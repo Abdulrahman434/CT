@@ -1,0 +1,804 @@
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import {
+  Phone,
+  PhoneCall,
+  PhoneOff,
+  PhoneMissed,
+  PhoneOutgoing,
+  PhoneIncoming as PhoneIncomingIcon,
+  Mic,
+  MicOff,
+  Volume2,
+  Pause,
+  Play,
+  Grid3X3,
+  ArrowLeft,
+  ArrowRight,
+  PhoneIncoming,
+  Delete,
+} from "lucide-react";
+import { useTheme, TEXT_STYLE, WEIGHT, TYPE_SCALE, SHADOW } from "./ThemeContext";
+import { useLocale } from "./i18n";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * DATA
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+interface Extension {
+  id: string;
+  nameKey: string;
+  descKey: string;
+  ext: string;
+  emergency?: boolean;
+}
+
+interface CallLogEntry {
+  id: string;
+  extensionId: string;
+  nameKey: string;
+  ext: string;
+  time: string;
+  duration?: string;
+  type: "missed" | "attended";
+  direction: "incoming" | "outgoing";
+}
+
+type CallState = "idle" | "incoming" | "outgoing" | "active";
+
+const EXTENSIONS: Extension[] = [
+  { id: "nurse",       nameKey: "call.nurseStation",     descKey: "call.nurseStation.desc",     ext: "1001" },
+  { id: "reception",   nameKey: "call.reception",        descKey: "call.reception.desc",        ext: "1000" },
+  { id: "pharmacy",    nameKey: "call.pharmacy",         descKey: "call.pharmacy.desc",         ext: "1050" },
+  { id: "dietary",     nameKey: "call.dietary",          descKey: "call.dietary.desc",          ext: "1060" },
+  { id: "housekeep",   nameKey: "call.housekeeping",     descKey: "call.housekeeping.desc",     ext: "1070" },
+  { id: "relations",   nameKey: "call.patientRelations", descKey: "call.patientRelations.desc", ext: "1080" },
+  { id: "it",          nameKey: "call.itSupport",        descKey: "call.itSupport.desc",        ext: "1090" },
+  { id: "religious",   nameKey: "call.religiousServices",descKey: "call.religiousServices.desc",ext: "1100" },
+  { id: "operator",    nameKey: "call.operator",         descKey: "call.operator.desc",         ext: "0" },
+];
+
+const MOCK_MISSED: CallLogEntry[] = [
+  { id: "m1", extensionId: "nurse",     nameKey: "call.nurseStation", ext: "1001", time: "2:15 PM",  type: "missed", direction: "incoming" },
+  { id: "m2", extensionId: "reception", nameKey: "call.reception",    ext: "1000", time: "11:30 AM", type: "missed", direction: "incoming" },
+  { id: "m3", extensionId: "pharmacy",  nameKey: "call.pharmacy",     ext: "1050", time: "9:45 AM",  type: "missed", direction: "incoming" },
+];
+
+const MOCK_ATTENDED: CallLogEntry[] = [
+  { id: "a1", extensionId: "nurse",     nameKey: "call.nurseStation",     ext: "1001", time: "1:30 PM",  duration: "3:24", type: "attended", direction: "incoming" },
+  { id: "a2", extensionId: "dietary",   nameKey: "call.dietary",          ext: "1060", time: "12:00 PM", duration: "1:12", type: "attended", direction: "outgoing" },
+  { id: "a3", extensionId: "reception", nameKey: "call.reception",        ext: "1000", time: "10:20 AM", duration: "2:45", type: "attended", direction: "outgoing" },
+  { id: "a4", extensionId: "relations", nameKey: "call.patientRelations", ext: "1080", time: "8:00 AM",  duration: "5:10", type: "attended", direction: "incoming" },
+];
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * CALL TIMER HOOK
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+function useCallTimer(active: boolean) {
+  const [seconds, setSeconds] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (active) {
+      setSeconds(0);
+      intervalRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      setSeconds(0);
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [active]);
+
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * MAIN CALL SCREEN
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+export function CallScreen({ onClose }: { onClose: () => void }) {
+  const { theme } = useTheme();
+  const { t, isRTL, fontFamily } = useLocale();
+  const BackArrow = isRTL ? ArrowRight : ArrowLeft;
+
+  const [callState, setCallState] = useState<CallState>("idle");
+  const [callTarget, setCallTarget] = useState<Extension | null>(null);
+  const [muted, setMuted] = useState(false);
+  const [speaker, setSpeaker] = useState(false);
+  const [onHold, setOnHold] = useState(false);
+  const [dialInput, setDialInput] = useState("");
+  const [historyTab, setHistoryTab] = useState<"all" | "missed" | "attended">("all");
+
+  const callTimer = useCallTimer(callState === "active");
+  const primary = theme.primary;
+  const DANGER = "#D10044";
+
+  useEffect(() => {
+    if (callState === "outgoing") {
+      const timer = setTimeout(() => setCallState("active"), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [callState]);
+
+  const handleDial = useCallback((ext: Extension) => {
+    setCallTarget(ext);
+    setMuted(false); setSpeaker(false); setOnHold(false);
+    setCallState("outgoing");
+  }, []);
+
+  const handleDialCustom = useCallback(() => {
+    if (!dialInput) return;
+    const found = EXTENSIONS.find((e) => e.ext === dialInput);
+    const target: Extension = found ?? { id: "custom", nameKey: "call.ext", descKey: "", ext: dialInput };
+    setCallTarget(target);
+    setMuted(false); setSpeaker(false); setOnHold(false);
+    setCallState("outgoing");
+  }, [dialInput]);
+
+  const handleSimulateIncoming = useCallback(() => {
+    setCallTarget(EXTENSIONS[0]);
+    setCallState("incoming");
+  }, []);
+
+  const handleAccept = useCallback(() => {
+    setCallState("active");
+    setMuted(false); setSpeaker(false); setOnHold(false);
+  }, []);
+
+  const handleDecline = useCallback(() => { setCallState("idle"); setCallTarget(null); }, []);
+  const handleEnd = useCallback(() => { setCallState("idle"); setCallTarget(null); }, []);
+
+  const onKeypadPress = useCallback((digit: string) => {
+    setDialInput((prev) => {
+      if (prev.length >= 6) return prev;
+      return prev + digit;
+    });
+  }, []);
+
+  const onKeypadDelete = useCallback(() => {
+    setDialInput((prev) => prev.slice(0, -1));
+  }, []);
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * RENDER — Call-in-progress overlays (dark)
+   * ══════════════════════════════════════════════════════════════════════ */
+  if (callState !== "idle" && callTarget) {
+    return (
+      <div className="absolute inset-0 z-50 flex flex-col" style={{ animation: "callScreenIn 0.25s ease-out" }}>
+        <div className="absolute inset-0" style={{
+          background: callState === "incoming"
+            ? `linear-gradient(160deg, ${primary} 0%, ${theme.primaryDark} 50%, #0a1628 100%)`
+            : callState === "outgoing"
+            ? `linear-gradient(160deg, ${primary} 0%, ${theme.primaryDark} 50%, #0a1628 100%)`
+            : `linear-gradient(160deg, ${theme.primaryDark} 0%, #0d1825 50%, #060e18 100%)`,
+        }} />
+
+        {callState === "incoming" && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="absolute rounded-full" style={{
+                width: `${200 + i * 120}px`, height: `${200 + i * 120}px`,
+                border: `1px solid rgba(255,255,255,${0.12 - i * 0.03})`,
+                animation: `callPulseRing 2.5s ease-out ${i * 0.5}s infinite`,
+              }} />
+            ))}
+          </div>
+        )}
+
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center gap-6">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <span style={{ fontFamily, ...TEXT_STYLE.label, color: "rgba(255,255,255,0.6)", letterSpacing: "2px" }}>
+              {callState === "incoming" ? t("call.incoming") : callState === "outgoing" ? t("call.ringing") : t("call.connected")}
+            </span>
+          </motion.div>
+
+          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", damping: 20 }}
+            className="flex items-center justify-center" style={{
+              width: "120px", height: "120px", borderRadius: theme.radiusFull,
+              backgroundColor: callState === "incoming" ? "rgba(255,255,255,0.15)" : callState === "active" ? `${primary}33` : "rgba(255,255,255,0.08)",
+              border: callState === "active" ? `2px solid ${primary}` : "2px solid rgba(255,255,255,0.12)",
+            }}>
+            <Phone size={48} color="#fff" strokeWidth={1.5} />
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="text-center">
+            <p style={{ fontFamily, ...TEXT_STYLE.display, color: "#FFFFFF", margin: 0 }}>{t(callTarget.nameKey)}</p>
+            <p style={{ fontFamily, ...TEXT_STYLE.body, color: "rgba(255,255,255,0.5)", marginTop: "8px" }}>
+              {t("call.ext")} {callTarget.ext}
+            </p>
+          </motion.div>
+
+          {callState === "active" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2">
+              <div className="rounded-full" style={{ width: "8px", height: "8px", backgroundColor: "#22C55E", animation: "callDotPulse 1.5s ease-in-out infinite" }} />
+              <span style={{ fontFamily: theme.fontFamilyMono, fontSize: TYPE_SCALE["2xl"], fontWeight: WEIGHT.semibold, color: "rgba(255,255,255,0.85)", letterSpacing: "2px" }}>
+                {callTimer}
+              </span>
+            </motion.div>
+          )}
+
+          {callState === "outgoing" && (
+            <div className="flex gap-2 mt-2">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="rounded-full" style={{
+                  width: "8px", height: "8px", backgroundColor: "rgba(255,255,255,0.4)",
+                  animation: `callDotBounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+                }} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="relative z-10 pb-16">
+          {callState === "active" && (
+            <div className="flex flex-col items-center gap-8">
+              <div className="flex items-center justify-center gap-10">
+                <CallControlButton icon={muted ? MicOff : Mic} label={muted ? t("call.unmute") : t("call.mute")} active={muted} onTap={() => setMuted(!muted)} fontFamily={fontFamily} />
+                <CallControlButton icon={Volume2} label={t("call.speaker")} active={speaker} onTap={() => setSpeaker(!speaker)} fontFamily={fontFamily} />
+                <CallControlButton icon={onHold ? Play : Pause} label={onHold ? t("call.resume") : t("call.hold")} active={onHold} onTap={() => setOnHold(!onHold)} fontFamily={fontFamily} />
+                <CallControlButton icon={Grid3X3} label={t("call.keypad")} active={false} onTap={() => {}} fontFamily={fontFamily} />
+              </div>
+              <button onClick={handleEnd} className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+                style={{ width: "72px", height: "72px", borderRadius: theme.radiusFull, backgroundColor: DANGER, border: "none", boxShadow: "0 8px 32px rgba(209,0,68,0.4)" }}>
+                <PhoneOff size={28} color="#fff" />
+              </button>
+              <span style={{ fontFamily, ...TEXT_STYLE.caption, color: "rgba(255,255,255,0.4)" }}>{t("call.endCall")}</span>
+            </div>
+          )}
+          {callState === "outgoing" && (
+            <div className="flex flex-col items-center gap-3">
+              <button onClick={handleEnd} className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+                style={{ width: "72px", height: "72px", borderRadius: theme.radiusFull, backgroundColor: DANGER, border: "none", boxShadow: "0 8px 32px rgba(209,0,68,0.4)" }}>
+                <PhoneOff size={28} color="#fff" />
+              </button>
+              <span style={{ fontFamily, ...TEXT_STYLE.caption, color: "rgba(255,255,255,0.4)" }}>{t("call.cancel")}</span>
+            </div>
+          )}
+          {callState === "incoming" && (
+            <div className="flex items-center justify-center gap-24">
+              <div className="flex flex-col items-center gap-3">
+                <button onClick={handleDecline} className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+                  style={{ width: "72px", height: "72px", borderRadius: theme.radiusFull, backgroundColor: DANGER, border: "none", boxShadow: "0 8px 32px rgba(209,0,68,0.35)" }}>
+                  <PhoneOff size={28} color="#fff" />
+                </button>
+                <span style={{ fontFamily, ...TEXT_STYLE.caption, color: "rgba(255,255,255,0.5)" }}>{t("call.decline")}</span>
+              </div>
+              <div className="flex flex-col items-center gap-3">
+                <button onClick={handleAccept} className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+                  style={{ width: "72px", height: "72px", borderRadius: theme.radiusFull, backgroundColor: "#22C55E", border: "none", boxShadow: "0 8px 32px rgba(34,197,94,0.35)", animation: "callAcceptPulse 1.5s ease-in-out infinite" }}>
+                  <Phone size={28} color="#fff" />
+                </button>
+                <span style={{ fontFamily, ...TEXT_STYLE.caption, color: "rgba(255,255,255,0.5)" }}>{t("call.accept")}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <style>{`
+          @keyframes callScreenIn { from { opacity:0; transform:scale(1.02); } to { opacity:1; transform:scale(1); } }
+          @keyframes callPulseRing { 0% { transform:scale(0.8); opacity:0.6; } 100% { transform:scale(1.6); opacity:0; } }
+          @keyframes callDotPulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+          @keyframes callDotBounce { 0%,100% { transform:translateY(0); opacity:0.3; } 50% { transform:translateY(-6px); opacity:1; } }
+          @keyframes callAcceptPulse { 0%,100% { box-shadow:0 8px 32px rgba(34,197,94,0.35); } 50% { box-shadow:0 8px 32px rgba(34,197,94,0.6),0 0 0 12px rgba(34,197,94,0.1); } }
+        `}</style>
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * RENDER — Idle / Directory + Keypad + History — CareMe expanded pattern
+   * ═══════════════════════════════════════════════════════════════════════ */
+  return (
+    <div
+      className="absolute inset-0 z-50 flex flex-col"
+      style={{
+        background: `linear-gradient(160deg, ${primary} 0%, ${theme.primaryDark} 40%, #0a1628 100%)`,
+        animation: "callScreenIn 0.2s ease-out",
+      }}
+    >
+      {/* Subtle hero texture */}
+      <img
+        src={theme.heroImageUrl}
+        alt="" aria-hidden
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+        style={{ opacity: 0.06, mixBlendMode: "luminosity" }}
+      />
+
+      {/* ── Header ── */}
+      <div className="shrink-0 flex items-center justify-between px-10 pt-8 pb-4 relative z-10">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            style={{
+              width: "52px", height: "52px", borderRadius: theme.radiusLg,
+              backgroundColor: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)",
+            }}
+          >
+            <BackArrow size={24} style={{ color: "#fff" }} />
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center" style={{
+              width: "52px", height: "52px", borderRadius: theme.radiusLg,
+              backgroundColor: "rgba(255,255,255,0.12)",
+            }}>
+              <Phone size={26} fill="#fff" style={{ color: "#fff" }} />
+            </div>
+            <div>
+              <h2 style={{ fontFamily, ...TEXT_STYLE.display, fontSize: "32px", color: "#FFFFFF", lineHeight: "36px" }}>
+                {t("call.title")}
+              </h2>
+              <p style={{ fontFamily, ...TEXT_STYLE.caption, color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>
+                {t("call.tapToCall")}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Simulate incoming + room ext info */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleSimulateIncoming}
+            className="flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
+            style={{
+              padding: "10px 18px", borderRadius: theme.radiusFull,
+              backgroundColor: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)",
+              outline: "none",
+            }}
+          >
+            <PhoneIncoming size={16} style={{ color: "#fff" }} />
+            <span style={{ fontFamily, ...TEXT_STYLE.buttonSm, color: "#fff" }}>{t("call.simulateIncoming")}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── Room Extension Info Bar (CareMe-style white cards) ── */}
+      <div className="shrink-0 flex gap-4 px-10 pb-5 relative z-10">
+        <div className="flex items-center gap-3" style={{
+          borderRadius: theme.radiusLg, backgroundColor: theme.surface,
+          border: `1px solid ${theme.borderDefault}`, padding: "14px 50px 14px 24px", boxShadow: SHADOW.sm,
+          minWidth: "220px",
+        }}>
+          <div className="w-9 h-9 flex items-center justify-center shrink-0"
+            style={{ backgroundColor: theme.primarySubtle, color: theme.primary, borderRadius: theme.radiusMd }}>
+            <Phone size={18} />
+          </div>
+          <div>
+            <p style={{ fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted }}>{t("call.yourExtension")}</p>
+            <p style={{ fontFamily: theme.fontFamilyMono, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading, letterSpacing: "0.5px" }}>4120</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3-Column Content ── */}
+      <div className="min-h-0 flex px-10 pb-10 relative z-10" style={{ flex: "1 1 0", maxHeight: "calc(100% - 200px)", gap: "64px" }}>
+
+        {/* Column 1 — Directory */}
+        <div className="flex flex-col min-w-0 min-h-0 overflow-hidden" style={{
+          flex: "1 1 0", backgroundColor: theme.surface, borderRadius: theme.radiusXl, boxShadow: SHADOW.xl,
+        }}>
+          <div className="shrink-0 flex items-center gap-2.5 px-5 pt-4 pb-2.5">
+            <div className="flex items-center justify-center shrink-0" style={{
+              width: "32px", height: "32px", borderRadius: theme.radiusMd,
+              backgroundColor: theme.primarySubtle, color: theme.primary,
+            }}>
+              <Phone size={16} />
+            </div>
+            <span style={{ fontFamily, ...TEXT_STYLE.subtitle, color: theme.textHeading }}>{t("call.hospitalDirectory")}</span>
+          </div>
+          <div style={{ height: "1px", backgroundColor: theme.borderSubtle, margin: "0 16px" }} />
+          <div className="flex-1 min-h-0 overflow-y-auto callscreen-scroll" style={{ padding: "10px 12px" }}>
+            <div className="flex flex-col gap-1.5">
+              {EXTENSIONS.map((ext) => (
+                <ExtensionRow key={ext.id} ext={ext} onDial={handleDial} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Column 2 — Keypad (center, takes remaining space) */}
+        <div className="flex flex-col min-h-0 overflow-hidden" style={{
+          backgroundColor: theme.surface, borderRadius: theme.radiusXl, boxShadow: SHADOW.xl,
+          flex: "1 1 0", minWidth: 0,
+        }}>
+          <div className="shrink-0 flex items-center gap-2.5 px-5 pt-4 pb-2.5">
+            <div className="flex items-center justify-center shrink-0" style={{
+              width: "32px", height: "32px", borderRadius: theme.radiusMd,
+              backgroundColor: theme.primarySubtle, color: theme.primary,
+            }}>
+              <Grid3X3 size={16} />
+            </div>
+            <span style={{ fontFamily, ...TEXT_STYLE.subtitle, color: theme.textHeading }}>{t("call.keypadTitle")}</span>
+          </div>
+          <div style={{ height: "1px", backgroundColor: theme.borderSubtle, margin: "0 16px" }} />
+
+          {/* Display */}
+          <div className="shrink-0 flex items-center justify-center px-5 pt-5 pb-2" style={{ minHeight: "64px" }}>
+            <span style={{
+              fontFamily: theme.fontFamilyMono, fontSize: "40px", fontWeight: WEIGHT.bold,
+              color: dialInput ? theme.textHeading : theme.textDisabled,
+              letterSpacing: "6px", textAlign: "center", minHeight: "48px",
+            }}>
+              {dialInput || "—"}
+            </span>
+          </div>
+          {!dialInput && (
+            <p className="text-center" style={{ fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted, marginTop: "-2px", marginBottom: "4px" }}>
+              {t("call.keypadHint")}
+            </p>
+          )}
+
+          {/* Keypad grid */}
+          <div dir="ltr" className="flex-1 flex flex-col justify-center items-center px-5 pb-3 gap-3">
+            {[["1","2","3"],["4","5","6"],["7","8","9"]].map((row, ri) => (
+              <div key={ri} className="flex gap-3 justify-center">
+                {row.map((digit) => (
+                  <KeypadButton key={digit} digit={digit} onPress={onKeypadPress} />
+                ))}
+              </div>
+            ))}
+            {/* Bottom row: empty | 0 | delete */}
+            <div className="flex gap-3 justify-center">
+              <div style={{ width: "72px", height: "72px" }} />
+              <KeypadButton digit="0" onPress={onKeypadPress} />
+              <button
+                onClick={onKeypadDelete}
+                className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+                style={{
+                  width: "72px", height: "72px", borderRadius: theme.radiusFull,
+                  backgroundColor: "transparent",
+                  border: "none",
+                  outline: "none",
+                  opacity: dialInput ? 1 : 0.3,
+                }}
+                disabled={!dialInput}
+              >
+                <Delete size={22} style={{ color: theme.textMuted }} />
+              </button>
+            </div>
+
+            {/* Call button */}
+            <div className="flex justify-center pt-2">
+              <button
+                onClick={handleDialCustom}
+                className="flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
+                style={{
+                  width: "232px", height: "52px", borderRadius: theme.radiusFull,
+                  backgroundColor: dialInput ? "#22C55E" : theme.borderSubtle,
+                  border: "none", outline: "none",
+                  opacity: dialInput ? 1 : 0.5,
+                  boxShadow: dialInput ? "0 4px 16px rgba(34,197,94,0.3)" : "none",
+                }}
+                disabled={!dialInput}
+              >
+                <Phone size={20} color="#fff" />
+                <span style={{ fontFamily, ...TEXT_STYLE.buttonSm, color: "#fff" }}>{t("call.title")}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Column 3 — Call History */}
+        <div className="flex flex-col min-w-0 min-h-0 overflow-hidden" style={{
+          flex: "1 1 0", backgroundColor: theme.surface, borderRadius: theme.radiusXl, boxShadow: SHADOW.xl,
+        }}>
+          {/* Row 1 — Title */}
+          <div className="shrink-0 flex items-center gap-2.5 px-5 pt-4 pb-2.5">
+            <div className="flex items-center justify-center shrink-0" style={{
+              width: "32px", height: "32px", borderRadius: theme.radiusMd,
+              backgroundColor: theme.primarySubtle, color: theme.primary,
+            }}>
+              <PhoneCall size={16} />
+            </div>
+            <span style={{ fontFamily, ...TEXT_STYLE.subtitle, color: theme.textHeading }}>{t("call.history")}</span>
+          </div>
+          {/* Row 2 — Tab toggle */}
+          <div className="shrink-0 px-5 pb-3">
+            <div className="flex gap-1" style={{
+              borderRadius: theme.radiusFull, backgroundColor: theme.background,
+              border: `1px solid ${theme.borderSubtle}`, padding: "4px",
+            }}>
+              {(["all", "missed", "attended"] as const).map((key) => {
+                const active = historyTab === key;
+                const count = key === "missed" ? MOCK_MISSED.length : key === "attended" ? MOCK_ATTENDED.length : MOCK_MISSED.length + MOCK_ATTENDED.length;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setHistoryTab(key)}
+                    className="flex-1 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                    style={{
+                      padding: "9px 12px", borderRadius: theme.radiusFull,
+                      backgroundColor: active ? theme.primary : "transparent",
+                      boxShadow: active ? SHADOW.sm : "none",
+                      border: "none", outline: "none",
+                    }}
+                  >
+                    <span style={{ fontFamily, fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold, color: active ? "#fff" : theme.textMuted }}>
+                      {t(`call.${key}`)}
+                    </span>
+                    {count > 0 && (
+                      <span className="flex items-center justify-center" style={{
+                        minWidth: "22px", height: "22px", borderRadius: theme.radiusFull, padding: "0 6px",
+                        backgroundColor: active ? "rgba(255,255,255,0.25)" : theme.primarySubtle,
+                        fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.semibold,
+                        color: active ? "#fff" : theme.primary,
+                      }}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div style={{ height: "1px", backgroundColor: theme.borderSubtle, margin: "0 16px" }} />
+
+          <div className="flex-1 min-h-0 overflow-y-auto callscreen-scroll" style={{ padding: "10px 12px" }}>
+            <AnimatePresence mode="wait">
+              {historyTab === "all" ? (
+                <motion.div key="all" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
+                  {MOCK_MISSED.length === 0 && MOCK_ATTENDED.length === 0 ? (
+                    <EmptyState message={t("call.noHistory")} />
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      <p className="px-2 pt-1 pb-2" style={{ fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted }}>{t("call.today")}</p>
+                      {MOCK_MISSED.map((entry) => (
+                        <CallLogRow key={entry.id} entry={entry} onCallback={(e) => {
+                          const ext = EXTENSIONS.find((x) => x.id === e.extensionId);
+                          if (ext) handleDial(ext);
+                        }} />
+                      ))}
+                      {MOCK_ATTENDED.map((entry) => (
+                        <CallLogRow key={entry.id} entry={entry} onCallback={(e) => {
+                          const ext = EXTENSIONS.find((x) => x.id === e.extensionId);
+                          if (ext) handleDial(ext);
+                        }} />
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              ) : historyTab === "missed" ? (
+                <motion.div key="missed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
+                  {MOCK_MISSED.length === 0 ? (
+                    <EmptyState message={t("call.noMissed")} />
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      <p className="px-2 pt-1 pb-2" style={{ fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted }}>{t("call.today")}</p>
+                      {MOCK_MISSED.map((entry) => (
+                        <CallLogRow key={entry.id} entry={entry} onCallback={(e) => {
+                          const ext = EXTENSIONS.find((x) => x.id === e.extensionId);
+                          if (ext) handleDial(ext);
+                        }} />
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div key="attended" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
+                  {MOCK_ATTENDED.length === 0 ? (
+                    <EmptyState message={t("call.noAttended")} />
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      <p className="px-2 pt-1 pb-2" style={{ fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted }}>{t("call.today")}</p>
+                      {MOCK_ATTENDED.map((entry) => (
+                        <CallLogRow key={entry.id} entry={entry} onCallback={(e) => {
+                          const ext = EXTENSIONS.find((x) => x.id === e.extensionId);
+                          if (ext) handleDial(ext);
+                        }} />
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes callScreenIn { from { opacity:0; transform:scale(1.02); } to { opacity:1; transform:scale(1); } }
+        .callscreen-scroll::-webkit-scrollbar { width: 4px; }
+        .callscreen-scroll::-webkit-scrollbar-track { background: transparent; margin: 4px 0; }
+        .callscreen-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 4px; }
+        .callscreen-scroll { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.08) transparent; }
+      `}</style>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * SUB-COMPONENTS
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+function ExtensionRow({ ext, onDial }: { ext: Extension; onDial: (e: Extension) => void }) {
+  const { theme } = useTheme();
+  const { t, fontFamily } = useLocale();
+  const [pressed, setPressed] = useState(false);
+
+  return (
+    <button
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
+      onClick={() => onDial(ext)}
+      className="flex items-center gap-3 w-full cursor-pointer transition-all"
+      style={{
+        padding: "11px 12px",
+        borderRadius: theme.radiusMd,
+        backgroundColor: pressed ? theme.primarySubtle : theme.background,
+        border: `1px solid ${pressed ? theme.borderActive : theme.borderSubtle}`,
+        outline: "none",
+        textAlign: "start",
+        transform: pressed ? "scale(0.99)" : "scale(1)",
+      }}
+    >
+      {/* Icon circle */}
+      <div className="shrink-0 flex items-center justify-center" style={{
+        width: "36px", height: "36px", borderRadius: theme.radiusFull,
+        backgroundColor: theme.primarySubtle,
+      }}>
+        <Phone size={16} color={theme.primary} strokeWidth={1.8} />
+      </div>
+
+      {/* Name + ext */}
+      <div className="flex-1 min-w-0">
+        <p className="truncate" style={{
+          fontFamily, fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold,
+          color: theme.textHeading, margin: 0,
+        }}>
+          {t(ext.nameKey)}
+        </p>
+        <span style={{
+          fontFamily: theme.fontFamilyMono, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium,
+          color: theme.textMuted,
+        }}>
+          {t("call.ext")} {ext.ext}
+        </span>
+      </div>
+
+      {/* Call button */}
+      <div className="shrink-0 flex items-center justify-center" style={{
+        width: "34px", height: "34px", borderRadius: theme.radiusFull,
+        backgroundColor: "#22C55E",
+      }}>
+        <Phone size={14} color="#fff" />
+      </div>
+    </button>
+  );
+}
+
+function CallLogRow({ entry, onCallback }: { entry: CallLogEntry; onCallback: (entry: CallLogEntry) => void }) {
+  const { theme } = useTheme();
+  const { t, fontFamily, locale } = useLocale();
+  const isMissed = entry.type === "missed";
+  const isOutgoing = entry.direction === "outgoing";
+  const DANGER = "#D10044";
+
+  /* Locale-aware AM/PM → صباحًا / مساءً */
+  const localizedTime = locale === "ar"
+    ? entry.time.replace(/\bAM\b/i, "صباحًا").replace(/\bPM\b/i, "مساءً")
+    : entry.time;
+
+  // Direction-aware icon like mobile phones
+  const DirIcon = isMissed
+    ? PhoneMissed
+    : isOutgoing
+    ? PhoneOutgoing
+    : PhoneIncomingIcon;
+  const iconColor = isMissed ? DANGER : isOutgoing ? theme.primary : "#22C55E";
+  const bgColor = isMissed ? "rgba(209,0,68,0.08)" : isOutgoing ? theme.primarySubtle : "rgba(34,197,94,0.08)";
+
+  return (
+    <button
+      onClick={() => onCallback(entry)}
+      className="flex items-center gap-3 w-full cursor-pointer active:scale-[0.99] transition-transform"
+      style={{
+        padding: "11px 12px", borderRadius: theme.radiusMd,
+        backgroundColor: isMissed ? "rgba(209,0,68,0.03)" : "transparent",
+        border: isMissed ? "1px solid rgba(209,0,68,0.06)" : `1px solid ${theme.borderSubtle}`,
+        outline: "none", textAlign: "start",
+      }}
+    >
+      <div className="shrink-0 flex items-center justify-center" style={{
+        width: "36px", height: "36px", borderRadius: theme.radiusFull,
+        backgroundColor: bgColor,
+      }}>
+        <DirIcon size={16} color={iconColor} strokeWidth={1.8} />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="truncate" style={{
+          fontFamily, fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold,
+          color: isMissed ? DANGER : theme.textHeading, margin: 0,
+        }}>
+          {t(entry.nameKey)}
+        </p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span style={{
+            fontFamily: theme.fontFamilyMono, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium, color: theme.textMuted,
+          }}>
+            {t("call.ext")} {entry.ext}
+          </span>
+          {entry.duration && (
+            <>
+              <span style={{ color: theme.borderDefault }}>·</span>
+              <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium, color: theme.textMuted }}>{entry.duration}</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="shrink-0 flex flex-col items-end gap-0.5">
+        <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium, color: isMissed ? "rgba(209,0,68,0.7)" : theme.textMuted }}>
+          {localizedTime}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function CallControlButton({ icon: Icon, label, active, onTap, fontFamily }: {
+  icon: React.ComponentType<any>; label: string; active: boolean; onTap: () => void; fontFamily: string;
+}) {
+  const { theme } = useTheme();
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <button onClick={onTap} className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+        style={{
+          width: "60px", height: "60px", borderRadius: theme.radiusFull,
+          backgroundColor: active ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)",
+          border: active ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(255,255,255,0.1)",
+          outline: "none",
+        }}>
+        <Icon size={24} color={active ? "#fff" : "rgba(255,255,255,0.7)"} />
+      </button>
+      <span style={{ fontFamily, fontSize: "11px", fontWeight: 500, color: "rgba(255,255,255,0.4)" }}>{label}</span>
+    </div>
+  );
+}
+
+function EmptyState({ message }: { message: string }) {
+  const { theme } = useTheme();
+  const { fontFamily } = useLocale();
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center h-full gap-3 py-16">
+      <div className="flex items-center justify-center" style={{
+        width: "52px", height: "52px", borderRadius: theme.radiusFull, backgroundColor: theme.primarySubtle,
+      }}>
+        <Phone size={22} color={theme.textMuted} />
+      </div>
+      <span style={{ fontFamily, ...TEXT_STYLE.body, color: theme.textMuted }}>{message}</span>
+    </div>
+  );
+}
+
+function KeypadButton({ digit, onPress }: { digit: string; onPress: (digit: string) => void }) {
+  const { theme } = useTheme();
+  const [pressed, setPressed] = useState(false);
+  return (
+    <button
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
+      onClick={() => onPress(digit)}
+      className="flex items-center justify-center cursor-pointer transition-all"
+      style={{
+        width: "72px", height: "72px", borderRadius: theme.radiusFull,
+        backgroundColor: pressed ? theme.primary : theme.background,
+        border: `1.5px solid ${pressed ? theme.primary : theme.borderDefault}`,
+        outline: "none",
+        transform: pressed ? "scale(0.92)" : "scale(1)",
+      }}
+    >
+      <span style={{
+        fontFamily: theme.fontFamilyMono, fontSize: "32px", fontWeight: WEIGHT.semibold,
+        color: pressed ? "#fff" : theme.textHeading,
+      }}>
+        {digit}
+      </span>
+    </button>
+  );
+}
