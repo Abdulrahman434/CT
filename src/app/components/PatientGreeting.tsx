@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, TEXT_STYLE, SPACE } from "./ThemeContext";
+import { useTheme, WEIGHT, SHADOW, TEXT_STYLE, SPACE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { useRipple } from "./useRipple";
 import { HelpCircle } from "lucide-react";

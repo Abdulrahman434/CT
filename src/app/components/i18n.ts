@@ -77,9 +77,9 @@ const translations: Record<string, TranslationEntry> = {
   "tasbih.resetConfirm": { en: "Reset", ar: "إعادة تعيين" },
 
   /* ─── News Ticker ─── */
-  "news.wifi": { en: "Dr. Soliman Fakeeh Hospital recognized as a JCI Gold Seal of Approval® recipient for 2026.", ar: "مستشفى الدكتور سليمان فقيه يحصل على ختم الاعتماد الذهبي من JCI لعام ٢٠٢٦." },
+  "news.wifi": { en: "Care Medical Hospital recognized as a JCI Gold Seal of Approval® recipient for 2026.", ar: "مستشفى رعاية الطبية يحصل على ختم الاعتماد الذهبي من JCI لعام ٢٠٢٦." },
   "news.carePlans": { en: "Our hospital launches the \"Healthier Tomorrow\" community wellness initiative across Jeddah.", ar: "المستشفى يطلق مبادرة «غدٍ أصحّ» للصحة المجتمعية في جدة." },
-  "news.menu": { en: "Fakeeh Medical Team wins Best Research Paper at the 2026 Saudi Healthcare Symposium.", ar: "فريق فقيه الطبي يفوز بجائزة أفضل بحث علمي في ملتقى الرعاية الصحية السعودي ٢٠٢٦." },
+  "news.menu": { en: "Care Medical Team wins Best Research Paper at the 2026 Saudi Healthcare Symposium.", ar: "فريق رعاية الطبي يفوز بجائزة أفضل بحث علمي في ملتقى الرعاية الصحية السعودي ٢٠٢٦." },
   "news.dallah.1": { en: "Dallah Hospitals awarded 'Leading Provider of Integrated Healthcare Services' in Saudi Arabia.", ar: "مستشفيات دله تحصل على جائزة «المزود الرائد لخدمات الرعاية الصحية المتكاملة» في المملكة." },
   "news.dallah.2": { en: "Dallah Healthcare announces the construction of the new state-of-the-art Al-Arid Hospital in Riyadh.", ar: "دله الصحية تعلن عن إنشاء مستشفى العارض الجديد والمتطور في الرياض." },
   "news.dallah.3": { en: "Dallah Healthcare completes 100% acquisition of Care Shield Holding, reinforcing Riyadh presence.", ar: "دله الصحية تكمل استحواذها بنسبة ١٠٠٪ على شركة درع الرعاية، مما يعزز تواجدها في الرياض." },
@@ -115,6 +115,16 @@ const translations: Record<string, TranslationEntry> = {
   "shortcut.quran": { en: "Quran", ar: "القرآن" },
   "shortcut.mirror": { en: "Mirror", ar: "المرآة" },
   "shortcut.podcast": { en: "Podcast", ar: "بودكاست" },
+  "shortcut.academy": { en: "Academy", ar: "الأكاديمية" },
+
+  /* ─── Care Medical Education Items ─── */
+  "caremed.edu.normalBirth": { en: "Normal Birth", ar: "الولادة الطبيعية" },
+  "caremed.edu.depression": { en: "Signs of Depression\nand How to Cope", ar: "علامات الاكتئاب\nوكيفية التعامل معها" },
+  "caremed.edu.dementia": { en: "Cognition and\nDementia", ar: "الإدراك والخرف" },
+  "caremed.edu.elderlyExercise": { en: "Exercise for\nThe Elderly", ar: "ممارسة الرياضة\nلكبار السن" },
+  "caremed.edu.falls": { en: "Common Causes\nof Falls", ar: "أسباب السقوط\nالشائعة" },
+  "caremed.edu.generalHealth": { en: "General Health\nQuestions", ar: "أسئلة عن\nالصحة العامة" },
+  "caremed.edu.medications": { en: "Questions About\nMedications", ar: "أسئلة بخصوص\nالأدوية" },
 
   /* ─── CareMe Slides ─── */
   "care.title": { en: "CareMe", ar: "رعايتي" },
@@ -282,8 +292,9 @@ const translations: Record<string, TranslationEntry> = {
   /* ─── About Us ─── */
   "about.title": { en: "About Us", ar: "عن المستشفى" },
   "about.ourHospital": { en: "Our Hospital", ar: "المستشفى" },
-  "about.dna": { en: "Fakeeh Care DNA", ar: "جينات رعاية فقيه" },
-  "about.numbers": { en: "Fakeeh In Numbers", ar: "فقيه بالأرقام" },
+  "about.dna": { en: "{0} DNA", ar: "{0} DNA" },
+  "about.caremedInBrief": { en: "CareMed InBrief", ar: "نبذة عن رعاية الطبية" },
+  "about.numbers": { en: "{0} In Numbers", ar: "{0} في أرقام" },
   "about.services": { en: "Services", ar: "الخدمات" },
   "about.accreditations": { en: "Accreditations", ar: "الاعتمادات" },
   "about.digital": { en: "Digital Services", ar: "الخدمات الرقمية" },

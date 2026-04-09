@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Settings, Globe, Bell, Cast } from "lucide-react";
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, TEXT_STYLE, SPACE } from "./ThemeContext";
 import { useLocale } from "./i18n";
@@ -51,10 +51,6 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onWeatherTap,
   const { t, locale, isRTL, fontFamily } = useLocale();
   const [time, setTime] = useState(new Date());
   const [nextPrayer, setNextPrayer] = useState(() => getNextPrayerIndex(new Date()));
-  const [showSettings, setShowSettings] = useState(false);
-  const tapCountRef = useRef(0);
-  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   useEffect(() => {
     const interval = setInterval(() => {
       setTime(new Date());
@@ -63,16 +59,9 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onWeatherTap,
     return () => clearInterval(interval);
   }, []);
 
-  /* Triple-tap on logo area to reveal settings */
+  /* Click on logo area to open Care Medical website */
   const handleLogoTap = () => {
-    tapCountRef.current += 1;
-    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
-    if (tapCountRef.current >= 3) {
-      setShowSettings((v) => !v);
-      tapCountRef.current = 0;
-    } else {
-      tapTimerRef.current = setTimeout(() => { tapCountRef.current = 0; }, 600);
-    }
+    window.open("https://care.med.sa/", "_blank");
   };
 
   const hours = time.getHours();

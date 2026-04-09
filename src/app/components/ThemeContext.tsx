@@ -325,9 +325,9 @@ function buildTheme(core: {
     fontFamilyAr: c.fontFamilyAr,
     fontFamilyMono: `${c.fontFamily.split(",")[0]}, monospace`,
 
-    logoUrl: c.logoUrl || (c.id === "dsfh" ? DSFH_LOGO : c.id === "burjeel" ? burjeelLogo : c.id === "slh" ? slhLogo : c.id === "dallah" ? dallahLogo : ""),
-    heroImageUrl: c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : ""),
-    heroImageUrls: c.heroImageUrls && c.heroImageUrls.length > 0 ? c.heroImageUrls : [c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : "")],
+    logoUrl: c.logoUrl || (c.id === "dsfh" ? DSFH_LOGO : c.id === "burjeel" ? burjeelLogo : c.id === "slh" ? slhLogo : c.id === "dallah" ? dallahLogo : c.id === "caremed" ? caremedLogo : ""),
+    heroImageUrl: c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : ""),
+    heroImageUrls: c.heroImageUrls && c.heroImageUrls.length > 0 ? c.heroImageUrls : [c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : "")],
     heroCropPosition: c.heroCropPosition || "50% 15%",
 
     primary: c.primary,
@@ -518,6 +518,9 @@ import slhHero from "../../assets/e956f98cfa0d9f06f0dd2befe535fed91ed51d1e.png";
 import dallahLogo from "../../assets/DallahLogo.png";
 import dallahHero from "../../assets/Dallah-Hospital1.jpg";
 
+import caremedLogo from "../../assets/CareMedicalLogo.png";
+import caremedHero from "../../assets/CareMedicalHospital.jpeg";
+
 /* Canonical built-in asset URLs — used as fallbacks for DSFH */
 export const DSFH_LOGO = logoImage;
 export const DSFH_HERO = hospitalImg;
@@ -593,12 +596,29 @@ export const DALLAH_CORE: HospitalCoreConfig = {
   accentLight: "#FFF6E0",
 };
 
+export const CAREMED_CORE: HospitalCoreConfig = {
+  id: "caremed",
+  hospitalName: "Care Medical",
+  hospitalShortName: "Care Med",
+  fontFamily: "'Mulish', sans-serif",
+  fontFamilyAr: "'Almarai', sans-serif",
+  logoUrl: caremedLogo,
+  heroImageUrl: caremedHero,
+  primary: "#1D234D",
+  primaryDark: "#121631",
+  primaryLight: "#E8EAF6",
+  accent: "#00A3C1",
+  accentDark: "#007A91",
+  accentLight: "#E0F7FA",
+};
+
 /** All built-in hospital presets (always available, never deleted) */
 export const BUILTIN_PRESETS: HospitalCoreConfig[] = [
   DSFH_CORE,
   BURJEEL_CORE,
   SLH_CORE,
   DALLAH_CORE,
+  CAREMED_CORE,
 ];
 
 const DSFH_THEME = buildTheme(DSFH_CORE);
@@ -752,7 +772,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const merged = BUILTIN_PRESETS.map((preset) => {
       const saved = savedConfigs.find((c) => c.id === preset.id);
       if (!saved) return preset;
-      const hasBuiltinAssets = ["dsfh", "burjeel", "slh", "dallah"].includes(preset.id);
+      const hasBuiltinAssets = ["dsfh", "burjeel", "slh", "dallah", "caremed"].includes(preset.id);
       return {
         ...preset,
         ...saved,
@@ -792,7 +812,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const saveConfigFn = useCallback((config: HospitalCoreConfig) => {
-    const hasBuiltinAssets = ["dsfh", "burjeel", "slh", "dallah"].includes(config.id);
+    const hasBuiltinAssets = ["dsfh", "burjeel", "slh", "dallah", "caremed"].includes(config.id);
     const toSave = hasBuiltinAssets
       ? {
           ...config,

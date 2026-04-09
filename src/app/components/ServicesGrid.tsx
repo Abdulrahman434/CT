@@ -8,12 +8,23 @@ import whatsappIcon from "@/assets/7583d2073e01dcd488456b25bc53248baf8547e8.png"
 import quranIcon from "@/assets/5303963df7d14bbca33ccffa43f982a464344809.png";
 import mirrorIcon from "@/assets/0ab7565691ddb8401a21da44af1864e8f4058536.png";
 import podcastIcon from "@/assets/5513479d879a8c3fcdd1f6832dd30ce350c81789.png";
+import caremedicalicon from "@/assets/caremedicalicon.png";
 
-const shortcutItems = [
+interface ShortcutItem {
+  labelKey: string;
+  icon: string;
+  url: string;
+}
+
+const getShortcutItems = (hospitalId: string): ShortcutItem[] => [
   { labelKey: "shortcut.whatsapp", icon: whatsappIcon, url: "" },
   { labelKey: "shortcut.quran", icon: quranIcon, url: "" },
-  { labelKey: "shortcut.mirror", icon: mirrorIcon, url: "" },
-  { labelKey: "shortcut.podcast", icon: podcastIcon, url: "https://www.youtube.com/watch?v=1WKyerFH34U&list=PL_JVZV-KlG7oFe-fUAMnbYsWyTU9k8ljF" },
+  hospitalId === "caremed"
+    ? { labelKey: "shortcut.academy", icon: caremedicalicon, url: "https://care.classera.com/explore/courses?lang=en" }
+    : { labelKey: "shortcut.mirror", icon: mirrorIcon, url: "" },
+  hospitalId === "caremed"
+    ? { labelKey: "shortcut.podcast", icon: caremedicalicon, url: "https://www.youtube.com/playlist?list=PLbWY8VfHuoBSK7XeJJtutBSTeY_e7Kut3" }
+    : { labelKey: "shortcut.podcast", icon: podcastIcon, url: "https://www.youtube.com/watch?v=1WKyerFH34U&list=PL_JVZV-KlG7oFe-fUAMnbYsWyTU9k8ljF" },
 ];
 
 /* ─── Hub item SVG icon paths from Figma ─── */
@@ -383,7 +394,7 @@ function SurveyCard({ square, contained }: { square?: boolean; contained?: boole
 }
 
 /* ─── Shortcut Tile — app icon + label ─── */
-function ShortcutTile({ item, contained }: { item: (typeof shortcutItems)[0]; contained?: boolean }) {
+function ShortcutTile({ item, contained }: { item: ShortcutItem; contained?: boolean }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
@@ -441,7 +452,7 @@ function ShortcutTile({ item, contained }: { item: (typeof shortcutItems)[0]; co
 }
 
 /* ─── Shortcut Tile — compact version for right column ─── */
-function ShortcutTileCompact({ item }: { item: (typeof shortcutItems)[0] }) {
+function ShortcutTileCompact({ item }: { item: ShortcutItem }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
@@ -497,7 +508,7 @@ function ShortcutTileCompact({ item }: { item: (typeof shortcutItems)[0] }) {
 }
 
 /* ─── Shortcut Tile — bare version for bottom row ─── */
-function ShortcutTileBare({ item }: { item: (typeof shortcutItems)[0] }) {
+function ShortcutTileBare({ item }: { item: ShortcutItem }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
@@ -612,6 +623,7 @@ function AboutUsButton({ onTap }: { onTap: () => void }) {
 /* ─── Engagement Grid: 4×2 hub + bottom row ─── */
 export function ServicesGrid({ onOpenCategory, contained, swapped, compact }: { onOpenCategory?: (key: string) => void; contained?: boolean; swapped?: boolean; compact?: boolean }) {
   const { theme } = useTheme();
+  const shortcutItems = getShortcutItems(theme.id);
   const gridGap = compact ? "gap-3" : "gap-6";
   const bottomHeight = compact ? "140px" : "192px";
   return (
@@ -690,6 +702,7 @@ export function ServicesGrid({ onOpenCategory, contained, swapped, compact }: { 
 /* ─── Right Column — shortcuts (default) or services (swapped) ─── */
 export function ShortcutsColumn({ contained, onOpenSurvey, swapped }: { contained?: boolean; onOpenSurvey?: () => void; swapped?: boolean }) {
   const { theme } = useTheme();
+  const shortcutItems = getShortcutItems(theme.id);
   if (swapped) {
     return (
       <div className="flex flex-col h-full" style={{ gap: "36px" }}>

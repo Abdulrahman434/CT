@@ -7,6 +7,11 @@ import logoImg from "../../assets/496960c397c9050764df477822163c6970cb738d.png";
 import dnaImg from "../../assets/7d25bcb72cca7f6efa0a0c3b850e8605d6d73401.png";
 import numbersImg from "../../assets/f59e36074e912058a9f8c7099b196139f6e61a09.png";
 import accreditationsImg from "../../assets/cdfa0dd6c88e1a32f4db54520c3e02d140955b11.png";
+import careMedInBriefEn from "../../assets/InbreifCareMed.png";
+import careMedInBriefAr from "../../assets/InbreifCareMedAr.png";
+import numbersEn from "../../assets/NumbersEn.png";
+import numbersAr from "../../assets/NumbersAr.png";
+import accredsImg from "../../assets/accreds.jpeg";
 
 interface AboutSection {
   id: string;
@@ -17,24 +22,24 @@ interface AboutSection {
   video?: string; // YouTube video ID
 }
 
-const sections: AboutSection[] = [
+const getSections = (themeId: string, isRTL: boolean): AboutSection[] => [
   {
     id: "hospital",
     title: "Our Hospital",
     titleKey: "about.ourHospital",
-    video: "4VXy7_qn608",
+    video: themeId === "caremed" ? "HW7Od_8C3_I" : "4VXy7_qn608",
   },
   {
     id: "dna",
-    title: "Fakeeh Care DNA",
-    titleKey: "about.dna",
-    image: dnaImg,
+    title: themeId === "caremed" ? "CareMed InBrief" : "Fakeeh Care DNA",
+    titleKey: themeId === "caremed" ? "about.caremedInBrief" : "about.dna",
+    image: themeId === "caremed" ? (isRTL ? careMedInBriefAr : careMedInBriefEn) : dnaImg,
   },
   {
     id: "numbers",
-    title: "Fakeeh In Numbers",
+    title: themeId === "caremed" ? "CareMed In Numbers" : "Fakeeh In Numbers",
     titleKey: "about.numbers",
-    image: numbersImg,
+    image: themeId === "caremed" ? (isRTL ? numbersAr : numbersEn) : numbersImg,
   },
   {
     id: "services",
@@ -70,7 +75,7 @@ Support Services
     id: "accreditations",
     title: "Accreditations",
     titleKey: "about.accreditations",
-    image: accreditationsImg,
+    image: themeId === "caremed" ? accredsImg : accreditationsImg,
   },
   {
     id: "digital",
@@ -107,6 +112,7 @@ Smart Hospital Features
 export function AboutUs({ onClose }: { onClose: () => void }) {
   const { theme } = useTheme();
   const { t, isRTL } = useLocale();
+  const sections = getSections(theme.id, isRTL);
   const [activeSection, setActiveSection] = useState(sections[0].id);
   const [videoPlaying, setVideoPlaying] = useState(false);
 
@@ -270,7 +276,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                       lineHeight: "20px",
                     }}
                   >
-                    {t(section.titleKey)}
+                    {t(section.titleKey, theme.hospitalShortName)}
                   </span>
                 </button>
               );
@@ -300,7 +306,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                   flexShrink: 0,
                 }}
               >
-                {t(currentSection.titleKey)}
+                {t(currentSection.titleKey, theme.hospitalShortName)}
               </h3>
             )}
 

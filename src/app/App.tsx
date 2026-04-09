@@ -17,6 +17,7 @@ import { AppTour } from "./components/AppTour";
 import { CallScreen } from "./components/CallScreen";
 import { AutoCarousel } from "./components/AutoCarousel";
 import fakeehSymbol from "../assets/7b9b440667ca2ce8678111ec37e1fb104ae88026.png";
+import caremedicalicon from "../assets/caremedicalicon.png";
 import { HospitalConfigurator } from "./components/HospitalConfigurator";
 import { TasbihScreenSaver } from "./components/TasbihScreenSaver";
 import { FoodOrdering } from "./components/FoodOrdering";
@@ -284,9 +285,9 @@ function BedsideScreen() {
           objectPosition={theme.heroCropPosition}
           style={{ zIndex: 0 }}
         />
-        {/* Decorative Fakeeh symbol watermarks */}
+        {/* Decorative hospital symbol watermarks */}
         <img
-          src={fakeehSymbol}
+          src={theme.id === "caremed" ? caremedicalicon : fakeehSymbol}
           alt=""
           aria-hidden="true"
           className="pointer-events-none select-none absolute"
@@ -301,7 +302,7 @@ function BedsideScreen() {
           }}
         />
         <img
-          src={fakeehSymbol}
+          src={theme.id === "caremed" ? caremedicalicon : fakeehSymbol}
           alt=""
           aria-hidden="true"
           className="pointer-events-none select-none absolute"

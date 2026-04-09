@@ -89,7 +89,7 @@ interface CategoryConfig {
 
 /* ── App data with accurate branding ────────────────────────── */
 
-function getCategories(theme: any): Record<string, CategoryConfig> {
+function getCategories(theme: any, locale: string = "en"): Record<string, CategoryConfig> {
   return {
     Media: {
       label: "Media",
@@ -908,46 +908,72 @@ function getCategories(theme: any): Record<string, CategoryConfig> {
       label: "Education",
       labelKey: "launcher.education",
       icon: BookOpenText,
-      apps: [
-        ...[
-          { id: "edu-cesarean-recovery", name: "5 Steps to Recovery\nAfter Cesarean", nameKey: "edu.cesareanRecovery", type: "pdf" as const },
-          { id: "edu-pain-management", name: "Pain Management\nGuide", nameKey: "edu.painManagement", type: "pdf" as const },
-          { id: "edu-wound-care", name: "Wound Care\nInstructions", nameKey: "edu.woundCare", type: "pdf" as const },
-          { id: "edu-exercise-video", name: "Post-Op Exercises\n& Mobility", nameKey: "edu.exerciseVideo", type: "video" as const },
-          { id: "edu-medication-guide", name: "Your Medication\nSchedule", nameKey: "edu.medicationGuide", type: "pdf" as const },
-          { id: "edu-nutrition-video", name: "Nutrition Tips for\nFaster Healing", nameKey: "edu.nutritionVideo", type: "video" as const },
-          { id: "edu-discharge-checklist", name: "Discharge\nChecklist", nameKey: "edu.dischargeChecklist", type: "pdf" as const },
-          { id: "edu-infection-signs", name: "Signs of Infection\nWhat to Watch For", nameKey: "edu.infectionSigns", type: "pdf" as const },
-          { id: "edu-baby-care", name: "Newborn Care\nBasics", nameKey: "edu.babyCare", type: "video" as const },
-          { id: "edu-breathing-exercises", name: "Breathing Exercises\nfor Recovery", nameKey: "edu.breathingExercises", type: "video" as const },
-          { id: "edu-blood-clot", name: "Preventing Blood\nClots After Surgery", nameKey: "edu.bloodClot", type: "pdf" as const },
-          { id: "edu-emotional-health", name: "Emotional Health\nAfter Delivery", nameKey: "edu.emotionalHealth", type: "video" as const },
-          { id: "edu-scar-care", name: "Scar Care &\nHealing Timeline", nameKey: "edu.scarCare", type: "pdf" as const },
-          { id: "edu-sleep-tips", name: "Sleep Positions\nAfter C-Section", nameKey: "edu.sleepTips", type: "pdf" as const },
-          { id: "edu-pelvic-floor", name: "Pelvic Floor\nExercises", nameKey: "edu.pelvicFloor", type: "video" as const },
-          { id: "edu-when-to-call", name: "When to Call\nYour Doctor", nameKey: "edu.whenToCall", type: "pdf" as const },
-        ].map((item) => ({
-          id: item.id,
-          name: item.name,
-          nameKey: item.nameKey,
-          bg: "transparent",
-          mark: "",
-          textColor: "#333",
-          customRender: item.type === "pdf"
-            ? () => (
-              <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "linear-gradient(135deg, #E8453C 0%, #C62828 100%)" }}>
-                <FileText size={48} color="#fff" strokeWidth={1.5} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginTop: 6, letterSpacing: 0.5 }}>PDF</span>
-              </div>
-            )
-            : () => (
-              <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "linear-gradient(135deg, #334155 0%, #0F172A 100%)" }}>
-                <PlayCircle size={52} color="#fff" strokeWidth={1.5} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginTop: 6, letterSpacing: 0.5 }}>VIDEO</span>
+      apps: theme.id === "caremed"
+        ? /* ── Care Medical patient education from care.med.sa ── */
+          [
+            { id: "cm-edu-normal-birth", nameKey: "caremed.edu.normalBirth", viewId: "30715" },
+            { id: "cm-edu-depression", nameKey: "caremed.edu.depression", viewId: "30916" },
+            { id: "cm-edu-dementia", nameKey: "caremed.edu.dementia", viewId: "30917" },
+            { id: "cm-edu-elderly-exercise", nameKey: "caremed.edu.elderlyExercise", viewId: "30918" },
+            { id: "cm-edu-falls", nameKey: "caremed.edu.falls", viewId: "30919" },
+            { id: "cm-edu-general-health", nameKey: "caremed.edu.generalHealth", viewId: "30920" },
+            { id: "cm-edu-medications", nameKey: "caremed.edu.medications", viewId: "30921" },
+          ].map((item) => ({
+            id: item.id,
+            name: item.nameKey,
+            nameKey: item.nameKey,
+            bg: "transparent",
+            mark: "",
+            textColor: "#333",
+            url: `https://care.med.sa/${locale}/view/${item.viewId}`,
+            customRender: () => (
+              <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "linear-gradient(135deg, #1D234D 0%, #00A3C1 100%)" }}>
+                <BookOpenText size={48} color="#fff" strokeWidth={1.5} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginTop: 6, letterSpacing: 0.5 }}>ARTICLE</span>
               </div>
             ),
-        })),
-      ],
+          }))
+        : /* ── Default education items for other hospitals ── */
+          [
+            ...[
+              { id: "edu-cesarean-recovery", name: "5 Steps to Recovery\nAfter Cesarean", nameKey: "edu.cesareanRecovery", type: "pdf" as const },
+              { id: "edu-pain-management", name: "Pain Management\nGuide", nameKey: "edu.painManagement", type: "pdf" as const },
+              { id: "edu-wound-care", name: "Wound Care\nInstructions", nameKey: "edu.woundCare", type: "pdf" as const },
+              { id: "edu-exercise-video", name: "Post-Op Exercises\n& Mobility", nameKey: "edu.exerciseVideo", type: "video" as const },
+              { id: "edu-medication-guide", name: "Your Medication\nSchedule", nameKey: "edu.medicationGuide", type: "pdf" as const },
+              { id: "edu-nutrition-video", name: "Nutrition Tips for\nFaster Healing", nameKey: "edu.nutritionVideo", type: "video" as const },
+              { id: "edu-discharge-checklist", name: "Discharge\nChecklist", nameKey: "edu.dischargeChecklist", type: "pdf" as const },
+              { id: "edu-infection-signs", name: "Signs of Infection\nWhat to Watch For", nameKey: "edu.infectionSigns", type: "pdf" as const },
+              { id: "edu-baby-care", name: "Newborn Care\nBasics", nameKey: "edu.babyCare", type: "video" as const },
+              { id: "edu-breathing-exercises", name: "Breathing Exercises\nfor Recovery", nameKey: "edu.breathingExercises", type: "video" as const },
+              { id: "edu-blood-clot", name: "Preventing Blood\nClots After Surgery", nameKey: "edu.bloodClot", type: "pdf" as const },
+              { id: "edu-emotional-health", name: "Emotional Health\nAfter Delivery", nameKey: "edu.emotionalHealth", type: "video" as const },
+              { id: "edu-scar-care", name: "Scar Care &\nHealing Timeline", nameKey: "edu.scarCare", type: "pdf" as const },
+              { id: "edu-sleep-tips", name: "Sleep Positions\nAfter C-Section", nameKey: "edu.sleepTips", type: "pdf" as const },
+              { id: "edu-pelvic-floor", name: "Pelvic Floor\nExercises", nameKey: "edu.pelvicFloor", type: "video" as const },
+              { id: "edu-when-to-call", name: "When to Call\nYour Doctor", nameKey: "edu.whenToCall", type: "pdf" as const },
+            ].map((item) => ({
+              id: item.id,
+              name: item.name,
+              nameKey: item.nameKey,
+              bg: "transparent",
+              mark: "",
+              textColor: "#333",
+              customRender: item.type === "pdf"
+                ? () => (
+                  <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "linear-gradient(135deg, #E8453C 0%, #C62828 100%)" }}>
+                    <FileText size={48} color="#fff" strokeWidth={1.5} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginTop: 6, letterSpacing: 0.5 }}>PDF</span>
+                  </div>
+                )
+                : () => (
+                  <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "linear-gradient(135deg, #334155 0%, #0F172A 100%)" }}>
+                    <PlayCircle size={52} color="#fff" strokeWidth={1.5} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginTop: 6, letterSpacing: 0.5 }}>VIDEO</span>
+                  </div>
+                ),
+            })),
+          ],
     },
   };
 }
@@ -1027,9 +1053,9 @@ export function AppLauncher({
   onLaunchTool?: (toolId: string) => void;
 }) {
   const { theme } = useTheme();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [activeKey, setActiveKey] = useState(categoryKey);
-  const allCategories = getCategories(theme);
+  const allCategories = getCategories(theme, locale);
   const category = allCategories[activeKey];
   const [launchedApp, setLaunchedApp] = useState<string | null>(null);
   const [showPdf, setShowPdf] = useState(false);
