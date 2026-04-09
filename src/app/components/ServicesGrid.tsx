@@ -18,7 +18,7 @@ interface ShortcutItem {
 
 const getShortcutItems = (hospitalId: string): ShortcutItem[] => [
   { labelKey: "shortcut.whatsapp", icon: whatsappIcon, url: "" },
-  { labelKey: "shortcut.quran", icon: quranIcon, url: "" },
+  { labelKey: "shortcut.quran", icon: quranIcon, url: "https://app.quranflash.com/book/Medina1?ar#/reader/chapter/3" },
   hospitalId === "caremed"
     ? { labelKey: "shortcut.academy", icon: caremedicalicon, url: "https://care.classera.com/explore/courses?lang=en" }
     : { labelKey: "shortcut.mirror", icon: mirrorIcon, url: "" },

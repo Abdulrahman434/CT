@@ -321,6 +321,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#25D366",
           mark: "",
           textColor: "#fff",
+          url: "https://web.whatsapp.com/",
           customRender: () => (
             <img src={whatsappIcon} alt="WhatsApp" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
@@ -331,6 +332,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#fff",
           mark: "",
           textColor: "#333",
+          url: "https://www.facebook.com/",
           customRender: () => (
             <img src={facebookIcon} alt="Facebook" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
@@ -341,6 +343,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%)",
           mark: "",
           textColor: "#fff",
+          url: "https://www.instagram.com/",
           customRender: () => (
             <img src={instagramIcon} alt="Instagram" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
@@ -351,6 +354,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#000000",
           mark: "𝕏",
           textColor: "#ffffff",
+          url: "https://x.com/",
           markSize: 56,
           markWeight: 400,
         },
@@ -360,6 +364,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#fff",
           mark: "",
           textColor: "#333",
+          url: "https://www.snapchat.com/",
           customRender: () => (
             <img src={snapchatIcon} alt="Snapchat" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
@@ -370,6 +375,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#fff",
           mark: "",
           textColor: "#333",
+          url: "https://www.tiktok.com/",
           customRender: () => (
             <img src={tiktokIcon} alt="TikTok" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
