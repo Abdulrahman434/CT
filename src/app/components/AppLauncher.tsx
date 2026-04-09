@@ -304,6 +304,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#fff",
           mark: "القرآن",
           textColor: "#333",
+          url: "https://app.quranflash.com/book/Medina1?ar#/reader/chapter/3",
           customRender: () => (
             <img src={quranBookIcon} alt="Quran" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
