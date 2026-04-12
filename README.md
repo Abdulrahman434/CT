@@ -1,5 +1,5 @@
 
-  # Redesign Bedside Screen UI (Abdulrahman) (Copy)alnajjar
+  # CareInn Template
 
   ## Running the code
 
