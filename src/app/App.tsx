@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { ThemeProvider, useTheme, TYPE_SCALE, WEIGHT, SHADOW, SPACE } from "./components/ThemeContext";
 import { useLocale } from "./components/i18n";
 import { TopBar } from "./components/TopBar";
@@ -22,6 +22,8 @@ import { HospitalConfigurator } from "./components/HospitalConfigurator";
 import { TasbihScreenSaver } from "./components/TasbihScreenSaver";
 import { FoodOrdering } from "./components/FoodOrdering";
 import { OrderProvider } from "./components/OrderStore";
+import { AuthProvider, useAuth } from "./components/AuthContext";
+import { PasswordGate } from "./components/PasswordGate";
 import { HospitalBroadcast, SAMPLE_BROADCAST } from "./components/HospitalBroadcast";
 import type { BroadcastNotification } from "./components/HospitalBroadcast";
 import { MemoryGame } from "./components/games/MemoryGame";
@@ -60,10 +62,20 @@ function useScreenScale() {
 }
 
 function BedsideScreen() {
-  const { patientAdmitted, setPatientAdmitted, theme, darkMode } = useTheme();
+  const { patientAdmitted, setPatientAdmitted, theme, darkMode, switchConfig } = useTheme();
+  const { isFullAccess, lockedHospitalId } = useAuth();
   const { t, isRTL, dir, fontFamily } = useLocale();
   const scale = useScreenScale();
   const [openCategory, setOpenCategory] = useState<string | null>(null);
+
+  /* ── Auto-switch hospital config based on login password ── */
+  const hasAppliedConfig = useRef(false);
+  useEffect(() => {
+    if (lockedHospitalId && !hasAppliedConfig.current) {
+      switchConfig(lockedHospitalId);
+      hasAppliedConfig.current = true;
+    }
+  }, [lockedHospitalId, switchConfig]);
   const [showSurvey, setShowSurvey] = useState(false);
   const [showAboutUs, setShowAboutUs] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -320,7 +332,7 @@ function BedsideScreen() {
         {/* System Header */}
         <TopBar
           onFajrTap={() => setLayoutVersion((v) => (v === 3 ? 1 : 3))}
-          onDhuhrTap={() => setShowConfigurator(true)}
+          onDhuhrTap={isFullAccess ? () => setShowConfigurator(true) : undefined}
           onIshaTap={() => setShowTasbih(true)}
           onWeatherTap={() => setLayoutVersion((v) => (v === 1 ? 2 : 1))}
           onSettingsTap={() => setShowSettings(true)}
@@ -564,12 +576,26 @@ function BedsideScreen() {
   );
 }
 
-export default function App() {
+function AuthenticatedApp() {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <PasswordGate />;
+  }
+
   return (
     <ThemeProvider>
       <OrderProvider>
         <BedsideScreen />
       </OrderProvider>
     </ThemeProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AuthenticatedApp />
+    </AuthProvider>
   );
 }
