@@ -9,6 +9,7 @@ import quranIcon from "@/assets/5303963df7d14bbca33ccffa43f982a464344809.png";
 import mirrorIcon from "@/assets/0ab7565691ddb8401a21da44af1864e8f4058536.png";
 import podcastIcon from "@/assets/5513479d879a8c3fcdd1f6832dd30ce350c81789.png";
 import caremedicalicon from "@/assets/caremedicalicon.png";
+import dallahPodcastIcon from "@/assets/dallah-podcast.png";
 
 interface ShortcutItem {
   labelKey: string;
@@ -16,16 +17,25 @@ interface ShortcutItem {
   url: string;
 }
 
-const getShortcutItems = (hospitalId: string): ShortcutItem[] => [
-  { labelKey: "shortcut.whatsapp", icon: whatsappIcon, url: "" },
-  { labelKey: "shortcut.quran", icon: quranIcon, url: "https://app.quranflash.com/book/Medina1?ar#/reader/chapter/3" },
-  hospitalId === "caremed"
-    ? { labelKey: "shortcut.academy", icon: caremedicalicon, url: "https://care.classera.com/explore/courses?lang=en" }
-    : { labelKey: "shortcut.mirror", icon: mirrorIcon, url: "" },
-  hospitalId === "caremed"
-    ? { labelKey: "shortcut.podcast", icon: caremedicalicon, url: "https://www.youtube.com/playlist?list=PLbWY8VfHuoBSK7XeJJtutBSTeY_e7Kut3" }
-    : { labelKey: "shortcut.podcast", icon: podcastIcon, url: "https://www.youtube.com/watch?v=1WKyerFH34U&list=PL_JVZV-KlG7oFe-fUAMnbYsWyTU9k8ljF" },
-];
+const getShortcutItems = (hospitalId: string): ShortcutItem[] => {
+  let podcastData;
+  if (hospitalId === "caremed") {
+    podcastData = { labelKey: "shortcut.podcast", icon: caremedicalicon, url: "https://www.youtube.com/playlist?list=PLbWY8VfHuoBSK7XeJJtutBSTeY_e7Kut3" };
+  } else if (hospitalId === "dallah") {
+    podcastData = { labelKey: "shortcut.podcast", icon: dallahPodcastIcon, url: "https://www.youtube.com/watch?v=FTacFGIn8aA&list=PLptiCCjrXsQt5lExxVzvUx61Hd65Tsefg" };
+  } else {
+    podcastData = { labelKey: "shortcut.podcast", icon: podcastIcon, url: "https://www.youtube.com/watch?v=1WKyerFH34U&list=PL_JVZV-KlG7oFe-fUAMnbYsWyTU9k8ljF" };
+  }
+
+  return [
+    { labelKey: "shortcut.whatsapp", icon: whatsappIcon, url: "" },
+    { labelKey: "shortcut.quran", icon: quranIcon, url: "https://app.quranflash.com/book/Medina1?ar#/reader/chapter/3" },
+    hospitalId === "caremed"
+      ? { labelKey: "shortcut.academy", icon: caremedicalicon, url: "https://care.classera.com/explore/courses?lang=en" }
+      : { labelKey: "shortcut.mirror", icon: mirrorIcon, url: "" },
+    podcastData,
+  ];
+};
 
 /* ─── Hub item SVG icon paths from Figma ─── */
 const hubSvgIcons: Record<string, { paths: { d: string; clipId?: string }[]; viewBox?: string }> = {
