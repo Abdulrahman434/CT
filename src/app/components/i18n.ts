@@ -105,7 +105,7 @@ const translations: Record<string, TranslationEntry> = {
   /* ─── Service Items ─── */
   "service.consultation": { en: "Consultation", ar: "استشارة" },
   "service.housekeeping": { en: "Housekeeping", ar: "خدمة الغرف" },
-  "service.orderFood": { en: "Order Food", ar: "طلب الطعام" },
+  "service.orderFood": { en: "Meal Ordering", ar: "طلب الوجبات" },
   "service.call": { en: "Call", ar: "اتصال" },
   "service.survey": { en: "Survey", ar: "استبيان" },
   "service.shareFeedback": { en: "Your Feedback", ar: "رأيك يهمنا" },
@@ -291,13 +291,17 @@ const translations: Record<string, TranslationEntry> = {
 
   /* ─── About Us ─── */
   "about.title": { en: "About Us", ar: "عن المستشفى" },
+  "about.aboutDallah": { en: "About Dallah", ar: "عن دله" },
   "about.ourHospital": { en: "Our Hospital", ar: "المستشفى" },
   "about.dna": { en: "{0} DNA", ar: "{0} DNA" },
+  "about.dallahDna": { en: "Dallah DNA", ar: "دله DNA" },
   "about.caremedInBrief": { en: "CareMed InBrief", ar: "نبذة عن رعاية الطبية" },
   "about.numbers": { en: "{0} In Numbers", ar: "{0} في أرقام" },
   "about.services": { en: "Services", ar: "الخدمات" },
   "about.accreditations": { en: "Accreditations", ar: "الاعتمادات" },
+  "about.awards": { en: "Awards", ar: "الجوائز" },
   "about.digital": { en: "Digital Services", ar: "الخدمات الرقمية" },
+  "about.patientRights": { en: "Patient Rights", ar: "حقوق المريض" },
   "about.watchVideo": { en: "Watch Our Hospital Video", ar: "شاهد فيديو المستشفى" },
   "about.video": { en: "Video", ar: "فيديو" },
 

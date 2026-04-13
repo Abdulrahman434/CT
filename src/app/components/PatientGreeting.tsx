@@ -149,7 +149,7 @@ export function PatientGreeting({ onOpenAboutUs, onOpenTour, fillImage }: { onOp
 
       {/* Hospital image */}
       <div
-        className={`overflow-hidden mx-4 ${fillImage ? "flex-1 min-h-0" : "shrink-0"}`}
+        className={`overflow-hidden mx-4 mb-4 ${fillImage ? "flex-1 min-h-[120px]" : "shrink-0"}`}
         style={{
           height: fillImage ? undefined : SPACE[12],
           borderRadius: theme.radiusLg,
@@ -158,13 +158,13 @@ export function PatientGreeting({ onOpenAboutUs, onOpenTour, fillImage }: { onOp
       >
         <AutoCarousel
           images={theme.heroImageUrls}
-          objectPosition={theme.heroCropPosition}
-          objectFit="contain"
+          objectPosition={theme.heroCropPosition || "50% 15%"}
+          objectFit="cover"
         />
       </div>
 
       {/* About Us — pill below image */}
-      <div className="mx-4 mb-4 mt-3" style={{ position: "relative", zIndex: 10 }}>
+      <div className="mx-4 mb-4" style={{ position: "relative", zIndex: 10 }}>
         <button
           data-nav="true"
           className="flex items-center justify-center gap-2.5 w-full py-3 cursor-pointer transition-all duration-150"

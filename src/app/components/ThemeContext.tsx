@@ -516,7 +516,7 @@ import slhLogo from "../../assets/000bda4db783fe15cbd489d69579eb6e0e831a8a.png";
 import slhHero from "../../assets/e956f98cfa0d9f06f0dd2befe535fed91ed51d1e.png";
 
 import dallahLogo from "../../assets/DallahLogo.png";
-import dallahHero from "../../assets/Dallah-Hospital1.jpg";
+import dallahHero from "../../assets/dallah-hero-welcome.jpg";
 
 import caremedLogo from "../../assets/CareMedicalLogo.png";
 import caremedHero from "../../assets/CareMedicalHospital.jpeg";
@@ -588,6 +588,7 @@ export const DALLAH_CORE: HospitalCoreConfig = {
   fontFamilyAr: "'Almarai', sans-serif",
   logoUrl: dallahLogo,
   heroImageUrl: dallahHero,
+  heroCropPosition: "50% 45%",
   primary: "#004B8D",
   primaryDark: "#003A6E",
   primaryLight: "#E6EEF5",

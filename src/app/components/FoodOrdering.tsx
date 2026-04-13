@@ -547,7 +547,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
                 </div>
                 <div>
                   <h2 style={{ fontFamily, ...TEXT_STYLE.display, fontSize: "32px", color: "#fff", lineHeight: "36px" }}>
-                    {isRTL ? "طلب الطعام" : "Order Food"}
+                    {isRTL ? "طلب الوجبات" : "Meal Ordering"}
                   </h2>
                   <p style={{ fontFamily, ...TEXT_STYLE.caption, color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>
                     {isRTL ? "اختر وجبتك المفضلة" : "Choose your favorite meal"}

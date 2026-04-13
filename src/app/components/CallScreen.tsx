@@ -416,39 +416,41 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
           <div style={{ height: "1px", backgroundColor: theme.borderSubtle, margin: "0 16px" }} />
 
           {/* Display */}
-          <div className="shrink-0 flex items-center justify-center px-5 pt-5 pb-2" style={{ minHeight: "64px" }}>
+          <div className="shrink-0 flex items-center justify-center px-5 pt-6 pb-2" style={{ minHeight: "80px" }}>
             <span style={{
-              fontFamily: theme.fontFamilyMono, fontSize: "40px", fontWeight: WEIGHT.bold,
-              color: dialInput ? theme.textHeading : theme.textDisabled,
-              letterSpacing: "6px", textAlign: "center", minHeight: "48px",
+              fontFamily: theme.fontFamilyMono, fontSize: "48px", fontWeight: WEIGHT.extrabold,
+              color: dialInput ? theme.primary : theme.textDisabled,
+              letterSpacing: "10px", textAlign: "center", minHeight: "56px",
+              textShadow: dialInput ? "0 4px 20px " + theme.primary + "40" : "none",
+              transition: "all 0.3s ease",
             }}>
               {dialInput || "—"}
             </span>
           </div>
           {!dialInput && (
-            <p className="text-center" style={{ fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted, marginTop: "-2px", marginBottom: "4px" }}>
+            <p className="text-center" style={{ fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted, marginTop: "2px", marginBottom: "4px" }}>
               {t("call.keypadHint")}
             </p>
           )}
 
           {/* Keypad grid */}
-          <div dir="ltr" className="flex-1 flex flex-col justify-center items-center px-5 pb-3 gap-3">
+          <div dir="ltr" className="flex-1 flex flex-col justify-center items-center px-5 pb-6 gap-5">
             {[["1","2","3"],["4","5","6"],["7","8","9"]].map((row, ri) => (
-              <div key={ri} className="flex gap-3 justify-center">
+              <div key={ri} className="flex gap-5 justify-center">
                 {row.map((digit) => (
                   <KeypadButton key={digit} digit={digit} onPress={onKeypadPress} />
                 ))}
               </div>
             ))}
             {/* Bottom row: empty | 0 | delete */}
-            <div className="flex gap-3 justify-center">
-              <div style={{ width: "72px", height: "72px" }} />
+            <div className="flex gap-5 justify-center">
+              <div style={{ width: "88px", height: "88px" }} />
               <KeypadButton digit="0" onPress={onKeypadPress} />
               <button
                 onClick={onKeypadDelete}
-                className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+                className="flex items-center justify-center cursor-pointer transition-transform duration-300 active:scale-90"
                 style={{
-                  width: "72px", height: "72px", borderRadius: theme.radiusFull,
+                  width: "88px", height: "88px", borderRadius: theme.radiusFull,
                   backgroundColor: "transparent",
                   border: "none",
                   outline: "none",
@@ -456,26 +458,26 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                 }}
                 disabled={!dialInput}
               >
-                <Delete size={22} style={{ color: theme.textMuted }} />
+                <Delete size={32} style={{ color: theme.textMuted }} />
               </button>
             </div>
 
             {/* Call button */}
-            <div className="flex justify-center pt-2">
+            <div className="flex justify-center pt-6">
               <button
                 onClick={handleDialCustom}
-                className="flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
+                className="flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all duration-300"
                 style={{
-                  width: "232px", height: "52px", borderRadius: theme.radiusFull,
+                  width: "304px", height: "68px", borderRadius: theme.radiusFull,
                   backgroundColor: dialInput ? "#22C55E" : theme.borderSubtle,
                   border: "none", outline: "none",
                   opacity: dialInput ? 1 : 0.5,
-                  boxShadow: dialInput ? "0 4px 16px rgba(34,197,94,0.3)" : "none",
+                  boxShadow: dialInput ? "0 8px 32px rgba(34,197,94,0.4)" : "none",
                 }}
                 disabled={!dialInput}
               >
-                <Phone size={20} color="#fff" />
-                <span style={{ fontFamily, ...TEXT_STYLE.buttonSm, color: "#fff" }}>{t("call.title")}</span>
+                <Phone size={24} color="#fff" />
+                <span style={{ fontFamily, ...TEXT_STYLE.buttonSm, fontSize: "18px", color: "#fff" }}>{t("call.title")}</span>
               </button>
             </div>
           </div>
@@ -778,24 +780,30 @@ function EmptyState({ message }: { message: string }) {
 function KeypadButton({ digit, onPress }: { digit: string; onPress: (digit: string) => void }) {
   const { theme } = useTheme();
   const [pressed, setPressed] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  
   return (
     <button
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
+      onPointerLeave={() => { setPressed(false); setHovered(false); }}
+      onPointerEnter={() => setHovered(true)}
       onClick={() => onPress(digit)}
-      className="flex items-center justify-center cursor-pointer transition-all"
+      className="flex items-center justify-center cursor-pointer transition-all duration-300"
       style={{
-        width: "72px", height: "72px", borderRadius: theme.radiusFull,
-        backgroundColor: pressed ? theme.primary : theme.background,
-        border: `1.5px solid ${pressed ? theme.primary : theme.borderDefault}`,
+        width: "88px", height: "88px", borderRadius: theme.radiusFull,
+        backgroundColor: pressed ? theme.primary : hovered ? theme.primarySubtle : theme.background,
+        border: `1.5px solid ${hovered || pressed ? theme.primary : theme.borderSubtle}`,
         outline: "none",
-        transform: pressed ? "scale(0.92)" : "scale(1)",
+        boxShadow: pressed ? "inset 0 4px 12px rgba(0,0,0,0.15)" : hovered ? "0 12px 32px " + theme.primary + "40" : "0 4px 16px rgba(0,0,0,0.06)",
+        transform: pressed ? "scale(0.92)" : hovered ? "scale(1.05)" : "scale(1)",
+        zIndex: hovered ? 10 : 1,
       }}
     >
       <span style={{
-        fontFamily: theme.fontFamilyMono, fontSize: "32px", fontWeight: WEIGHT.semibold,
+        fontFamily: theme.fontFamilyMono, fontSize: "42px", fontWeight: WEIGHT.extrabold,
         color: pressed ? "#fff" : theme.textHeading,
+        transition: "color 0.2s",
       }}>
         {digit}
       </span>

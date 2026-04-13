@@ -12,6 +12,9 @@ import careMedInBriefAr from "../../assets/InbreifCareMedAr.png";
 import numbersEn from "../../assets/NumbersEn.png";
 import numbersAr from "../../assets/NumbersAr.png";
 import accredsImg from "../../assets/accreds.jpeg";
+import dallahDna from "../../assets/dallah-dna.png";
+import dallahAwardsAr from "../../assets/dallah-awards-ar.png";
+import dallahAwardsEn from "../../assets/dallah-awards-en.png";
 
 interface AboutSection {
   id: string;
@@ -22,24 +25,85 @@ interface AboutSection {
   video?: string; // YouTube video ID
 }
 
+const dallahPatientRightsEn = `• Receive a copy of the Patient and Family Bill of Rights and Responsibilities from the Reception, Admission Office, or Nursing Staff. If, for any reason, you cannot understand it, please contact the Customer Service Officer for help on Dallah Hospital- Namar Telephone 011/ 8275555, extension 1717, 1710 ، Dallah Hospital - Alnakheel telephone 011/299-5555, extension 3399, 4841, and 5735
+• Receive comprehensive care given without discrimination by competent personnel who respect your personal values and beliefs as per hospital rules and regulations and Saudi laws.
+• Expect emergency procedure to be carried out according to the medical priority of the case and without unnecessary delay.
+• Have appropriate assessment and management of pain.
+• Participate in decisions involving your health care.
+• Be provided with information upon discharge, of your continuing health care requirements and how to meet them.
+• Receive written general consent when you come for treatment for the first time.
+• Sign the necessary informed consent after giving all necessary information explained as interpreted prior to any surgery or invasive procedure, blood or blood components transfusion or anesthesia or procedural sedation or high risk procedures and treatments.
+• The Unique needs of dying patient will be recognized, respected and addressed in the care process without contradicting with the hospital rules and regulations and Saudi laws.
+• Know the identity of your physician, nurses and other health care giver.
+• You can seek a second opinion without fear to compromise the service provided to you. (As per the hospital financial rules and regulations) and Customer Services on extension Dallah Hospital- Namar 1717, 1710 ، Dallah Hospital - Alnakheel extension 3399, 4841, will initiate the second opinion procedure as per hospital rules and regulations.
+• Receive complete and current information from your treating doctor "once final diagnosis is defined" regarding the diagnosis and the medical condition, consent, planned care and treatment, the outcome of care, any anticipated outcomes of care and treatment, changes in your health status, potential benefits and drawbacks of proposed treatment, likelihood of successful treatment, possible problems related to recovery and possible results of non-treatment in terms that you can understand (Interpreter is available, if needed).
+• Refuse / discontinue the treatment to the extent permitted by law and to be informed about the potential consequences and responsibilities related to such decisions and you will be asked to sign a form prepared for that purpose. You will be informed about the available care and treatment alternatives.
+• Receive upon your request an appropriate explanation of the cost of your treatment.
+• Voice complaint regarding your care through the Customer Service Office, Ext. Dallah Hospital- Namar 1717, 1710 ، Dallah Hospital - Alnakheel 4844, 3399, or through the Suggestion Boxes. The result of the investigation will be relayed to you by Complaint unit as soon as possible on extension Dallah Hospital- Namar 1717، Dallah Hospital - Alnakheel 5533.
+• Know, upon your request, other available sources of care for your condition and other alternative treatment inside or outside the hospital.
+• Protect your privacy while receiving services.
+• Have your medical record confidentially protected from loss or misuse and read only by individuals involved in your care or by individuals authorized by law or third-party contractual agreement.
+• Be provided with safe environment surrounding your care within the framework established by the hospital.
+• Be provided with a safety mechanism for your valuables from loss or theft, when needed.
+• Be protected from physical, verbal and psychological assault.
+• Be informed on how to seek assistance when you have any concerns about your condition.
+• We do support your decision if you decide to donate organ or tissue although we don't provide this service in Dallah Hospital. For more information, you can call the Saudi Center for Organ and Tissue Transplantation on Toll Free 800-124-5500 and land line 011/ 445-1100.`;
+
+const dallahPatientRightsAr = `سيقوم مكتب الاستقبال أو طاقم التمريض بتقديم نسخة مكتوبة من وثيقة حقوق وواجبات المرضى لكل مراجع. وفي حال كانت لديكم أي استفسارات بشأن الوثيقة، يرجى الاتصال بقسم خدمة العملاء: دلّه النخيل 2995555/011 التحويلات 5735 / 4841 / 3399 | دلّه نمار 8275555 / 011 التحويلات 1717 /1710.
+
+تلتزم دلّه الصحية بضمان الحقوق التالية لجميع المرضى:
+
+• الحصول على رعاية طبية بواسطة أطباء مؤهلين دون أي تمييز ومع ضمان مراعاة المعتقدات والقيم الشخصية بما لا يتعارض مع لوائح المستشفى والأنظمة المعمول بها في المملكة العربية السعودية.
+• الحصول على خدمات الرعاية العاجلة في الحالات الطارئة دون تأخير بحسب الأولويات التي يحددها الطبيب.
+• تقييم وعلاج وتخفيف الألم بالطرق العلاجية المتعارف عليها.
+• المشاركة في اتخاذ القرارات المتعلقة بالخطة العلاجية بعد مناقشتها مع الطبيب المعالج.
+• عند الخروج من المستشفى، تقديم إرشادات الخروج والتي تشمل الخطة العلاجية والإرشادات الطبية التي توضح مراحل العلاج خارج المستشفى.
+• توقيع إقرار مكتوب للموافقة العامة على العلاج بالمستشفى في أول زيارة.
+• طلب موافقة كتابية مسبقة قبل إجراء أي عمليات جراحية أو جراحات مناظير أو عملية نقل للدم أو مكوناته أو تخدير أو عمليات تستلزم استخدام أدوية مهدئة أو مسكنة أو إجراءات تنطوي على مخاطر خاصة أو أية إجراءات أخرى تتطلب ذلك.
+• التعامل بشكل إنساني وأخلاقي واحترام الاحتياجات الاستثنائية للمرضى على فراش الموت وفقاً لما تسمح به إمكانيات المستشفى وبما لا يتعارض مع اللوائح التنظيمية للمستشفى والأنظمة السارية في المملكة العربية السعودية.
+• تعريف المرضى بهوية وتخصص الطبيب وطاقم التمريض وجميع المشاركين في العلاج.
+• طلب مشورة طبية ثانية للحالة المرضية دون أي تأثير على مستوى الخدمة مع الأخذ بالاعتبار قواعد وأسعار الخدمات في المستشفى، وذلك من خلال الاتصال بخدمة العملاء على التحويلات: دلّه النخيل 5735 / 4841 / 3399 | دلّه نمار 1717 /1710.
+• الحصول على معلومات من الطبيب المعالج بشأن الحالة المرضية بمجرد تشخيصها، وكذلك خطة العلاج المقترحة، واحتمالات النجاح، وأي تغيرات قد تطرأ على الحالة الصحية وسبب هذه التغيرات، والعلاجات البديلة المتوفرة، والمشاكل المتوقعة أثناء العلاج، والنتائج المتوقعة في حالة رفض العلاج. كما يحق للمرضى الحصول على مترجم في حال شكلت اللغة عائقاً يحول دون فهم تفاصيل العلاج.
+• يحق للمرضى رفض أو إيقاف العلاج بما لا يتعارض مع الأنظمة المعمول بها، وسيتم إعلامهم بالتبعات الصحية والمسؤوليات المترتبة على هذا القرار وطلب توقيع إقرار خطي معد لهذا الغرض.
+• مناقشة تكاليف العلاج مع الأشخاص المعنيين.
+• يمكن للمرضى تقديم شكوى متعلقة بأي تقصير في الرعاية الطبية من خلال مكتب خدمات العملاء، تحويلة رقم (النخيل: 4841 / 3399، نمار: 1717 /1710). يمكن وضع الشكوى في صندوق الشكاوى، وسيتم إبلاغ المريض بنتيجة التحقيق عن طريق وحدة الشكاوى؛ تحويلة النخيل: 5533، نمار: 1717.
+• طلب معرفة الأماكن الأخرى التي توفر العلاج المطلوب للحالة المرضية والبدائل المتاحة داخل وخارج المستشفى.
+• الحفاظ على أعلى درجات الخصوصية أثناء تلقي الخدمة الطبية.
+• الحفاظ على سرية معلومات المرضى، بما في ذلك الملف الطبي وحمايته من الضياع وسوء الاستعمال مع ضمان توفيره فقط للأشخاص المعنيين بالعلاج أو الجهات الرسمية المصرح لها بذلك أو الجهة المتعاقدة مع المستشفى لأغراض العلاج في حال تم طلب ذلك وفقاً للعقد الموقع.
+• توفير بيئة آمنة من الأخطار أثناء العلاج.
+• الحفاظ على المقتنيات الشخصية من السرقة والضياع وفقاً لأنظمة المستشفى.
+• حماية المرضى من أي اعتداء جسدي أو نفسي أو لفظي.
+• يحق للمرضى طلب المساعدة ومعرفة جميع التفاصيل المتعلقة بالحالة المرضية.
+• في حال قرر المرضى التبرع بالأعضاء، يقدم المستشفى الدعم في مجال التواصل مع الجهة المسؤولة عن نقل الأعضاء باعتبار أن هذه الخدمة غير متوفرة. للمزيد من المعلومات، يرجى الاتصال بالمركز السعودي لنقل الأعضاء عبر رقم الهاتف المجاني: 8001245500 / 0114451100.`;
+
+const dallahAccreditationsText = `• Saudi Central Board for Accreditation of Healthcare Institutions (CBAHI)
+• Joint Commission International (JCI)
+• International Organization for Standardization (ISO)
+• Surgical Review Corporation (SRC)
+• College of American Pathologists (CAP)
+• Global Healthcare Accreditation (GHA)
+• ISO 22000 (Food Safety), ISO 27000 (Information Security)
+• Age-Friendly Health Facilities Accreditation – Ministry of Health`;
+
 const getSections = (themeId: string, isRTL: boolean): AboutSection[] => [
   {
     id: "hospital",
-    title: "Our Hospital",
-    titleKey: "about.ourHospital",
-    video: themeId === "caremed" ? "HW7Od_8C3_I" : "4VXy7_qn608",
+    title: themeId === "dallah" ? "About Dallah" : "Our Hospital",
+    titleKey: themeId === "dallah" ? "about.aboutDallah" : "about.ourHospital",
+    video: themeId === "caremed" ? "HW7Od_8C3_I" : themeId === "dallah" ? "JPgxKaOQf3s" : "4VXy7_qn608",
   },
   {
     id: "dna",
-    title: themeId === "caremed" ? "CareMed InBrief" : "Fakeeh Care DNA",
-    titleKey: themeId === "caremed" ? "about.caremedInBrief" : "about.dna",
-    image: themeId === "caremed" ? (isRTL ? careMedInBriefAr : careMedInBriefEn) : dnaImg,
+    title: themeId === "caremed" ? "CareMed InBrief" : themeId === "dallah" ? "Dallah DNA" : "Fakeeh Care DNA",
+    titleKey: themeId === "caremed" ? "about.caremedInBrief" : themeId === "dallah" ? "about.dallahDna" : "about.dna",
+    image: themeId === "dallah" ? dallahDna : themeId === "caremed" ? (isRTL ? careMedInBriefAr : careMedInBriefEn) : dnaImg,
   },
   {
     id: "numbers",
-    title: themeId === "caremed" ? "CareMed In Numbers" : "Fakeeh In Numbers",
-    titleKey: "about.numbers",
-    image: themeId === "caremed" ? (isRTL ? numbersAr : numbersEn) : numbersImg,
+    title: themeId === "caremed" ? "CareMed In Numbers" : themeId === "dallah" ? "Accreditations" : "Fakeeh In Numbers",
+    titleKey: themeId === "dallah" ? "about.accreditations" : "about.numbers",
+    image: themeId === "dallah" ? undefined : themeId === "caremed" ? (isRTL ? numbersAr : numbersEn) : numbersImg,
+    content: themeId === "dallah" ? dallahAccreditationsText : undefined,
   },
   {
     id: "services",
@@ -73,15 +137,15 @@ Support Services
   },
   {
     id: "accreditations",
-    title: "Accreditations",
-    titleKey: "about.accreditations",
-    image: themeId === "caremed" ? accredsImg : accreditationsImg,
+    title: themeId === "dallah" ? "Awards" : "Accreditations",
+    titleKey: themeId === "dallah" ? "about.awards" : "about.accreditations",
+    image: themeId === "dallah" ? (isRTL ? dallahAwardsAr : dallahAwardsEn) : themeId === "caremed" ? accredsImg : accreditationsImg,
   },
   {
     id: "digital",
-    title: "Digital Services",
-    titleKey: "about.digital",
-    content: `Connected Care at Your Fingertips
+    title: themeId === "dallah" ? "Patient Rights" : "Digital Services",
+    titleKey: themeId === "dallah" ? "about.patientRights" : "about.digital",
+    content: themeId === "dallah" ? (isRTL ? dallahPatientRightsAr : dallahPatientRightsEn) : `Connected Care at Your Fingertips
 
 Patient Portal
 • View lab results & medical records
@@ -298,10 +362,10 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
               <h3
                 style={{
                   fontFamily: theme.fontFamily,
-                  fontSize: TYPE_SCALE["3xl"],
+                  fontSize: TYPE_SCALE["2xl"],
                   fontWeight: WEIGHT.bold,
                   color: theme.primary,
-                  marginBottom: "20px",
+                  marginBottom: "24px",
                   letterSpacing: "-0.5px",
                   flexShrink: 0,
                 }}
@@ -316,7 +380,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                 <img
                   src={currentSection.image}
                   alt={currentSection.title}
-                  className="max-w-full max-h-full object-contain"
+                  className="w-full h-full object-contain"
                 />
               </div>
             )}
