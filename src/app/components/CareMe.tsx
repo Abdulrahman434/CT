@@ -187,7 +187,6 @@ function TimelineSlide({
                   height: "50%",
                   width: "2px",
                   backgroundColor: items[i - 1].done ? theme.success : theme.borderDefault,
-                  borderRadius: "2px",
                 }}
               />
             )}
@@ -201,7 +200,6 @@ function TimelineSlide({
                   height: "50%",
                   width: "2px",
                   backgroundColor: step.done ? theme.success : theme.borderDefault,
-                  borderRadius: "2px",
                 }}
               />
             )}
@@ -222,7 +220,7 @@ function TimelineSlide({
             </div>
             {/* Content row */}
             <div
-              className="flex-1 flex items-center justify-between px-3 py-2.5"
+              className="flex-1 flex items-center justify-between px-3 py-4"
               style={{
                 borderRadius: theme.radiusLg,
                 backgroundColor: step.active ? `${theme.primarySubtle}` : "transparent",
@@ -261,11 +259,11 @@ function TimelineSlide({
 function DietSlide({ theme }: { theme: any }) {
   const { t } = useLocale();
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       {dietCodes.map((d) => (
         <div
           key={d.code}
-          className="flex items-center gap-3 px-4 py-4"
+          className="flex items-center gap-3 px-4 py-3"
           style={{ backgroundColor: theme.primarySubtle, border: `1px solid ${theme.primarySubtle}`, borderRadius: theme.radiusLg }}
         >
           <div
@@ -285,11 +283,11 @@ function AllergySlide() {
   const { theme } = useTheme();
   const { t } = useLocale();
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       {allergies.map((a) => (
         <div
           key={a.nameKey}
-          className="flex items-center gap-4 px-4 py-4"
+          className="flex items-center gap-4 px-4 py-3"
           style={{ backgroundColor: theme.errorSubtle, border: `1px solid ${theme.errorSubtle}`, borderRadius: theme.radiusLg }}
         >
           <div className="w-9 h-9 flex items-center justify-center shrink-0" style={{ backgroundColor: theme.errorSubtle, borderRadius: theme.radiusMd }}>
