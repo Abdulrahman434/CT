@@ -304,8 +304,9 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
         src={theme.heroImageUrl}
         alt="" aria-hidden
         className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
-        style={{ opacity: 0.06, mixBlendMode: "luminosity" }}
+        style={{ opacity: 0.1, mixBlendMode: "luminosity" }}
       />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: "rgba(0,0,0,0.15)", backdropFilter: "blur(6px)" }} />
 
       {/* ── Header ── */}
       <div className="shrink-0 flex items-center justify-between px-10 pt-8 pb-4 relative z-10">
@@ -374,7 +375,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* ── 3-Column Content ── */}
-      <div className="min-h-0 flex px-10 pb-10 relative z-10" style={{ flex: "1 1 0", maxHeight: "calc(100% - 200px)", gap: "64px" }}>
+      <div className="min-h-0 flex px-10 pb-24 relative z-10" style={{ flex: "1 1 0", maxHeight: "calc(100% - 240px)", gap: "64px" }}>
 
         {/* Column 1 — Directory */}
         <div className="flex flex-col min-w-0 min-h-0 overflow-hidden" style={{
@@ -434,7 +435,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
           )}
 
           {/* Keypad grid */}
-          <div dir="ltr" className="flex-1 flex flex-col justify-center items-center px-5 pb-6 gap-5">
+          <div dir="ltr" className="flex-1 flex flex-col justify-center items-center px-5 pb-8 gap-5">
             {[["1","2","3"],["4","5","6"],["7","8","9"]].map((row, ri) => (
               <div key={ri} className="flex gap-5 justify-center">
                 {row.map((digit) => (
