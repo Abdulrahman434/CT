@@ -651,6 +651,9 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
   const ExtIcon = ext.icon;
+  
+  const isHighlighted = ext.id === "nurse";
+  const isFilled = isHighlighted ? !pressed : pressed;
 
   return (
     <button
@@ -663,12 +666,12 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
         aspectRatio: "1 / 1",
         padding: "16px 12px",
         borderRadius: theme.radiusLg,
-        backgroundColor: pressed ? theme.primary : theme.background,
-        border: `2px solid ${pressed ? "transparent" : theme.borderSubtle}`,
+        backgroundColor: isFilled ? theme.primary : theme.background,
+        border: `2px solid ${isFilled ? "transparent" : theme.borderSubtle}`,
         outline: "none",
         textAlign: "center",
         transform: pressed ? "scale(0.95)" : "scale(1)",
-        boxShadow: pressed ? "none" : "0 4px 12px rgba(0,0,0,0.05)",
+        boxShadow: pressed ? "none" : (isHighlighted ? `0 4px 16px ${theme.primary}40` : "0 4px 12px rgba(0,0,0,0.05)"),
         position: "relative",
         overflow: "hidden",
       }}
@@ -676,16 +679,16 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
       {/* Department icon */}
       <div className="flex items-center justify-center" style={{
         width: "56px", height: "56px", borderRadius: theme.radiusLg,
-        backgroundColor: pressed ? "rgba(255,255,255,0.2)" : theme.primaryLight,
+        backgroundColor: isFilled ? "rgba(255,255,255,0.2)" : theme.primaryLight,
         transition: "all 0.2s",
       }}>
-        <ExtIcon size={32} color={pressed ? theme.textInverse : theme.primary} strokeWidth={2} />
+        <ExtIcon size={32} color={isFilled ? theme.textInverse : theme.primary} strokeWidth={2} />
       </div>
 
       {/* Name */}
       <p style={{
         fontFamily, fontSize: "20px", fontWeight: WEIGHT.semibold,
-        color: pressed ? theme.textInverse : theme.textHeading, margin: 0, lineHeight: "1.2",
+        color: isFilled ? theme.textInverse : theme.textHeading, margin: 0, lineHeight: "1.2",
       }}>
         {t(ext.nameKey)}
       </p>
@@ -693,7 +696,7 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
       {/* Extension number */}
       <span style={{
         fontFamily: theme.fontFamilyMono, fontSize: "18px", fontWeight: WEIGHT.medium,
-        color: pressed ? "rgba(255,255,255,0.8)" : theme.textMuted,
+        color: isFilled ? "rgba(255,255,255,0.8)" : theme.textMuted,
       }}>
         {ext.ext}
       </span>
