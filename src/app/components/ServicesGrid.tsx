@@ -139,6 +139,27 @@ function HubCard({
   const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.12)");
   const [pressed, setPressed] = useState(false);
 
+  const handleTap = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const t = ctx.currentTime;
+        const gain = ctx.createGain();
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.04, t + 0.01);
+        gain.gain.linearRampToValueAtTime(0, t + 0.04);
+        const osc = ctx.createOscillator();
+        osc.frequency.value = 600;
+        osc.connect(gain);
+        osc.start(t);
+        osc.stop(t + 0.04);
+      }
+    } catch(e) {}
+    onTap();
+  };
+
   const iconBoxSize = compact ? "48px" : "72px";
   const iconRadius = compact ? theme.radiusMd : theme.radiusLg;
 
@@ -148,7 +169,7 @@ function HubCard({
       onPointerDown={(e) => { onPointerDown(e); setPressed(true); }}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
-      onClick={onTap}
+      onClick={handleTap}
       className={`relative overflow-hidden flex flex-col items-center justify-center ${compact ? "gap-1.5" : "gap-3"} transition-all duration-150 cursor-pointer h-full w-full`}
       style={{
         backgroundColor: pressed ? theme.primary : contained ? theme.surfaceElevated : theme.surface,

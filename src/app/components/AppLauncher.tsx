@@ -98,7 +98,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
       apps: [
         {
           id: "iptv",
-          name: "Live TV",
+          name: locale === "ar" ? "البث المباشر" : "Live TV",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -108,7 +108,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "youtube",
-          name: "YouTube",
+          name: locale === "ar" ? "يوتيوب" : "YouTube",
           bg: "#fff",
           mark: "",
           textColor: "#fff",
@@ -119,7 +119,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "netflix",
-          name: "Netflix",
+          name: locale === "ar" ? "نتفليكس" : "Netflix",
           bg: "#000",
           mark: "",
           textColor: "#E50914",
@@ -130,7 +130,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "primevideo",
-          name: "Prime Video",
+          name: locale === "ar" ? "برايم فيديو" : "Prime Video",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -141,7 +141,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "mbc",
-          name: "Shahid",
+          name: locale === "ar" ? "شاهد" : "Shahid",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -152,7 +152,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "thamanyah",
-          name: "ثمانيه",
+          name: locale === "ar" ? "ثمانية" : "Thmanyah",
           bg: "#000",
           mark: "",
           textColor: "#fff",
@@ -174,7 +174,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
       apps: [
         {
           id: "because-you-are-allah",
-          name: "Because You Are Allah (AR)",
+          name: locale === "ar" ? "لأنك الله (عربي)" : "Because You Are Allah (AR)",
           bg: "#fff",
           mark: "لأنك الله",
           textColor: "#333",
@@ -188,7 +188,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "en-because-you-are-allah",
-          name: "Because You Are Allah (EN)",
+          name: locale === "ar" ? "لأنك الله (إنجليزي)" : "Because You Are Allah (EN)",
           bg: "#fff",
           mark: "BYAA",
           textColor: "#333",
@@ -202,7 +202,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "dont-be-sad",
-          name: "Don't Be Sad (AR)",
+          name: locale === "ar" ? "لا تحزن (عربي)" : "Don't Be Sad (AR)",
           bg: "#fff",
           mark: "لا تحزن",
           textColor: "#333",
@@ -216,7 +216,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "the-subtle-art",
-          name: "Subtle Art (EN)",
+          name: locale === "ar" ? "فن اللامبالاة (إنجليزي)" : "Subtle Art (EN)",
           bg: "#fff",
           mark: "SA",
           textColor: "#333",
@@ -230,7 +230,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "why-we-sleep",
-          name: "Why We Sleep (EN)",
+          name: locale === "ar" ? "لماذا ننام (إنجليزي)" : "Why We Sleep (EN)",
           bg: "#fff",
           mark: "WWS",
           textColor: "#333",
@@ -244,7 +244,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "amal-kubra",
-          name: "Amal Kubra (AR)",
+          name: locale === "ar" ? "الأعمال الكبرى (عربي)" : "Amal Kubra (AR)",
           bg: "#fff",
           mark: "الأعمال الكبرى",
           textColor: "#333",
@@ -258,7 +258,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "fan-all-la-mubalah",
-          name: "فن اللامبالاة (AR)",
+          name: locale === "ar" ? "فن اللامبالاة (عربي)" : "فن اللامبالاة (AR)",
           bg: "#fff",
           mark: "فن اللامبالاة",
           textColor: "#333",
@@ -272,7 +272,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "great-expectations",
-          name: "Great Expectations (EN)",
+          name: locale === "ar" ? "آمال كبرى (إنجليزي)" : "Great Expectations (EN)",
           bg: "#fff",
           mark: "GE",
           textColor: "#333",
@@ -286,7 +286,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "la-tahzan-pdf",
-          name: "La Tahzan Guide (AR)",
+          name: locale === "ar" ? "دليل لا تحزن (عربي)" : "La Tahzan Guide (AR)",
           bg: "#fff",
           mark: "دليل لا تحزن",
           textColor: "#333",
@@ -300,7 +300,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "quran-app",
-          name: "Quran Explorer",
+          name: locale === "ar" ? "القرآن الكريم" : "Quran Explorer",
           bg: "#fff",
           mark: "القرآن",
           textColor: "#333",
@@ -318,7 +318,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
       apps: [
         {
           id: "whatsapp",
-          name: "WhatsApp",
+          name: locale === "ar" ? "واتس آب" : "WhatsApp",
           bg: "#25D366",
           mark: "",
           textColor: "#fff",
@@ -329,7 +329,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "facebook",
-          name: "Facebook",
+          name: locale === "ar" ? "فيسبوك" : "Facebook",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -340,7 +340,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "instagram",
-          name: "Instagram",
+          name: locale === "ar" ? "إنستغرام" : "Instagram",
           bg: "radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%)",
           mark: "",
           textColor: "#fff",
@@ -351,7 +351,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "x",
-          name: "X",
+          name: locale === "ar" ? "إكس (تويتر)" : "X",
           bg: "#000000",
           mark: "𝕏",
           textColor: "#ffffff",
@@ -361,7 +361,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "snapchat",
-          name: "Snapchat",
+          name: locale === "ar" ? "سناب شات" : "Snapchat",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -372,7 +372,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "tiktok",
-          name: "TikTok",
+          name: locale === "ar" ? "تيك توك" : "TikTok",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -390,7 +390,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
       apps: [
         {
           id: "memory",
-          name: "Memory Match",
+          name: locale === "ar" ? "لعبة الذاكرة" : "Memory Match",
           bg: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
           mark: "",
           textColor: "#fff",
@@ -434,7 +434,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "tictactoe",
-          name: "Tic-Tac-Toe",
+          name: locale === "ar" ? "إكس-أو" : "Tic-Tac-Toe",
           bg: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
           mark: "",
           textColor: "#fff",
@@ -461,7 +461,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "puzzle",
-          name: "Sliding Puzzle",
+          name: locale === "ar" ? "لعبة الألغاز" : "Sliding Puzzle",
           bg: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
           mark: "",
           textColor: "#fff",
@@ -494,7 +494,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "colormatch",
-          name: "Color Match",
+          name: locale === "ar" ? "تطابق الألوان" : "Color Match",
           bg: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
           mark: "",
           textColor: "#fff",
@@ -512,7 +512,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "patternmemory",
-          name: "Pattern Memory",
+          name: locale === "ar" ? "ذاكرة الأنماط" : "Pattern Memory",
           bg: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
           mark: "",
           textColor: "#fff",
@@ -549,7 +549,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "emojimatch",
-          name: "Emoji Match",
+          name: locale === "ar" ? "تطابق الرموز" : "Emoji Match",
           bg: "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
           mark: "",
           textColor: "#fff",
@@ -587,7 +587,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
       apps: [
         {
           id: "teams",
-          name: "Teams",
+          name: locale === "ar" ? "تيمز" : "Teams",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -597,7 +597,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "webex",
-          name: "Webex",
+          name: locale === "ar" ? "ويبيكس" : "Webex",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -607,7 +607,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "skype",
-          name: "Skype",
+          name: locale === "ar" ? "سكايب" : "Skype",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -617,7 +617,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "zoom",
-          name: "Zoom",
+          name: locale === "ar" ? "زوم" : "Zoom",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -627,7 +627,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "meet",
-          name: "Google Meet",
+          name: locale === "ar" ? "جوجل ميت" : "Google Meet",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -644,7 +644,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
       apps: [
         {
           id: "chrome",
-          name: "Chrome",
+          name: locale === "ar" ? "كروم" : "Chrome",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -654,7 +654,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "saudigazette",
-          name: "Saudi Gazette",
+          name: locale === "ar" ? "سعودي جازيت" : "Saudi Gazette",
           bg: "#fff",
           mark: "",
           textColor: "#fff",
@@ -664,7 +664,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "bbc",
-          name: "BBC News",
+          name: locale === "ar" ? "بي بي سي الإخبارية" : "BBC News",
           bg: "#1a1a1a",
           mark: "",
           textColor: "#fff",
@@ -683,7 +683,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "cnn",
-          name: "CNN",
+          name: locale === "ar" ? "سي إن إن" : "CNN",
           bg: "#CC0000",
           mark: "CNN",
           textColor: "#fff",
@@ -692,7 +692,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "okaz",
-          name: "Okaz",
+          name: locale === "ar" ? "عكاظ" : "Okaz",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -709,7 +709,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
       apps: [
         {
           id: "calculator",
-          name: "Calculator",
+          name: locale === "ar" ? "آلة حاسبة" : "Calculator",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -720,7 +720,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "notes",
-          name: "Notes",
+          name: locale === "ar" ? "ملاحظات" : "Notes",
           bg: "linear-gradient(135deg, #FDB022 0%, #F59E0B 100%)",
           mark: "",
           textColor: "#fff",
@@ -734,7 +734,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "reminders",
-          name: "Reminders",
+          name: locale === "ar" ? "تذكيرات" : "Reminders",
           bg: "#fff",
           mark: "",
           textColor: "#333",
@@ -745,7 +745,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "stopwatch",
-          name: "Stopwatch",
+          name: locale === "ar" ? "ساعة الإيقاف" : "Stopwatch",
           bg: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
           mark: "",
           textColor: "#fff",
@@ -795,7 +795,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "unitconverter",
-          name: "Unit Converter",
+          name: locale === "ar" ? "محول الوحدات" : "Unit Converter",
           bg: "linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)",
           mark: "",
           textColor: "#fff",
@@ -838,7 +838,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
         },
         {
           id: "breathing",
-          name: "Breathing",
+          name: locale === "ar" ? "تمرين التنفس" : "Breathing",
           bg: "linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)",
           mark: "",
           textColor: "#fff",
