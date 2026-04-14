@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useTheme, TEXT_STYLE, WEIGHT, TYPE_SCALE, SHADOW } from "./ThemeContext";
 import { useLocale } from "./i18n";
+import { playTone } from "./useRipple";
 import type { LucideIcon } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -118,46 +119,19 @@ const DTMF_FREQS: Record<string, [number, number]> = {
   "4": [770, 1209], "5": [770, 1336], "6": [770, 1477],
   "7": [852, 1209], "8": [852, 1336], "9": [852, 1477],
   "0": [941, 1336],
+  "*": [941, 1209], "#": [941, 1477]
 };
 
-let dtmfCtx: AudioContext | null = null;
 function playDTMF(digit: string) {
-  try {
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtx) return;
-    if (!dtmfCtx) dtmfCtx = new AudioCtx();
-    if (dtmfCtx.state === "suspended") dtmfCtx.resume();
-  } catch (e) { return; }
-  
-  const t = dtmfCtx.currentTime;
-  const gain = dtmfCtx.createGain();
-  gain.connect(dtmfCtx.destination);
-  
   if (digit === "delete") {
-    gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(0.08, t + 0.01);
-    gain.gain.linearRampToValueAtTime(0, t + 0.08); // Quick, soft low blip
-    const osc = dtmfCtx.createOscillator();
-    osc.frequency.value = 350;
-    osc.connect(gain);
-    osc.start(t);
-    osc.stop(t + 0.08);
+    // Quick pop for delete
+    playTone(350, undefined, 0.08, 0.08);
     return;
   }
-
   const freqs = DTMF_FREQS[digit];
-  if (!freqs) return;
-  
-  gain.gain.setValueAtTime(0, t);
-  gain.gain.linearRampToValueAtTime(0.08, t + 0.02);
-  gain.gain.setValueAtTime(0.08, t + 0.1);
-  gain.gain.linearRampToValueAtTime(0, t + 0.15);
-  
-  const o1 = dtmfCtx.createOscillator(); o1.frequency.value = freqs[0];
-  const o2 = dtmfCtx.createOscillator(); o2.frequency.value = freqs[1];
-  o1.connect(gain); o2.connect(gain);
-  o1.start(t); o2.start(t);
-  o1.stop(t + 0.15); o2.stop(t + 0.15);
+  if (freqs) {
+    playTone(freqs[0], freqs[1], 0.15, 0.1);
+  }
 }
 
 function useCallAudio(callState: CallState) {
@@ -414,6 +388,27 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                         ))}
                       </div>
                    ))}
+                   {/* Bottom row: Hide + End call + Placeholder to align perfectly with the grid */}
+                   <div className="flex gap-4 justify-center mt-2 relative">
+                     {/* Left: Back (aligns with *) */}
+                     <button onClick={() => { setShowKeypad(false); setInCallDigits(""); }}
+                       className="flex items-center justify-center active:scale-90 transition-transform"
+                       style={{ width: "68px", height: "68px", borderRadius: theme.radiusFull, backgroundColor: "rgba(255,255,255,0.12)", border: "none" }}>
+                       <ArrowLeft size={28} color="rgba(255,255,255,0.8)" />
+                     </button>
+                     
+                     {/* Center: End Call (aligns with 0) */}
+                     <div className="flex flex-col items-center relative">
+                       <button onClick={handleEnd} className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform relative z-10"
+                         style={{ width: "68px", height: "68px", borderRadius: theme.radiusFull, backgroundColor: DANGER, border: "none", boxShadow: "0 8px 32px rgba(209,0,68,0.4)" }}>
+                         <PhoneOff size={28} color="#fff" />
+                       </button>
+                       <span style={{ position: "absolute", top: "76px", width: "100px", textAlign: "center", fontFamily, ...TEXT_STYLE.caption, color: "rgba(255,255,255,0.4)" }}>{t("call.endCall")}</span>
+                     </div>
+                     
+                     {/* Right: Empty placeholder (aligns with #) */}
+                     <div style={{ width: "68px" }} />
+                   </div>
                 </div>
               ) : (
                 /* ── Normal call controls ── */
@@ -425,21 +420,16 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                 </div>
               )}
 
-              {/* ── Bottom row: always end-call, plus back arrow when keypad open ── */}
-              <div className="flex items-center justify-center gap-8">
-                {showKeypad && (
-                  <button onClick={() => { setShowKeypad(false); setInCallDigits(""); }}
-                    className="flex items-center justify-center active:scale-90 transition-transform"
-                    style={{ width: "48px", height: "48px", borderRadius: theme.radiusFull, backgroundColor: "rgba(255,255,255,0.12)", border: "none" }}>
-                    <ArrowLeft size={22} color="rgba(255,255,255,0.8)" />
+              {/* ── Normal End Call button when keypad is HIDDEN ── */}
+              {!showKeypad && (
+                <div className="flex flex-col items-center gap-2 mt-4">
+                  <button onClick={handleEnd} className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+                    style={{ width: "72px", height: "72px", borderRadius: theme.radiusFull, backgroundColor: DANGER, border: "none", boxShadow: "0 8px 32px rgba(209,0,68,0.4)" }}>
+                    <PhoneOff size={28} color="#fff" />
                   </button>
-                )}
-                <button onClick={handleEnd} className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
-                  style={{ width: "72px", height: "72px", borderRadius: theme.radiusFull, backgroundColor: DANGER, border: "none", boxShadow: "0 8px 32px rgba(209,0,68,0.4)" }}>
-                  <PhoneOff size={28} color="#fff" />
-                </button>
-              </div>
-              <span style={{ fontFamily, ...TEXT_STYLE.caption, color: "rgba(255,255,255,0.4)", marginTop: "-14px" }}>{t("call.endCall")}</span>
+                  <span style={{ fontFamily, ...TEXT_STYLE.caption, color: "rgba(255,255,255,0.4)" }}>{t("call.endCall")}</span>
+                </div>
+              )}
             </div>
           )}
           {callState === "outgoing" && (
