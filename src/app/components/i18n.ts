@@ -443,7 +443,7 @@ const translations: Record<string, TranslationEntry> = {
   "call.recentCalls": { en: "Recent Calls", ar: "المكالمات الأخيرة" },
   "call.callBack": { en: "Call Back", ar: "معاودة الاتصال" },
   "call.keypadTitle": { en: "Dial a Number", ar: "اتصل برقم" },
-  "call.keypadHint": { en: "Enter an extension number", ar: "أدخل رقم التحويلة" },
+  "call.keypadHint": { en: "Enter an Extension", ar: "ادخل التحويلة" },
   "call.history": { en: "Call History", ar: "سجل المكالمات" },
   "call.all": { en: "All", ar: "الكل" },
   "call.noHistory": { en: "No call history", ar: "لا يوجد سجل مكالمات" },
