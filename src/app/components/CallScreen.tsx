@@ -615,11 +615,11 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
             <span style={{ fontFamily, ...TEXT_STYLE.subtitle, fontSize: "24px", color: theme.textHeading }}>{t("call.hospitalDirectory")}</span>
           </div>
           <div style={{ height: "1px", backgroundColor: theme.borderSubtle, margin: "0 16px" }} />
-          <div className="flex-1 min-h-0 overflow-y-auto callscreen-scroll" style={{ padding: "16px" }}>
+          <div className="flex-1 min-h-0 overflow-y-auto callscreen-scroll" style={{ padding: "16px 36px 24px 36px" }}>
             <div style={{
               display: "grid",
               gridTemplateColumns: "repeat(2, 1fr)",
-              gap: "10px",
+              gap: "16px",
             }}>
               {EXTENSIONS.slice(0, 6).map((ext) => (
                 <ExtensionCard key={ext.id} ext={ext} onDial={handleDial} />
@@ -658,8 +658,9 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onClick={() => onDial(ext)}
-      className="flex flex-col items-center justify-center gap-2 cursor-pointer transition-all"
+      className="flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
       style={{
+        aspectRatio: "1 / 1",
         padding: "16px 12px",
         borderRadius: theme.radiusLg,
         backgroundColor: pressed ? theme.primary : theme.background,
