@@ -658,10 +658,9 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onClick={() => onDial(ext)}
-      className="flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
+      className="flex flex-col items-center justify-center gap-2 cursor-pointer transition-all"
       style={{
-        aspectRatio: "1 / 1",
-        padding: "20px 12px",
+        padding: "16px 12px",
         borderRadius: theme.radiusLg,
         backgroundColor: pressed ? theme.primary : theme.background,
         border: `2px solid ${pressed ? "transparent" : theme.borderSubtle}`,
@@ -675,11 +674,11 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
     >
       {/* Department icon */}
       <div className="flex items-center justify-center" style={{
-        width: "72px", height: "72px", borderRadius: theme.radiusLg,
+        width: "56px", height: "56px", borderRadius: theme.radiusLg,
         backgroundColor: pressed ? "rgba(255,255,255,0.2)" : theme.primaryLight,
         transition: "all 0.2s",
       }}>
-        <ExtIcon size={36} color={pressed ? theme.textInverse : theme.primary} strokeWidth={2} />
+        <ExtIcon size={32} color={pressed ? theme.textInverse : theme.primary} strokeWidth={2} />
       </div>
 
       {/* Name */}
