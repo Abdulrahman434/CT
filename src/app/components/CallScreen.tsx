@@ -374,22 +374,22 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
       <div className="shrink-0 flex gap-4 px-10 pb-5 relative z-10">
         <div className="flex items-center gap-3" style={{
           borderRadius: theme.radiusLg, backgroundColor: theme.surface,
-          border: `1px solid ${theme.borderDefault}`, padding: "14px 50px 14px 24px", boxShadow: SHADOW.sm,
-          minWidth: "220px",
+          border: `1px solid ${theme.borderDefault}`, padding: "18px 60px 18px 28px", boxShadow: SHADOW.sm,
+          minWidth: "260px",
         }}>
-          <div className="w-9 h-9 flex items-center justify-center shrink-0"
+          <div className="w-12 h-12 flex items-center justify-center shrink-0"
             style={{ backgroundColor: theme.primarySubtle, color: theme.primary, borderRadius: theme.radiusMd }}>
-            <Phone size={18} />
+            <Phone size={24} />
           </div>
           <div>
-            <p style={{ fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted }}>{t("call.yourExtension")}</p>
-            <p style={{ fontFamily: theme.fontFamilyMono, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading, letterSpacing: "0.5px" }}>4120</p>
+            <p style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "16px", color: theme.textMuted }}>{t("call.yourExtension")}</p>
+            <p style={{ fontFamily: theme.fontFamilyMono, fontSize: "28px", fontWeight: WEIGHT.bold, color: theme.textHeading, letterSpacing: "1px" }}>4120</p>
           </div>
         </div>
       </div>
 
       {/* ── 3-Column Content ── */}
-      <div className="min-h-0 flex px-10 pb-24 relative z-10" style={{ flex: "1 1 0", maxHeight: "calc(100% - 240px)", gap: "64px" }}>
+      <div className="min-h-0 flex px-10 pb-16 relative z-10" style={{ flex: "1 1 0", maxHeight: "calc(100% - 200px)", gap: "40px" }}>
 
         {/* Column 1 — Directory */}
         <div className="flex flex-col min-w-0 min-h-0 overflow-hidden" style={{
@@ -397,15 +397,15 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
         }}>
           <div className="shrink-0 flex items-center gap-2.5 px-5 pt-4 pb-2.5">
             <div className="flex items-center justify-center shrink-0" style={{
-              width: "32px", height: "32px", borderRadius: theme.radiusMd,
+              width: "40px", height: "40px", borderRadius: theme.radiusMd,
               backgroundColor: theme.primarySubtle, color: theme.primary,
             }}>
-              <BookUser size={16} />
+              <BookUser size={20} />
             </div>
-            <span style={{ fontFamily, ...TEXT_STYLE.subtitle, color: theme.textHeading }}>{t("call.hospitalDirectory")}</span>
+            <span style={{ fontFamily, ...TEXT_STYLE.subtitle, fontSize: "24px", color: theme.textHeading }}>{t("call.hospitalDirectory")}</span>
           </div>
           <div style={{ height: "1px", backgroundColor: theme.borderSubtle, margin: "0 16px" }} />
-          <div className="flex-1 min-h-0 overflow-y-auto callscreen-scroll" style={{ padding: "10px 12px" }}>
+          <div className="flex-1 min-h-0 overflow-y-auto callscreen-scroll" style={{ padding: "16px" }}>
             <div style={{
               display: "grid",
               gridTemplateColumns: "repeat(2, 1fr)",
@@ -425,21 +425,21 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
         }}>
           <div className="shrink-0 flex items-center gap-2.5 px-5 pt-4 pb-2.5">
             <div className="flex items-center justify-center shrink-0" style={{
-              width: "32px", height: "32px", borderRadius: theme.radiusMd,
+              width: "40px", height: "40px", borderRadius: theme.radiusMd,
               backgroundColor: theme.primarySubtle, color: theme.primary,
             }}>
-              <Grid3X3 size={16} />
+              <Grid3X3 size={20} />
             </div>
-            <span style={{ fontFamily, ...TEXT_STYLE.subtitle, color: theme.textHeading }}>{t("call.keypadTitle")}</span>
+            <span style={{ fontFamily, ...TEXT_STYLE.subtitle, fontSize: "24px", color: theme.textHeading }}>{t("call.keypadTitle")}</span>
           </div>
           <div style={{ height: "1px", backgroundColor: theme.borderSubtle, margin: "0 16px" }} />
 
           {/* Display */}
-          <div className="shrink-0 flex items-center justify-center px-5 pt-6 pb-2" style={{ minHeight: "80px" }}>
+          <div className="shrink-0 flex items-center justify-center px-5 pt-10 pb-4" style={{ minHeight: "100px" }}>
             <span style={{
-              fontFamily: theme.fontFamilyMono, fontSize: "48px", fontWeight: WEIGHT.extrabold,
+              fontFamily: theme.fontFamilyMono, fontSize: "64px", fontWeight: WEIGHT.extrabold,
               color: dialInput ? theme.primary : theme.textDisabled,
-              letterSpacing: "10px", textAlign: "center", minHeight: "56px",
+              letterSpacing: "12px", textAlign: "center", minHeight: "76px",
               textShadow: dialInput ? "0 4px 20px " + theme.primary + "40" : "none",
               transition: "all 0.3s ease",
             }}>
@@ -447,7 +447,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
             </span>
           </div>
           {!dialInput && (
-            <p className="text-center" style={{ fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted, marginTop: "2px", marginBottom: "4px" }}>
+            <p className="text-center" style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "16px", color: theme.textMuted, marginTop: "4px", marginBottom: "8px" }}>
               {t("call.keypadHint")}
             </p>
           )}
@@ -463,13 +463,13 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
             ))}
             {/* Bottom row: empty | 0 | delete */}
             <div className="flex gap-5 justify-center">
-              <div style={{ width: "88px", height: "88px" }} />
+              <div style={{ width: "110px", height: "110px" }} />
               <KeypadButton digit="0" onPress={onKeypadPress} />
               <button
                 onClick={onKeypadDelete}
                 className="flex items-center justify-center cursor-pointer transition-transform duration-300 active:scale-90"
                 style={{
-                  width: "88px", height: "88px", borderRadius: theme.radiusFull,
+                  width: "110px", height: "110px", borderRadius: theme.radiusFull,
                   backgroundColor: "transparent",
                   border: "none",
                   outline: "none",
@@ -477,7 +477,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                 }}
                 disabled={!dialInput}
               >
-                <Delete size={32} style={{ color: theme.textMuted }} />
+                <Delete size={40} style={{ color: theme.textMuted }} />
               </button>
             </div>
 
@@ -487,7 +487,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                 onClick={handleDialCustom}
                 className="flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all duration-300"
                 style={{
-                  width: "304px", height: "68px", borderRadius: theme.radiusFull,
+                  width: "360px", height: "80px", borderRadius: theme.radiusFull,
                   backgroundColor: dialInput ? "#22C55E" : theme.borderSubtle,
                   border: "none", outline: "none",
                   opacity: dialInput ? 1 : 0.5,
@@ -495,8 +495,8 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                 }}
                 disabled={!dialInput}
               >
-                <Phone size={24} color="#fff" />
-                <span style={{ fontFamily, ...TEXT_STYLE.buttonSm, fontSize: "18px", color: "#fff" }}>{t("call.title")}</span>
+                <Phone size={32} color="#fff" />
+                <span style={{ fontFamily, ...TEXT_STYLE.buttonSm, fontSize: "22px", color: "#fff" }}>{t("call.title")}</span>
               </button>
             </div>
           </div>
@@ -509,12 +509,12 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
           {/* Row 1 — Title */}
           <div className="shrink-0 flex items-center gap-2.5 px-5 pt-4 pb-2.5">
             <div className="flex items-center justify-center shrink-0" style={{
-              width: "32px", height: "32px", borderRadius: theme.radiusMd,
+              width: "40px", height: "40px", borderRadius: theme.radiusMd,
               backgroundColor: theme.primarySubtle, color: theme.primary,
             }}>
-              <PhoneCall size={16} />
+              <PhoneCall size={20} />
             </div>
-            <span style={{ fontFamily, ...TEXT_STYLE.subtitle, color: theme.textHeading }}>{t("call.history")}</span>
+            <span style={{ fontFamily, ...TEXT_STYLE.subtitle, fontSize: "24px", color: theme.textHeading }}>{t("call.history")}</span>
           </div>
           {/* Row 2 — Tab toggle */}
           <div className="shrink-0 px-5 pb-3">
@@ -537,14 +537,14 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                       border: "none", outline: "none",
                     }}
                   >
-                    <span style={{ fontFamily, fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold, color: active ? "#fff" : theme.textMuted }}>
+                    <span style={{ fontFamily, fontSize: "18px", fontWeight: WEIGHT.bold, color: active ? "#fff" : theme.textMuted }}>
                       {t(`call.${key}`)}
                     </span>
                     {count > 0 && (
                       <span className="flex items-center justify-center" style={{
                         minWidth: "22px", height: "22px", borderRadius: theme.radiusFull, padding: "0 6px",
                         backgroundColor: active ? "rgba(255,255,255,0.25)" : theme.primarySubtle,
-                        fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.semibold,
+                        fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold,
                         color: active ? "#fff" : theme.primary,
                       }}>
                         {count}
@@ -557,15 +557,15 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
           </div>
           <div style={{ height: "1px", backgroundColor: theme.borderSubtle, margin: "0 16px" }} />
 
-          <div className="flex-1 min-h-0 overflow-y-auto callscreen-scroll" style={{ padding: "10px 12px" }}>
+          <div className="flex-1 min-h-0 overflow-y-auto callscreen-scroll" style={{ padding: "16px" }}>
             <AnimatePresence mode="wait">
               {historyTab === "all" ? (
                 <motion.div key="all" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
                   {MOCK_MISSED.length === 0 && MOCK_ATTENDED.length === 0 ? (
                     <EmptyState message={t("call.noHistory")} />
                   ) : (
-                    <div className="flex flex-col gap-1.5">
-                      <p className="px-2 pt-1 pb-2" style={{ fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted }}>{t("call.today")}</p>
+                    <div className="flex flex-col gap-3">
+                      <p className="px-2 pt-1 pb-2" style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "16px", color: theme.textMuted }}>{t("call.today")}</p>
                       {MOCK_MISSED.map((entry) => (
                         <CallLogRow key={entry.id} entry={entry} onCallback={(e) => {
                           const ext = EXTENSIONS.find((x) => x.id === e.extensionId);
@@ -586,8 +586,8 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                   {MOCK_MISSED.length === 0 ? (
                     <EmptyState message={t("call.noMissed")} />
                   ) : (
-                    <div className="flex flex-col gap-1.5">
-                      <p className="px-2 pt-1 pb-2" style={{ fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted }}>{t("call.today")}</p>
+                    <div className="flex flex-col gap-3">
+                      <p className="px-2 pt-1 pb-2" style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "16px", color: theme.textMuted }}>{t("call.today")}</p>
                       {MOCK_MISSED.map((entry) => (
                         <CallLogRow key={entry.id} entry={entry} onCallback={(e) => {
                           const ext = EXTENSIONS.find((x) => x.id === e.extensionId);
@@ -602,8 +602,8 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                   {MOCK_ATTENDED.length === 0 ? (
                     <EmptyState message={t("call.noAttended")} />
                   ) : (
-                    <div className="flex flex-col gap-1.5">
-                      <p className="px-2 pt-1 pb-2" style={{ fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted }}>{t("call.today")}</p>
+                    <div className="flex flex-col gap-3">
+                      <p className="px-2 pt-1 pb-2" style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "16px", color: theme.textMuted }}>{t("call.today")}</p>
                       {MOCK_ATTENDED.map((entry) => (
                         <CallLogRow key={entry.id} entry={entry} onCallback={(e) => {
                           const ext = EXTENSIONS.find((x) => x.id === e.extensionId);
@@ -639,43 +639,41 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
-  const [hovered, setHovered] = useState(false);
   const ExtIcon = ext.icon;
 
   return (
     <button
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => { setPressed(false); setHovered(false); }}
-      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setPressed(false)}
       onClick={() => onDial(ext)}
-      className="flex flex-col items-center justify-center gap-2 cursor-pointer transition-all"
+      className="flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
       style={{
         aspectRatio: "1 / 1",
-        padding: "12px 8px",
+        padding: "20px 12px",
         borderRadius: theme.radiusLg,
-        backgroundColor: pressed ? ext.iconBg : hovered ? theme.background : theme.background,
-        border: `1.5px solid ${pressed ? ext.iconColor + "40" : hovered ? theme.borderActive : theme.borderSubtle}`,
+        backgroundColor: pressed ? ext.iconBg : theme.background,
+        border: `2px solid ${pressed ? ext.iconColor + "40" : theme.borderSubtle}`,
         outline: "none",
         textAlign: "center",
-        transform: pressed ? "scale(0.95)" : hovered ? "scale(1.02)" : "scale(1)",
-        boxShadow: hovered ? "0 8px 24px rgba(0,0,0,0.08)" : "none",
+        transform: pressed ? "scale(0.95)" : "scale(1)",
+        boxShadow: pressed ? "none" : "0 4px 12px rgba(0,0,0,0.05)",
         position: "relative",
         overflow: "hidden",
       }}
     >
       {/* Department icon */}
       <div className="flex items-center justify-center" style={{
-        width: "44px", height: "44px", borderRadius: theme.radiusLg,
+        width: "72px", height: "72px", borderRadius: theme.radiusLg,
         backgroundColor: ext.iconBg,
         transition: "all 0.2s",
       }}>
-        <ExtIcon size={22} color={ext.iconColor} strokeWidth={1.8} />
+        <ExtIcon size={36} color={ext.iconColor} strokeWidth={2} />
       </div>
 
       {/* Name */}
-      <p className="truncate w-full" style={{
-        fontFamily, fontSize: "13px", fontWeight: WEIGHT.semibold,
+      <p style={{
+        fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold,
         color: theme.textHeading, margin: 0, lineHeight: "1.2",
       }}>
         {t(ext.nameKey)}
@@ -683,24 +681,21 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
 
       {/* Extension number */}
       <span style={{
-        fontFamily: theme.fontFamilyMono, fontSize: "11px", fontWeight: WEIGHT.medium,
+        fontFamily: theme.fontFamilyMono, fontSize: "18px", fontWeight: WEIGHT.medium,
         color: theme.textMuted,
       }}>
         {ext.ext}
       </span>
 
-      {/* Call indicator on hover */}
-      {hovered && (
-        <div className="absolute" style={{
-          bottom: "8px", right: "8px",
-          width: "24px", height: "24px", borderRadius: theme.radiusFull,
-          backgroundColor: "#22C55E",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          animation: "callCardPopIn 0.15s ease-out",
-        }}>
-          <Phone size={12} color="#fff" />
-        </div>
-      )}
+      {/* Primary call action indicator - permanently visible for touch */}
+      <div className="absolute" style={{
+        bottom: "10px", right: "10px",
+        width: "32px", height: "32px", borderRadius: theme.radiusFull,
+        backgroundColor: "#22C55E",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <Phone size={16} color="#fff" />
+      </div>
     </button>
   );
 }
@@ -729,45 +724,45 @@ function CallLogRow({ entry, onCallback }: { entry: CallLogEntry; onCallback: (e
   return (
     <button
       onClick={() => onCallback(entry)}
-      className="flex items-center gap-3 w-full cursor-pointer active:scale-[0.99] transition-transform"
+      className="flex items-center gap-4 w-full cursor-pointer active:scale-[0.99] transition-transform"
       style={{
-        padding: "11px 12px", borderRadius: theme.radiusMd,
+        padding: "16px 20px", borderRadius: theme.radiusMd,
         backgroundColor: isMissed ? "rgba(209,0,68,0.03)" : "transparent",
         border: isMissed ? "1px solid rgba(209,0,68,0.06)" : `1px solid ${theme.borderSubtle}`,
         outline: "none", textAlign: "start",
       }}
     >
       <div className="shrink-0 flex items-center justify-center" style={{
-        width: "36px", height: "36px", borderRadius: theme.radiusFull,
+        width: "48px", height: "48px", borderRadius: theme.radiusFull,
         backgroundColor: bgColor,
       }}>
-        <DirIcon size={16} color={iconColor} strokeWidth={1.8} />
+        <DirIcon size={24} color={iconColor} strokeWidth={2} />
       </div>
 
       <div className="flex-1 min-w-0">
         <p className="truncate" style={{
-          fontFamily, fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold,
+          fontFamily, fontSize: "22px", fontWeight: WEIGHT.bold,
           color: isMissed ? DANGER : theme.textHeading, margin: 0,
         }}>
           {t(entry.nameKey)}
         </p>
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex items-center gap-3 mt-1">
           <span style={{
-            fontFamily: theme.fontFamilyMono, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium, color: theme.textMuted,
+            fontFamily: theme.fontFamilyMono, fontSize: "18px", fontWeight: WEIGHT.medium, color: theme.textMuted,
           }}>
             {t("call.ext")} {entry.ext}
           </span>
           {entry.duration && (
             <>
               <span style={{ color: theme.borderDefault }}>·</span>
-              <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium, color: theme.textMuted }}>{entry.duration}</span>
+              <span style={{ fontFamily, fontSize: "18px", fontWeight: WEIGHT.medium, color: theme.textMuted }}>{entry.duration}</span>
             </>
           )}
         </div>
       </div>
 
-      <div className="shrink-0 flex flex-col items-end gap-0.5">
-        <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium, color: isMissed ? "rgba(209,0,68,0.7)" : theme.textMuted }}>
+      <div className="shrink-0 flex flex-col items-end gap-1">
+        <span style={{ fontFamily, fontSize: "18px", fontWeight: WEIGHT.medium, color: isMissed ? "rgba(209,0,68,0.7)" : theme.textMuted }}>
           {localizedTime}
         </span>
       </div>
@@ -783,14 +778,14 @@ function CallControlButton({ icon: Icon, label, active, onTap, fontFamily }: {
     <div className="flex flex-col items-center gap-2">
       <button onClick={onTap} className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
         style={{
-          width: "60px", height: "60px", borderRadius: theme.radiusFull,
+          width: "80px", height: "80px", borderRadius: theme.radiusFull,
           backgroundColor: active ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)",
           border: active ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(255,255,255,0.1)",
           outline: "none",
         }}>
-        <Icon size={24} color={active ? "#fff" : "rgba(255,255,255,0.7)"} />
+        <Icon size={32} color={active ? "#fff" : "rgba(255,255,255,0.7)"} />
       </button>
-      <span style={{ fontFamily, fontSize: "11px", fontWeight: 500, color: "rgba(255,255,255,0.4)" }}>{label}</span>
+      <span style={{ fontFamily, fontSize: "14px", fontWeight: 500, color: "rgba(255,255,255,0.4)" }}>{label}</span>
     </div>
   );
 }
@@ -799,13 +794,13 @@ function EmptyState({ message }: { message: string }) {
   const { theme } = useTheme();
   const { fontFamily } = useLocale();
   return (
-    <div className="flex-1 flex flex-col items-center justify-center h-full gap-3 py-16">
+    <div className="flex-1 flex flex-col items-center justify-center h-full gap-4 py-16">
       <div className="flex items-center justify-center" style={{
-        width: "52px", height: "52px", borderRadius: theme.radiusFull, backgroundColor: theme.primarySubtle,
+        width: "64px", height: "64px", borderRadius: theme.radiusFull, backgroundColor: theme.primarySubtle,
       }}>
-        <Phone size={22} color={theme.textMuted} />
+        <Phone size={28} color={theme.textMuted} />
       </div>
-      <span style={{ fontFamily, ...TEXT_STYLE.body, color: theme.textMuted }}>{message}</span>
+      <span style={{ fontFamily, ...TEXT_STYLE.body, fontSize: "18px", color: theme.textMuted }}>{message}</span>
     </div>
   );
 }
@@ -813,28 +808,25 @@ function EmptyState({ message }: { message: string }) {
 function KeypadButton({ digit, onPress }: { digit: string; onPress: (digit: string) => void }) {
   const { theme } = useTheme();
   const [pressed, setPressed] = useState(false);
-  const [hovered, setHovered] = useState(false);
   
   return (
     <button
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => { setPressed(false); setHovered(false); }}
-      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setPressed(false)}
       onClick={() => onPress(digit)}
       className="flex items-center justify-center cursor-pointer transition-all duration-300"
       style={{
-        width: "88px", height: "88px", borderRadius: theme.radiusFull,
-        backgroundColor: pressed ? theme.primary : hovered ? theme.primarySubtle : theme.background,
-        border: `1.5px solid ${hovered || pressed ? theme.primary : theme.borderSubtle}`,
+        width: "110px", height: "110px", borderRadius: theme.radiusFull,
+        backgroundColor: pressed ? theme.primary : theme.background,
+        border: `2px solid ${pressed ? theme.primary : theme.borderSubtle}`,
         outline: "none",
-        boxShadow: pressed ? "inset 0 4px 12px rgba(0,0,0,0.15)" : hovered ? "0 12px 32px " + theme.primary + "40" : "0 4px 16px rgba(0,0,0,0.06)",
-        transform: pressed ? "scale(0.92)" : hovered ? "scale(1.05)" : "scale(1)",
-        zIndex: hovered ? 10 : 1,
+        boxShadow: pressed ? "inset 0 4px 12px rgba(0,0,0,0.15)" : "0 4px 16px rgba(0,0,0,0.06)",
+        transform: pressed ? "scale(0.92)" : "scale(1)",
       }}
     >
       <span style={{
-        fontFamily: theme.fontFamilyMono, fontSize: "42px", fontWeight: WEIGHT.extrabold,
+        fontFamily: theme.fontFamilyMono, fontSize: "52px", fontWeight: WEIGHT.extrabold,
         color: pressed ? "#fff" : theme.textHeading,
         transition: "color 0.2s",
       }}>
