@@ -113,6 +113,40 @@ function useCallTimer(active: boolean) {
 /* ═══════════════════════════════════════════════════════════════════════════
  * AUDIO HOOK (Web Audio API Synth)
  * ═══════════════════════════════════════════════════════════════════════════ */
+const DTMF_FREQS: Record<string, [number, number]> = {
+  "1": [697, 1209], "2": [697, 1336], "3": [697, 1477],
+  "4": [770, 1209], "5": [770, 1336], "6": [770, 1477],
+  "7": [852, 1209], "8": [852, 1336], "9": [852, 1477],
+  "0": [941, 1336],
+};
+
+let dtmfCtx: AudioContext | null = null;
+function playDTMF(digit: string) {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!dtmfCtx) dtmfCtx = new AudioCtx();
+    if (dtmfCtx.state === "suspended") dtmfCtx.resume();
+  } catch (e) { return; }
+  
+  const freqs = DTMF_FREQS[digit];
+  if (!freqs) return;
+  const t = dtmfCtx.currentTime;
+  const gain = dtmfCtx.createGain();
+  gain.connect(dtmfCtx.destination);
+  
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(0.08, t + 0.02);
+  gain.gain.setValueAtTime(0.08, t + 0.1);
+  gain.gain.linearRampToValueAtTime(0, t + 0.15);
+  
+  const o1 = dtmfCtx.createOscillator(); o1.frequency.value = freqs[0];
+  const o2 = dtmfCtx.createOscillator(); o2.frequency.value = freqs[1];
+  o1.connect(gain); o2.connect(gain);
+  o1.start(t); o2.start(t);
+  o1.stop(t + 0.15); o2.stop(t + 0.15);
+}
+
 function useCallAudio(callState: CallState) {
   useEffect(() => {
     let ctx: AudioContext | null = null;
@@ -156,12 +190,12 @@ function useCallAudio(callState: CallState) {
       playTone();
       interval = setInterval(playTone, 6000);
     } else if (callState === "incoming" && ctx) {
-      // Soft, pleasant modern hospital chime (Ding... Dong...)
+      // Modern soft electronic melodic arpeggio ringtone (Smartphone notification style)
       const playRing = () => {
         if (!ctx) return;
         const t = ctx.currentTime;
         
-        const playBell = (freq: number, startTime: number) => {
+        const playTone = (freq: number, startOff: number) => {
           if (!ctx) return;
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -172,21 +206,26 @@ function useCallAudio(callState: CallState) {
           osc.connect(gain);
           gain.connect(ctx.destination);
           
-          // Soft attack, gentle exponential fade out
-          gain.gain.setValueAtTime(0, startTime);
-          gain.gain.linearRampToValueAtTime(0.15, startTime + 0.05);
-          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.5);
+          gain.gain.setValueAtTime(0, t + startOff);
+          gain.gain.linearRampToValueAtTime(0.12, t + startOff + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + startOff + 0.5);
           
-          osc.start(startTime);
-          osc.stop(startTime + 1.5);
+          osc.start(t + startOff);
+          osc.stop(t + startOff + 0.5);
         };
 
-        // Play E5 then C5 with a slight pause
-        playBell(659.25, t);         // Ding
-        playBell(523.25, t + 0.5);   // Dong
+        // Quick upward ripple
+        playTone(523.25, 0.0);  // C5
+        playTone(698.46, 0.12); // F5
+        playTone(880.00, 0.24); // A5
+        playTone(1046.50, 0.36); // C6
+        
+        // Gentle downward ripple
+        playTone(880.00, 0.6); // A5
+        playTone(698.46, 0.72); // F5
       };
       playRing();
-      interval = setInterval(playRing, 3500); // Repeat every 3.5 seconds
+      interval = setInterval(playRing, 2800); // Repeat every 2.8 seconds
     }
 
     return stop;
@@ -252,6 +291,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
   const handleEnd = useCallback(() => { setCallState("idle"); setCallTarget(null); }, []);
 
   const onKeypadPress = useCallback((digit: string) => {
+    playDTMF(digit);
     setDialInput((prev) => {
       if (prev.length >= 6) return prev;
       return prev + digit;
