@@ -156,26 +156,37 @@ function useCallAudio(callState: CallState) {
       playTone();
       interval = setInterval(playTone, 6000);
     } else if (callState === "incoming" && ctx) {
+      // Soft, pleasant modern hospital chime (Ding... Dong...)
       const playRing = () => {
         if (!ctx) return;
         const t = ctx.currentTime;
-        const gain = ctx.createGain();
-        gain.connect(ctx.destination);
-        gain.gain.setValueAtTime(0.2, t);
-
-        const playBurst = (start: number) => {
+        
+        const playBell = (freq: number, startTime: number) => {
           if (!ctx) return;
-          const o1 = ctx.createOscillator(); o1.frequency.value = 400;
-          const o2 = ctx.createOscillator(); o2.frequency.value = 450;
-          o1.connect(gain); o2.connect(gain);
-          o1.start(start); o2.start(start);
-          o1.stop(start + 0.4); o2.stop(start + 0.4);
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.type = "sine";
+          osc.frequency.value = freq;
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          // Soft attack, gentle exponential fade out
+          gain.gain.setValueAtTime(0, startTime);
+          gain.gain.linearRampToValueAtTime(0.15, startTime + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.5);
+          
+          osc.start(startTime);
+          osc.stop(startTime + 1.5);
         };
-        playBurst(t);
-        playBurst(t + 0.6);
+
+        // Play E5 then C5 with a slight pause
+        playBell(659.25, t);         // Ding
+        playBell(523.25, t + 0.5);   // Dong
       };
       playRing();
-      interval = setInterval(playRing, 3000);
+      interval = setInterval(playRing, 3500); // Repeat every 3.5 seconds
     }
 
     return stop;
