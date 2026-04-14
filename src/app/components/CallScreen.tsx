@@ -534,29 +534,21 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
             }}>
               <Grid3X3 size={20} />
             </div>
-            <span style={{ fontFamily, ...TEXT_STYLE.subtitle, fontSize: "24px", color: theme.textHeading }}>{t("call.keypadTitle")}</span>
+            <span style={{ fontFamily, ...TEXT_STYLE.subtitle, fontSize: "24px", color: theme.textHeading }}>{t("call.keypadHint")}</span>
           </div>
           <div style={{ height: "1px", backgroundColor: theme.borderSubtle, margin: "0 16px" }} />
 
           {/* Display */}
-          <div className="shrink-0 flex items-center justify-center px-5 pt-6 pb-2" style={{ minHeight: "80px", position: "relative" }}>
-            {dialInput ? (
-                <span style={{
-                  fontFamily: theme.fontFamilyMono, fontSize: "64px", fontWeight: WEIGHT.extrabold,
-                  color: theme.primary,
-                  letterSpacing: "12px", textAlign: "center", minHeight: "76px",
-                  textShadow: "0 4px 20px " + theme.primary + "40",
-                  transition: "color 0.3s ease",
-                }}>
-                  {dialInput}
-                </span>
-            ) : (
-                <span style={{
-                  fontFamily, ...TEXT_STYLE.caption, fontSize: "20px", color: theme.textMuted, textAlign: "center", minHeight: "76px", display: "flex", alignItems: "center"
-                }}>
-                  {t("call.keypadHint")}
-                </span>
-            )}
+          <div className="shrink-0 flex items-center justify-center px-5 pt-6 pb-2" style={{ minHeight: "80px" }}>
+            <span style={{
+              fontFamily: theme.fontFamilyMono, fontSize: "64px", fontWeight: WEIGHT.extrabold,
+              color: dialInput ? theme.primary : theme.textDisabled,
+              letterSpacing: "12px", textAlign: "center", minHeight: "76px",
+              textShadow: dialInput ? "0 4px 20px " + theme.primary + "40" : "none",
+              transition: "all 0.3s ease",
+            }}>
+              {dialInput || "—"}
+            </span>
           </div>
 
           {/* Keypad grid */}
@@ -750,7 +742,7 @@ function CallLogRow({ entry, onCallback }: { entry: CallLogEntry; onCallback: (e
 
       <div className="flex-1 min-w-0">
         <p className="truncate" style={{
-          fontFamily, fontSize: "22px", fontWeight: WEIGHT.bold,
+          fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold,
           color: isMissed ? DANGER : theme.textHeading, margin: 0,
         }}>
           {t(entry.nameKey)}
