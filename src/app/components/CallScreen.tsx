@@ -111,6 +111,78 @@ function useCallTimer(active: boolean) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+ * AUDIO HOOK (Web Audio API Synth)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+function useCallAudio(callState: CallState) {
+  useEffect(() => {
+    let ctx: AudioContext | null = null;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const stop = () => {
+      if (interval) clearInterval(interval);
+      if (ctx) ctx.close().catch(() => {});
+      ctx = null;
+    };
+
+    if (callState === "outgoing" || callState === "incoming") {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return stop;
+      try {
+        ctx = new AudioCtx();
+        if (ctx.state === "suspended") ctx.resume();
+      } catch (e) {
+        console.warn("AudioContext failed", e);
+        return stop;
+      }
+    }
+
+    if (callState === "outgoing" && ctx) {
+      const playTone = () => {
+        if (!ctx) return;
+        const t = ctx.currentTime;
+        const gain = ctx.createGain();
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.12, t + 0.1);
+        gain.gain.setValueAtTime(0.12, t + 1.9);
+        gain.gain.linearRampToValueAtTime(0, t + 2.0);
+
+        const o1 = ctx.createOscillator(); o1.frequency.value = 440;
+        const o2 = ctx.createOscillator(); o2.frequency.value = 480;
+        o1.connect(gain); o2.connect(gain);
+        o1.start(t); o2.start(t);
+        o1.stop(t + 2.0); o2.stop(t + 2.0);
+      };
+      playTone();
+      interval = setInterval(playTone, 6000);
+    } else if (callState === "incoming" && ctx) {
+      const playRing = () => {
+        if (!ctx) return;
+        const t = ctx.currentTime;
+        const gain = ctx.createGain();
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.2, t);
+
+        const playBurst = (start: number) => {
+          if (!ctx) return;
+          const o1 = ctx.createOscillator(); o1.frequency.value = 400;
+          const o2 = ctx.createOscillator(); o2.frequency.value = 450;
+          o1.connect(gain); o2.connect(gain);
+          o1.start(start); o2.start(start);
+          o1.stop(start + 0.4); o2.stop(start + 0.4);
+        };
+        playBurst(t);
+        playBurst(t + 0.6);
+      };
+      playRing();
+      interval = setInterval(playRing, 3000);
+    }
+
+    return stop;
+  }, [callState]);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
  * MAIN CALL SCREEN
  * ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -128,6 +200,8 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
   const [historyTab, setHistoryTab] = useState<"all" | "missed" | "attended">("all");
 
   const callTimer = useCallTimer(callState === "active");
+  useCallAudio(callState);
+  
   const primary = theme.primary;
   const DANGER = "#D10044";
 
