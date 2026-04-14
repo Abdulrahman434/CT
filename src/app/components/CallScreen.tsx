@@ -544,7 +544,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
               fontFamily: theme.fontFamilyMono, fontSize: "64px", fontWeight: WEIGHT.bold,
               color: dialInput ? theme.primary : theme.textDisabled,
               letterSpacing: "12px", textAlign: "center", minHeight: "76px",
-              textShadow: dialInput ? "0 4px 20px " + theme.primary + "40" : "none",
+              textShadow: "none",
               transition: "all 0.3s ease",
             }}>
               {dialInput || "—"}
@@ -576,7 +576,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                 }}
                 disabled={!dialInput}
               >
-                <Delete size={32} style={{ color: theme.textMuted }} />
+                <Delete size={36} style={{ color: theme.textMuted }} strokeWidth={1.5} />
               </button>
             </div>
 
@@ -819,15 +819,15 @@ function KeypadButton({ digit, onPress }: { digit: string; onPress: (digit: stri
       className="flex items-center justify-center cursor-pointer transition-all duration-300"
       style={{
         width: "88px", height: "88px", borderRadius: theme.radiusFull,
-        backgroundColor: pressed ? theme.primary : theme.background,
-        border: `2px solid ${pressed ? theme.primary : theme.borderSubtle}`,
+        backgroundColor: pressed ? theme.primary : "rgba(0,0,0,0.03)",
+        border: "none",
         outline: "none",
-        boxShadow: pressed ? "inset 0 4px 12px rgba(0,0,0,0.15)" : "0 4px 16px rgba(0,0,0,0.06)",
+        boxShadow: "none",
         transform: pressed ? "scale(0.92)" : "scale(1)",
       }}
     >
       <span style={{
-        fontFamily: theme.fontFamilyMono, fontSize: "40px", fontWeight: WEIGHT.bold,
+        fontFamily: theme.fontFamilyMono, fontSize: "40px", fontWeight: WEIGHT.medium,
         color: pressed ? "#fff" : theme.textHeading,
         transition: "color 0.2s",
       }}>
