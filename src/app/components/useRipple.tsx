@@ -9,6 +9,33 @@ interface Ripple {
 
 let rippleId = 0;
 
+/* ── Shared AudioContext for instant tap sound (zero-delay) ── */
+let _tapCtx: AudioContext | null = null;
+function getTapCtx(): AudioContext | null {
+  try {
+    const AC = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AC) return null;
+    if (!_tapCtx) _tapCtx = new AC();
+    if (_tapCtx.state === "suspended") _tapCtx.resume();
+    return _tapCtx;
+  } catch { return null; }
+}
+
+function playTapSound() {
+  const ctx = getTapCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  const gain = ctx.createGain();
+  gain.connect(ctx.destination);
+  gain.gain.setValueAtTime(0.06, t);
+  gain.gain.linearRampToValueAtTime(0, t + 0.035);
+  const osc = ctx.createOscillator();
+  osc.frequency.value = 800;
+  osc.connect(gain);
+  osc.start(t);
+  osc.stop(t + 0.035);
+}
+
 /**
  * Returns props to spread onto a container element, plus a <RippleContainer>
  * element to render inside that container (must have `position: relative; overflow: hidden`).
@@ -21,6 +48,7 @@ export function useRipple(color = "rgba(0,0,0,0.08)") {
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent<HTMLElement>) => {
+      playTapSound();
       const el = e.currentTarget;
       containerRef.current = el;
       const rect = el.getBoundingClientRect();

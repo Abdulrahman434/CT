@@ -262,6 +262,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
   const [dialInput, setDialInput] = useState("");
   const [historyTab, setHistoryTab] = useState<"all" | "missed" | "attended">("all");
   const [showKeypad, setShowKeypad] = useState(false);
+  const [inCallDigits, setInCallDigits] = useState("");
 
   const callTimer = useCallTimer(callState === "active");
   useCallAudio(callState);
@@ -301,8 +302,8 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
     setMuted(false); setSpeaker(false); setOnHold(false);
   }, []);
 
-  const handleDecline = useCallback(() => { setCallState("idle"); setCallTarget(null); setShowKeypad(false); }, []);
-  const handleEnd = useCallback(() => { setCallState("idle"); setCallTarget(null); setShowKeypad(false); }, []);
+  const handleDecline = useCallback(() => { setCallState("idle"); setCallTarget(null); setShowKeypad(false); setInCallDigits(""); }, []);
+  const handleEnd = useCallback(() => { setCallState("idle"); setCallTarget(null); setShowKeypad(false); setInCallDigits(""); }, []);
 
   const onKeypadPress = useCallback((digit: string) => {
     playDTMF(digit);
@@ -392,22 +393,39 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
           {callState === "active" && (
             <div className="flex flex-col items-center gap-8">
               {showKeypad ? (
-                <div dir="ltr" className="flex flex-col items-center justify-center gap-4 bg-[rgba(0,0,0,0.6)] p-6 rounded-3xl backdrop-blur-md" style={{ animation: "callScreenIn 0.2s ease-out" }}>
+                <div dir="ltr" className="flex flex-col items-center justify-center gap-3" style={{ animation: "callScreenIn 0.2s ease-out" }}>
+                   {/* Digit display */}
+                   <div style={{
+                     minHeight: "44px", display: "flex", alignItems: "center", justifyContent: "center",
+                     padding: "4px 16px", minWidth: "200px",
+                   }}>
+                     <span style={{ fontFamily: theme.fontFamilyMono || fontFamily, fontSize: "32px", color: "#fff", fontWeight: 400, letterSpacing: "6px" }}>
+                       {inCallDigits || "\u00A0"}
+                     </span>
+                   </div>
+                   {/* Keypad grid */}
                    {[["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]].map((row, ri) => (
                       <div key={ri} className="flex gap-4 justify-center">
                         {row.map((digit) => (
-                           <button key={digit} onPointerDown={() => playDTMF(digit)} className="active:scale-90 transition-transform" style={{
-                             width:"72px", height:"72px", borderRadius:theme.radiusFull, backgroundColor:"rgba(255,255,255,0.15)",
-                             display:"flex", alignItems:"center", justifyContent:"center"
+                           <button key={digit} onPointerDown={() => { playDTMF(digit); setInCallDigits(prev => prev.length >= 16 ? prev : prev + digit); }} className="active:scale-90 transition-transform" style={{
+                             width:"68px", height:"68px", borderRadius:theme.radiusFull, backgroundColor:"rgba(255,255,255,0.12)",
+                             display:"flex", alignItems:"center", justifyContent:"center", border: "none",
                            }}>
-                             <span style={{fontFamily:theme.fontFamilyMono, fontSize:"32px", color:"#fff", fontWeight: 500}}>{digit}</span>
+                             <span style={{fontFamily:theme.fontFamilyMono || fontFamily, fontSize:"28px", color:"#fff", fontWeight: 500}}>{digit}</span>
                            </button>
                         ))}
                       </div>
                    ))}
-                   <button onClick={() => setShowKeypad(false)} className="mt-2 px-6 py-2 rounded-full bg-[rgba(255,255,255,0.2)] text-white active:scale-95 transition-transform" style={{ fontFamily }}>
-                     {t("general.close")}
-                   </button>
+                   {/* Bottom row: Hide + End call */}
+                   <div className="flex items-center justify-center gap-6 mt-2">
+                     <button onClick={() => { setShowKeypad(false); setInCallDigits(""); }} className="px-5 py-2.5 rounded-full active:scale-95 transition-transform" style={{ backgroundColor: "rgba(255,255,255,0.12)", border: "none" }}>
+                       <span style={{ fontFamily, fontSize: "15px", color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>{t("call.keypad")}</span>
+                     </button>
+                     <button onClick={handleEnd} className="flex items-center justify-center active:scale-90 transition-transform"
+                       style={{ width: "64px", height: "64px", borderRadius: theme.radiusFull, backgroundColor: DANGER, border: "none", boxShadow: "0 6px 24px rgba(209,0,68,0.4)" }}>
+                       <PhoneOff size={24} color="#fff" />
+                     </button>
+                   </div>
                 </div>
               ) : (
                 <>
