@@ -29,7 +29,6 @@ import {
   Search,
   Maximize,
   Minimize,
-  RotateCcw,
 } from "lucide-react";
 import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
@@ -1583,20 +1582,6 @@ export function SettingsPanel({
               ) : (
                 <Maximize size={22} style={{ color: t.primary }} />
               )}
-            </button>
-            <button
-              onClick={() => window.location.reload()}
-              className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
-              style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: t.radiusLg,
-                backgroundColor: t.tileInactiveBg,
-                border: "none",
-              }}
-              title="Reload App"
-            >
-              <RotateCcw size={22} style={{ color: t.textMuted }} />
             </button>
             <button
               onClick={onClose}
