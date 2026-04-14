@@ -391,15 +391,13 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
 
         <div className="relative z-10 pb-16">
           {callState === "active" && (
-            <div className="flex flex-col items-center gap-8">
+            <div className="flex flex-col items-center gap-6">
               {showKeypad ? (
-                <div dir="ltr" className="flex flex-col items-center justify-center gap-3" style={{ animation: "callScreenIn 0.2s ease-out" }}>
+                /* ── In-call Keypad overlay ── */
+                <div dir="ltr" className="flex flex-col items-center gap-3" style={{ animation: "callScreenIn 0.2s ease-out" }}>
                    {/* Digit display */}
-                   <div style={{
-                     minHeight: "44px", display: "flex", alignItems: "center", justifyContent: "center",
-                     padding: "4px 16px", minWidth: "200px",
-                   }}>
-                     <span style={{ fontFamily: theme.fontFamilyMono || fontFamily, fontSize: "32px", color: "#fff", fontWeight: 400, letterSpacing: "6px" }}>
+                   <div style={{ minHeight: "40px", display: "flex", alignItems: "center", justifyContent: "center", padding: "2px 16px" }}>
+                     <span style={{ fontFamily: theme.fontFamilyMono || fontFamily, fontSize: "30px", color: "#fff", fontWeight: 400, letterSpacing: "6px" }}>
                        {inCallDigits || "\u00A0"}
                      </span>
                    </div>
@@ -416,32 +414,32 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                         ))}
                       </div>
                    ))}
-                   {/* Bottom row: Hide + End call */}
-                   <div className="flex items-center justify-center gap-6 mt-2">
-                     <button onClick={() => { setShowKeypad(false); setInCallDigits(""); }} className="px-5 py-2.5 rounded-full active:scale-95 transition-transform" style={{ backgroundColor: "rgba(255,255,255,0.12)", border: "none" }}>
-                       <span style={{ fontFamily, fontSize: "15px", color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>{t("call.keypad")}</span>
-                     </button>
-                     <button onClick={handleEnd} className="flex items-center justify-center active:scale-90 transition-transform"
-                       style={{ width: "64px", height: "64px", borderRadius: theme.radiusFull, backgroundColor: DANGER, border: "none", boxShadow: "0 6px 24px rgba(209,0,68,0.4)" }}>
-                       <PhoneOff size={24} color="#fff" />
-                     </button>
-                   </div>
                 </div>
               ) : (
-                <>
-                  <div className="flex items-center justify-center gap-10">
-                    <CallControlButton icon={muted ? MicOff : Mic} label={muted ? t("call.unmute") : t("call.mute")} active={muted} onTap={() => setMuted(!muted)} fontFamily={fontFamily} />
-                    <CallControlButton icon={Volume2} label={t("call.speaker")} active={speaker} onTap={() => setSpeaker(!speaker)} fontFamily={fontFamily} />
-                    <CallControlButton icon={onHold ? Play : Pause} label={onHold ? t("call.resume") : t("call.hold")} active={onHold} onTap={() => setOnHold(!onHold)} fontFamily={fontFamily} />
-                    <CallControlButton icon={Grid3X3} label={t("call.keypad")} active={showKeypad} onTap={() => setShowKeypad(true)} fontFamily={fontFamily} />
-                  </div>
-                  <button onClick={handleEnd} className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
-                    style={{ width: "72px", height: "72px", borderRadius: theme.radiusFull, backgroundColor: DANGER, border: "none", boxShadow: "0 8px 32px rgba(209,0,68,0.4)" }}>
-                    <PhoneOff size={28} color="#fff" />
-                  </button>
-                  <span style={{ fontFamily, ...TEXT_STYLE.caption, color: "rgba(255,255,255,0.4)", marginTop: "-16px" }}>{t("call.endCall")}</span>
-                </>
+                /* ── Normal call controls ── */
+                <div className="flex items-center justify-center gap-10">
+                  <CallControlButton icon={muted ? MicOff : Mic} label={muted ? t("call.unmute") : t("call.mute")} active={muted} onTap={() => setMuted(!muted)} fontFamily={fontFamily} />
+                  <CallControlButton icon={Volume2} label={t("call.speaker")} active={speaker} onTap={() => setSpeaker(!speaker)} fontFamily={fontFamily} />
+                  <CallControlButton icon={onHold ? Play : Pause} label={onHold ? t("call.resume") : t("call.hold")} active={onHold} onTap={() => setOnHold(!onHold)} fontFamily={fontFamily} />
+                  <CallControlButton icon={Grid3X3} label={t("call.keypad")} active={false} onTap={() => setShowKeypad(true)} fontFamily={fontFamily} />
+                </div>
               )}
+
+              {/* ── Bottom row: always end-call, plus back arrow when keypad open ── */}
+              <div className="flex items-center justify-center gap-8">
+                {showKeypad && (
+                  <button onClick={() => { setShowKeypad(false); setInCallDigits(""); }}
+                    className="flex items-center justify-center active:scale-90 transition-transform"
+                    style={{ width: "48px", height: "48px", borderRadius: theme.radiusFull, backgroundColor: "rgba(255,255,255,0.12)", border: "none" }}>
+                    <ArrowLeft size={22} color="rgba(255,255,255,0.8)" />
+                  </button>
+                )}
+                <button onClick={handleEnd} className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+                  style={{ width: "72px", height: "72px", borderRadius: theme.radiusFull, backgroundColor: DANGER, border: "none", boxShadow: "0 8px 32px rgba(209,0,68,0.4)" }}>
+                  <PhoneOff size={28} color="#fff" />
+                </button>
+              </div>
+              <span style={{ fontFamily, ...TEXT_STYLE.caption, color: "rgba(255,255,255,0.4)", marginTop: "-14px" }}>{t("call.endCall")}</span>
             </div>
           )}
           {callState === "outgoing" && (

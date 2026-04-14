@@ -9,31 +9,53 @@ interface Ripple {
 
 let rippleId = 0;
 
-/* ── Shared AudioContext for instant tap sound (zero-delay) ── */
+/* ═══════════════════════════════════════════════════════════════════════════
+ * INSTANT TAP SOUND — Pre-warmed AudioContext
+ * ═══════════════════════════════════════════════════════════════════════════
+ * The AudioContext is created and resumed by a one-shot document-level
+ * pointerdown listener (capture phase). This fires BEFORE any React
+ * component handler, so by the time playTapSound() runs inside
+ * onPointerDown, the context is already in "running" state.
+ * ═══════════════════════════════════════════════════════════════════════════ */
 let _tapCtx: AudioContext | null = null;
-function getTapCtx(): AudioContext | null {
-  try {
-    const AC = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AC) return null;
-    if (!_tapCtx) _tapCtx = new AC();
-    if (_tapCtx.state === "suspended") _tapCtx.resume();
-    return _tapCtx;
-  } catch { return null; }
+let _tapReady = false;
+
+// Pre-warm: fires once on very first touch, before any component handler
+if (typeof document !== "undefined") {
+  const warmUp = () => {
+    try {
+      const AC = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AC) return;
+      _tapCtx = new AC();
+      // Play a silent buffer to fully unlock the audio pipeline
+      const buf = _tapCtx.createBuffer(1, 1, _tapCtx.sampleRate);
+      const src = _tapCtx.createBufferSource();
+      src.buffer = buf;
+      src.connect(_tapCtx.destination);
+      src.start(0);
+      if (_tapCtx.state === "suspended") {
+        _tapCtx.resume().then(() => { _tapReady = true; });
+      } else {
+        _tapReady = true;
+      }
+    } catch {}
+    document.removeEventListener("pointerdown", warmUp, true);
+  };
+  document.addEventListener("pointerdown", warmUp, true);
 }
 
 function playTapSound() {
-  const ctx = getTapCtx();
-  if (!ctx) return;
-  const t = ctx.currentTime;
-  const gain = ctx.createGain();
-  gain.connect(ctx.destination);
+  if (!_tapCtx || !_tapReady) return;
+  const t = _tapCtx.currentTime;
+  const gain = _tapCtx.createGain();
+  gain.connect(_tapCtx.destination);
   gain.gain.setValueAtTime(0.06, t);
-  gain.gain.linearRampToValueAtTime(0, t + 0.035);
-  const osc = ctx.createOscillator();
+  gain.gain.linearRampToValueAtTime(0, t + 0.03);
+  const osc = _tapCtx.createOscillator();
   osc.frequency.value = 800;
   osc.connect(gain);
   osc.start(t);
-  osc.stop(t + 0.035);
+  osc.stop(t + 0.03);
 }
 
 /**
