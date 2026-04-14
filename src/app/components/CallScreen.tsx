@@ -129,11 +129,24 @@ function playDTMF(digit: string) {
     if (dtmfCtx.state === "suspended") dtmfCtx.resume();
   } catch (e) { return; }
   
-  const freqs = DTMF_FREQS[digit];
-  if (!freqs) return;
   const t = dtmfCtx.currentTime;
   const gain = dtmfCtx.createGain();
   gain.connect(dtmfCtx.destination);
+  
+  if (digit === "delete") {
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.08, t + 0.01);
+    gain.gain.linearRampToValueAtTime(0, t + 0.08); // Quick, soft low blip
+    const osc = dtmfCtx.createOscillator();
+    osc.frequency.value = 350;
+    osc.connect(gain);
+    osc.start(t);
+    osc.stop(t + 0.08);
+    return;
+  }
+
+  const freqs = DTMF_FREQS[digit];
+  if (!freqs) return;
   
   gain.gain.setValueAtTime(0, t);
   gain.gain.linearRampToValueAtTime(0.08, t + 0.02);
@@ -299,8 +312,10 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
   }, []);
 
   const onKeypadDelete = useCallback(() => {
+    if (!dialInput) return;
+    playDTMF("delete");
     setDialInput((prev) => prev.slice(0, -1));
-  }, []);
+  }, [dialInput]);
 
   /* ═══════════════════════════════════════════════════════════════════════
    * RENDER — Call-in-progress overlays (dark)
