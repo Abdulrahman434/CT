@@ -154,6 +154,18 @@ function BedsideScreen() {
     } catch { }
   }, []);
 
+  const handleAsrTap = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  }, []);
+
   // ── Keyboard Navigation ──
   useEffect(() => {
     const anyOverlayOpen =
@@ -333,6 +345,7 @@ function BedsideScreen() {
         <TopBar
           onFajrTap={() => setLayoutVersion((v) => (v === 3 ? 1 : 3))}
           onDhuhrTap={isFullAccess ? () => setShowConfigurator(true) : undefined}
+          onAsrTap={handleAsrTap}
           onIshaTap={() => setShowTasbih(true)}
           onWeatherTap={() => setLayoutVersion((v) => (v === 1 ? 2 : 1))}
           onSettingsTap={() => setShowSettings(true)}

@@ -46,7 +46,7 @@ function SunIcon() {
   );
 }
 
-export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onWeatherTap, onSettingsTap, onBellTap, onIshaTap, onMaghribTap, unreadCount = 3 }: { showPrayer?: boolean; onFajrTap?: () => void; onDhuhrTap?: () => void; onWeatherTap?: () => void; onSettingsTap?: () => void; onBellTap?: () => void; onIshaTap?: () => void; onMaghribTap?: () => void; unreadCount?: number }) {
+export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onWeatherTap, onSettingsTap, onBellTap, onIshaTap, onMaghribTap, unreadCount = 3 }: { showPrayer?: boolean; onFajrTap?: () => void; onDhuhrTap?: () => void; onAsrTap?: () => void; onWeatherTap?: () => void; onSettingsTap?: () => void; onBellTap?: () => void; onIshaTap?: () => void; onMaghribTap?: () => void; unreadCount?: number }) {
   const { theme, castDevice, setLocale, locale: currentLocale } = useTheme();
   const { t, locale, isRTL, fontFamily } = useLocale();
   const [time, setTime] = useState(new Date());
@@ -105,11 +105,11 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onWeatherTap,
             return (
               <div key={p.nameKey} className="flex items-center">
                 <div
-                  className={`flex flex-col items-center px-4 py-1.5 rounded-xl${p.nameKey === "prayer.fajr" || p.nameKey === "prayer.dhuhr" || p.nameKey === "prayer.isha" || p.nameKey === "prayer.maghrib" ? " cursor-pointer" : ""}`}
+                  className={`flex flex-col items-center px-4 py-1.5 rounded-xl${p.nameKey === "prayer.fajr" || p.nameKey === "prayer.dhuhr" || p.nameKey === "prayer.asr" || p.nameKey === "prayer.isha" || p.nameKey === "prayer.maghrib" ? " cursor-pointer" : ""}`}
                   style={{
                     backgroundColor: "transparent",
                   }}
-                  onClick={p.nameKey === "prayer.fajr" ? onFajrTap : p.nameKey === "prayer.dhuhr" ? onDhuhrTap : p.nameKey === "prayer.isha" ? onIshaTap : p.nameKey === "prayer.maghrib" ? onMaghribTap : undefined}
+                  onClick={p.nameKey === "prayer.fajr" ? onFajrTap : p.nameKey === "prayer.dhuhr" ? onDhuhrTap : p.nameKey === "prayer.asr" ? onAsrTap : p.nameKey === "prayer.isha" ? onIshaTap : p.nameKey === "prayer.maghrib" ? onMaghribTap : undefined}
                 >
                   <span
                     style={{
