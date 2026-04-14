@@ -27,6 +27,9 @@ import {
   ShieldAlert,
   Clock,
   Search,
+  Maximize,
+  Minimize,
+  RotateCcw,
 } from "lucide-react";
 import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
@@ -1456,7 +1459,15 @@ function ActionButton({
 /* ═══════════════════════════════════════════════════════════════
  * MAIN SETTINGS PANEL
  * ═══════════════════════════════════════════════════════════════ */
-export function SettingsPanel({ onClose }: { onClose: () => void }) {
+export function SettingsPanel({
+  onClose,
+  onFullscreenTap,
+  isFullscreen,
+}: {
+  onClose: () => void;
+  onFullscreenTap?: () => void;
+  isFullscreen?: boolean;
+}) {
   const { theme: t, darkMode, setDarkMode, castDevice, setCastDevice, locale: currentLocale, setLocale } = useTheme();
   const { t: tr, isRTL, fontFamily } = useLocale();
 
@@ -1554,19 +1565,53 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               {tr("settings.title")}
             </span>
           </div>
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
-            style={{
-              width: "48px",
-              height: "48px",
-              borderRadius: t.radiusLg,
-              backgroundColor: t.tileInactiveBg,
-              border: "none",
-            }}
-          >
-            <X size={22} style={{ color: t.textMuted }} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onFullscreenTap}
+              className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: t.radiusLg,
+                backgroundColor: t.tileInactiveBg,
+                border: "none",
+              }}
+              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            >
+              {isFullscreen ? (
+                <Minimize size={22} style={{ color: t.primary }} />
+              ) : (
+                <Maximize size={22} style={{ color: t.primary }} />
+              )}
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: t.radiusLg,
+                backgroundColor: t.tileInactiveBg,
+                border: "none",
+              }}
+              title="Reload App"
+            >
+              <RotateCcw size={22} style={{ color: t.textMuted }} />
+            </button>
+            <button
+              onClick={onClose}
+              className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: t.radiusLg,
+                backgroundColor: t.tileInactiveBg,
+                border: "none",
+              }}
+            >
+              <X size={22} style={{ color: t.textMuted }} />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable content */}

@@ -98,6 +98,13 @@ function BedsideScreen() {
   const [acknowledgedBroadcasts, setAcknowledgedBroadcasts] = useState<BroadcastNotification[]>([]);
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [activeTool, setActiveTool] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+
+  useEffect(() => {
+    const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handleFsChange);
+    return () => document.removeEventListener("fullscreenchange", handleFsChange);
+  }, []);
 
   const handleBroadcastAcknowledge = useCallback((id: string) => {
     setActiveBroadcast((prev) => {
@@ -154,7 +161,7 @@ function BedsideScreen() {
     } catch { }
   }, []);
 
-  const handleAsrTap = useCallback(() => {
+  const handleFullscreenTap = useCallback(() => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch((err) => {
         console.error(`Error attempting to enable full-screen mode: ${err.message}`);
@@ -345,7 +352,6 @@ function BedsideScreen() {
         <TopBar
           onFajrTap={() => setLayoutVersion((v) => (v === 3 ? 1 : 3))}
           onDhuhrTap={isFullAccess ? () => setShowConfigurator(true) : undefined}
-          onAsrTap={handleAsrTap}
           onIshaTap={() => setShowTasbih(true)}
           onWeatherTap={() => setLayoutVersion((v) => (v === 1 ? 2 : 1))}
           onSettingsTap={() => setShowSettings(true)}
@@ -497,7 +503,11 @@ function BedsideScreen() {
 
         {/* Settings Panel — slide-in from right */}
         {showSettings && (
-          <SettingsPanel onClose={() => setShowSettings(false)} />
+          <SettingsPanel
+            onClose={() => setShowSettings(false)}
+            onFullscreenTap={handleFullscreenTap}
+            isFullscreen={isFullscreen}
+          />
         )}
 
         {/* Notifications Panel — slide-in from right */}
