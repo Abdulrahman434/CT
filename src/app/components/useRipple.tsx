@@ -23,7 +23,7 @@ let _dtmfOsc2: OscillatorNode | null = null;
 
 // The UI tick uses a simple pop
 export function playTapSound() {
-  if (!_ctx || !_tapGain) return;
+  if (!_ctx || !_tapGain || _ctx.state !== "running") return;
   const t = _ctx.currentTime;
   _tapGain.gain.cancelScheduledValues(0);
   _tapGain.gain.setValueAtTime(0.06, t);
@@ -33,7 +33,7 @@ export function playTapSound() {
 
 // Exported for CallScreen
 export function playTone(freq1: number, freq2?: number, duration: number = 0.15, vol: number = 0.1) {
-  if (!_ctx || !_dtmfGain || !_dtmfOsc1) return;
+  if (!_ctx || !_dtmfGain || !_dtmfOsc1 || _ctx.state !== "running") return;
   const t = _ctx.currentTime;
   _dtmfOsc1.frequency.setValueAtTime(freq1, t);
   if (freq2 && _dtmfOsc2) _dtmfOsc2.frequency.setValueAtTime(freq2, t);
@@ -88,6 +88,7 @@ if (typeof document !== "undefined") {
   // Automatically play tick for ANY interactive element on the screen
   document.addEventListener("pointerdown", (e) => {
     const el = e.target as HTMLElement;
+    if (el.closest("[data-no-tick='true']")) return;
     if (
       el.closest("button") || 
       el.closest("a") || 
