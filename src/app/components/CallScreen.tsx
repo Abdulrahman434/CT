@@ -27,6 +27,7 @@ import {
   Monitor,
   BookOpen,
   Headset,
+  MapPin,
 } from "lucide-react";
 import { useTheme, TEXT_STYLE, WEIGHT, TYPE_SCALE, SHADOW } from "./ThemeContext";
 import { useLocale } from "./i18n";
@@ -374,8 +375,23 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
       <div className="shrink-0 flex gap-4 px-10 pb-5 relative z-10">
         <div className="flex items-center gap-3" style={{
           borderRadius: theme.radiusLg, backgroundColor: theme.surface,
-          border: `1px solid ${theme.borderDefault}`, padding: "18px 60px 18px 28px", boxShadow: SHADOW.sm,
-          minWidth: "260px",
+          border: `1px solid ${theme.borderDefault}`, padding: "12px 32px 12px 20px", boxShadow: SHADOW.sm,
+          minWidth: "220px",
+        }}>
+          <div className="w-12 h-12 flex items-center justify-center shrink-0"
+            style={{ backgroundColor: theme.primarySubtle, color: theme.primary, borderRadius: theme.radiusMd }}>
+            <MapPin size={24} />
+          </div>
+          <div>
+            <p style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "16px", color: theme.textMuted }}>{t("call.roomNo")}</p>
+            <p style={{ fontFamily: theme.fontFamilyMono, fontSize: "28px", fontWeight: WEIGHT.bold, color: theme.textHeading, letterSpacing: "1px" }}>412</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3" style={{
+          borderRadius: theme.radiusLg, backgroundColor: theme.surface,
+          border: `1px solid ${theme.borderDefault}`, padding: "12px 32px 12px 20px", boxShadow: SHADOW.sm,
+          minWidth: "220px",
         }}>
           <div className="w-12 h-12 flex items-center justify-center shrink-0"
             style={{ backgroundColor: theme.primarySubtle, color: theme.primary, borderRadius: theme.radiusMd }}>
@@ -389,7 +405,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* ── 3-Column Content ── */}
-      <div className="min-h-0 flex px-10 pb-24 relative z-10" style={{ flex: "1 1 0", maxHeight: "calc(100% - 240px)", gap: "40px" }}>
+      <div className="min-h-0 flex px-10 pb-16 relative z-10" style={{ flex: "1 1 0", maxHeight: "calc(100% - 190px)", gap: "40px" }}>
 
         {/* Column 1 — Call History */}
         <div className="flex flex-col min-w-0 min-h-0 overflow-hidden" style={{
@@ -523,22 +539,25 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
           <div style={{ height: "1px", backgroundColor: theme.borderSubtle, margin: "0 16px" }} />
 
           {/* Display */}
-          <div className="shrink-0 flex items-center justify-center px-5 pt-6 pb-2" style={{ minHeight: "80px" }}>
-            <span style={{
-              fontFamily: theme.fontFamilyMono, fontSize: "64px", fontWeight: WEIGHT.extrabold,
-              color: dialInput ? theme.primary : theme.textDisabled,
-              letterSpacing: "12px", textAlign: "center", minHeight: "76px",
-              textShadow: dialInput ? "0 4px 20px " + theme.primary + "40" : "none",
-              transition: "all 0.3s ease",
-            }}>
-              {dialInput || "—"}
-            </span>
+          <div className="shrink-0 flex items-center justify-center px-5 pt-6 pb-2" style={{ minHeight: "80px", position: "relative" }}>
+            {dialInput ? (
+                <span style={{
+                  fontFamily: theme.fontFamilyMono, fontSize: "64px", fontWeight: WEIGHT.extrabold,
+                  color: theme.primary,
+                  letterSpacing: "12px", textAlign: "center", minHeight: "76px",
+                  textShadow: "0 4px 20px " + theme.primary + "40",
+                  transition: "color 0.3s ease",
+                }}>
+                  {dialInput}
+                </span>
+            ) : (
+                <span style={{
+                  fontFamily, ...TEXT_STYLE.caption, fontSize: "20px", color: theme.textMuted, textAlign: "center", minHeight: "76px", display: "flex", alignItems: "center"
+                }}>
+                  {t("call.keypadHint")}
+                </span>
+            )}
           </div>
-          {!dialInput && (
-            <p className="text-center" style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "16px", color: theme.textMuted, marginTop: "4px", marginBottom: "8px" }}>
-              {t("call.keypadHint")}
-            </p>
-          )}
 
           {/* Keypad grid */}
           <div dir="ltr" className="flex-1 flex flex-col justify-center items-center px-5 pb-6 gap-4">
