@@ -17,9 +17,20 @@ import {
   ArrowRight,
   PhoneIncoming,
   Delete,
+  BookUser,
+  Stethoscope,
+  ConciergeBell,
+  Pill,
+  UtensilsCrossed,
+  Sparkles,
+  Heart,
+  Monitor,
+  BookOpen,
+  Headset,
 } from "lucide-react";
 import { useTheme, TEXT_STYLE, WEIGHT, TYPE_SCALE, SHADOW } from "./ThemeContext";
 import { useLocale } from "./i18n";
+import type { LucideIcon } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * DATA
@@ -30,6 +41,9 @@ interface Extension {
   nameKey: string;
   descKey: string;
   ext: string;
+  icon: LucideIcon;
+  iconColor: string;
+  iconBg: string;
   emergency?: boolean;
 }
 
@@ -47,15 +61,15 @@ interface CallLogEntry {
 type CallState = "idle" | "incoming" | "outgoing" | "active";
 
 const EXTENSIONS: Extension[] = [
-  { id: "nurse",       nameKey: "call.nurseStation",     descKey: "call.nurseStation.desc",     ext: "1001" },
-  { id: "reception",   nameKey: "call.reception",        descKey: "call.reception.desc",        ext: "1000" },
-  { id: "pharmacy",    nameKey: "call.pharmacy",         descKey: "call.pharmacy.desc",         ext: "1050" },
-  { id: "dietary",     nameKey: "call.dietary",          descKey: "call.dietary.desc",          ext: "1060" },
-  { id: "housekeep",   nameKey: "call.housekeeping",     descKey: "call.housekeeping.desc",     ext: "1070" },
-  { id: "relations",   nameKey: "call.patientRelations", descKey: "call.patientRelations.desc", ext: "1080" },
-  { id: "it",          nameKey: "call.itSupport",        descKey: "call.itSupport.desc",        ext: "1090" },
-  { id: "religious",   nameKey: "call.religiousServices",descKey: "call.religiousServices.desc",ext: "1100" },
-  { id: "operator",    nameKey: "call.operator",         descKey: "call.operator.desc",         ext: "0" },
+  { id: "nurse",       nameKey: "call.nurseStation",     descKey: "call.nurseStation.desc",     ext: "1001", icon: Stethoscope,     iconColor: "#E11D48", iconBg: "rgba(225,29,72,0.08)" },
+  { id: "reception",   nameKey: "call.reception",        descKey: "call.reception.desc",        ext: "1000", icon: ConciergeBell,   iconColor: "#0891B2", iconBg: "rgba(8,145,178,0.08)" },
+  { id: "pharmacy",    nameKey: "call.pharmacy",         descKey: "call.pharmacy.desc",         ext: "1050", icon: Pill,            iconColor: "#7C3AED", iconBg: "rgba(124,58,237,0.08)" },
+  { id: "dietary",     nameKey: "call.dietary",          descKey: "call.dietary.desc",          ext: "1060", icon: UtensilsCrossed, iconColor: "#EA580C", iconBg: "rgba(234,88,12,0.08)" },
+  { id: "housekeep",   nameKey: "call.housekeeping",     descKey: "call.housekeeping.desc",     ext: "1070", icon: Sparkles,        iconColor: "#0D9488", iconBg: "rgba(13,148,136,0.08)" },
+  { id: "relations",   nameKey: "call.patientRelations", descKey: "call.patientRelations.desc", ext: "1080", icon: Heart,           iconColor: "#DB2777", iconBg: "rgba(219,39,119,0.08)" },
+  { id: "it",          nameKey: "call.itSupport",        descKey: "call.itSupport.desc",        ext: "1090", icon: Monitor,         iconColor: "#4F46E5", iconBg: "rgba(79,70,229,0.08)" },
+  { id: "religious",   nameKey: "call.religiousServices",descKey: "call.religiousServices.desc",ext: "1100", icon: BookOpen,        iconColor: "#059669", iconBg: "rgba(5,150,105,0.08)" },
+  { id: "operator",    nameKey: "call.operator",         descKey: "call.operator.desc",         ext: "0",    icon: Headset,         iconColor: "#6366F1", iconBg: "rgba(99,102,241,0.08)" },
 ];
 
 const MOCK_MISSED: CallLogEntry[] = [
@@ -386,15 +400,19 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
               width: "32px", height: "32px", borderRadius: theme.radiusMd,
               backgroundColor: theme.primarySubtle, color: theme.primary,
             }}>
-              <Phone size={16} />
+              <BookUser size={16} />
             </div>
             <span style={{ fontFamily, ...TEXT_STYLE.subtitle, color: theme.textHeading }}>{t("call.hospitalDirectory")}</span>
           </div>
           <div style={{ height: "1px", backgroundColor: theme.borderSubtle, margin: "0 16px" }} />
           <div className="flex-1 min-h-0 overflow-y-auto callscreen-scroll" style={{ padding: "10px 12px" }}>
-            <div className="flex flex-col gap-1.5">
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(2, 1fr)",
+              gap: "10px",
+            }}>
               {EXTENSIONS.map((ext) => (
-                <ExtensionRow key={ext.id} ext={ext} onDial={handleDial} />
+                <ExtensionCard key={ext.id} ext={ext} onDial={handleDial} />
               ))}
             </div>
           </div>
@@ -603,6 +621,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
 
       <style>{`
         @keyframes callScreenIn { from { opacity:0; transform:scale(1.02); } to { opacity:1; transform:scale(1); } }
+        @keyframes callCardPopIn { from { opacity:0; transform:scale(0.6); } to { opacity:1; transform:scale(1); } }
         .callscreen-scroll::-webkit-scrollbar { width: 4px; }
         .callscreen-scroll::-webkit-scrollbar-track { background: transparent; margin: 4px 0; }
         .callscreen-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 4px; }
@@ -616,59 +635,72 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
  * SUB-COMPONENTS
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function ExtensionRow({ ext, onDial }: { ext: Extension; onDial: (e: Extension) => void }) {
+function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension) => void }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const ExtIcon = ext.icon;
 
   return (
     <button
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
+      onPointerLeave={() => { setPressed(false); setHovered(false); }}
+      onPointerEnter={() => setHovered(true)}
       onClick={() => onDial(ext)}
-      className="flex items-center gap-3 w-full cursor-pointer transition-all"
+      className="flex flex-col items-center justify-center gap-2 cursor-pointer transition-all"
       style={{
-        padding: "11px 12px",
-        borderRadius: theme.radiusMd,
-        backgroundColor: pressed ? theme.primarySubtle : theme.background,
-        border: `1px solid ${pressed ? theme.borderActive : theme.borderSubtle}`,
+        aspectRatio: "1 / 1",
+        padding: "12px 8px",
+        borderRadius: theme.radiusLg,
+        backgroundColor: pressed ? ext.iconBg : hovered ? theme.background : theme.background,
+        border: `1.5px solid ${pressed ? ext.iconColor + "40" : hovered ? theme.borderActive : theme.borderSubtle}`,
         outline: "none",
-        textAlign: "start",
-        transform: pressed ? "scale(0.99)" : "scale(1)",
+        textAlign: "center",
+        transform: pressed ? "scale(0.95)" : hovered ? "scale(1.02)" : "scale(1)",
+        boxShadow: hovered ? "0 8px 24px rgba(0,0,0,0.08)" : "none",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
-      {/* Icon circle */}
-      <div className="shrink-0 flex items-center justify-center" style={{
-        width: "36px", height: "36px", borderRadius: theme.radiusFull,
-        backgroundColor: theme.primarySubtle,
+      {/* Department icon */}
+      <div className="flex items-center justify-center" style={{
+        width: "44px", height: "44px", borderRadius: theme.radiusLg,
+        backgroundColor: ext.iconBg,
+        transition: "all 0.2s",
       }}>
-        <Phone size={16} color={theme.primary} strokeWidth={1.8} />
+        <ExtIcon size={22} color={ext.iconColor} strokeWidth={1.8} />
       </div>
 
-      {/* Name + ext */}
-      <div className="flex-1 min-w-0">
-        <p className="truncate" style={{
-          fontFamily, fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold,
-          color: theme.textHeading, margin: 0,
-        }}>
-          {t(ext.nameKey)}
-        </p>
-        <span style={{
-          fontFamily: theme.fontFamilyMono, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium,
-          color: theme.textMuted,
-        }}>
-          {t("call.ext")} {ext.ext}
-        </span>
-      </div>
-
-      {/* Call button */}
-      <div className="shrink-0 flex items-center justify-center" style={{
-        width: "34px", height: "34px", borderRadius: theme.radiusFull,
-        backgroundColor: "#22C55E",
+      {/* Name */}
+      <p className="truncate w-full" style={{
+        fontFamily, fontSize: "13px", fontWeight: WEIGHT.semibold,
+        color: theme.textHeading, margin: 0, lineHeight: "1.2",
       }}>
-        <Phone size={14} color="#fff" />
-      </div>
+        {t(ext.nameKey)}
+      </p>
+
+      {/* Extension number */}
+      <span style={{
+        fontFamily: theme.fontFamilyMono, fontSize: "11px", fontWeight: WEIGHT.medium,
+        color: theme.textMuted,
+      }}>
+        {ext.ext}
+      </span>
+
+      {/* Call indicator on hover */}
+      {hovered && (
+        <div className="absolute" style={{
+          bottom: "8px", right: "8px",
+          width: "24px", height: "24px", borderRadius: theme.radiusFull,
+          backgroundColor: "#22C55E",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          animation: "callCardPopIn 0.15s ease-out",
+        }}>
+          <Phone size={12} color="#fff" />
+        </div>
+      )}
     </button>
   );
 }
