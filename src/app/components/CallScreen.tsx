@@ -541,7 +541,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
           {/* Display */}
           <div className="shrink-0 flex items-center justify-center px-5 pt-6 pb-2" style={{ minHeight: "80px" }}>
             <span style={{
-              fontFamily: theme.fontFamilyMono, fontSize: "64px", fontWeight: WEIGHT.extrabold,
+              fontFamily: theme.fontFamilyMono, fontSize: "64px", fontWeight: WEIGHT.bold,
               color: dialInput ? theme.primary : theme.textDisabled,
               letterSpacing: "12px", textAlign: "center", minHeight: "76px",
               textShadow: dialInput ? "0 4px 20px " + theme.primary + "40" : "none",
@@ -663,8 +663,8 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
         aspectRatio: "1 / 1",
         padding: "20px 12px",
         borderRadius: theme.radiusLg,
-        backgroundColor: pressed ? ext.iconBg : theme.background,
-        border: `2px solid ${pressed ? ext.iconColor + "40" : theme.borderSubtle}`,
+        backgroundColor: pressed ? theme.primary : theme.background,
+        border: `2px solid ${pressed ? "transparent" : theme.borderSubtle}`,
         outline: "none",
         textAlign: "center",
         transform: pressed ? "scale(0.95)" : "scale(1)",
@@ -676,16 +676,16 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
       {/* Department icon */}
       <div className="flex items-center justify-center" style={{
         width: "72px", height: "72px", borderRadius: theme.radiusLg,
-        backgroundColor: ext.iconBg,
+        backgroundColor: pressed ? "rgba(255,255,255,0.2)" : theme.primaryLight,
         transition: "all 0.2s",
       }}>
-        <ExtIcon size={36} color={ext.iconColor} strokeWidth={2} />
+        <ExtIcon size={36} color={pressed ? theme.textInverse : theme.primary} strokeWidth={2} />
       </div>
 
       {/* Name */}
       <p style={{
-        fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold,
-        color: theme.textHeading, margin: 0, lineHeight: "1.2",
+        fontFamily, fontSize: "20px", fontWeight: WEIGHT.semibold,
+        color: pressed ? theme.textInverse : theme.textHeading, margin: 0, lineHeight: "1.2",
       }}>
         {t(ext.nameKey)}
       </p>
@@ -693,7 +693,7 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
       {/* Extension number */}
       <span style={{
         fontFamily: theme.fontFamilyMono, fontSize: "18px", fontWeight: WEIGHT.medium,
-        color: theme.textMuted,
+        color: pressed ? "rgba(255,255,255,0.8)" : theme.textMuted,
       }}>
         {ext.ext}
       </span>
@@ -742,7 +742,7 @@ function CallLogRow({ entry, onCallback }: { entry: CallLogEntry; onCallback: (e
 
       <div className="flex-1 min-w-0">
         <p className="truncate" style={{
-          fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold,
+          fontFamily, fontSize: "20px", fontWeight: WEIGHT.semibold,
           color: isMissed ? DANGER : theme.textHeading, margin: 0,
         }}>
           {t(entry.nameKey)}
@@ -827,7 +827,7 @@ function KeypadButton({ digit, onPress }: { digit: string; onPress: (digit: stri
       }}
     >
       <span style={{
-        fontFamily: theme.fontFamilyMono, fontSize: "40px", fontWeight: WEIGHT.extrabold,
+        fontFamily: theme.fontFamilyMono, fontSize: "40px", fontWeight: WEIGHT.bold,
         color: pressed ? "#fff" : theme.textHeading,
         transition: "color 0.2s",
       }}>
