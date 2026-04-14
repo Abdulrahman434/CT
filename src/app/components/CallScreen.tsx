@@ -379,7 +379,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                    {[["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]].map((row, ri) => (
                       <div key={ri} className="flex gap-4 justify-center">
                         {row.map((digit) => (
-                           <button key={digit} onPointerDown={() => { playDTMF(digit); setInCallDigits(prev => prev.length >= 16 ? prev : prev + digit); }} className="active:scale-90 transition-transform" style={{
+                           <button key={digit} data-no-tick="true" onPointerDown={() => { playDTMF(digit); setInCallDigits(prev => prev.length >= 16 ? prev : prev + digit); }} className="active:scale-90 transition-transform" style={{
                              width:"68px", height:"68px", borderRadius:theme.radiusFull, backgroundColor:"rgba(255,255,255,0.12)",
                              display:"flex", alignItems:"center", justifyContent:"center", border: "none",
                            }}>
@@ -393,8 +393,8 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                      {/* Left: Back (aligns with *) */}
                      <button onClick={() => { setShowKeypad(false); setInCallDigits(""); }}
                        className="flex items-center justify-center active:scale-90 transition-transform"
-                       style={{ width: "68px", height: "68px", borderRadius: theme.radiusFull, backgroundColor: "rgba(255,255,255,0.12)", border: "none" }}>
-                       <ArrowLeft size={28} color="rgba(255,255,255,0.8)" />
+                       style={{ width: "68px", height: "68px", backgroundColor: "transparent", border: "none" }}>
+                       <ArrowLeft size={28} color="rgba(255,255,255,0.5)" strokeWidth={2} />
                      </button>
                      
                      {/* Center: End Call (aligns with 0) */}
@@ -734,6 +734,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
               <div style={{ width: "88px", height: "88px" }} />
               <KeypadButton digit="0" onPress={onKeypadPress} />
               <button
+                data-no-tick="true"
                 onClick={onKeypadDelete}
                 className="flex items-center justify-center cursor-pointer transition-transform duration-300 active:scale-90"
                 style={{
@@ -984,6 +985,7 @@ function KeypadButton({ digit, onPress }: { digit: string; onPress: (digit: stri
   
   return (
     <button
+      data-no-tick="true"
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
