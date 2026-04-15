@@ -207,7 +207,6 @@ const translations: Record<string, TranslationEntry> = {
   "care.baby.nursery": { en: "Nursery — Camera 3", ar: "الحضانة — كاميرا ٣" },
   "care.baby.connected": { en: "Connected", ar: "متصل" },
   "care.baby.expand": { en: "Expand view", ar: "توسيع العرض" },
-  "care.baby.tapToExit": { en: "Tap anywhere to exit fullscreen", ar: "اضغط في أي مكان للخروج" },
 
   /* ─── Settings Panel ─── */
   "settings.title": { en: "Settings", ar: "الإعدادات" },
