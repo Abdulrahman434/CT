@@ -101,8 +101,8 @@ const labResults = [
 ];
 
 const imagingResults = [
-  { labelKey: "care.imaging.ultrasound", date: "09 Mar", summaryKey: "care.imaging.summary", type: "Obstetric" },
-  { labelKey: "care.imaging.xray", date: "05 Mar", summaryKey: "care.plan.done", type: "Chest" },
+  { labelKey: "care.imaging.ultrasound", date: "09 Mar", summaryKey: "care.imaging.summary", type: "Obstetric", pdfUrl: "https://www.dallah-hospital.com/english/MediaCenter/EducationalPdfs/Pregnancy%20and%20Childbirth.pdf" },
+  { labelKey: "care.imaging.xray", date: "05 Mar", summaryKey: "care.plan.done", type: "Chest", pdfUrl: "https://www.dallah-hospital.com/english/MediaCenter/EducationalPdfs/Patient%20Education%20on%20Pneumonia.pdf" },
 ];
 
 /* ─── Reported Pain ─── */
@@ -373,8 +373,9 @@ function ImagingSlide({ theme }: { theme: any }) {
           </div>
           <p style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.caption, color: theme.textHeading, paddingLeft: 40 }}>{t(img.summaryKey)}</p>
           <button 
-            className="mt-1 flex items-center gap-1.5 self-start px-3 py-1.5" 
+            className="mt-1 flex items-center gap-1.5 self-start px-3 py-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer" 
             style={{ borderRadius: theme.radiusMd, backgroundColor: theme.surface, border: `1px solid ${theme.borderSubtle}` }}
+            onClick={() => window.open(img.pdfUrl, "_blank")}
           >
             <FileText size={12} style={{ color: theme.primary }} />
             <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.micro, fontWeight: WEIGHT.bold, color: theme.primary }}>{t("care.imaging.viewReport")}</span>
