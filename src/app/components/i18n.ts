@@ -108,7 +108,7 @@ const translations: Record<string, TranslationEntry> = {
   "service.orderFood": { en: "Meal Ordering", ar: "طلب الوجبات", ur: "کھانے کا آرڈر" },
   "service.call": { en: "Call", ar: "اتصال", ur: "کال" },
   "service.survey": { en: "Survey", ar: "استبيان", ur: "سروے" },
-  "service.shareFeedback": { en: "Your Feedback", ar: "رأيك يهمنا" },
+  "service.shareFeedback": { en: "Your Feedback", ar: "رأيك يهمنا", ur: "آپ کی رائے" },
 
   /* ─── Shortcut Items ─── */
   "shortcut.whatsapp": { en: "WhatsApp", ar: "واتساب", ur: "واٹس ایپ" },
