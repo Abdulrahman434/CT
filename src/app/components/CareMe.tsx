@@ -467,57 +467,46 @@ function BabyCameraFullscreen({ onClose, cameraImage }: { onClose: () => void, c
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center"
+      className="fixed inset-0 z-[100] flex items-center justify-center cursor-pointer"
       style={{
-        backgroundColor: "#0a0a14",
+        backgroundColor: "#000",
         animation: "babyCamFadeIn 0.3s ease-out",
       }}
+      onClick={onClose}
     >
-      {/* Camera feed — full screen */}
-      <img
-        src={cameraImage}
-        alt="Baby Camera Feed — Full Screen"
-        className="absolute inset-0 w-full h-full object-contain"
-      />
+      {/* Container for feed + overlays (maintaining 16:9 for overlay positioning if possible, or just edge overlays) */}
+      <div className="relative w-full h-full flex items-center justify-center">
+        {/* Camera feed — full screen */}
+        <img
+          src={cameraImage}
+          alt="Baby Camera Feed — Full Screen"
+          className="w-full h-full object-contain"
+        />
 
-      {/* Top bar overlay */}
-      <div
-        className="absolute top-0 left-0 right-0 flex items-center justify-between px-8 py-6 z-10"
-        style={{ background: "linear-gradient(rgba(0,0,0,0.6), transparent)" }}
-      >
-        {/* Left: LIVE badge + baby info */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ backgroundColor: "rgba(239,68,68,0.9)" }}>
-            <Circle size={10} fill="#fff" style={{ color: "#fff" }} />
-            <span style={{ fontFamily: theme.fontFamily, fontSize: "14px", fontWeight: 700, color: "#fff", letterSpacing: "0.5px" }}>{t("care.baby.live")}</span>
-          </div>
-          <div>
-            <p style={{ fontFamily: theme.fontFamily, fontSize: TYPE_SCALE.xl, fontWeight: WEIGHT.semibold, color: "#fff" }}>Baby Saleh</p>
-            <p style={{ fontFamily: theme.fontFamily, fontSize: TYPE_SCALE.base, color: "rgba(255,255,255,0.6)" }}>Nursery · Crib 3A</p>
+        {/* Top bar overlay — strictly on feed area */}
+        <div 
+          className="absolute top-0 left-0 right-0 px-8 py-6 flex items-start justify-between z-10 pointer-events-none"
+          style={{ background: "linear-gradient(rgba(0,0,0,0.6) 0%, transparent 100%)" }}
+        >
+          {/* Left: LIVE badge + baby info */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ backgroundColor: "rgba(239,68,68,0.9)" }}>
+              <Circle size={10} fill="#fff" style={{ color: "#fff", animation: "pulse 1.5s infinite" }} />
+              <span style={{ fontSize: "14px", fontWeight: 800, color: "#fff", letterSpacing: "1px" }}>{t("care.baby.live")}</span>
+            </div>
+            <div>
+              <p style={{ fontFamily: theme.fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#fff", textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>Baby Saleh</p>
+              <p style={{ fontFamily: theme.fontFamily, fontSize: "18px", color: "rgba(255,255,255,0.7)", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>Nursery · Crib 3A</p>
+            </div>
           </div>
         </div>
 
-        {/* Right: Status + Close */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ backgroundColor: "rgba(16,185,129,0.25)" }}>
-            <div className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span style={{ fontFamily: theme.fontFamily, fontSize: "14px", fontWeight: 600, color: "#6EE7B7" }}>{t("care.baby.connected")}</span>
-          </div>
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-all"
-            style={{
-              width: "52px",
-              height: "52px",
-              borderRadius: theme.radiusLg,
-              backgroundColor: "rgba(255,255,255,0.15)",
-              border: "1px solid rgba(255,255,255,0.2)",
-              backdropFilter: "blur(8px)",
-            }}
-            aria-label="Close fullscreen"
-          >
-            <X size={24} style={{ color: "#fff" }} />
-          </button>
+        {/* Footer hint */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 px-8 py-3 rounded-full z-10" style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.15)" }}>
+          <Video size={18} style={{ color: "#fff" }} />
+          <span style={{ fontFamily: theme.fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#fff" }}>
+            {t("care.baby.tapToExit")}
+          </span>
         </div>
       </div>
 
