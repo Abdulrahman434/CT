@@ -273,6 +273,9 @@ const translations: Record<string, TranslationEntry> = {
 
   /* ─── Notification Items ─── */
   "notif.medicationDue": { en: "Medication due at 2:00 PM", ar: "موعد الدواء الساعة 2:00 م" },
+  "notif.mriReady": { en: "MRI results ready for review", ar: "نتائج الرنين المغناطيسي جاهزة للمراجعة" },
+  "notif.labsComplete": { en: "Blood test panel complete", ar: "اكتملت نتائج فحص الدم" },
+  "notif.hygieneScheduled": { en: "Room hygiene check scheduled", ar: "موعد فحص نظافة الغرفة" },
   "notif.newMessages": { en: "3 new messages", ar: "3 رسائل جديدة" },
   "notif.doctorVisit": { en: "Dr. Al-Ghamdi visit at 3 PM", ar: "زيارة د. الغامدي الساعة 3 م" },
   "notif.lunchMenu": { en: "Lunch menu available", ar: "قائمة الغداء متاحة" },

@@ -31,16 +31,17 @@ interface Notification {
 }
 
 const initialNotifications: Notification[] = [
-  { id: "1", iconType: "pill", textKey: "notif.medicationDue", time: "01:42 pm", read: false },
-  { id: "2", iconType: "message", textKey: "notif.newMessages", time: "09:47 am", read: false },
-  { id: "3", iconType: "stethoscope", textKey: "notif.doctorVisit", time: "09:15 am", read: false },
-  { id: "4", iconType: "food", textKey: "notif.lunchMenu", time: "08:30 am", read: true },
-  { id: "5", iconType: "download", textKey: "notif.fileDownloaded", time: "08:12 am", read: true },
+  { id: "1", iconType: "megaphone", textKey: "notif.mriReady", time: "11:20 am", read: false },
+  { id: "2", iconType: "megaphone", textKey: "notif.labsComplete", time: "10:45 am", read: false },
+  { id: "3", iconType: "megaphone", textKey: "notif.medicationDue", time: "09:30 am", read: false },
+  { id: "4", iconType: "megaphone", textKey: "notif.hygieneScheduled", time: "08:15 am", read: true },
+  { id: "5", iconType: "megaphone", textKey: "notif.doctorVisit", time: "Yesterday", read: true },
 ];
 
 function NotifIcon({ type }: { type: string }) {
   const { theme } = useTheme();
   switch (type) {
+    case "megaphone": return <Megaphone size={20} style={{ color: theme.primary }} />;
     case "pill": return <Pill size={20} style={{ color: theme.accent }} />;
     case "message": return <MessageSquare size={20} style={{ color: "#25D366" }} />;
     case "stethoscope": return <Stethoscope size={20} style={{ color: theme.primary }} />;
@@ -54,9 +55,11 @@ function NotifIcon({ type }: { type: string }) {
 function SwipeableRow({
   notification,
   onDismiss,
+  onClick,
 }: {
   notification: Notification;
   onDismiss: (id: string) => void;
+  onClick: (notif: Notification) => void;
 }) {
   const { theme } = useTheme();
   const { t, isRTL, fontFamily } = useLocale();
@@ -155,15 +158,21 @@ function SwipeableRow({
       {/* Swipeable content row */}
       <div
         ref={rowRef}
-        className="relative flex items-center gap-4"
+        className="relative flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all"
         style={{
           padding: "14px 16px",
           borderRadius: "14px",
           backgroundColor: notification.read ? theme.surfaceElevated : theme.primarySubtle,
           transform: `translateX(${offsetX}px)`,
-          transition: isDragging.current ? "none" : "transform 0.25s ease",
+          transition: isDragging.current ? "none" : "transform 0.25s ease, scale 0.2s ease",
           touchAction: "pan-y",
           userSelect: "none",
+        }}
+        onClick={(e) => {
+          // Only trigger if not dragging significantly
+          if (Math.abs(offsetX) < 10) {
+            onClick(notification);
+          }
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -245,7 +254,15 @@ const ORDER_STATUS_NOTIF: Record<OrderStatus, { textKey: { en: string; ar: strin
 };
 
 /* ─── Main Panel ─── */
-export function NotificationsPanel({ onClose, acknowledgedBroadcasts = [] }: { onClose: () => void; acknowledgedBroadcasts?: BroadcastNotification[] }) {
+export function NotificationsPanel({ 
+  onClose, 
+  acknowledgedBroadcasts = [],
+  onNotificationClick,
+}: { 
+  onClose: () => void; 
+  acknowledgedBroadcasts?: BroadcastNotification[];
+  onNotificationClick: (notif: Notification) => void;
+}) {
   const [notifications, setNotifications] = useState(initialNotifications);
   const { theme } = useTheme();
   const { t, isRTL, fontFamily } = useLocale();
@@ -660,6 +677,7 @@ export function NotificationsPanel({ onClose, acknowledgedBroadcasts = [] }: { o
                 key={notif.id}
                 notification={notif}
                 onDismiss={dismissNotification}
+                onClick={onNotificationClick}
               />
             ))
           )}

@@ -130,6 +130,67 @@ function BedsideScreen() {
     });
   }, []);
 
+  const handleNotificationClick = useCallback((notif: any) => {
+    // Map textKey to realistic broadcast content
+    const contentMap: Record<string, { title: { en: string, ar: string }, body: { en: string, ar: string }, priority: "info" | "warning" | "urgent" }> = {
+      "notif.mriReady": {
+        title: { en: "MRI Study Complete", ar: "اكتملت دراسة الرنين المغناطيسي" },
+        body: { 
+          en: "Your Abdominal MRI study is now ready for review. Your attending physician has been notified and will discuss the results with you during the next ward round.",
+          ar: "دراسة الرنين المغناطيسي للبطن جاهزة الآن للمراجعة. تم إبلاغ طبيبك المعالج وسيناقش النتائج معك خلال جولة القسم القادمة."
+        },
+        priority: "info"
+      },
+      "notif.labsComplete": {
+        title: { en: "Lab Results Ready", ar: "نتائج المختبر جاهزة" },
+        body: { 
+          en: "Your comprehensive blood panel results are now available. You can view the summary in the CareMe section under Lab Results.",
+          ar: "نتائج فحص الدم الشامل متاحة الآن. يمكنك عرض الملخص في قسم رعاية المرضى (CareMe) تحت نتائج المختبر."
+        },
+        priority: "info"
+      },
+      "notif.medicationDue": {
+        title: { en: "Medication Reminder", ar: "تذكير بموعد الدواء" },
+        body: { 
+          en: "Your scheduled medication is due now. A nurse will be visiting your room shortly to assist with administration.",
+          ar: "حان موعد دواءك المجدول الآن. ستقوم الممرضة بزيارة غرفتك قريباً للمساعدة في إعطائه."
+        },
+        priority: "urgent"
+      },
+      "notif.hygieneScheduled": {
+        title: { en: "Maintenance Alert", ar: "تنبيه الصيانة والنظافة" },
+        body: { 
+          en: "A routine hospital hygiene check is scheduled for your room shortly. This should take approximately 10 minutes. Thank you.",
+          ar: "من المقرر إجراء فحص دوري لنظافة المستشفى في غرفتك قريباً. سيستغرق ذلك حوالي 10 دقائق. شكراً لكم."
+        },
+        priority: "warning"
+      },
+      "notif.doctorVisit": {
+        title: { en: "Doctor Update", ar: "تحديث من الطبيب" },
+        body: { 
+          en: "Dr. Al-Ghamdi has reviewed your latest vitals and will visit your bedside during the afternoon rounds.",
+          ar: "قام الدكتور الغامدي بمراجعة علاماتك الحيوية الأخيرة وسيقوم بزيارتك خلال جولات بعد الظهر."
+        },
+        priority: "info"
+      }
+    };
+
+    const details = contentMap[notif.textKey] || {
+      title: { en: "Hospital Notification", ar: "إشعار من المستشفى" },
+      body: { en: "You have a new update from the medical staff.", ar: "لديك تحديث جديد من الطاقم الطبي." },
+      priority: "info"
+    };
+
+    setActiveBroadcast({
+      id: "notif-popup-" + notif.id,
+      title: details.title,
+      body: details.body,
+      priority: details.priority,
+      timestamp: notif.time,
+    });
+    setShowNotifications(false); // Close panel to focus on broadcast
+  }, []);
+
   const handleOpenCategory = (categoryKey: string) => {
     if (categoryKey === "About Us") {
       setShowAboutUs(true);
@@ -512,7 +573,11 @@ function BedsideScreen() {
 
         {/* Notifications Panel — slide-in from right */}
         {showNotifications && (
-          <NotificationsPanel onClose={() => setShowNotifications(false)} acknowledgedBroadcasts={acknowledgedBroadcasts} />
+          <NotificationsPanel 
+            onClose={() => setShowNotifications(false)} 
+            acknowledgedBroadcasts={acknowledgedBroadcasts} 
+            onNotificationClick={handleNotificationClick}
+          />
         )}
 
         {/* Application Tour Modal */}
