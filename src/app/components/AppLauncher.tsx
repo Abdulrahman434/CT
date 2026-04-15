@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Play,
@@ -1236,11 +1236,11 @@ export function AppLauncher({
       <div className="flex-1 min-h-0 px-16 pb-4 flex flex-col items-center justify-center" style={{ position: "relative", zIndex: 10 }}>
         {/* Main Grid Wrapper */}
         <div 
+          key={`page-${activeKey}-${pageIndex}`}
           className="flex-1 flex flex-col items-center justify-center w-full"
           style={{ 
             animation: "appsFadeIn 0.3s ease-out",
-            key: `page-${activeKey}-${pageIndex}` // Force re-animation on page change
-          } as any}
+          }}
         >
           <div
             className="grid gap-x-12 gap-y-10"
