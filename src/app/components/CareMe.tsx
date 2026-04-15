@@ -672,6 +672,20 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
   const activeSlide = slides[activeIndex];
 
   const renderSlideContent = () => {
+    switch (activeSlide.key) {
+      case "team": return <CareTeamSlide theme={theme} />;
+      case "plan": return <TimelineSlide items={carePlan} theme={theme} />;
+      case "dietAllergy": return (
+        <div className="flex flex-col gap-3">
+          <DietSlide theme={theme} />
+          <SlideSectionHeading
+            icon={<AlertTriangle size={16} strokeWidth={2} style={{ color: theme.primary }} />}
+            label={t("care.allergies")}
+            theme={theme}
+          />
+          <AllergySlide />
+        </div>
+      );
       case "labs": return <LabResultsSlide theme={theme} />;
       case "imaging": return <ImagingSlide theme={theme} />;
       case "baby": return <BabyCameraSlide />;
