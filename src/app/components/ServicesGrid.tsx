@@ -439,12 +439,12 @@ function ShortcutTile({ item, contained }: { item: ShortcutItem; contained?: boo
       }}
       aria-label={t(item.labelKey)}
     >
-      {item.labelKey === "shortcut.patientPortal" || item.labelKey === "shortcut.podcast" ? (
+      {item.labelKey === "shortcut.patientPortal" || item.labelKey === "shortcut.podcast" || item.labelKey === "shortcut.dallahPodcast" ? (
         <div 
           style={{
             width: SPACE[12],
             height: SPACE[12],
-            backgroundColor: item.labelKey === "shortcut.podcast" ? "#00A3C1" : "#fff",
+            backgroundColor: (item.labelKey === "shortcut.podcast" || item.labelKey === "shortcut.dallahPodcast") ? "#00A3C1" : "#fff",
             borderRadius: theme.radiusXl,
             display: "flex",
             alignItems: "center",
@@ -460,7 +460,7 @@ function ShortcutTile({ item, contained }: { item: ShortcutItem; contained?: boo
               maxWidth: "100%",
               maxHeight: "100%",
               objectFit: "contain",
-              filter: item.labelKey === "shortcut.podcast" ? "brightness(0) invert(1)" : "none",
+              filter: (item.labelKey === "shortcut.podcast" || item.labelKey === "shortcut.dallahPodcast") ? "brightness(0) invert(1)" : "none",
             }}
           />
         </div>
@@ -521,12 +521,12 @@ function ShortcutTileCompact({ item }: { item: ShortcutItem }) {
       }}
       aria-label={t(item.labelKey)}
     >
-      {item.labelKey === "shortcut.patientPortal" || item.labelKey === "shortcut.podcast" ? (
+      {item.labelKey === "shortcut.patientPortal" || item.labelKey === "shortcut.podcast" || item.labelKey === "shortcut.dallahPodcast" ? (
         <div 
           style={{
             width: "88px",
             height: "88px",
-            backgroundColor: item.labelKey === "shortcut.podcast" ? "#00A3C1" : "#fff",
+            backgroundColor: (item.labelKey === "shortcut.podcast" || item.labelKey === "shortcut.dallahPodcast") ? "#00A3C1" : "#fff",
             borderRadius: theme.radiusLg,
             display: "flex",
             alignItems: "center",
@@ -542,7 +542,7 @@ function ShortcutTileCompact({ item }: { item: ShortcutItem }) {
               maxWidth: "100%",
               maxHeight: "100%",
               objectFit: "contain",
-              filter: item.labelKey === "shortcut.podcast" ? "brightness(0) invert(1)" : "none",
+              filter: (item.labelKey === "shortcut.podcast" || item.labelKey === "shortcut.dallahPodcast") ? "brightness(0) invert(1)" : "none",
             }}
           />
         </div>
