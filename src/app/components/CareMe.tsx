@@ -39,6 +39,7 @@ import svgPaths from "../../imports/svg-ca68x68c4i";
 import imgNuraAlRashid from "@/assets/a7907a91bbdb1ced8824b3333ece109b3cd92b62.png";
 import imgDrOmarAbdulhalim from "@/assets/2318867853acb678569427c88b9e543e22bd46b6.png";
 import imgBabyCam from "@/assets/68ba9ba13c5aa1cc7d2af5bee7bc955298b612dd.png";
+import imgDallahBabyCam from "@/assets/dallah-baby-cam.jpg";
 
 const careTeam = [
   { nameKey: "care.team.name.nura", roleKey: "care.team.primaryNurse", specialtyKey: "care.team.specialty.icu", img: imgNuraAlRashid },
@@ -388,48 +389,79 @@ function BabyCameraSlide() {
   const { theme } = useTheme();
   const { t } = useLocale();
   const [fullscreen, setFullscreen] = useState(false);
+  
+  const isDallah = theme.id === "dallah";
+  const cameraImage = isDallah ? imgDallahBabyCam : imgBabyCam;
+
   return (
-    <div className="flex flex-col gap-3 h-full">
+    <div className="flex flex-col gap-4 h-full">
+      {/* 16:9 Camera Feed */}
       <div
-        className="flex-1 overflow-hidden relative w-full min-h-0 cursor-pointer"
-        style={{ backgroundColor: "#1a1a2e", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", borderRadius: theme.radiusLg }}
+        className="relative w-full cursor-pointer overflow-hidden group"
+        style={{ 
+          aspectRatio: "16 / 9",
+          backgroundColor: "#1a1a2e", 
+          boxShadow: "0 4px 16px rgba(0,0,0,0.12)", 
+          borderRadius: theme.radiusLg 
+        }}
         onClick={() => setFullscreen(true)}
       >
         <img
-          src={imgBabyCam}
+          src={cameraImage}
           alt="Baby Camera Feed"
-          className="w-full h-full object-cover absolute inset-0"
+          className="w-full h-full object-cover absolute inset-0 transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ backgroundColor: "rgba(239,68,68,0.9)" }}>
-          <Circle size={8} fill="#fff" style={{ color: "#fff" }} />
-          <span style={{ fontSize: "12px", fontWeight: 700, color: "#fff", letterSpacing: "0.5px" }}>{t("care.baby.live")}</span>
+        
+        {/* Overlays on Image */}
+        <div className="absolute top-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ backgroundColor: "rgba(239,68,68,0.9)" }}>
+          <Circle size={8} fill="#fff" style={{ color: "#fff", animation: "pulse 1.5s infinite" }} />
+          <span style={{ fontSize: "11px", fontWeight: 800, color: "#fff", letterSpacing: "0.5px" }}>{t("care.baby.live")}</span>
         </div>
-        <div className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
+
+        {!isDallah && (
+          <div className="absolute top-3 right-3 flex items-center gap-2 px-3 py-1.5 rounded-md" style={{ backgroundColor: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}>
+            <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>11:34:12 AM</span>
+          </div>
+        )}
+
+        <div className="absolute inset-0 border-[1px] border-white/10 rounded-[inherit] pointer-events-none" />
+        
+        <div className="absolute bottom-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors group-hover:bg-white/20" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
           <Maximize2 size={14} style={{ color: "#fff" }} />
         </div>
-        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3" style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.6))" }}>
-          <div>
-            <p style={{ fontFamily: theme.fontFamily, fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold, color: theme.textInverse }}>Baby Saleh</p>
-            <p style={{ fontFamily: theme.fontFamily, fontSize: TYPE_SCALE.sm, color: theme.textInverseMuted }}>Nursery · Crib 3A</p>
-          </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ backgroundColor: "rgba(16,185,129,0.25)" }}>
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <span style={{ fontSize: "12px", fontWeight: 600, color: "#6EE7B7" }}>{t("care.baby.connected")}</span>
-          </div>
+      </div>
+
+      {/* Info Below Feed */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex-1 min-w-0">
+          <p style={{ fontFamily: theme.fontFamily, fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.bold, color: theme.textHeading }}>Baby Saleh</p>
+          <p style={{ fontFamily: theme.fontFamily, fontSize: TYPE_SCALE.sm, color: theme.textMuted }}>Nursery · Crib 3A</p>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ backgroundColor: theme.primarySubtle }}>
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: theme.success, boxShadow: `0 0 8px ${theme.success}` }} />
+          <span style={{ fontFamily: theme.fontFamily, fontSize: "12px", fontWeight: 700, color: theme.primary }}>{t("care.baby.connected")}</span>
         </div>
       </div>
 
       {/* Fullscreen Baby Camera Overlay */}
       {fullscreen && createPortal(
-        <BabyCameraFullscreen onClose={() => setFullscreen(false)} />,
+        <BabyCameraFullscreen onClose={() => setFullscreen(false)} cameraImage={cameraImage} />,
         document.body
       )}
+      
+      <style>{`
+        @keyframes pulse {
+          0% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.2); opacity: 0.7; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
 
 /* ─── Fullscreen Baby Camera Overlay ─── */
-function BabyCameraFullscreen({ onClose }: { onClose: () => void }) {
+function BabyCameraFullscreen({ onClose, cameraImage }: { onClose: () => void, cameraImage: any }) {
   const { theme } = useTheme();
   const { t } = useLocale();
 
@@ -443,9 +475,9 @@ function BabyCameraFullscreen({ onClose }: { onClose: () => void }) {
     >
       {/* Camera feed — full screen */}
       <img
-        src={imgBabyCam}
+        src={cameraImage}
         alt="Baby Camera Feed — Full Screen"
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-contain"
       />
 
       {/* Top bar overlay */}
