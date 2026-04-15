@@ -24,6 +24,8 @@ import {
   Hash,
   Activity,
   Utensils,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import svgPaths from "../../imports/svg-ca68x68c4i";
@@ -533,6 +535,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
   const { theme } = useTheme();
   const { t, isRTL } = useLocale();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isBlurred, setIsBlurred] = useState(false);
   const touchStartX = useRef(0);
   const touchDeltaX = useRef(0);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -621,6 +624,15 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
           <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.sectionTitle, color: theme.textHeading }}>CareMe</span>
         </div>
         <div className="flex items-center gap-1">
+          <button
+            data-nav="true"
+            onClick={() => setIsBlurred(prev => !prev)}
+            className="p-1.5 cursor-pointer hover:bg-black/5 transition-colors"
+            style={{ borderRadius: theme.radiusMd }}
+            aria-label="Toggle privacy blur"
+          >
+            {isBlurred ? <EyeOff size={15} style={{ color: theme.primary }} /> : <Eye size={15} style={{ color: theme.primary }} />}
+          </button>
           {onExpand && (
             <button
               data-nav="true"
@@ -682,6 +694,9 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
           style={{
             padding: "12px 22px",
             animation: "caremeSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
+            filter: isBlurred ? "blur(10px)" : "none",
+            transition: "filter 0.3s ease",
+            pointerEvents: isBlurred ? "none" : "auto",
           }}
         >
           {renderSlideContent()}
