@@ -116,6 +116,7 @@ const translations: Record<string, TranslationEntry> = {
   "shortcut.mirror": { en: "Mirror", ar: "المرآة" },
   "shortcut.patientPortal": { en: "Patient Portal", ar: "بوابة المريض" },
   "shortcut.podcast": { en: "Podcast", ar: "بودكاست" },
+  "shortcut.dallahPodcast": { en: "Dallah Podcast", ar: "بودكاست دله" },
   "shortcut.academy": { en: "Academy", ar: "الأكاديمية" },
 
   /* ─── Care Medical Education Items ─── */

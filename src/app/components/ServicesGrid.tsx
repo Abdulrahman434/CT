@@ -23,7 +23,7 @@ const getShortcutItems = (hospitalId: string): ShortcutItem[] => {
   if (hospitalId === "caremed") {
     podcastData = { labelKey: "shortcut.podcast", icon: caremedicalicon, url: "https://www.youtube.com/playlist?list=PLbWY8VfHuoBSK7XeJJtutBSTeY_e7Kut3" };
   } else if (hospitalId === "dallah") {
-    podcastData = { labelKey: "shortcut.podcast", icon: dallahPodcastIcon, url: "https://www.youtube.com/watch?v=FTacFGIn8aA&list=PLptiCCjrXsQt5lExxVzvUx61Hd65Tsefg" };
+    podcastData = { labelKey: "shortcut.dallahPodcast", icon: dallahPodcastIcon, url: "https://www.youtube.com/watch?v=FTacFGIn8aA&list=PLptiCCjrXsQt5lExxVzvUx61Hd65Tsefg" };
   } else {
     podcastData = { labelKey: "shortcut.podcast", icon: podcastIcon, url: "https://www.youtube.com/watch?v=1WKyerFH34U&list=PL_JVZV-KlG7oFe-fUAMnbYsWyTU9k8ljF" };
   }
