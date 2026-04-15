@@ -26,6 +26,8 @@ import {
   Utensils,
   Eye,
   EyeOff,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import svgPaths from "../../imports/svg-ca68x68c4i";
@@ -536,6 +538,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
   const { t, isRTL } = useLocale();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isBlurred, setIsBlurred] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
   const touchStartX = useRef(0);
   const touchDeltaX = useRef(0);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -552,14 +555,14 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
 
   /* Auto-rotate every 6 seconds */
   useEffect(() => {
-    if (paused) return;
+    if (paused || isPinned) return;
     autoTimerRef.current = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % slides.length);
     }, 6000);
     return () => {
       if (autoTimerRef.current) clearInterval(autoTimerRef.current);
     };
-  }, [paused]);
+  }, [paused, isPinned]);
 
   /* Pause on user interaction, resume after 15s */
   const pauseAutoRotate = useCallback(() => {
@@ -627,18 +630,39 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
           <button
             data-nav="true"
             onClick={() => setIsBlurred(prev => !prev)}
-            className="p-1.5 cursor-pointer hover:bg-black/5 transition-colors"
-            style={{ borderRadius: theme.radiusMd }}
+            className="p-1.5 cursor-pointer active:bg-black/10 transition-colors"
+            style={{ borderRadius: theme.radiusMd, outline: 'none' }}
             aria-label="Toggle privacy blur"
           >
             {isBlurred ? <EyeOff size={15} style={{ color: theme.primary }} /> : <Eye size={15} style={{ color: theme.primary }} />}
+          </button>
+          <button
+            data-nav="true"
+            onClick={() => setIsPinned(prev => !prev)}
+            className="p-1.5 cursor-pointer active:bg-black/10 transition-colors"
+            style={{ 
+              borderRadius: theme.radiusMd, 
+              outline: 'none',
+              backgroundColor: isPinned ? "rgba(0,0,0,0.05)" : "transparent"
+            }}
+            aria-label={isPinned ? "Unpin slider" : "Pin slider"}
+          >
+            <Pin 
+              size={15} 
+              style={{ 
+                color: isPinned ? theme.accent : theme.primary,
+                fill: isPinned ? theme.accent : 'none',
+                transform: isPinned ? 'rotate(45deg)' : 'none',
+                transition: 'all 0.2s ease'
+              }} 
+            />
           </button>
           {onExpand && (
             <button
               data-nav="true"
               onClick={onExpand}
-              className="p-1.5 cursor-pointer hover:bg-black/5 transition-colors"
-              style={{ borderRadius: theme.radiusMd }}
+              className="p-1.5 cursor-pointer active:bg-black/10 transition-colors"
+              style={{ borderRadius: theme.radiusMd, outline: 'none' }}
               aria-label="Expand CareMe"
             >
               <Maximize2 size={15} style={{ color: theme.primary }} />
@@ -647,8 +671,8 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
           <button
             data-nav="true"
             onClick={() => handleManualNav(activeIndex - 1)}
-            className="p-1.5 cursor-pointer"
-            style={{ borderRadius: theme.radiusMd }}
+            className="p-1.5 cursor-pointer active:bg-black/10 transition-colors"
+            style={{ borderRadius: theme.radiusMd, outline: 'none' }}
             aria-label="Previous slide"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={isRTL ? { transform: "scaleX(-1)" } : undefined}>
@@ -658,8 +682,8 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
           <button
             data-nav="true"
             onClick={() => handleManualNav(activeIndex + 1)}
-            className="p-1.5 cursor-pointer"
-            style={{ borderRadius: theme.radiusMd }}
+            className="p-1.5 cursor-pointer active:bg-black/10 transition-colors"
+            style={{ borderRadius: theme.radiusMd, outline: 'none' }}
             aria-label="Next slide"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={isRTL ? { transform: "scaleX(-1)" } : undefined}>
