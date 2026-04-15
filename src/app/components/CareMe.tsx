@@ -413,26 +413,39 @@ function BabyCameraSlide() {
           className="w-full h-full object-cover absolute inset-0 transition-transform duration-500 group-hover:scale-105"
         />
         
-        {/* Overlays on Image */}
-        <div className="absolute inset-0 p-4 flex flex-col justify-between pointer-events-none" style={{ background: "linear-gradient(rgba(0,0,0,0.5) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.5) 100%)" }}>
-          <div className="flex items-start justify-between">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 px-2 py-1 rounded-md self-start" style={{ backgroundColor: "rgba(239,68,68,0.9)" }}>
-                <Circle size={8} fill="#fff" style={{ color: "#fff", animation: "pulse 1.5s infinite" }} />
-                <span style={{ fontSize: "10px", fontWeight: 800, color: "#fff", letterSpacing: "0.5px", textTransform: "uppercase" }}>{t("care.baby.live")}</span>
-              </div>
-              <div className="mt-1">
-                <p style={{ fontFamily: theme.fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: "#fff", textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>Baby Saleh</p>
-                <p style={{ fontFamily: theme.fontFamily, fontSize: "12px", color: "rgba(255,255,255,0.8)", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>Nursery · Crib 3A</p>
-              </div>
-            </div>
+        {/* Image Overlays — LIVE badge + expand only */}
+        <div className="absolute inset-0 p-3 flex flex-col justify-between pointer-events-none">
+          {/* Top: LIVE badge */}
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-md self-start" style={{ backgroundColor: "rgba(239,68,68,0.9)" }}>
+            <Circle size={7} fill="#fff" style={{ color: "#fff", animation: "pulse 1.5s infinite" }} />
+            <span style={{ fontSize: "10px", fontWeight: 800, color: "#fff", letterSpacing: "0.5px", textTransform: "uppercase" }}>{t("care.baby.live")}</span>
           </div>
-
+          {/* Bottom-right: expand icon */}
           <div className="flex items-center justify-end">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.2)", backdropFilter: "blur(8px)" }}>
-              <Maximize2 size={14} style={{ color: "#fff" }} />
+            <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.2)", backdropFilter: "blur(8px)" }}>
+              <Maximize2 size={13} style={{ color: "#fff" }} />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Info below the feed */}
+      <div className="flex items-center justify-between px-1 pt-1">
+        <div className="flex items-center gap-3">
+          {/* Baby icon avatar */}
+          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: theme.primarySubtle }}>
+            <Baby size={18} style={{ color: theme.primary }} />
+          </div>
+          <div>
+            <p style={{ fontFamily: theme.fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: theme.textHeading, lineHeight: 1.2 }}>Baby Saleh</p>
+            <p style={{ fontFamily: theme.fontFamily, fontSize: "12px", color: theme.textMuted, marginTop: "2px" }}>Nursery · Crib 3A</p>
+          </div>
+        </div>
+
+        {/* Connected badge */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ backgroundColor: theme.primarySubtle }}>
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: theme.success, boxShadow: `0 0 6px ${theme.success}` }} />
+          <span style={{ fontFamily: theme.fontFamily, fontSize: "11px", fontWeight: 700, color: theme.primary }}>Connected</span>
         </div>
       </div>
 
