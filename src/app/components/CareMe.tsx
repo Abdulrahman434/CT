@@ -102,9 +102,9 @@ const labResults = [
 ];
 
 const imagingResults = [
-  { labelKey: "care.imaging.ultrasound", date: "09 Mar", summaryKey: "care.imaging.summary", type: "Obstetric", pdfUrl: "https://www.dallah-hospital.com/english/MediaCenter/EducationalPdfs/Pregnancy%20and%20Childbirth.pdf" },
-  { labelKey: "care.imaging.xray", date: "05 Mar", summaryKey: "care.imaging.xraySummary", type: "Chest", pdfUrl: "https://www.dallah-hospital.com/english/MediaCenter/EducationalPdfs/Patient%20Education%20on%20Pneumonia.pdf" },
-  { labelKey: "care.imaging.ctPelvis", date: "12 Mar", summaryKey: "care.imaging.ctSummary", type: "CT", pdfUrl: "https://www.dallah-hospital.com/english/MediaCenter/EducationalPdfs/Pregnancy%20and%20Childbirth.pdf" },
+  { labelKey: "care.imaging.ultrasound", date: "09 Mar", summaryKey: "care.imaging.summary", type: "Obstetric", pdfUrl: "https://www.tewhatuora.govt.nz/assets/Our-Health-System/Health-Services/Maternity/First-Trimester-Ultrasound-Report.pdf" },
+  { labelKey: "care.imaging.xray", date: "05 Mar", summaryKey: "care.imaging.xraySummary", type: "Chest", pdfUrl: "https://ndximaging.com/wp-content/uploads/2021/05/Sample-Radiology-Report-NDI.pdf" },
+  { labelKey: "care.imaging.doppler", date: "12 Mar", summaryKey: "care.imaging.dopplerSummary", type: "Ultrasound", pdfUrl: "https://www.mvsdoctors.com/wp-content/uploads/2015/07/Sample-Report.pdf" },
 ];
 
 /* ─── Reported Pain ─── */

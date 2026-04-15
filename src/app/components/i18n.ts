@@ -157,8 +157,8 @@ const translations: Record<string, TranslationEntry> = {
   "care.imaging.xray": { en: "Chest X-Ray", ar: "أشعة سينية للصد" },
   "care.imaging.xraySummary": { en: "Lungs clear. No acute abnormality detected.", ar: "الرئتان سليمتان. لا يوجد شذوذ حاد." },
   "care.imaging.mri": { en: "Abdominal MRI", ar: "رنين مغناطيسي للبطن" },
-  "care.imaging.ctPelvis": { en: "CT Pelvis", ar: "تصوير مقطعي للحوض" },
-  "care.imaging.ctSummary": { en: "No significant findings. Normal pelvic anatomy.", ar: "لا توجد ملاحظات مهمة. تشريح طبيعي للحوض." },
+  "care.imaging.doppler": { en: "Venous Doppler Scan", ar: "تصوير دوبلر للأوردة" },
+  "care.imaging.dopplerSummary": { en: "Normal blood flow. No evidence of deep vein thrombosis.", ar: "تدفق دم طبيعي. لا يوجد دليل على تخثر الأوردة العميقة." },
   "care.imaging.viewReport": { en: "View Detailed Report", ar: "عرض التقرير التفصيلي" },
   "care.imaging.pending": { en: "Processing...", ar: "قيد المعالجة..." },
 
