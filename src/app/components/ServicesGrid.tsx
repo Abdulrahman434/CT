@@ -10,6 +10,7 @@ import mirrorIcon from "@/assets/0ab7565691ddb8401a21da44af1864e8f4058536.png";
 import podcastIcon from "@/assets/5513479d879a8c3fcdd1f6832dd30ce350c81789.png";
 import caremedicalicon from "@/assets/caremedicalicon.png";
 import dallahPodcastIcon from "@/assets/dallah-podcast.png";
+import patientPortalIcon from "@/assets/patient-portal.png";
 
 interface ShortcutItem {
   labelKey: string;
@@ -32,6 +33,8 @@ const getShortcutItems = (hospitalId: string): ShortcutItem[] => {
     { labelKey: "shortcut.quran", icon: quranIcon, url: "https://app.quranflash.com/book/Medina1?ar#/reader/chapter/3" },
     hospitalId === "caremed"
       ? { labelKey: "shortcut.academy", icon: caremedicalicon, url: "https://care.classera.com/explore/courses?lang=en" }
+      : hospitalId === "dallah"
+      ? { labelKey: "shortcut.patientPortal", icon: patientPortalIcon, url: "https://www.dallah-hospital.com/arabic/book-an-appointment/home" }
       : { labelKey: "shortcut.mirror", icon: mirrorIcon, url: "" },
     podcastData,
   ];

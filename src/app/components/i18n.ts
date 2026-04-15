@@ -114,6 +114,7 @@ const translations: Record<string, TranslationEntry> = {
   "shortcut.whatsapp": { en: "WhatsApp", ar: "واتساب" },
   "shortcut.quran": { en: "Quran", ar: "القرآن" },
   "shortcut.mirror": { en: "Mirror", ar: "المرآة" },
+  "shortcut.patientPortal": { en: "Patient Portal", ar: "بوابة المريض" },
   "shortcut.podcast": { en: "Podcast", ar: "بودكاست" },
   "shortcut.academy": { en: "Academy", ar: "الأكاديمية" },
 
