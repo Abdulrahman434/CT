@@ -444,7 +444,7 @@ function ShortcutTile({ item, contained }: { item: ShortcutItem; contained?: boo
           style={{
             width: SPACE[12],
             height: SPACE[12],
-            backgroundColor: "#fff",
+            backgroundColor: item.labelKey === "shortcut.podcast" ? "#00A3C1" : "#fff",
             borderRadius: theme.radiusXl,
             display: "flex",
             alignItems: "center",
@@ -460,6 +460,7 @@ function ShortcutTile({ item, contained }: { item: ShortcutItem; contained?: boo
               maxWidth: "100%",
               maxHeight: "100%",
               objectFit: "contain",
+              filter: item.labelKey === "shortcut.podcast" ? "brightness(0) invert(1)" : "none",
             }}
           />
         </div>
@@ -525,7 +526,7 @@ function ShortcutTileCompact({ item }: { item: ShortcutItem }) {
           style={{
             width: "88px",
             height: "88px",
-            backgroundColor: "#fff",
+            backgroundColor: item.labelKey === "shortcut.podcast" ? "#00A3C1" : "#fff",
             borderRadius: theme.radiusLg,
             display: "flex",
             alignItems: "center",
@@ -541,6 +542,7 @@ function ShortcutTileCompact({ item }: { item: ShortcutItem }) {
               maxWidth: "100%",
               maxHeight: "100%",
               objectFit: "contain",
+              filter: item.labelKey === "shortcut.podcast" ? "brightness(0) invert(1)" : "none",
             }}
           />
         </div>
