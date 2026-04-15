@@ -38,12 +38,16 @@ export function IdleScreen() {
       />
 
       <div className="relative z-10 flex flex-col items-center gap-8 text-center">
-        <img
-          src={theme.logoUrl}
-          alt="Hospital"
-          className="w-auto object-contain"
-          style={{ height: "80px" }}
-        />
+        <a href={theme.hospitalWebsiteUrl} target="_blank" rel="noopener noreferrer" 
+          className="transition-transform hover:scale-105 active:scale-95"
+          style={{ textDecoration: "none" }}>
+          <img
+            src={theme.logoUrl}
+            alt="Hospital"
+            className="w-auto object-contain"
+            style={{ height: "80px" }}
+          />
+        </a>
         <div>
           <h2
             style={{

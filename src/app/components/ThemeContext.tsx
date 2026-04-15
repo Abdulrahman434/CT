@@ -210,6 +210,7 @@ export interface ThemeConfig {
   id: string;               // unique key, e.g. "dsfh", "kfmc"
   hospitalName: string;
   hospitalShortName: string;
+  hospitalWebsiteUrl: string;
 
   /* ── Typography ── */
   fontFamily: string;        // Latin/primary — e.g. "'Mulish', sans-serif"
@@ -300,6 +301,7 @@ function buildTheme(core: {
   id: string;
   hospitalName: string;
   hospitalShortName: string;
+  hospitalWebsiteUrl: string;
   fontFamily: string;
   fontFamilyAr: string;
   logoUrl: string;
@@ -320,6 +322,7 @@ function buildTheme(core: {
     id: c.id,
     hospitalName: c.hospitalName,
     hospitalShortName: c.hospitalShortName,
+    hospitalWebsiteUrl: c.hospitalWebsiteUrl,
 
     fontFamily: c.fontFamily,
     fontFamilyAr: c.fontFamilyAr,
@@ -537,6 +540,7 @@ export const DSFH_CORE: HospitalCoreConfig = {
   fontFamily: "'Mulish', sans-serif",
   fontFamilyAr: "'Almarai', sans-serif",
   logoUrl: logoImage,
+  hospitalWebsiteUrl: "https://en.dsfhjeddah.fakeeh.care/",
   heroImageUrl: hospitalImg,
   primary: "#008AAB",
   primaryDark: "#006B85",
@@ -554,6 +558,7 @@ export const BURJEEL_CORE: HospitalCoreConfig = {
   fontFamily: "'Montserrat', sans-serif",
   fontFamilyAr: "'Almarai', sans-serif",
   logoUrl: burjeelLogo,
+  hospitalWebsiteUrl: "https://burjeel.com/abu-dhabi/",
   heroImageUrl: burjeelHero,
   primary: "#8C124B",
   primaryDark: "#6D0E3B",
@@ -570,6 +575,7 @@ export const SLH_CORE: HospitalCoreConfig = {
   fontFamily: "'Poppins', sans-serif",
   fontFamilyAr: "'Almarai', sans-serif",
   logoUrl: slhLogo,
+  hospitalWebsiteUrl: "https://www.slouishospital.com/en",
   heroImageUrl: slhHero,
   heroCropPosition: "50% 65%",
   primary: "#212556",
@@ -587,6 +593,7 @@ export const DALLAH_CORE: HospitalCoreConfig = {
   fontFamily: "'Mulish', sans-serif",
   fontFamilyAr: "'Almarai', sans-serif",
   logoUrl: dallahLogo,
+  hospitalWebsiteUrl: "https://www.dallah-hospital.com/english/home",
   heroImageUrl: dallahHero,
   heroCropPosition: "50% 45%",
   primary: "#004B8D",
@@ -604,6 +611,7 @@ export const CAREMED_CORE: HospitalCoreConfig = {
   fontFamily: "'Mulish', sans-serif",
   fontFamilyAr: "'Almarai', sans-serif",
   logoUrl: caremedLogo,
+  hospitalWebsiteUrl: "https://burjeel.com/abu-dhabi/",
   heroImageUrl: caremedHero,
   primary: "#1D234D",
   primaryDark: "#121631",
@@ -629,6 +637,7 @@ export interface HospitalCoreConfig {
   id: string;
   hospitalName: string;
   hospitalShortName: string;
+  hospitalWebsiteUrl: string;
   fontFamily: string;
   fontFamilyAr: string;
   logoUrl: string;

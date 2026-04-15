@@ -59,10 +59,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onWeatherTap,
     return () => clearInterval(interval);
   }, []);
 
-  /* Click on logo area to open Care Medical website */
-  const handleLogoTap = () => {
-    window.open("https://care.med.sa/", "_blank");
-  };
+
 
   const hours = time.getHours();
   const minutes = time.getMinutes().toString().padStart(2, "0");
@@ -88,13 +85,18 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onWeatherTap,
       }}
     >
       {/* Left: Logo — always left-aligned within its column */}
-      <div className="flex items-center justify-start h-full" onClick={handleLogoTap}>
+      <a 
+        href={theme.hospitalWebsiteUrl} 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className="flex items-center justify-start h-full transition-opacity hover:opacity-80 active:opacity-60"
+      >
         <img
           alt={theme.hospitalName}
           src={theme.logoUrl}
           style={{ height: SPACE[10], width: "auto", maxWidth: "300px", objectFit: "contain" }}
         />
-      </div>
+      </a>
 
       {/* Center: Prayer Times — always dead-center on screen */}
       {showPrayer ? (

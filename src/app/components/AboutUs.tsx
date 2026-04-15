@@ -280,13 +280,18 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
           }}
         >
           {/* Hospital Logo */}
-          <div 
-            className="rounded-3xl overflow-hidden flex items-center justify-center"
+          <a
+            href={theme.hospitalWebsiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-3xl overflow-hidden flex items-center justify-center transition-transform hover:scale-[1.02] active:scale-[0.98]"
             style={{
               backgroundColor: "#FFFFFF",
               boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
               padding: "20px 28px",
               height: "140px",
+              display: "flex",
+              textDecoration: "none",
             }}
           >
             <img
@@ -298,7 +303,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                 objectFit: "contain",
               }}
             />
-          </div>
+          </a>
 
           {/* Tabs Container */}
           <div className="flex-1 flex flex-col gap-3 overflow-y-auto about-tabs-sidebar">
