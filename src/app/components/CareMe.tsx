@@ -448,7 +448,7 @@ function BabyCameraSlide() {
       <div
         className="relative w-full cursor-pointer overflow-hidden group"
         style={{ 
-          aspectRatio: "16 / 9",
+          aspectRatio: "3 / 2",
           backgroundColor: "#000", 
           boxShadow: SHADOW.xl, 
           borderRadius: theme.radiusLg 
