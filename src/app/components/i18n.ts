@@ -272,11 +272,10 @@ const translations: Record<string, TranslationEntry> = {
   "notif.noNew": { en: "No new notifications at the moment.", ar: "لا توجد إشعارات في الوقت الحالي." },
 
   /* ─── Notification Items ─── */
-  "notif.medicationDue": { en: "Medication due at 2:00 PM", ar: "موعد الدواء الساعة 2:00 م" },
+  "notif.labsReady": { en: "Lab results are ready", ar: "نتائج المختبر جاهزة" },
+  "notif.surveyRequest": { en: "We value your feedback", ar: "نحن نقدر ملاحظاتك" },
   "notif.mriReady": { en: "MRI results ready for review", ar: "نتائج الرنين المغناطيسي جاهزة للمراجعة" },
-  "notif.labsComplete": { en: "Blood test panel complete", ar: "اكتملت نتائج فحص الدم" },
   "notif.hygieneScheduled": { en: "Room hygiene check scheduled", ar: "موعد فحص نظافة الغرفة" },
-  "notif.newMessages": { en: "3 new messages", ar: "3 رسائل جديدة" },
   "notif.doctorVisit": { en: "Dr. Al-Ghamdi visit at 3 PM", ar: "زيارة د. الغامدي الساعة 3 م" },
   "notif.lunchMenu": { en: "Lunch menu available", ar: "قائمة الغداء متاحة" },
   "notif.fileDownloaded": { en: "1 file downloaded", ar: "تم تحميل ملف واحد" },

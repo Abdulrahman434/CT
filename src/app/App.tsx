@@ -141,21 +141,21 @@ function BedsideScreen() {
         },
         priority: "info"
       },
-      "notif.labsComplete": {
-        title: { en: "Lab Results Ready", ar: "نتائج المختبر جاهزة" },
+      "notif.labsReady": {
+        title: { en: "Laboratory Results", ar: "نتائج المختبر" },
         body: { 
-          en: "Your comprehensive blood panel results are now available. You can view the summary in the CareMe section under Lab Results.",
-          ar: "نتائج فحص الدم الشامل متاحة الآن. يمكنك عرض الملخص في قسم رعاية المرضى (CareMe) تحت نتائج المختبر."
+          en: "Your latest laboratory results are now available. You can review the detailed breakdown and clinical status in the 'Care Me' module under Lab Results.",
+          ar: "أنتائج المختبر الأخيرة متاحة الآن. يمكنك مراجعة التفاصيل والحالة السريرية في قسم 'رعاية المريض' (Care Me) تحت نتائج المختبر."
         },
         priority: "info"
       },
-      "notif.medicationDue": {
-        title: { en: "Medication Reminder", ar: "تذكير بموعد الدواء" },
+      "notif.surveyRequest": {
+        title: { en: "We Value Your Feedback", ar: "نحن نقدر رأيك" },
         body: { 
-          en: "Your scheduled medication is due now. A nurse will be visiting your room shortly to assist with administration.",
-          ar: "حان موعد دواءك المجدول الآن. ستقوم الممرضة بزيارة غرفتك قريباً للمساعدة في إعطائه."
+          en: "How are we doing? Please take a moment to share your experience with us through our quick patient survey. Your feedback helps us improve our care.",
+          ar: "كيف كانت خدمتنا؟ يرجى تخصيص لحظة لمشاركة تجربتك معنا من خلال استبيان المريض السريع. ملاحظاتك تساعدنا على تحسين رعايتنا."
         },
-        priority: "urgent"
+        priority: "info"
       },
       "notif.hygieneScheduled": {
         title: { en: "Maintenance Alert", ar: "تنبيه الصيانة والنظافة" },

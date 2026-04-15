@@ -31,9 +31,9 @@ interface Notification {
 }
 
 const initialNotifications: Notification[] = [
-  { id: "1", iconType: "megaphone", textKey: "notif.mriReady", time: "11:20 am", read: false },
-  { id: "2", iconType: "megaphone", textKey: "notif.labsComplete", time: "10:45 am", read: false },
-  { id: "3", iconType: "megaphone", textKey: "notif.medicationDue", time: "09:30 am", read: false },
+  { id: "1", iconType: "megaphone", textKey: "notif.labsReady", time: "11:20 am", read: false },
+  { id: "2", iconType: "megaphone", textKey: "notif.surveyRequest", time: "10:45 am", read: false },
+  { id: "3", iconType: "megaphone", textKey: "notif.mriReady", time: "09:30 am", read: false },
   { id: "4", iconType: "megaphone", textKey: "notif.hygieneScheduled", time: "08:15 am", read: true },
   { id: "5", iconType: "megaphone", textKey: "notif.doctorVisit", time: "Yesterday", read: true },
 ];
@@ -42,7 +42,6 @@ function NotifIcon({ type }: { type: string }) {
   const { theme } = useTheme();
   switch (type) {
     case "megaphone": return <Megaphone size={20} style={{ color: theme.primary }} />;
-    case "pill": return <Pill size={20} style={{ color: theme.accent }} />;
     case "message": return <MessageSquare size={20} style={{ color: "#25D366" }} />;
     case "stethoscope": return <Stethoscope size={20} style={{ color: theme.primary }} />;
     case "food": return <UtensilsCrossed size={20} style={{ color: "#E8A530" }} />;
