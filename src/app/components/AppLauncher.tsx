@@ -1130,8 +1130,18 @@ export function AppLauncher({
   const [showPdf, setShowPdf] = useState(false);
   const [pdfSource, setPdfSource] = useState<string | undefined>(undefined);
   const [pdfTitle, setPdfTitle] = useState<string>("");
+  const [pageIndex, setPageIndex] = useState(0);
+
+  // Reset page index when switching categories
+  useEffect(() => {
+    setPageIndex(0);
+  }, [activeKey]);
 
   if (!category) return null;
+
+  const appsPerPage = 18; // 6 columns * 3 rows
+  const numPages = Math.ceil(category.apps.length / appsPerPage);
+  const currentApps = category.apps.slice(pageIndex * appsPerPage, (pageIndex + 1) * appsPerPage);
 
   const handleAppTap = (app: AppItem) => {
     // Check if it's a tool first (based on category)
@@ -1197,6 +1207,10 @@ export function AppLauncher({
         style={{ opacity: 0.08, mixBlendMode: "luminosity", userSelect: "none" }}
       />
       <style>{`
+        @keyframes appsFadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         @keyframes appLauncherIn {
           from { opacity: 0; transform: scale(0.98); }
           to { opacity: 1; transform: scale(1); }
@@ -1219,19 +1233,54 @@ export function AppLauncher({
       />
 
       {/* Apps grid */}
-      <div className="flex-1 overflow-y-auto min-h-0 px-16 pb-4 flex items-center justify-center" style={{ scrollbarWidth: "none", position: "relative", zIndex: 10 }}>
-        <div
-          className="grid gap-12 py-4"
-          style={{
-            gridTemplateColumns: `repeat(6, 160px)`,
-            justifyContent: "center",
-            justifyItems: "center",
-          }}
+      <div className="flex-1 min-h-0 px-16 pb-4 flex flex-col items-center justify-center" style={{ position: "relative", zIndex: 10 }}>
+        {/* Main Grid Wrapper */}
+        <div 
+          className="flex-1 flex flex-col items-center justify-center w-full"
+          style={{ 
+            animation: "appsFadeIn 0.3s ease-out",
+            key: `page-${activeKey}-${pageIndex}` // Force re-animation on page change
+          } as any}
         >
-          {category.apps.map((app) => (
-            <AppTile key={app.id} app={app} onTap={() => handleAppTap(app)} />
-          ))}
+          <div
+            className="grid gap-x-12 gap-y-10"
+            style={{
+              gridTemplateColumns: `repeat(6, 160px)`,
+              gridTemplateRows: `repeat(3, auto)`, // Force max 3 rows implicitly by slicing
+              justifyContent: "center",
+              justifyItems: "center",
+              marginTop: "-40px", // Pull up slightly to center better in the available space
+            }}
+          >
+            {currentApps.map((app) => (
+              <AppTile key={app.id} app={app} onTap={() => handleAppTap(app)} />
+            ))}
+            
+            {/* Fill empty slots to maintain grid alignment if needed (not strictly necessary with justify-center but helps) */}
+          </div>
         </div>
+
+        {/* Page Indicators (if more than 1 page) */}
+        {numPages > 1 && (
+          <div className="flex items-center gap-3 py-6">
+            {Array.from({ length: numPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPageIndex(i)}
+                className="transition-all duration-300"
+                style={{
+                  width: i === pageIndex ? 24 : 10,
+                  height: 10,
+                  borderRadius: 5,
+                  backgroundColor: i === pageIndex ? "#fff" : "rgba(255,255,255,0.3)",
+                  cursor: "pointer",
+                  border: "none",
+                  outline: "none",
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Category navigation bar */}
