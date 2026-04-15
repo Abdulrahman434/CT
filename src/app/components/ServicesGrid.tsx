@@ -439,29 +439,42 @@ function ShortcutTile({ item, contained }: { item: ShortcutItem; contained?: boo
       }}
       aria-label={t(item.labelKey)}
     >
-      <div 
-        style={{
-          width: SPACE[12],
-          height: SPACE[12],
-          backgroundColor: "#fff",
-          borderRadius: theme.radiusXl,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 10,
-          boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-        }}
-      >
+      {item.labelKey === "shortcut.patientPortal" || item.labelKey === "shortcut.podcast" ? (
+        <div 
+          style={{
+            width: SPACE[12],
+            height: SPACE[12],
+            backgroundColor: "#fff",
+            borderRadius: theme.radiusXl,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 10,
+            boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+          }}
+        >
+          <img
+            src={item.icon}
+            alt={t(item.labelKey)}
+            style={{
+              maxWidth: "100%",
+              maxHeight: "100%",
+              objectFit: "contain",
+            }}
+          />
+        </div>
+      ) : (
         <img
           src={item.icon}
           alt={t(item.labelKey)}
           style={{
-            maxWidth: "100%",
-            maxHeight: "100%",
-            objectFit: "contain",
+            width: SPACE[12],
+            height: SPACE[12],
+            borderRadius: theme.radiusXl,
+            objectFit: "cover",
           }}
         />
-      </div>
+      )}
       <span
         style={{
           fontFamily: fontFamily,
@@ -507,29 +520,42 @@ function ShortcutTileCompact({ item }: { item: ShortcutItem }) {
       }}
       aria-label={t(item.labelKey)}
     >
-      <div 
-        style={{
-          width: "88px",
-          height: "88px",
-          backgroundColor: "#fff",
-          borderRadius: theme.radiusLg,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 12,
-          boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-        }}
-      >
+      {item.labelKey === "shortcut.patientPortal" || item.labelKey === "shortcut.podcast" ? (
+        <div 
+          style={{
+            width: "88px",
+            height: "88px",
+            backgroundColor: "#fff",
+            borderRadius: theme.radiusLg,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 12,
+            boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+          }}
+        >
+          <img
+            src={item.icon}
+            alt={t(item.labelKey)}
+            style={{
+              maxWidth: "100%",
+              maxHeight: "100%",
+              objectFit: "contain",
+            }}
+          />
+        </div>
+      ) : (
         <img
           src={item.icon}
           alt={t(item.labelKey)}
           style={{
-            maxWidth: "100%",
-            maxHeight: "100%",
-            objectFit: "contain",
+            width: "88px",
+            height: "88px",
+            borderRadius: theme.radiusLg,
+            objectFit: "cover",
           }}
         />
-      </div>
+      )}
       <span
         style={{
           fontFamily: fontFamily,
