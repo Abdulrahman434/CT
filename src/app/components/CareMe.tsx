@@ -501,7 +501,6 @@ function BabyCameraFullscreen({ onClose, cameraImage }: { onClose: () => void, c
           </div>
         </div>
 
-        {/* Footer hint */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 px-8 py-3 rounded-full z-10" style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.15)" }}>
           <Video size={18} style={{ color: "#fff" }} />
           <span style={{ fontFamily: theme.fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#fff" }}>
@@ -509,26 +508,6 @@ function BabyCameraFullscreen({ onClose, cameraImage }: { onClose: () => void, c
           </span>
         </div>
       </div>
-
-      {/* Bottom bar overlay */}
-      <div
-        className="absolute bottom-0 left-0 right-0 flex items-center justify-center px-8 py-6 z-10"
-        style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.6))" }}
-      >
-        <div className="flex items-center gap-3">
-          <Video size={18} style={{ color: "rgba(255,255,255,0.7)" }} />
-          <span style={{ fontFamily: theme.fontFamily, fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.medium, color: "rgba(255,255,255,0.7)" }}>
-            {t("care.baby.tapToExit")}
-          </span>
-        </div>
-      </div>
-
-      {/* Tap-to-close area (behind top/bottom bars) */}
-      <div
-        className="absolute inset-0 z-[5] cursor-pointer"
-        onClick={onClose}
-        aria-label="Exit fullscreen"
-      />
 
       <style>{`
         @keyframes babyCamFadeIn {
