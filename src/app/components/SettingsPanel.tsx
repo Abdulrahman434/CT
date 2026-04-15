@@ -255,13 +255,14 @@ function LanguagePicker({
   selected,
   onSelect,
 }: {
-  selected: "en" | "ar";
-  onSelect: (lang: "en" | "ar") => void;
+  selected: Locale;
+  onSelect: (lang: Locale) => void;
 }) {
   const { theme: t } = useTheme();
-  const options: { key: "en" | "ar"; label: string; native: string }[] = [
+  const options: { key: Locale; label: string; native: string }[] = [
     { key: "en", label: "English", native: "English" },
     { key: "ar", label: "Arabic", native: "\u0627\u0644\u0639\u0631\u0628\u064A\u0629" },
+    { key: "ur", label: "Urdu", native: "\u0627\u0631\u062f\u0648" },
   ];
 
   return (
