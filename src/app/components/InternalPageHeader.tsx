@@ -16,13 +16,14 @@ export function InternalPageHeader({ title, icon, onClose }: InternalPageHeaderP
     <div className="shrink-0 flex items-center gap-5 px-12 pt-10 pb-6 relative z-10">
       <button
         onClick={onClose}
-        className="flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer"
+        className="flex items-center justify-center transition-all cursor-pointer active:scale-95"
         style={{
           width: "52px",
           height: "52px",
           borderRadius: "12px",
-          backgroundColor: "rgba(255,255,255,0.1)",
+          backgroundColor: "rgba(255,255,255,0.12)",
           border: "1px solid rgba(255,255,255,0.15)",
+          outline: 'none',
         }}
       >
         <BackArrow size={24} style={{ color: "#fff" }} />

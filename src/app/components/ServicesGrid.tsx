@@ -149,7 +149,7 @@ function HubCard({
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onClick={onTap}
-      className={`relative overflow-hidden flex flex-col items-center justify-center ${compact ? "gap-1.5" : "gap-3"} transition-all duration-150 cursor-pointer h-full w-full`}
+      className={`relative overflow-hidden flex flex-col items-center justify-center ${compact ? "gap-1.5" : "gap-3"} transition-all duration-100 ease-out cursor-pointer h-full w-full`}
       style={{
         backgroundColor: pressed ? theme.primary : contained ? theme.surfaceElevated : theme.surface,
         borderRadius: theme.radiusCard,
@@ -173,7 +173,7 @@ function HubCard({
           height: iconBoxSize,
           borderRadius: iconRadius,
           backgroundColor: pressed ? "rgba(255,255,255,0.2)" : theme.primaryLight,
-          transition: "background-color 0.15s",
+          transition: "background-color 0.1s ease-out",
         }}
       >
         <HubIcon label={item.label} color={pressed ? theme.textInverse : theme.primary} />
@@ -187,7 +187,7 @@ function HubCard({
           color: pressed ? theme.textInverse : theme.textHeading,
           lineHeight: compact ? "18px" : "26px",
           textAlign: "center",
-          transition: "color 0.15s",
+          transition: "color 0.1s ease-out",
         }}
       >
         {t(item.labelKey)}
@@ -215,7 +215,7 @@ function ServiceCard({ item, onTap, square, contained, compact }: { item: (typeo
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onClick={onTap}
-      className={`relative overflow-hidden flex flex-col items-center justify-center gap-${gapSize} transition-all duration-150 cursor-pointer${square ? " flex-1 w-full" : " w-full h-full"}`}
+      className={`relative overflow-hidden flex flex-col items-center justify-center gap-${gapSize} transition-all duration-100 ease-out cursor-pointer${square ? " flex-1 w-full" : " w-full h-full"}`}
       style={{
         height: square ? undefined : undefined,
         padding: square ? "0 28px 0 18px" : "0",
@@ -241,7 +241,7 @@ function ServiceCard({ item, onTap, square, contained, compact }: { item: (typeo
           height: iconBoxSize,
           borderRadius: iconRadius,
           backgroundColor: pressed ? "rgba(255,255,255,0.2)" : theme.primary,
-          transition: "background-color 0.15s",
+          transition: "background-color 0.1s ease-out",
         }}
       >
         {item.lucideIcon ? (
@@ -280,7 +280,7 @@ function ServiceCard({ item, onTap, square, contained, compact }: { item: (typeo
           color: pressed ? theme.textInverse : theme.textHeading,
           textAlign: "center",
           lineHeight: compact ? "14px" : undefined,
-          transition: "color 0.15s",
+          transition: "color 0.1s ease-out",
         }}
       >
         {t(item.labelKey)}
@@ -424,7 +424,7 @@ function ShortcutTile({ item, contained }: { item: ShortcutItem; contained?: boo
       className="relative overflow-hidden flex flex-col items-center justify-center gap-2 transition-all duration-150 cursor-pointer w-full h-full"
       style={{
         borderRadius: theme.radiusCard,
-        backgroundColor: pressed ? theme.primarySubtle : contained ? theme.surfaceElevated : theme.surface,
+        backgroundColor: pressed ? theme.primary : contained ? theme.surfaceElevated : theme.surface,
         boxShadow: pressed
           ? `0px 2px 8px 0px ${theme.primarySubtle}`
           : contained
@@ -451,7 +451,7 @@ function ShortcutTile({ item, contained }: { item: ShortcutItem; contained?: boo
           fontFamily: fontFamily,
           ...TEXT_STYLE.label,
           fontWeight: WEIGHT.bold,
-          color: pressed ? theme.primary : theme.textMuted,
+          color: pressed ? theme.textInverse : theme.textMuted,
           lineHeight: "16px",
         }}
       >
@@ -483,7 +483,7 @@ function ShortcutTileCompact({ item }: { item: ShortcutItem }) {
       className="relative overflow-hidden flex flex-col items-center justify-center gap-2.5 transition-all duration-150 cursor-pointer w-full h-full"
       style={{
         borderRadius: theme.radiusLg,
-        backgroundColor: pressed ? theme.primarySubtle : "transparent",
+        backgroundColor: pressed ? theme.primary : "transparent",
         boxShadow: "none",
         outline: "none",
         transform: pressed ? "scale(0.96)" : "scale(1)",
@@ -506,7 +506,7 @@ function ShortcutTileCompact({ item }: { item: ShortcutItem }) {
           fontFamily: fontFamily,
           fontSize: TYPE_SCALE.base,
           fontWeight: WEIGHT.semibold,
-          color: pressed ? theme.primary : theme.textMuted,
+          color: pressed ? theme.textInverse : theme.textMuted,
           textAlign: "center",
           transition: "color 0.15s",
         }}
@@ -539,7 +539,7 @@ function ShortcutTileBare({ item }: { item: ShortcutItem }) {
       className="relative overflow-hidden flex flex-col items-center justify-center gap-2 transition-all duration-150 cursor-pointer w-full h-full"
       style={{
         borderRadius: theme.radiusXl,
-        backgroundColor: pressed ? theme.primarySubtle : "transparent",
+        backgroundColor: pressed ? theme.primary : "transparent",
         boxShadow: "none",
         outline: "none",
         transform: pressed ? "scale(0.96)" : "scale(1)",
@@ -562,7 +562,7 @@ function ShortcutTileBare({ item }: { item: ShortcutItem }) {
           fontFamily: fontFamily,
           fontSize: TYPE_SCALE.base,
           fontWeight: WEIGHT.bold,
-          color: pressed ? theme.primary : theme.textMuted,
+          color: pressed ? theme.textInverse : theme.textMuted,
           textAlign: "center",
           transition: "color 0.15s",
         }}

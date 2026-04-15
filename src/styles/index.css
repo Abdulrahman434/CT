@@ -12,3 +12,28 @@
     transform: translateX(0);
   }
 }
+
+/* ─── Touch Interface Fixes ─── */
+* {
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-focus-ring-color: transparent !important;
+  outline: none !important;
+}
+
+button:focus, a:focus, input:focus, select:focus, textarea:focus, div:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Hide persistent focus states on touch */
+@media (hover: none) {
+  button:hover, a:hover {
+    background-color: transparent !important;
+  }
+}
+
+/* Instant active feedback for all buttons without lingering */
+button:active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
+}

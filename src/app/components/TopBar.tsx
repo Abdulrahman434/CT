@@ -199,52 +199,68 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onWeatherTap,
         </div>
 
         {/* Lang */}
-        <button
-          data-nav="true"
-          onClick={() => setLocale(currentLocale === "en" ? "ar" : "en")}
-          className="rounded-full cursor-pointer flex items-center justify-center"
-          style={{ backgroundColor: theme.primarySubtle, width: theme.touchTargetMin, height: theme.touchTargetMin }}
-          aria-label="Language"
-        >
-          <Globe size={20} style={{ color: theme.primary }} />
-        </button>
+        <div className="relative">
+          <button
+            data-nav="true"
+            onClick={() => setLocale(currentLocale === "en" ? "ar" : "en")}
+            className="rounded-full cursor-pointer flex items-center justify-center transition-all active:scale-90"
+            style={{ 
+              backgroundColor: theme.primarySubtle, 
+              width: theme.touchTargetMin, 
+              height: theme.touchTargetMin,
+              outline: 'none',
+              border: 'none',
+            }}
+            aria-label="Language"
+          >
+            <Globe size={20} style={{ color: theme.primary }} />
+          </button>
+        </div>
 
         {/* Notifications Bell */}
-        <button
-          data-nav="true"
-          className="rounded-full cursor-pointer flex items-center justify-center relative"
-          style={{ backgroundColor: theme.primarySubtle, width: theme.touchTargetMin, height: theme.touchTargetMin }}
-          aria-label="Notifications"
-          onClick={onBellTap}
-        >
-          <Bell size={20} style={{ color: theme.primary }} />
-          {unreadCount > 0 && (
-            <div
-              className="absolute flex items-center justify-center"
-              style={{
-                top: "-2px",
-                right: "-2px",
-                minWidth: "18px",
-                height: "18px",
-                borderRadius: theme.radiusFull,
-                backgroundColor: "#D10044",
-                border: `2px solid ${theme.surface}`,
-                padding: "0 4px",
-              }}
-            >
-              <span
+        <div className="relative">
+          <button
+            data-nav="true"
+            className="rounded-full cursor-pointer flex items-center justify-center transition-all active:scale-90"
+            style={{ 
+              backgroundColor: theme.primarySubtle, 
+              width: theme.touchTargetMin, 
+              height: theme.touchTargetMin,
+              outline: 'none',
+              border: 'none',
+            }}
+            aria-label="Notifications"
+            onClick={onBellTap}
+          >
+            <Bell size={20} style={{ color: theme.primary }} />
+            {unreadCount > 0 && (
+              <div
+                className="absolute flex items-center justify-center"
                 style={{
-                  fontFamily: theme.fontFamily,
-                  ...TEXT_STYLE.micro,
-                  fontWeight: WEIGHT.bold,
-                  color: theme.textInverse,
+                  top: "-2px",
+                  right: "-2px",
+                  minWidth: "18px",
+                  height: "18px",
+                  borderRadius: theme.radiusFull,
+                  backgroundColor: "#D10044",
+                  border: `2px solid ${theme.surface}`,
+                  padding: "0 4px",
                 }}
               >
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            </div>
-          )}
-        </button>
+                <span
+                  style={{
+                    fontFamily: theme.fontFamily,
+                    ...TEXT_STYLE.micro,
+                    fontWeight: WEIGHT.bold,
+                    color: theme.textInverse,
+                  }}
+                >
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              </div>
+            )}
+          </button>
+        </div>
 
         {/* Cast indicator — pulsing when actively casting */}
         {castDevice && (
@@ -278,15 +294,23 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onWeatherTap,
         )}
 
         {/* Settings — always visible */}
-        <button
-          data-nav="true"
-          className="rounded-full cursor-pointer flex items-center justify-center"
-          style={{ backgroundColor: theme.primarySubtle, width: theme.touchTargetMin, height: theme.touchTargetMin }}
-          aria-label="Settings"
-          onClick={onSettingsTap}
-        >
-          <Settings size={20} style={{ color: theme.primary }} />
-        </button>
+        <div className="relative">
+          <button
+            data-nav="true"
+            className="rounded-full cursor-pointer flex items-center justify-center transition-all active:scale-90"
+            style={{ 
+              backgroundColor: theme.primarySubtle, 
+              width: theme.touchTargetMin, 
+              height: theme.touchTargetMin,
+              outline: 'none',
+              border: 'none',
+            }}
+            aria-label="Settings"
+            onClick={onSettingsTap}
+          >
+            <Settings size={20} style={{ color: theme.primary }} />
+          </button>
+        </div>
       </div>
     </div>
   );
