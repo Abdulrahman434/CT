@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chest X-Ray Report — Sara Saleh</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #fff; color: #1a1a2e; padding: 0; }
+  .report { max-width: 800px; margin: 0 auto; padding: 40px 48px; }
+
+  .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0d4f6b; padding-bottom: 20px; margin-bottom: 24px; }
+  .hospital-info { display: flex; align-items: center; gap: 16px; }
+  .hospital-logo { width: 60px; height: 60px; border-radius: 12px; background: linear-gradient(135deg, #0d4f6b, #1a7a9e); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 22px; font-weight: 700; }
+  .hospital-name { font-size: 20px; font-weight: 700; color: #0d4f6b; }
+  .hospital-sub { font-size: 12px; color: #666; margin-top: 2px; }
+  .report-type { text-align: right; }
+  .report-type h2 { font-size: 16px; font-weight: 700; color: #0d4f6b; text-transform: uppercase; letter-spacing: 1px; }
+  .report-type .ref { font-size: 11px; color: #999; margin-top: 4px; }
+
+  .confidential { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 8px 16px; text-align: center; font-size: 11px; font-weight: 600; color: #92400e; margin-bottom: 24px; letter-spacing: 0.5px; }
+
+  .patient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px 24px; margin-bottom: 24px; }
+  .patient-grid .field { display: flex; justify-content: space-between; }
+  .patient-grid .label { font-size: 12px; color: #64748b; font-weight: 500; }
+  .patient-grid .value { font-size: 12px; color: #1e293b; font-weight: 600; }
+
+  .section { margin-bottom: 20px; }
+  .section-title { font-size: 13px; font-weight: 700; color: #0d4f6b; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  th { background: #f1f5f9; font-size: 11px; font-weight: 700; color: #475569; text-align: left; padding: 8px 12px; border: 1px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { font-size: 12px; padding: 8px 12px; border: 1px solid #e2e8f0; color: #334155; }
+  td.normal { color: #16a34a; font-weight: 600; }
+  td.value { font-weight: 600; color: #1e293b; }
+
+  .findings-section { margin-bottom: 20px; }
+  .finding-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; }
+  .finding-row:last-child { border-bottom: none; }
+  .finding-label { font-size: 12px; color: #334155; font-weight: 500; }
+  .finding-value { font-size: 12px; font-weight: 600; }
+  .finding-value.normal { color: #16a34a; }
+  .finding-value.noted { color: #f59e0b; }
+
+  .findings-detail { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; }
+  .findings-detail h4 { font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 10px; }
+  .findings-detail p { font-size: 12px; line-height: 1.8; color: #334155; }
+  .findings-detail p strong { color: #1e293b; }
+
+  .impression { background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 24px; }
+  .impression h4 { font-size: 13px; font-weight: 700; color: #1e40af; margin-bottom: 6px; }
+  .impression p { font-size: 12px; color: #334155; line-height: 1.7; }
+
+  .signature-block { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 32px; padding-top: 20px; border-top: 2px solid #e2e8f0; }
+  .sig { text-align: center; }
+  .sig .line { width: 180px; border-bottom: 1px solid #94a3b8; margin-bottom: 6px; padding-bottom: 4px; font-style: italic; font-size: 14px; color: #475569; }
+  .sig .name { font-size: 12px; font-weight: 700; color: #1e293b; }
+  .sig .title { font-size: 11px; color: #64748b; }
+  .sig .license { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+
+  .footer { margin-top: 32px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 16px; }
+  .footer .disclaimer { font-style: italic; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="report">
+  <!-- Header -->
+  <div class="header">
+    <div class="hospital-info">
+      <div class="hospital-logo">DH</div>
+      <div>
+        <div class="hospital-name">Dallah Hospital</div>
+        <div class="hospital-sub">Department of Radiology & Diagnostic Imaging</div>
+        <div class="hospital-sub">Riyadh, Kingdom of Saudi Arabia</div>
+      </div>
+    </div>
+    <div class="report-type">
+      <h2>Radiology Report</h2>
+      <div class="ref">Ref: DH-XR-2026-03298</div>
+      <div class="ref">Page 1 of 1</div>
+    </div>
+  </div>
+
+  <div class="confidential">⚠ CONFIDENTIAL MEDICAL DOCUMENT — AUTHORIZED PERSONNEL ONLY</div>
+
+  <!-- Patient Information -->
+  <div class="section">
+    <div class="section-title">Patient Information</div>
+    <div class="patient-grid">
+      <div class="field"><span class="label">Patient Name</span><span class="value">Sara Saleh</span></div>
+      <div class="field"><span class="label">MRN</span><span class="value">DH-2026-08452</span></div>
+      <div class="field"><span class="label">Date of Birth</span><span class="value">15 Jul 1994</span></div>
+      <div class="field"><span class="label">Age / Sex</span><span class="value">31 years / Female</span></div>
+      <div class="field"><span class="label">Referring Physician</span><span class="value">Dr. Omar Abdulhalim</span></div>
+      <div class="field"><span class="label">Ward / Bed</span><span class="value">Maternity 3 / 312-A</span></div>
+      <div class="field"><span class="label">Exam Date</span><span class="value">05 March 2026</span></div>
+      <div class="field"><span class="label">Report Date</span><span class="value">05 March 2026</span></div>
+    </div>
+  </div>
+
+  <!-- Examination Details -->
+  <div class="section">
+    <div class="section-title">Examination Details</div>
+    <table>
+      <tr><th>Study</th><td>PA and Lateral Chest Radiograph</td></tr>
+      <tr><th>Clinical Indication</th><td>Pre-operative assessment. Mild cough for 3 days. Rule out lower respiratory infection.</td></tr>
+      <tr><th>Technique</th><td>PA and lateral projections performed in full inspiration. Adequate penetration and exposure.</td></tr>
+      <tr><th>Comparison</th><td>No prior chest radiographs available for comparison.</td></tr>
+    </table>
+  </div>
+
+  <!-- Systematic Findings -->
+  <div class="section">
+    <div class="section-title">Systematic Review of Findings</div>
+  </div>
+
+  <div class="findings-detail">
+    <h4>Detailed Radiological Findings</h4>
+    <p>
+      <strong>Airway:</strong> Trachea is midline with no deviation. Carina is normal in position. Main bronchi appear patent bilaterally.<br><br>
+      <strong>Breathing / Lungs:</strong> Both lung fields are clear with no focal consolidation, mass, or nodule identified. No pleural effusion or pneumothorax. Bilateral costophrenic angles are sharp. The lung markings are normal in distribution and caliber. No interstitial abnormality is seen.<br><br>
+      <strong>Cardiac:</strong> Heart size is within normal limits. The cardiothoracic ratio measures approximately <strong>0.42</strong> (normal &lt; 0.50). The cardiac silhouette is normal in configuration. No pericardial effusion is suggested.<br><br>
+      <strong>Diaphragm:</strong> Both hemidiaphragms are smooth and well-positioned. Right hemidiaphragm is slightly higher than left, which is a normal variant.<br><br>
+      <strong>Mediastinum:</strong> The mediastinal contour is normal. Aortic knob is unremarkable. No mediastinal widening or lymphadenopathy. The hilae are normal in size and density bilaterally.<br><br>
+      <strong>Bones &amp; Soft Tissues:</strong> No rib fractures or bony lesions are identified. Thoracic spine alignment is normal. Soft tissues of the chest wall are unremarkable. No calcification of note.<br><br>
+      <strong>Lines / Tubes / Devices:</strong> None present.
+    </p>
+  </div>
+
+  <!-- Summary Table -->
+  <div class="section">
+    <div class="section-title">Summary of Findings</div>
+    <table>
+      <tr><th>Structure</th><th>Assessment</th><th>Status</th></tr>
+      <tr><td>Lungs</td><td>Clear bilateral lung fields, no focal lesion</td><td class="normal">Normal</td></tr>
+      <tr><td>Heart</td><td>Normal size (CTR 0.42), normal silhouette</td><td class="normal">Normal</td></tr>
+      <tr><td>Mediastinum</td><td>No widening, normal hilae</td><td class="normal">Normal</td></tr>
+      <tr><td>Pleural Space</td><td>No effusion or pneumothorax</td><td class="normal">Normal</td></tr>
+      <tr><td>Diaphragm</td><td>Normal position bilaterally</td><td class="normal">Normal</td></tr>
+      <tr><td>Trachea</td><td>Midline, no deviation</td><td class="normal">Normal</td></tr>
+      <tr><td>Bones</td><td>No fractures, normal alignment</td><td class="normal">Normal</td></tr>
+      <tr><td>Soft Tissues</td><td>Unremarkable</td><td class="normal">Normal</td></tr>
+    </table>
+  </div>
+
+  <!-- Impression -->
+  <div class="impression">
+    <h4>IMPRESSION</h4>
+    <p>
+      <strong>Normal PA and lateral chest radiograph.</strong><br><br>
+      The lungs are clear bilaterally with no evidence of consolidation, effusion, or pneumothorax. Heart size is normal with a cardiothoracic ratio of 0.42. Mediastinal structures, diaphragm, and bony thorax are unremarkable.<br><br>
+      <strong>No acute cardiopulmonary process identified.</strong> The patient is cleared from a chest radiograph perspective for the planned procedure. Clinical correlation is recommended should symptoms persist or worsen.
+    </p>
+  </div>
+
+  <!-- Signatures -->
+  <div class="signature-block">
+    <div class="sig">
+      <div class="line">Dr. Faisal Al-Mutairi</div>
+      <div class="name">Dr. Faisal Al-Mutairi, MD, FRCR</div>
+      <div class="title">Consultant Radiologist</div>
+      <div class="license">SCFHS License: R-2015-02773</div>
+    </div>
+    <div class="sig">
+      <div class="line">Amal Al-Zahrani</div>
+      <div class="name">Amal Al-Zahrani, RT(R)</div>
+      <div class="title">Radiologic Technologist</div>
+      <div class="license">SCFHS License: T-2018-09156</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>Dallah Hospital — Radiology & Diagnostic Imaging Department — Riyadh, KSA — Tel: +966 11 444 8000</div>
+    <div class="disclaimer">This report is confidential and intended solely for the use of the referring physician and the patient named above.</div>
+    <div style="margin-top: 6px;">Generated: 05 March 2026 10:18 AST &nbsp;|&nbsp; Report ID: DH-XR-2026-03298</div>
+  </div>
+</div>
+</body>
+</html>

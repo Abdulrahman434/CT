@@ -102,9 +102,9 @@ const labResults = [
 ];
 
 const imagingResults = [
-  { labelKey: "care.imaging.ultrasound", date: "09 Mar", summaryKey: "care.imaging.summary", type: "Obstetric", pdfUrl: "https://www.tewhatuora.govt.nz/assets/Our-Health-System/Health-Services/Maternity/First-Trimester-Ultrasound-Report.pdf" },
-  { labelKey: "care.imaging.xray", date: "05 Mar", summaryKey: "care.imaging.xraySummary", type: "Chest", pdfUrl: "https://ndximaging.com/wp-content/uploads/2021/05/Sample-Radiology-Report-NDI.pdf" },
-  { labelKey: "care.imaging.doppler", date: "12 Mar", summaryKey: "care.imaging.dopplerSummary", type: "Ultrasound", pdfUrl: "https://www.mvsdoctors.com/wp-content/uploads/2015/07/Sample-Report.pdf" },
+  { labelKey: "care.imaging.ultrasound", date: "09 Mar", summaryKey: "care.imaging.summary", type: "Obstetric", pdfUrl: "/reports/obstetric-ultrasound.html" },
+  { labelKey: "care.imaging.xray", date: "05 Mar", summaryKey: "care.imaging.xraySummary", type: "Chest", pdfUrl: "/reports/chest-xray.html" },
+  { labelKey: "care.imaging.doppler", date: "12 Mar", summaryKey: "care.imaging.dopplerSummary", type: "Ultrasound", pdfUrl: "/reports/venous-doppler.html" },
 ];
 
 /* ─── Reported Pain ─── */
@@ -357,7 +357,6 @@ function LabResultsSlide({ theme }: { theme: any }) {
 /* ─── In-App PDF Viewer Modal ─── */
 function PdfViewerModal({ url, title, onClose }: { url: string; title: string; onClose: () => void }) {
   const { theme } = useTheme();
-  const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
   return createPortal(
     <div
       className="fixed inset-0 z-[200] flex flex-col"
@@ -385,7 +384,7 @@ function PdfViewerModal({ url, title, onClose }: { url: string; title: string; o
       {/* PDF iframe */}
       <div className="flex-1 min-h-0">
         <iframe
-          src={viewerUrl}
+          src={url}
           title={title}
           className="w-full h-full border-0"
           allow="fullscreen"

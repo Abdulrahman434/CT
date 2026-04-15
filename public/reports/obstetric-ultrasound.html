@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obstetric Ultrasound Report — Sara Saleh</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #fff; color: #1a1a2e; padding: 0; }
+  .report { max-width: 800px; margin: 0 auto; padding: 40px 48px; }
+
+  /* Header */
+  .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0d4f6b; padding-bottom: 20px; margin-bottom: 24px; }
+  .hospital-info { display: flex; align-items: center; gap: 16px; }
+  .hospital-logo { width: 60px; height: 60px; border-radius: 12px; background: linear-gradient(135deg, #0d4f6b, #1a7a9e); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 22px; font-weight: 700; }
+  .hospital-name { font-size: 20px; font-weight: 700; color: #0d4f6b; }
+  .hospital-sub { font-size: 12px; color: #666; margin-top: 2px; }
+  .report-type { text-align: right; }
+  .report-type h2 { font-size: 16px; font-weight: 700; color: #0d4f6b; text-transform: uppercase; letter-spacing: 1px; }
+  .report-type .ref { font-size: 11px; color: #999; margin-top: 4px; }
+
+  /* Confidential Banner */
+  .confidential { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 8px 16px; text-align: center; font-size: 11px; font-weight: 600; color: #92400e; margin-bottom: 24px; letter-spacing: 0.5px; }
+
+  /* Patient Info Grid */
+  .patient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px 24px; margin-bottom: 24px; }
+  .patient-grid .field { display: flex; justify-content: space-between; }
+  .patient-grid .label { font-size: 12px; color: #64748b; font-weight: 500; }
+  .patient-grid .value { font-size: 12px; color: #1e293b; font-weight: 600; }
+
+  /* Section */
+  .section { margin-bottom: 20px; }
+  .section-title { font-size: 13px; font-weight: 700; color: #0d4f6b; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  th { background: #f1f5f9; font-size: 11px; font-weight: 700; color: #475569; text-align: left; padding: 8px 12px; border: 1px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { font-size: 12px; padding: 8px 12px; border: 1px solid #e2e8f0; color: #334155; }
+  td.normal { color: #16a34a; font-weight: 600; }
+  td.value { font-weight: 600; color: #1e293b; }
+
+  /* Findings */
+  .findings { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; }
+  .findings h4 { font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 8px; }
+  .findings ul { list-style: none; padding: 0; }
+  .findings li { font-size: 12px; color: #334155; padding: 4px 0; padding-left: 16px; position: relative; line-height: 1.6; }
+  .findings li::before { content: '✓'; position: absolute; left: 0; color: #16a34a; font-weight: 700; }
+
+  /* Impression */
+  .impression { background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 24px; }
+  .impression h4 { font-size: 13px; font-weight: 700; color: #1e40af; margin-bottom: 6px; }
+  .impression p { font-size: 12px; color: #334155; line-height: 1.7; }
+
+  /* Signature */
+  .signature-block { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 32px; padding-top: 20px; border-top: 2px solid #e2e8f0; }
+  .sig { text-align: center; }
+  .sig .line { width: 180px; border-bottom: 1px solid #94a3b8; margin-bottom: 6px; padding-bottom: 4px; font-style: italic; font-size: 14px; color: #475569; }
+  .sig .name { font-size: 12px; font-weight: 700; color: #1e293b; }
+  .sig .title { font-size: 11px; color: #64748b; }
+  .sig .license { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+
+  /* Footer */
+  .footer { margin-top: 32px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 16px; }
+  .footer .disclaimer { font-style: italic; margin-top: 4px; }
+
+  @media print { body { padding: 0; } .report { padding: 24px; } }
+</style>
+</head>
+<body>
+<div class="report">
+  <!-- Header -->
+  <div class="header">
+    <div class="hospital-info">
+      <div class="hospital-logo">DH</div>
+      <div>
+        <div class="hospital-name">Dallah Hospital</div>
+        <div class="hospital-sub">Department of Radiology & Diagnostic Imaging</div>
+        <div class="hospital-sub">Riyadh, Kingdom of Saudi Arabia</div>
+      </div>
+    </div>
+    <div class="report-type">
+      <h2>Ultrasound Report</h2>
+      <div class="ref">Ref: DH-US-2026-04871</div>
+      <div class="ref">Page 1 of 1</div>
+    </div>
+  </div>
+
+  <div class="confidential">⚠ CONFIDENTIAL MEDICAL DOCUMENT — AUTHORIZED PERSONNEL ONLY</div>
+
+  <!-- Patient Information -->
+  <div class="section">
+    <div class="section-title">Patient Information</div>
+    <div class="patient-grid">
+      <div class="field"><span class="label">Patient Name</span><span class="value">Sara Saleh</span></div>
+      <div class="field"><span class="label">MRN</span><span class="value">DH-2026-08452</span></div>
+      <div class="field"><span class="label">Date of Birth</span><span class="value">15 Jul 1994</span></div>
+      <div class="field"><span class="label">Age / Sex</span><span class="value">31 years / Female</span></div>
+      <div class="field"><span class="label">Referring Physician</span><span class="value">Dr. Layla Al-Harbi</span></div>
+      <div class="field"><span class="label">Ward / Bed</span><span class="value">Maternity 3 / 312-A</span></div>
+      <div class="field"><span class="label">Exam Date</span><span class="value">09 March 2026</span></div>
+      <div class="field"><span class="label">Report Date</span><span class="value">09 March 2026</span></div>
+    </div>
+  </div>
+
+  <!-- Examination -->
+  <div class="section">
+    <div class="section-title">Examination Details</div>
+    <table>
+      <tr><th>Study</th><td>Obstetric Ultrasound — Second Trimester</td></tr>
+      <tr><th>Clinical Indication</th><td>Routine antenatal screening. Follow-up fetal growth and anatomy survey.</td></tr>
+      <tr><th>Technique</th><td>Transabdominal ultrasound with a 3.5 MHz curvilinear transducer. Real-time B-mode and M-mode imaging performed. Doppler assessment of umbilical artery included.</td></tr>
+      <tr><th>Comparison</th><td>First trimester scan dated 12 December 2025 — normal findings.</td></tr>
+    </table>
+  </div>
+
+  <!-- Biometry -->
+  <div class="section">
+    <div class="section-title">Fetal Biometry</div>
+    <table>
+      <tr>
+        <th>Measurement</th>
+        <th>Value</th>
+        <th>Percentile</th>
+        <th>Status</th>
+      </tr>
+      <tr>
+        <td>Biparietal Diameter (BPD)</td>
+        <td class="value">52.3 mm</td>
+        <td class="value">54th</td>
+        <td class="normal">Normal</td>
+      </tr>
+      <tr>
+        <td>Head Circumference (HC)</td>
+        <td class="value">192.5 mm</td>
+        <td class="value">48th</td>
+        <td class="normal">Normal</td>
+      </tr>
+      <tr>
+        <td>Abdominal Circumference (AC)</td>
+        <td class="value">168.2 mm</td>
+        <td class="value">51st</td>
+        <td class="normal">Normal</td>
+      </tr>
+      <tr>
+        <td>Femur Length (FL)</td>
+        <td class="value">36.8 mm</td>
+        <td class="value">56th</td>
+        <td class="normal">Normal</td>
+      </tr>
+      <tr>
+        <td>Estimated Fetal Weight (EFW)</td>
+        <td class="value">410 g</td>
+        <td class="value">52nd</td>
+        <td class="normal">Normal</td>
+      </tr>
+      <tr>
+        <td>Gestational Age (by biometry)</td>
+        <td class="value" colspan="2">21 weeks 3 days (± 10 days)</td>
+        <td class="normal">Consistent with dates</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Fetal Assessment -->
+  <div class="section">
+    <div class="section-title">Fetal Assessment</div>
+    <table>
+      <tr><th>Parameter</th><th>Finding</th><th>Status</th></tr>
+      <tr><td>Fetal Heart Rate</td><td class="value">148 bpm</td><td class="normal">Normal</td></tr>
+      <tr><td>Fetal Cardiac Activity</td><td>Present, regular rhythm</td><td class="normal">Normal</td></tr>
+      <tr><td>Fetal Movements</td><td>Active limb and body movements observed</td><td class="normal">Normal</td></tr>
+      <tr><td>Fetal Presentation</td><td>Cephalic (head-down)</td><td class="normal">Normal</td></tr>
+      <tr><td>Number of Fetuses</td><td>Singleton</td><td class="normal">—</td></tr>
+    </table>
+  </div>
+
+  <!-- Anatomical Survey -->
+  <div class="findings">
+    <h4>Anatomical Survey — Second Trimester</h4>
+    <ul>
+      <li><strong>Brain:</strong> Normal cerebral hemispheres, cavum septum pellucidum present, cerebellum normal.</li>
+      <li><strong>Spine:</strong> Intact vertebral bodies with normal curvature. No evidence of neural tube defect.</li>
+      <li><strong>Face:</strong> Normal profile. Nasal bone present. Intact upper lip.</li>
+      <li><strong>Heart:</strong> Four-chamber view normal. Outflow tracts visualized and appear normal.</li>
+      <li><strong>Diaphragm:</strong> Intact. Stomach and heart on correct sides.</li>
+      <li><strong>Abdominal Wall:</strong> Intact. Normal cord insertion site.</li>
+      <li><strong>Kidneys:</strong> Both kidneys visualized with normal echogenicity.</li>
+      <li><strong>Bladder:</strong> Visualized and appears normal.</li>
+      <li><strong>Limbs:</strong> All four limbs identified with normal long bones bilaterally.</li>
+    </ul>
+  </div>
+
+  <!-- Placenta and Fluid -->
+  <div class="section">
+    <div class="section-title">Placenta & Amniotic Fluid</div>
+    <table>
+      <tr><th>Parameter</th><th>Finding</th><th>Status</th></tr>
+      <tr><td>Placental Position</td><td>Posterior, upper segment. Well clear of internal os.</td><td class="normal">Normal</td></tr>
+      <tr><td>Placental Grade</td><td>Grade I (appropriate for gestational age)</td><td class="normal">Normal</td></tr>
+      <tr><td>Amniotic Fluid Index (AFI)</td><td class="value">14.2 cm</td><td class="normal">Normal</td></tr>
+      <tr><td>Umbilical Cord</td><td>Three-vessel cord (2 arteries, 1 vein)</td><td class="normal">Normal</td></tr>
+      <tr><td>Cervical Length</td><td class="value">38 mm (closed)</td><td class="normal">Normal</td></tr>
+    </table>
+  </div>
+
+  <!-- Doppler -->
+  <div class="section">
+    <div class="section-title">Doppler Assessment</div>
+    <table>
+      <tr><th>Vessel</th><th>PI</th><th>RI</th><th>Status</th></tr>
+      <tr><td>Umbilical Artery</td><td class="value">1.02</td><td class="value">0.63</td><td class="normal">Normal</td></tr>
+    </table>
+  </div>
+
+  <!-- Impression -->
+  <div class="impression">
+    <h4>IMPRESSION</h4>
+    <p>
+      <strong>Single live intrauterine pregnancy at approximately 21 weeks 3 days gestation.</strong><br><br>
+      Fetal biometry is consistent with dates and within normal limits. Detailed anatomical survey demonstrates no structural abnormalities. Fetal heart rate and cardiac activity are normal. Placenta is posteriorly located in the upper segment with normal grading. Amniotic fluid volume is adequate. Cervical length is reassuring.<br><br>
+      <strong>No concerning findings identified.</strong> Routine follow-up scan recommended at 28–32 weeks for growth assessment.
+    </p>
+  </div>
+
+  <!-- Signatures -->
+  <div class="signature-block">
+    <div class="sig">
+      <div class="line">Dr. Hana Al-Otaibi</div>
+      <div class="name">Dr. Hana Al-Otaibi, MD</div>
+      <div class="title">Consultant Radiologist — Obstetric Imaging</div>
+      <div class="license">SCFHS License: R-2019-04521</div>
+    </div>
+    <div class="sig">
+      <div class="line">Noura Al-Ghamdi</div>
+      <div class="name">Noura Al-Ghamdi, BSc</div>
+      <div class="title">Senior Sonographer</div>
+      <div class="license">SCFHS License: S-2017-08834</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>Dallah Hospital — Radiology & Diagnostic Imaging Department — Riyadh, KSA — Tel: +966 11 444 8000</div>
+    <div class="disclaimer">This report is confidential and intended solely for the use of the referring physician and the patient named above.</div>
+    <div style="margin-top: 6px;">Generated: 09 March 2026 14:32 AST &nbsp;|&nbsp; Report ID: DH-US-2026-04871</div>
+  </div>
+</div>
+</body>
+</html>
