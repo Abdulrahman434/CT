@@ -940,6 +940,68 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
               </div>
             ),
           }))
+        : theme.id === "dallah"
+        ? /* ── Dallah Hospital official educational materials ── */
+          (locale === "ar"
+            ? [
+                { id: "d-edu-reflux", name: "ارتجاع الحمض", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/acid%20reflux.pdf" },
+                { id: "d-edu-asthma", name: "الربو", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/asthma.pdf" },
+                { id: "d-edu-bronch", name: "توسع القصبات", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/bronchiectasis.pdf" },
+                { id: "d-edu-chol", name: "الكوليسترول", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/cholesterol.pdf" },
+                { id: "d-edu-colo", name: "تنظير القولون", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/colonoscopy.pdf" },
+                { id: "d-edu-pneu", name: "الالتهاب الرئوي", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/community-acquired%20pneumonia.pdf" },
+                { id: "d-edu-derm", name: "التهاب الجلد", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/Contact%20dermatitis.pdf" },
+                { id: "d-edu-anemia", name: "فقر الدم", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/iron%20deficiency%20anemia.pdf" },
+                { id: "d-edu-ibs", name: "القولون المتهيج", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/irritable%20bowel%20syndrome.pdf" },
+                { id: "d-edu-vitd", name: "نقص فيتامين د", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/Vitamin%20D%20Deficiency.pdf" },
+                { id: "d-edu-gdiabetes", name: "سكري الحمل", pdf: "https://www.dallah-hospital.com/Assets/library/Gallery/AR%20GESTATIONAL%20DIABETES-083537.pdf" },
+                { id: "d-edu-neonatal", name: "تغذية الرضيع", pdf: "https://www.dallah-hospital.com/Assets/library/Gallery/AR_Neonatal%20Weight%20Gain%20and%20Nutrition.pdf" },
+                { id: "d-edu-diadiet", name: "حمية السكري", pdf: "https://www.dallah-hospital.com/assets/Library/Gallery/Educational%20Content%20AR/Diabetes%20Diet%20AR%20%28coded%29.pdf" },
+                { id: "d-edu-knee", name: "استبدال الركبة", pdf: "https://www.dallah-hospital.com/assets/Library/Gallery/Educational%20Content%20AR/Total%20Knee%20Replacement_Leaflet%20AR.pdf" },
+                { id: "d-edu-const", name: "الإمساك", pdf: "https://www.dallah-hospital.com/assets/Library/Gallery/Educational%20Content%20AR/AR-Constipation%20in%20Adults.pdf" },
+                { id: "d-edu-csect", name: "الولادة القيصرية", pdf: "https://www.dallah-hospital.com/assets/Library/Gallery/Educational%20Content%20AR/C-section%20%28cesarean%20birth%29%20AR.pdf" },
+                { id: "d-edu-labor", name: "الولادة الطبيعية", pdf: "https://www.dallah-hospital.com/assets/Library/Gallery/Educational%20Content%20AR/Labor%20and%20delivery%20%28childbirth%20AR.pdf" },
+              ]
+            : [
+                { id: "d-edu-reflux", name: "Acid Reflux", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/acid%20reflux.pdf" },
+                { id: "d-edu-asthma", name: "Asthma", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/Asthma.pdf" },
+                { id: "d-edu-bronch", name: "Bronchiectasis", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/bronchiectasis.pdf" },
+                { id: "d-edu-chol", name: "Cholesterol", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/cholesterol.pdf" },
+                { id: "d-edu-bronchitis", name: "Chronic Bronchitis", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/chronic%20bronchitis.pdf" },
+                { id: "d-edu-colo", name: "Colonoscopy", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/colonoscopy.pdf" },
+                { id: "d-edu-pneu", name: "Community Pneumonia", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/community-acquired%20pneumonia.pdf" },
+                { id: "d-edu-derm", name: "Contact Dermatitis", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/Contact%20dermatitis.pdf" },
+                { id: "d-edu-copd", name: "COPD Guide", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/COPD.pdf" },
+                { id: "d-edu-crohn", name: "Crohn Disease", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/Crohn%20disease%20in%20adult.pdf" },
+                { id: "d-edu-gi", name: "GI Bleed", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/GI%20bleed.pdf" },
+                { id: "d-edu-hypok", name: "Hypokalemia", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/hypokalemia.pdf" },
+                { id: "d-edu-hypot", name: "Hypothyroidism", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/hypothyroidism.pdf" },
+                { id: "d-edu-anemia", name: "Iron Anemia", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/iron%20deficiency%20anemia.pdf" },
+                { id: "d-edu-ibs", name: "Irritable Bowel (IBS)", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/irritable%20bowel%20syndrome.pdf" },
+                { id: "d-edu-warts", name: "Skin Warts", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/Skin%20warts.pdf" },
+                { id: "d-edu-tb", name: "Tuberculosis", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/Tuberculosis.pdf" },
+                { id: "d-edu-vitd", name: "Vitamin D Deficiency", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/Vitamin%20D%20Deficiency.pdf" },
+                { id: "d-edu-csect", name: "C-Section Recovery", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/C-section%20(cesarean%20birth)%20EN.pdf" },
+                { id: "d-edu-diadiet", name: "Diabetes Diet", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/Diabetes%20Diet%20EN%20(coded).pdf" },
+                { id: "d-edu-falls", name: "Fall Prevention", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/Fall%20Prevention.pdf" },
+                { id: "d-edu-gdiabetes", name: "Gestational Diabetes", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/GESTATIONAL%20DIABETES.pdf" },
+                { id: "d-edu-labor", name: "Labor and Delivery", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/Labor%20and%20delivery%20(childbirth)%20ENG.pdf" },
+                { id: "d-edu-neonatal", name: "Newborn Nutrition", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/Neonatal%20Weight%20Gain%20and%20Nutrition.pdf" },
+              ]
+          ).map((item) => ({
+            id: item.id,
+            name: item.name,
+            bg: "transparent",
+            mark: "",
+            textColor: "#333",
+            pdfSource: item.pdf,
+            customRender: () => (
+              <div className="flex flex-col items-center justify-center text-center" style={{ width: 150, height: 150, padding: 12, background: "linear-gradient(135deg, #E8453C 0%, #C62828 100%)" }}>
+                <FileText size={42} color="#fff" strokeWidth={1.5} />
+                <span style={{ fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.7)", marginTop: 4, letterSpacing: 0.5, textTransform: "uppercase" }}>GUIDE</span>
+              </div>
+            ),
+          }))
         : /* ── Default education items for other hospitals ── */
           [
             ...[
