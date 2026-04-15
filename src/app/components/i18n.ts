@@ -135,9 +135,28 @@ const translations: Record<string, TranslationEntry> = {
   "care.plan.title": { en: "My Care Plan", ar: "خطة الرعاية" },
   "care.diet.title": { en: "Diet Codes", ar: "النظام الغذائي" },
   "care.baby.title": { en: "Baby Camera", ar: "كاميرا الطفل" },
+  "care.labs.title": { en: "Lab Results", ar: "نتائج المختبر" },
+  "care.imaging.title": { en: "Scans & Imaging", ar: "الأشعة والتصوير" },
   "care.discharge.title": { en: "Discharge Plan", ar: "خطة الخروج" },
   "care.room": { en: "Room", ar: "الغرفة" },
   "care.extension": { en: "Extension", ar: "التحويلة" },
+
+  /* ─── Lab Results ─── */
+  "care.labs.cbc": { en: "Complete Blood Count", ar: "تعداد الدم الكامل" },
+  "care.labs.glucose": { en: "Glucose Level", ar: "مستوى الجلوكوز" },
+  "care.labs.hemoglobin": { en: "Hemoglobin", ar: "الهيموجلوبين" },
+  "care.labs.potassium": { en: "Potassium", ar: "البوتاسيوم" },
+  "care.labs.normal": { en: "Normal", ar: "طبيعي" },
+  "care.labs.high": { en: "High", ar: "مرتفع" },
+  "care.labs.low": { en: "Low", ar: "منخفض" },
+
+  /* ─── Scans & Imaging ─── */
+  "care.imaging.ultrasound": { en: "Obstetric Ultrasound", ar: "تصوير السونار للجنين" },
+  "care.imaging.summary": { en: "Healthy development. Normal fetal heart rate.", ar: "نمو صحي. معدل نبضات قلب الجنين طبيعي." },
+  "care.imaging.xray": { en: "Chest X-Ray", ar: "أشعة سينية للصد" },
+  "care.imaging.mri": { en: "Abdominal MRI", ar: "رنين مغناطيسي للبطن" },
+  "care.imaging.viewReport": { en: "View Detailed Report", ar: "عرض التقرير التفصيلي" },
+  "care.imaging.pending": { en: "Processing...", ar: "قيد المعالجة..." },
 
   /* ─── Care Team ─── */
   "care.team.name.nura": { en: "Nura Al-Rashid", ar: "نورا الرشيد" },

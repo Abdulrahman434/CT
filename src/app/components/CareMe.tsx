@@ -28,6 +28,9 @@ import {
   EyeOff,
   Pin,
   PinOff,
+  FlaskConical,
+  Image as ImageIcon,
+  FileText,
 } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import svgPaths from "../../imports/svg-ca68x68c4i";
@@ -83,8 +86,22 @@ const slides: SlideConfig[] = [
   { key: "team", title: "My Care Team", titleKey: "care.team.title", icon: Users },
   { key: "plan", title: "My Care Plan", titleKey: "care.plan.title", icon: ClipboardList },
   { key: "dietAllergy", title: "Diet Codes", titleKey: "care.diet.title", icon: Apple },
+  { key: "labs", title: "Lab Results", titleKey: "care.labs.title", icon: FlaskConical },
+  { key: "imaging", title: "Scans & Imaging", titleKey: "care.imaging.title", icon: ImageIcon },
   { key: "baby", title: "Baby Camera", titleKey: "care.baby.title", icon: Baby },
   { key: "discharge", title: "Discharge Plan", titleKey: "care.discharge.title", icon: LogOut },
+];
+
+const labResults = [
+  { labelKey: "care.labs.cbc", valueKey: "care.labs.normal", status: "normal", date: "10 Mar" },
+  { labelKey: "care.labs.hemoglobin", value: "11.2 g/dL", status: "low", date: "10 Mar" },
+  { labelKey: "care.labs.glucose", value: "98 mg/dL", status: "normal", date: "11 Mar" },
+  { labelKey: "care.labs.potassium", value: "4.1 mmol/L", status: "normal", date: "11 Mar" },
+];
+
+const imagingResults = [
+  { labelKey: "care.imaging.ultrasound", date: "09 Mar", summaryKey: "care.imaging.summary", type: "Obstetric" },
+  { labelKey: "care.imaging.xray", date: "05 Mar", summaryKey: "care.plan.done", type: "Chest" },
 ];
 
 /* ─── Reported Pain ─── */
@@ -304,6 +321,69 @@ function AllergySlide() {
   );
 }
 
+function LabResultsSlide({ theme }: { theme: any }) {
+  const { t } = useLocale();
+  return (
+    <div className="flex flex-col gap-2.5">
+      {labResults.map((lab, i) => (
+        <div 
+          key={i}
+          className="flex items-center justify-between px-4 py-3"
+          style={{ backgroundColor: "rgba(232,236,238,0.5)", borderRadius: theme.radiusLg }}
+        >
+          <div className="min-w-0">
+            <p style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.body, fontWeight: WEIGHT.bold, color: theme.textHeading }}>{t(lab.labelKey)}</p>
+            <p style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted }}>{lab.date}</p>
+          </div>
+          <div className="text-right">
+            <p style={{
+              fontFamily: theme.fontFamily,
+              ...TEXT_STYLE.bodyEmphasis,
+              color: lab.status === "normal" ? theme.success : lab.status === "high" ? theme.error : "#C29100",
+              fontWeight: WEIGHT.bold
+            }}>
+              {lab.valueKey ? t(lab.valueKey) : lab.value}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ImagingSlide({ theme }: { theme: any }) {
+  const { t } = useLocale();
+  return (
+    <div className="flex flex-col gap-3">
+      {imagingResults.map((img, i) => (
+        <div 
+          key={i}
+          className="flex flex-col gap-2 px-4 py-3"
+          style={{ backgroundColor: theme.primarySubtle, border: `1px solid ${theme.primarySubtle}`, borderRadius: theme.radiusLg }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ backgroundColor: "#fff" }}>
+                <ImageIcon size={16} style={{ color: theme.primary }} />
+              </div>
+              <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.bodyEmphasis, fontWeight: WEIGHT.bold, color: theme.textHeading }}>{t(img.labelKey)}</span>
+            </div>
+            <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted }}>{img.date}</span>
+          </div>
+          <p style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.caption, color: theme.textHeading, paddingLeft: 40 }}>{t(img.summaryKey)}</p>
+          <button 
+            className="mt-1 flex items-center gap-1.5 self-start px-3 py-1.5" 
+            style={{ borderRadius: theme.radiusMd, backgroundColor: theme.surface, border: `1px solid ${theme.borderSubtle}` }}
+          >
+            <FileText size={12} style={{ color: theme.primary }} />
+            <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.micro, fontWeight: WEIGHT.bold, color: theme.primary }}>{t("care.imaging.viewReport")}</span>
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function BabyCameraSlide() {
   const { theme } = useTheme();
   const { t } = useLocale();
@@ -448,6 +528,8 @@ function SlideIcon({ slideKey }: { slideKey: string }) {
     case "team": return <Users {...iconProps} style={{ color }} />;
     case "plan": return <ClipboardList {...iconProps} style={{ color }} />;
     case "dietAllergy": return <Apple {...iconProps} style={{ color }} />;
+    case "labs": return <FlaskConical {...iconProps} style={{ color }} />;
+    case "imaging": return <ImageIcon {...iconProps} style={{ color }} />;
     case "baby": return <Baby {...iconProps} style={{ color }} />;
     case "discharge": return <LogOut {...iconProps} style={{ color }} />;
     default: return <Heart {...iconProps} style={{ color }} />;
@@ -590,20 +672,8 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
   const activeSlide = slides[activeIndex];
 
   const renderSlideContent = () => {
-    switch (activeSlide.key) {
-      case "team": return <CareTeamSlide theme={theme} />;
-      case "plan": return <TimelineSlide items={carePlan} theme={theme} />;
-      case "dietAllergy": return (
-        <div className="flex flex-col gap-3">
-          <DietSlide theme={theme} />
-          <SlideSectionHeading
-            icon={<AlertTriangle size={16} strokeWidth={2} style={{ color: theme.primary }} />}
-            label={t("care.allergies")}
-            theme={theme}
-          />
-          <AllergySlide />
-        </div>
-      );
+      case "labs": return <LabResultsSlide theme={theme} />;
+      case "imaging": return <ImagingSlide theme={theme} />;
       case "baby": return <BabyCameraSlide />;
       case "discharge": return <TimelineSlide items={dischargePlan} theme={theme} completedLabel="2 of 6 Completed" />;
       default: return null;
@@ -780,6 +850,8 @@ function ExpandedSlideIcon({ slideKey, size = 20 }: { slideKey: string; size?: n
     case "team": return <Users {...iconProps} />;
     case "plan": return <ClipboardList {...iconProps} />;
     case "dietAllergy": return <Apple {...iconProps} />;
+    case "labs": return <FlaskConical {...iconProps} />;
+    case "imaging": return <ImageIcon {...iconProps} />;
     case "baby": return <Baby {...iconProps} />;
     case "discharge": return <LogOut {...iconProps} />;
     default: return <Heart {...iconProps} />;
@@ -801,6 +873,8 @@ function renderExpandedSlideContent(key: string, theme: any, t: (k: string) => s
         <AllergySlide />
       </div>
     );
+    case "labs": return <LabResultsSlide theme={theme} />;
+    case "imaging": return <ImagingSlide theme={theme} />;
     case "baby": return <BabyCameraSlide />;
     case "discharge": return <TimelineSlide items={dischargePlan} theme={theme} completedLabel="2 of 6 Completed" />;
     default: return null;
@@ -996,13 +1070,14 @@ export function CareMeExpanded({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        {/* 5 Columns — one per slide (compact) */}
-        <div className="flex gap-4 px-10 pb-8" style={{ height: "55%" }}>
+        {/* Horizontal Scrolling Columns — 5 visible at once */}
+        <div className="flex gap-4 px-10 pb-8 overflow-x-auto careme-scroll h-full no-scrollbar" style={{ height: "65%" }}>
           {slides.map((slide) => (
             <div
               key={slide.key}
-              className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden"
+              className="flex flex-col h-full min-h-0 overflow-hidden shrink-0"
               style={{
+                width: "calc(20% - 13px)",
                 backgroundColor: theme.surface,
                 borderRadius: theme.radiusXl,
                 boxShadow: SHADOW.xl,
@@ -1010,9 +1085,7 @@ export function CareMeExpanded({ onClose }: { onClose: () => void }) {
               }}
             >
               {/* Column header */}
-              <div
-                className="shrink-0 flex items-center gap-2.5 px-5 pt-4 pb-2.5"
-              >
+              <div className="shrink-0 flex items-center gap-2.5 px-5 pt-4 pb-2.5">
                 <div
                   className="flex items-center justify-center shrink-0"
                   style={{
@@ -1023,16 +1096,9 @@ export function CareMeExpanded({ onClose }: { onClose: () => void }) {
                     color: theme.primary,
                   }}
                 >
-                  <ExpandedSlideIcon
-                    slideKey={slide.key}
-                    size={16}
-                  />
+                  <ExpandedSlideIcon slideKey={slide.key} size={16} />
                 </div>
-                <span style={{
-                  fontFamily: theme.fontFamily,
-                  ...TEXT_STYLE.subtitle,
-                  color: theme.textHeading,
-                }}>
+                <span className="truncate" style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.subtitle, color: theme.textHeading }}>
                   {t(slide.titleKey)}
                 </span>
               </div>
