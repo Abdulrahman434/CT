@@ -146,6 +146,7 @@ const translations: Record<string, TranslationEntry> = {
   "care.labs.glucose": { en: "Glucose Level", ar: "مستوى الجلوكوز" },
   "care.labs.hemoglobin": { en: "Hemoglobin", ar: "الهيموجلوبين" },
   "care.labs.potassium": { en: "Potassium", ar: "البوتاسيوم" },
+  "care.labs.tsh": { en: "TSH (Thyroid)", ar: "خضاب الغدة الدرقية" },
   "care.labs.normal": { en: "Normal", ar: "طبيعي" },
   "care.labs.high": { en: "High", ar: "مرتفع" },
   "care.labs.low": { en: "Low", ar: "منخفض" },
@@ -154,7 +155,10 @@ const translations: Record<string, TranslationEntry> = {
   "care.imaging.ultrasound": { en: "Obstetric Ultrasound", ar: "تصوير السونار للجنين" },
   "care.imaging.summary": { en: "Healthy development. Normal fetal heart rate.", ar: "نمو صحي. معدل نبضات قلب الجنين طبيعي." },
   "care.imaging.xray": { en: "Chest X-Ray", ar: "أشعة سينية للصد" },
+  "care.imaging.xraySummary": { en: "Lungs clear. No acute abnormality detected.", ar: "الرئتان سليمتان. لا يوجد شذوذ حاد." },
   "care.imaging.mri": { en: "Abdominal MRI", ar: "رنين مغناطيسي للبطن" },
+  "care.imaging.ctPelvis": { en: "CT Pelvis", ar: "تصوير مقطعي للحوض" },
+  "care.imaging.ctSummary": { en: "No significant findings. Normal pelvic anatomy.", ar: "لا توجد ملاحظات مهمة. تشريح طبيعي للحوض." },
   "care.imaging.viewReport": { en: "View Detailed Report", ar: "عرض التقرير التفصيلي" },
   "care.imaging.pending": { en: "Processing...", ar: "قيد المعالجة..." },
 

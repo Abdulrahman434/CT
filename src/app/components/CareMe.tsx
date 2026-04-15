@@ -98,11 +98,13 @@ const labResults = [
   { labelKey: "care.labs.hemoglobin", value: "11.2 g/dL", status: "low", date: "10 Mar" },
   { labelKey: "care.labs.glucose", value: "98 mg/dL", status: "normal", date: "11 Mar" },
   { labelKey: "care.labs.potassium", value: "4.1 mmol/L", status: "normal", date: "11 Mar" },
+  { labelKey: "care.labs.tsh", value: "2.3 mIU/L", status: "normal", date: "12 Mar" },
 ];
 
 const imagingResults = [
   { labelKey: "care.imaging.ultrasound", date: "09 Mar", summaryKey: "care.imaging.summary", type: "Obstetric", pdfUrl: "https://www.dallah-hospital.com/english/MediaCenter/EducationalPdfs/Pregnancy%20and%20Childbirth.pdf" },
-  { labelKey: "care.imaging.xray", date: "05 Mar", summaryKey: "care.plan.done", type: "Chest", pdfUrl: "https://www.dallah-hospital.com/english/MediaCenter/EducationalPdfs/Patient%20Education%20on%20Pneumonia.pdf" },
+  { labelKey: "care.imaging.xray", date: "05 Mar", summaryKey: "care.imaging.xraySummary", type: "Chest", pdfUrl: "https://www.dallah-hospital.com/english/MediaCenter/EducationalPdfs/Patient%20Education%20on%20Pneumonia.pdf" },
+  { labelKey: "care.imaging.ctPelvis", date: "12 Mar", summaryKey: "care.imaging.ctSummary", type: "CT", pdfUrl: "https://www.dallah-hospital.com/english/MediaCenter/EducationalPdfs/Pregnancy%20and%20Childbirth.pdf" },
 ];
 
 /* ─── Reported Pain ─── */
@@ -352,37 +354,84 @@ function LabResultsSlide({ theme }: { theme: any }) {
   );
 }
 
+/* ─── In-App PDF Viewer Modal ─── */
+function PdfViewerModal({ url, title, onClose }: { url: string; title: string; onClose: () => void }) {
+  const { theme } = useTheme();
+  const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[200] flex flex-col"
+      style={{ backgroundColor: "rgba(0,0,0,0.85)", animation: "babyCamFadeIn 0.25s ease-out" }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 shrink-0" style={{ backgroundColor: theme.surface, borderBottom: `1px solid ${theme.borderSubtle}` }}>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: theme.primarySubtle }}>
+            <FileText size={18} style={{ color: theme.primary }} />
+          </div>
+          <div>
+            <p style={{ fontFamily: theme.fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>{title}</p>
+            <p style={{ fontFamily: theme.fontFamily, fontSize: "12px", color: theme.textMuted }}>Detailed Medical Report</p>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer"
+          style={{ backgroundColor: theme.surfaceAlt }}
+        >
+          <X size={18} style={{ color: theme.textMuted }} />
+        </button>
+      </div>
+      {/* PDF iframe */}
+      <div className="flex-1 min-h-0">
+        <iframe
+          src={viewerUrl}
+          title={title}
+          className="w-full h-full border-0"
+          allow="fullscreen"
+        />
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 function ImagingSlide({ theme }: { theme: any }) {
   const { t } = useLocale();
+  const [pdfModal, setPdfModal] = useState<{ url: string; title: string } | null>(null);
+
   return (
-    <div className="flex flex-col gap-3">
-      {imagingResults.map((img, i) => (
-        <div 
-          key={i}
-          className="flex flex-col gap-2 px-4 py-3"
-          style={{ backgroundColor: theme.primarySubtle, border: `1px solid ${theme.primarySubtle}`, borderRadius: theme.radiusLg }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ backgroundColor: "#fff" }}>
-                <ImageIcon size={16} style={{ color: theme.primary }} />
-              </div>
-              <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.bodyEmphasis, fontWeight: WEIGHT.bold, color: theme.textHeading }}>{t(img.labelKey)}</span>
-            </div>
-            <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted }}>{img.date}</span>
-          </div>
-          <p style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.caption, color: theme.textHeading, paddingLeft: 40 }}>{t(img.summaryKey)}</p>
-          <button 
-            className="mt-1 flex items-center gap-1.5 self-start px-3 py-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer" 
-            style={{ borderRadius: theme.radiusMd, backgroundColor: theme.surface, border: `1px solid ${theme.borderSubtle}` }}
-            onClick={() => window.open(img.pdfUrl, "_blank")}
+    <>
+      <div className="flex flex-col gap-3">
+        {imagingResults.map((img, i) => (
+          <div 
+            key={i}
+            className="flex flex-col gap-2 px-4 py-3"
+            style={{ backgroundColor: theme.primarySubtle, border: `1px solid ${theme.primarySubtle}`, borderRadius: theme.radiusLg }}
           >
-            <FileText size={12} style={{ color: theme.primary }} />
-            <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.micro, fontWeight: WEIGHT.bold, color: theme.primary }}>{t("care.imaging.viewReport")}</span>
-          </button>
-        </div>
-      ))}
-    </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ backgroundColor: "#fff" }}>
+                  <ImageIcon size={16} style={{ color: theme.primary }} />
+                </div>
+                <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.bodyEmphasis, fontWeight: WEIGHT.bold, color: theme.textHeading }}>{t(img.labelKey)}</span>
+              </div>
+              <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted }}>{img.date}</span>
+            </div>
+            <p style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.caption, color: theme.textHeading, paddingLeft: 40 }}>{t(img.summaryKey)}</p>
+            <button 
+              className="mt-1 flex items-center gap-1.5 self-start px-3 py-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer" 
+              style={{ borderRadius: theme.radiusMd, backgroundColor: theme.surface, border: `1px solid ${theme.borderSubtle}` }}
+              onClick={() => setPdfModal({ url: img.pdfUrl, title: t(img.labelKey) })}
+            >
+              <FileText size={12} style={{ color: theme.primary }} />
+              <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.micro, fontWeight: WEIGHT.bold, color: theme.primary }}>{t("care.imaging.viewReport")}</span>
+            </button>
+          </div>
+        ))}
+      </div>
+      {pdfModal && <PdfViewerModal url={pdfModal.url} title={pdfModal.title} onClose={() => setPdfModal(null)} />}
+    </>
   );
 }
 
