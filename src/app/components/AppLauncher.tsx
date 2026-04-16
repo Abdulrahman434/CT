@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   Play,
@@ -935,8 +935,8 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
             url: `https://care.med.sa/${locale}/view/${item.viewId}`,
             customRender: () => (
               <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "#fff", borderRadius: theme.radiusXl }}>
-                <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#E8453C", borderRadius: theme.radiusLg }}>
-                  <BookOpenText size={32} color="#fff" strokeWidth={1.5} />
+                <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#fff", border: "2px solid #E8453C", borderRadius: theme.radiusLg }}>
+                  <BookOpenText size={32} color="#E8453C" strokeWidth={2} />
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 800, color: "#E8453C", letterSpacing: 0.5 }}>PDF</span>
               </div>
@@ -1007,8 +1007,8 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
             pdfSource: item.pdf,
             customRender: () => (
               <div className="flex flex-col items-center justify-center text-center" style={{ width: 150, height: 150, padding: 12, background: "#fff", borderRadius: theme.radiusXl }}>
-                <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#E8453C", borderRadius: theme.radiusLg }}>
-                  <FileText size={32} color="#fff" strokeWidth={1.5} />
+                <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#fff", border: "2px solid #E8453C", borderRadius: theme.radiusLg }}>
+                  <FileText size={32} color="#E8453C" strokeWidth={2} />
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 800, color: "#E8453C", letterSpacing: 0.5 }}>PDF</span>
               </div>
@@ -1043,8 +1043,8 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
               customRender: item.type === "pdf"
                 ? () => (
                   <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "#fff", borderRadius: theme.radiusXl }}>
-                    <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#E8453C", borderRadius: theme.radiusLg }}>
-                      <FileText size={32} color="#fff" strokeWidth={1.5} />
+                    <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#fff", border: "2px solid #E8453C", borderRadius: theme.radiusLg }}>
+                      <FileText size={32} color="#E8453C" strokeWidth={2} />
                     </div>
                     <span style={{ fontSize: 13, fontWeight: 800, color: "#E8453C", letterSpacing: 0.5 }}>PDF</span>
                   </div>
@@ -1145,6 +1145,7 @@ export function AppLauncher({
   const [pdfSource, setPdfSource] = useState<string | undefined>(undefined);
   const [pdfTitle, setPdfTitle] = useState<string>("");
   const [pageIndex, setPageIndex] = useState(0);
+  const swipeStartX = useRef<number | null>(null);
 
   // Reset page index when switching categories
   useEffect(() => {
@@ -1155,6 +1156,24 @@ export function AppLauncher({
 
   const appsPerPage = 18; // 6 columns * 3 rows
   const numPages = Math.ceil(category.apps.length / appsPerPage);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (numPages <= 1) return;
+    swipeStartX.current = e.clientX;
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (swipeStartX.current === null) return;
+    const deltaX = e.clientX - swipeStartX.current;
+    swipeStartX.current = null;
+
+    const threshold = 60;
+    if (deltaX > threshold && pageIndex > 0) {
+      setPageIndex(prev => prev - 1);
+    } else if (deltaX < -threshold && pageIndex < numPages - 1) {
+      setPageIndex(prev => prev + 1);
+    }
+  };
   const currentApps = category.apps.slice(pageIndex * appsPerPage, (pageIndex + 1) * appsPerPage);
 
   const handleAppTap = (app: AppItem) => {
@@ -1247,23 +1266,30 @@ export function AppLauncher({
       />
 
       {/* Apps grid */}
-      <div className="flex-1 min-h-0 px-16 pb-4 flex flex-col items-center justify-center" style={{ position: "relative", zIndex: 10 }}>
+      <div 
+        className="flex-1 min-h-0 px-16 pb-4 flex flex-col items-center justify-center" 
+        style={{ position: "relative", zIndex: 10, touchAction: "pan-y" }}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+      >
         {/* Main Grid Wrapper */}
         <div 
           key={`page-${activeKey}-${pageIndex}`}
           className="flex-1 flex flex-col items-center justify-center w-full"
           style={{ 
             animation: "appsFadeIn 0.3s ease-out",
+            pointerEvents: "none", // Allow swipes to pass through to container, but AppTile overrides this
           }}
         >
           <div
             className="grid gap-x-12 gap-y-10"
             style={{
               gridTemplateColumns: `repeat(${Math.min(currentApps.length, 6)}, 160px)`,
-              gridTemplateRows: `repeat(3, auto)`, // Force max 3 rows implicitly by slicing
+              gridTemplateRows: `repeat(3, auto)`,
               justifyContent: "center",
               justifyItems: "center",
-              marginTop: "-40px", // Pull up slightly to center better in the available space
+              marginTop: "-40px",
+              pointerEvents: "auto", // Re-enable pointer events for inner tiles
             }}
           >
             {currentApps.map((app) => (
