@@ -520,6 +520,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
         )}
         <div className="h-20 shrink-0" /> {/* Spacer for bottom bar */}
       </div>
+    </div>
 
       {/* Bottom Toolbar - Main Controls moved here */}
       <div
