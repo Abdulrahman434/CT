@@ -669,7 +669,7 @@ function DateStrip() {
 
 export function CareMe({ onExpand }: { onExpand?: () => void }) {
   const { theme } = useTheme();
-  const { t, isRTL } = useLocale();
+  const { t, isRTL, dir } = useLocale();
   const [activeIndex, setActiveIndex] = useState(1); // Start at index 1 because of clones
   const [isBlurred, setIsBlurred] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
@@ -903,6 +903,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
         <div
           className="flex h-full"
           onTransitionEnd={handleTransitionEnd}
+          dir="ltr"
           style={{
             width: `${extendedSlides.length * 100}%`,
             transition: (isDragging || isSnapping) ? "none" : "transform 0.5s cubic-bezier(0.2, 1, 0.2, 1)",
@@ -913,6 +914,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
             <div
               key={`${slide.key}-${i}`}
               className="h-full overflow-y-auto careme-scroll shrink-0"
+              dir={dir}
               style={{
                 width: `${100 / extendedSlides.length}%`,
                 padding: "12px 22px",
