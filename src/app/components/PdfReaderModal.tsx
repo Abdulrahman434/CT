@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, Printer, Loader2, Info, AlertCircle, HelpCircle, Columns, BookOpen as BookIcon, ScrollText, Layers } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, Printer, Loader2, Info, Star, Bookmark, PanelLeft, PanelLeftClose, Columns, BookOpen as BookIcon, ScrollText, Layers } from "lucide-react";
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import BecauseYouAreAllah from "@/assets/because-you-are-allah.pdf";
@@ -32,6 +32,8 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
   const [isTwoPage, setIsTwoPage] = useState(false);
   const [isContinuous, setIsContinuous] = useState(false);
   const [inputPage, setInputPage] = useState("1");
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [bookmarks, setBookmarks] = useState<number[]>([]);
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<{[key: number]: HTMLDivElement | null}>({});
@@ -50,6 +52,21 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
       }
     }
   }, [pdfSource]);
+
+  // Save/Load bookmarks
+  useEffect(() => {
+    if (pdfSource) {
+      const saved = localStorage.getItem(`pdf_bookmarks_${pdfSource}`);
+      if (saved) setBookmarks(JSON.parse(saved));
+      else setBookmarks([]);
+    }
+  }, [pdfSource]);
+
+  useEffect(() => {
+    if (pdfSource) {
+      localStorage.setItem(`pdf_bookmarks_${pdfSource}`, JSON.stringify(bookmarks));
+    }
+  }, [bookmarks, pdfSource]);
 
   // Save page whenever it changes
   useEffect(() => {
@@ -142,8 +159,29 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
     const nextContinuous = !isContinuous;
     setIsContinuous(nextContinuous);
     if (nextContinuous) {
-      setIsTwoPage(false); // Disable two-page when switching to continuous
+      setIsTwoPage(false);
     }
+  };
+
+  const toggleBookmark = () => {
+    if (bookmarks.includes(pageNumber)) {
+      setBookmarks(bookmarks.filter(p => p !== pageNumber));
+    } else {
+      setBookmarks([...bookmarks, pageNumber].sort((a, b) => a - b));
+    }
+  };
+
+  const swipeStartX = useRef<number | null>(null);
+  const handleSwipeStart = (e: React.PointerEvent) => {
+    swipeStartX.current = e.clientX;
+  };
+  const handleSwipeEnd = (e: React.PointerEvent) => {
+    if (swipeStartX.current === null) return;
+    const deltaX = e.clientX - swipeStartX.current;
+    swipeStartX.current = null;
+    const threshold = 50;
+    if (deltaX > threshold) goToPrevPage();
+    else if (deltaX < -threshold) goToNextPage();
   };
 
   // If no source is provided, use the hardcoded whitepaper sample simulation
@@ -246,139 +284,118 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
         }
       `}</style>
 
-      {/* Top Toolbar */}
+      {/* Top Header - Just Metadata and Sidebar Toggle */}
       <div
         className="flex items-center justify-between shrink-0 px-6"
         style={{
           height: "64px",
           backgroundColor: "#323639",
           borderBottom: "1px solid #1a1a1a",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
           zIndex: 10,
           color: "#fff"
         }}
       >
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <div className="pdf-toolbar-btn" title="Zoom Out" onClick={handleZoomOut}>
-              <ZoomOut size={20} color="#fff" />
-            </div>
-            <span style={{ fontSize: "14px", fontWeight: 600, minWidth: "45px", textAlign: "center" }}>
-              {Math.round(scale * 100)}%
-            </span>
-            <div className="pdf-toolbar-btn" title="Zoom In" onClick={handleZoomIn}>
-              <ZoomIn size={20} color="#fff" />
-            </div>
-          </div>
-          
-          <div className="hidden lg:flex items-center gap-3 ml-4">
-             <span style={{ fontSize: "14px", fontWeight: 500, color: "rgba(255,255,255,0.6)" }}>
-               {title || "Document Viewer"}
-             </span>
-          </div>
-
-          <div style={{ width: "1px", height: "24px", backgroundColor: "#555", margin: "0 10px" }} />
-          
+        <div className="flex items-center gap-4">
           <div 
             className="pdf-toolbar-btn" 
-            title={isTwoPage ? "Single Page View" : "Two Page View"}
-            onClick={toggleTwoPage}
-            style={{ backgroundColor: isTwoPage ? "rgba(255,255,255,0.1)" : "transparent" }}
+            title="Toggle Sidebar" 
+            onClick={() => setShowSidebar(!showSidebar)}
+            style={{ backgroundColor: showSidebar ? "rgba(255,255,255,0.1)" : "transparent" }}
           >
-            {isTwoPage ? <BookIcon size={20} color="#fff" /> : <Columns size={20} color="#fff" />}
+            {showSidebar ? <PanelLeftClose size={22} color="#fff" /> : <PanelLeft size={22} color="#fff" />}
           </div>
-
-          <div 
-            className="pdf-toolbar-btn" 
-            title={isContinuous ? "Paginated View" : "Continuous Scroll View"}
-            onClick={toggleContinuous}
-            style={{ backgroundColor: isContinuous ? "rgba(255,255,255,0.1)" : "transparent" }}
-          >
-            {isContinuous ? <Layers size={20} color="#fff" /> : <ScrollText size={20} color="#fff" />}
-          </div>
-        </div>
-
-        {/* Pagination Controls & Slider */}
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={goToPrevPage}
-              disabled={pageNumber <= 1}
-              className="pdf-toolbar-btn"
-              style={{ opacity: pageNumber <= 1 ? 0.3 : 1, cursor: pageNumber <= 1 ? "default" : "pointer" }}
-            >
-              {isRTL ? <ChevronRight size={26} color="#fff" /> : <ChevronLeft size={26} color="#fff" />}
-            </button>
-            
-            <div className="flex items-center gap-2.5" style={{ fontSize: "15px" }}>
-              <input 
-                className="page-input"
-                value={inputPage}
-                onChange={(e) => setInputPage(e.target.value)}
-                onKeyDown={handlePageInput}
-                onBlur={() => setInputPage(pageNumber.toString())}
-              />
-              <span style={{ color: "#9ca3af" }}>/</span>
-              <span style={{ fontWeight: 500 }}>{numPages || "--"}</span>
-            </div>
-
-            <button
-              onClick={goToNextPage}
-              disabled={pageNumber >= (numPages || 1)}
-              className="pdf-toolbar-btn"
-              style={{ opacity: pageNumber >= (numPages || 1) ? 0.3 : 1, cursor: pageNumber >= (numPages || 1) ? "default" : "pointer" }}
-            >
-              {isRTL ? <ChevronLeft size={26} color="#fff" /> : <ChevronRight size={26} color="#fff" />}
-            </button>
-          </div>
-
-          {/* Page Slider */}
-          {numPages && numPages > 1 && (
-            <div className="hidden sm:flex items-center gap-3">
-               <Slider.Root 
-                className="SliderRoot" 
-                value={[pageNumber]} 
-                max={numPages} 
-                min={1} 
-                step={1}
-                onValueChange={handleSliderChange}
-               >
-                <Slider.Track className="SliderTrack">
-                  <Slider.Range className="SliderRange" />
-                </Slider.Track>
-                <Slider.Thumb className="SliderThumb" aria-label="Page" />
-              </Slider.Root>
-            </div>
-          )}
+          <span style={{ fontSize: "16px", fontWeight: 700, letterSpacing: "0.5px" }}>
+            {title || "Document Viewer"}
+          </span>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-3 mr-4">
-            <div className="pdf-toolbar-btn" title="Download">
-              <Download size={20} color="#fff" />
-            </div>
-            <div className="pdf-toolbar-btn" title="Print">
-              <Printer size={20} color="#fff" />
-            </div>
-          </div>
-          <div style={{ width: "1px", height: "24px", backgroundColor: "#555", margin: "0 4px" }} />
           <button 
             onClick={onClose} 
             className="pdf-toolbar-btn" 
-            style={{ backgroundColor: "#dc2626", width: "42px", height: "42px" }} 
-            title="Close"
+            style={{ backgroundColor: "#dc2626", borderRadius: "10px" }} 
           >
-            <X size={22} color="#fff" />
+            <X size={20} color="#fff" />
           </button>
         </div>
       </div>
 
-      {/* Pages Container */}
-      <div 
-        ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto flex flex-col items-center"
-        style={{ scrollBehavior: "smooth", backgroundColor: "#525659" }}
-      >
+      {/* Main Content Area: Sidebar + Scroll Area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar */}
+        {showSidebar && (
+          <div 
+            className="w-80 shrink-0 flex flex-col border-r border-black/40 bg-[#2a2d2e] transition-all duration-300 transform"
+            style={{ animation: "slideInLeft 0.3s ease-out" }}
+          >
+            <style>{`
+              @keyframes slideInLeft {
+                from { opacity: 0; transform: translateX(-20px); }
+                to { opacity: 1; transform: translateX(0); }
+              }
+              .thumbnail-card {
+                cursor: pointer;
+                transition: transform 0.2s, background-color 0.2s;
+                border: 2px solid transparent;
+              }
+              .thumbnail-card:hover {
+                background-color: rgba(255,255,255,0.05);
+              }
+              .thumbnail-card.active {
+                border-color: #3b82f6;
+                background-color: rgba(59, 130, 246, 0.1);
+              }
+              .sidebar-tab {
+                flex: 1;
+                padding: 12px;
+                text-align: center;
+                font-size: 13px;
+                font-weight: 600;
+                color: rgba(255,255,255,0.4);
+                cursor: pointer;
+                border-bottom: 2px solid transparent;
+              }
+              .sidebar-tab.active {
+                color: #fff;
+                border-bottom-color: #3b82f6;
+              }
+            `}</style>
+            
+            <div className="flex border-b border-black/20 bg-black/10">
+              <div className="sidebar-tab active">Pages</div>
+              <div className="sidebar-tab" onClick={toggleBookmark} style={{ opacity: 0.5 }}>Bookmarks ({bookmarks.length})</div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+              {Array.from(new Array(numPages), (el, index) => (
+                <div 
+                  key={`thumb_${index + 1}`}
+                  className={`thumbnail-card rounded-lg p-2 ${pageNumber === index + 1 ? "active" : ""}`}
+                  onClick={() => setPageNumber(index + 1)}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <Document file={{ url: pdfSource }} loading={null}>
+                      <Page pageNumber={index + 1} width={240} renderTextLayer={false} renderAnnotationLayer={false} loading="" />
+                    </Document>
+                    <div className="flex items-center justify-between w-full px-2">
+                      <span className="text-xs text-white/50">{index + 1}</span>
+                      {bookmarks.includes(index + 1) && <Star size={12} className="fill-blue-500 text-blue-500" />}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Scrollable PDF Area */}
+        <div 
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto flex flex-col items-center relative touch-none"
+          style={{ scrollBehavior: "smooth", backgroundColor: "#525659" }}
+          onPointerDown={handleSwipeStart}
+          onPointerUp={handleSwipeEnd}
+        >
         {loading && !isSimulated && (
           <div className="flex-1 flex flex-col items-center justify-center text-white gap-4">
             <Loader2 className="animate-spin text-blue-400" size={56} />
@@ -500,7 +517,86 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
               )}
             </div>
           </Document>
-        )}
+        <div className="h-20 shrink-0" /> {/* Spacer for bottom bar */}
+      </div>
+
+      {/* Bottom Toolbar - Main Controls moved here */}
+      <div
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 px-6 py-3"
+        style={{
+          backgroundColor: "rgba(40, 44, 47, 0.95)",
+          backdropFilter: "blur(20px)",
+          borderRadius: "16px",
+          border: "1px solid rgba(255,255,255,0.15)",
+          boxShadow: "0 10px 40px rgba(0,0,0,0.4)",
+          zIndex: 100,
+          color: "#fff"
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="pdf-toolbar-btn" onClick={handleZoomOut}><ZoomOut size={18} /></div>
+          <span className="text-xs font-bold w-10 text-center">{Math.round(scale * 100)}%</span>
+          <div className="pdf-toolbar-btn" onClick={handleZoomIn}><ZoomIn size={18} /></div>
+        </div>
+
+        <div className="w-[1px] h-6 bg-white/10 mx-1" />
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={goToPrevPage}
+            disabled={pageNumber <= 1}
+            className="pdf-toolbar-btn"
+            style={{ opacity: pageNumber <= 1 ? 0.3 : 1 }}
+          >
+            {isRTL ? <ChevronRight size={22} /> : <ChevronLeft size={22} />}
+          </button>
+          
+          <div className="flex items-center gap-1.5 px-2">
+            <input 
+              className="page-input"
+              value={inputPage}
+              onChange={(e) => setInputPage(e.target.value)}
+              onKeyDown={handlePageInput}
+              onBlur={() => setInputPage(pageNumber.toString())}
+            />
+            <span className="text-white/30 text-sm">/</span>
+            <span className="text-sm font-bold">{numPages || "--"}</span>
+          </div>
+
+          <button
+            onClick={goToNextPage}
+            disabled={pageNumber >= (numPages || 1)}
+            className="pdf-toolbar-btn"
+            style={{ opacity: pageNumber >= (numPages || 1) ? 0.3 : 1 }}
+          >
+            {isRTL ? <ChevronLeft size={22} /> : <ChevronRight size={22} />}
+          </button>
+        </div>
+
+        <div className="w-[1px] h-6 bg-white/10 mx-1" />
+
+        <div className="flex items-center gap-1">
+          <div 
+            className="pdf-toolbar-btn" 
+            onClick={toggleTwoPage}
+            style={{ color: isTwoPage ? "#3b82f6" : "#fff" }}
+          >
+            <Columns size={18} />
+          </div>
+          <div 
+            className="pdf-toolbar-btn" 
+            onClick={toggleContinuous}
+            style={{ color: isContinuous ? "#3b82f6" : "#fff" }}
+          >
+            <ScrollText size={18} />
+          </div>
+          <div 
+            className="pdf-toolbar-btn" 
+            onClick={toggleBookmark}
+          >
+            <Bookmark size={18} className={bookmarks.includes(pageNumber) ? "fill-blue-500 text-blue-500" : ""} />
+          </div>
+        </div>
       </div>
     </div>
   );
