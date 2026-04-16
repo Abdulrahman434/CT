@@ -54,24 +54,38 @@ function SettingsSlider({
   onChange: (v: number) => void;
 }) {
   const { theme: t } = useTheme();
+  const { isRTL } = useLocale();
   const trackRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const calcValue = (e: React.PointerEvent | PointerEvent) => {
     const rect = trackRef.current?.getBoundingClientRect();
     if (!rect) return value;
-    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-    return Math.round((x / rect.width) * 100);
+    
+    let percentage: number;
+    if (isRTL) {
+      percentage = (rect.right - e.clientX) / rect.width;
+    } else {
+      percentage = (e.clientX - rect.left) / rect.width;
+    }
+    
+    return Math.max(0, Math.min(100, Math.round(percentage * 100)));
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    e.preventDefault();
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setIsDragging(true);
     onChange(calcValue(e));
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (e.buttons === 0) return;
+    if (!isDragging) return;
     onChange(calcValue(e));
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    setIsDragging(false);
+    e.currentTarget.releasePointerCapture(e.pointerId);
   };
 
   return (
@@ -127,31 +141,41 @@ function SettingsSlider({
         <div
           ref={trackRef}
           className="flex-1 relative cursor-pointer"
-          style={{ height: "10px", borderRadius: t.radiusSm, backgroundColor: t.sliderBg, touchAction: "none" }}
+          style={{ 
+            height: "12px", 
+            borderRadius: t.radiusSm, 
+            backgroundColor: t.sliderBg, 
+            touchAction: "none" 
+          }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
         >
+          {/* Track fill */}
           <div
             style={{
               height: "100%",
               borderRadius: t.radiusSm,
               backgroundColor: t.sliderTrack,
               width: `${value}%`,
-              transition: "width 0.15s",
+              transition: isDragging ? "none" : "width 0.2s ease-out",
             }}
           />
+          {/* Thumb */}
           <div
             className="absolute top-1/2"
             style={{
-              insetInlineStart: `${value}%`,
-              transform: "translateY(-50%)",
-              marginInlineStart: "-10px",
-              width: "20px",
-              height: "20px",
+              [isRTL ? "right" : "left"]: `${value}%`,
+              transform: `translate(${isRTL ? "50%" : "-50%"}, -50%)`,
+              width: isDragging ? "24px" : "20px",
+              height: isDragging ? "24px" : "20px",
               borderRadius: t.radiusFull,
               backgroundColor: t.sliderThumb,
               border: `3px solid ${t.surface}`,
-              boxShadow: `0 2px 6px ${t.primarySubtle}`,
+              boxShadow: isDragging ? `0 4px 12px ${t.primary}44` : `0 2px 6px rgba(0,0,0,0.15)`,
+              transition: isDragging ? "width 0.1s, height 0.1s" : "all 0.2s ease-out",
+              zIndex: 10,
             }}
           />
         </div>
