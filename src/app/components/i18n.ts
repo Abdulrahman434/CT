@@ -224,43 +224,33 @@ const translations: Record<string, TranslationEntry> = {
   "settings.darkMode": { en: "Dark Mode", ar: "الوضع الداكن", ur: "ڈارک موڈ" },
   "settings.language": { en: "Language", ar: "اللغة", ur: "زبان" },
   "settings.language.select": { en: "Select your preferred display language", ar: "اختر لغة العرض المفضلة", ur: "اپنی پسندیدہ زبان منتخب کریں" },
-  "settings.adminOnly": { en: "Admin Only", ar: "المشرف فقط", ur: "صرف ایڈمن" },
-  "settings.adminOnly.subtitle": { en: "PIN required", ar: "رمز الدخول مطلوب", ur: "پن درکار ہے" },
-  "settings.clearData": { en: "Clear Data", ar: "مسح البيانات", ur: "ڈیٹا صاف کریں" },
-  "settings.clearData.question": { en: "Clear Data?", ar: "مسح البيانات؟", ur: "ڈیٹا صاف کریں؟" },
-  "settings.clearData.desc": { en: "This will end all active sessions and remove your personal data from this device.", ar: "سيؤدي هذا إلى إنهاء جميع الجلسات النشطة وحذف بياناتك الشخصية من هذا الجهاز.", ur: "یہ تمام فعال سیشنز کو ختم کر دے گا اور اس ڈیوائس سے آپ کا ذاتی ڈیٹا ہٹا دے گا۔" },
-  "settings.clearData.signOut": { en: "Sign out of all logged-in applications", ar: "تسجيل الخروج من جميع التطبيقات", ur: "تمام لاگ ان ایپس سے سائن آؤٹ کریں" },
-  "settings.clearData.history": { en: "Clear browsing history & cookies", ar: "مسح سجل التصفح وملفات تعريف الارتباط", ur: "براؤزنگ کی تاریخ اور کوکیز صاف کریں" },
-  "settings.clearData.passwords": { en: "Remove saved passwords & logins", ar: "حذف كلمات المرور وبيانات الدخول المحفوظة", ur: "محفوظ کردہ پاس ورڈز اور لاگ انز ہٹائیں" },
-  "settings.clearData.reset": { en: "Reset app preferences to default", ar: "إعادة تعيين تفضيلات التطبيقات", ur: "ایپ کی ترجیحات کو ڈیفالٹ پر ری سیٹ کریں" },
-  "settings.castScreen": { en: "Cast Screen", ar: "عرض الشاشة", ur: "اسکرین کاسٹ کریں" },
-  "settings.stopCasting": { en: "Stop Casting", ar: "إيقاف العرض", ur: "کاسٹنگ روکیں" },
-  "settings.disconnect": { en: "Disconnect", ar: "قطع الاتصال", ur: "رابطہ ختم کریں" },
+  /* ─── Care Team Only (formerly Admin) ─── */
+  "settings.careTeamOnly": { en: "Care Team Only", ar: "فريق الرعاية فقط", ur: "صرف کیئر ٹیم" },
+  "settings.careTeamOnly.subtitle": { en: "PIN required", ar: "رمز الدخول مطلوب", ur: "پن درکار ہے" },
 
-  /* ─── Wi-Fi Dialog ─── */
-  "wifi.scanning": { en: "Scanning for networks...", ar: "جارٍ البحث عن الشبكات...", ur: "نیٹ ورکس تلاش کر رہے ہیں..." },
-  "wifi.available": { en: "Available Networks", ar: "الشبكات المتاحة", ur: "دستیاب نیٹ ورکس" },
-  "wifi.connected": { en: "Connected", ar: "متصل", ur: "منسلک" },
-  "wifi.secured": { en: "Secured", ar: "محمية", ur: "محفوظ" },
-  "wifi.open": { en: "Open", ar: "مفتوحة", ur: "کھلا" },
+  /* ─── Care Team Access Dialog ─── */
+  "careteam.title": { en: "Care Team Access", ar: "دخول فريق الرعاية", ur: "کیئر ٹیم رسائی" },
+  "careteam.enterPin": { en: "Enter 4-digit team PIN", ar: "أدخل رمز الفريق المكون من 4 أرقام", ur: "4 ہندسوں والا ٹیم پن درج کریں" },
+  "careteam.incorrect": { en: "Incorrect PIN. Please try again.", ar: "رمز خاطئ. يرجى المحاولة مرة أخرى.", ur: "غلط پن۔ دوبارہ کوشش کریں۔" },
+  "careteam.nurseRole": { en: "Nurse Interface", ar: "واجهة التمريض", ur: "نرس انٹرفیس" },
+  "careteam.doctorRole": { en: "Physician Interface", ar: "واجهة الطبيب", ur: "ڈاکٹر انٹرفیس" },
 
-  /* ─── Bluetooth Dialog ─── */
-  "bt.searching": { en: "Searching for devices...", ar: "جارٍ البحث عن الأجهزة...", ur: "ڈیوائسز تلاش کر رہے ہیں..." },
-  "bt.paired": { en: "Paired Devices", ar: "الأجهزة المقترنة", ur: "پیئرڈ ڈیوائسز" },
-  "bt.available": { en: "Available Devices", ar: "الأجهزة المتاحة", ur: "دستیاب ڈیوائسز" },
-  "bt.pairedStatus": { en: "Paired", ar: "مقترن", ur: "پیئرڈ" },
-  "bt.searchDevices": { en: "Search devices...", ar: "بحث عن الأجهزة...", ur: "ڈیوائسز تلاش کریں..." },
-  "bt.noMatch": { en: "No devices match \"{0}\"", ar: "لا توجد أجهزة مطابقة لـ \"{0}\"", ur: "\"{0}\" کے لیے کوئی ڈیوائس نہیں ملی" },
-
-  /* ─── Cast Dialog ─── */
-  "cast.looking": { en: "Looking for devices...", ar: "جارٍ البحث عن الأجهزة...", ur: "ڈیوائسز تلاش کر رہے ہیں..." },
-  "cast.unavailable": { en: "Unavailable", ar: "غير متاح", ur: "دستیاب نہیں" },
-
-  /* ─── Admin Dialog ─── */
-  "admin.title": { en: "Admin Access", ar: "دخول المشرف", ur: "ایڈمن رسائی" },
-  "admin.enterPin": { en: "Enter 4-digit admin PIN", ar: "أدخل رمز المشرف المكون من 4 أرقام", ur: "4 ہندسوں والا ایڈمن پن درج کریں" },
-  "admin.incorrect": { en: "Incorrect PIN. Please try again.", ar: "رمز خاطئ. يرجى المحاولة مرة أخرى.", ur: "غلط پن۔ دوبارہ کوشش کریں۔" },
-  "admin.del": { en: "DEL", ar: "حذف", ur: "ختم کریں" },
+  /* ─── Clinical Interface ─── */
+  "clinical.patientInfo": { en: "Patient Information", ar: "معلومات المريض", ur: "مریض کی معلومات" },
+  "clinical.vitals": { en: "Vital Signs", ar: "العلامات الحيوية", ur: "اہم علامات" },
+  "clinical.painReport": { en: "Pain Assessment", ar: "تقييم الألم", ur: "درد کی تشخیص" },
+  "clinical.dailyNotes": { en: "Daily Progress Notes", ar: "ملاحظات التطور اليومية", ur: "روزانہ کی پیش رفت کے نوٹ" },
+  "clinical.risks": { en: "Risk Assessment", ar: "تقييم المخاطر", ur: "خطرے کی تشخیص" },
+  "clinical.bp": { en: "Blood Pressure", ar: "ضغط الدم", ur: "بلڈ پریشر" },
+  "clinical.hr": { en: "Heart Rate", ar: "نبض القلب", ur: "دل کی دھڑکن" },
+  "clinical.temp": { en: "Temperature", ar: "الحرارة", ur: "درجہ حرارت" },
+  "clinical.spo2": { en: "Oxygen Saturation", ar: "تشبع الأكسجين", ur: "آکسیجن کی سطح" },
+  "clinical.notesPlaceholder": { en: "Enter clinical observations...", ar: "أدخل الملاحظات السريرية...", ur: "طبی مشاہدات درج کریں..." },
+  "clinical.save": { en: "Save Records", ar: "حفظ السجلات", ur: "ریکارڈ محفوظ کریں" },
+  "clinical.lastNurseNote": { en: "Last Nurse Entry", ar: "آخر إدخال للتمريض", ur: "آخری نرس اندراج" },
+  "clinical.addDocNote": { en: "Add Physician Note", ar: "إضافة ملاحظة طبيب", ur: "ڈاکٹر کا نوٹ شامل کریں" },
+  "clinical.fallRisk": { en: "Fall Risk", ar: "خطر السقوط", ur: "گرنے کا خطرہ" },
+  "clinical.pressureUlcer": { en: "Pressure Ulcer Risk", ar: "خطر قرح الفراش", ur: "دباؤ کے زخم کا خطرہ" },
 
   /* ─── Notifications Panel ─── */
   "notif.title": { en: "Notifications", ar: "الإشعارات", ur: "اطلاعات" },

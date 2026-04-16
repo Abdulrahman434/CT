@@ -29,9 +29,12 @@ import {
   Search,
   Maximize,
   Minimize,
+  Stethoscope,
+  Users,
 } from "lucide-react";
 import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
+import { CareTeamInterface } from "./CareTeamInterface";
 import type { Locale } from "./i18n";
 import imgMosque from "../../assets/b51acb5e2ec4a2c930572c53103b020b12e76ee2.png";
 import { getPrayerStatus, getCountdown, formatPrayerTime, PRAYER_NAMES } from "../utils/prayerUtils";
@@ -1092,8 +1095,8 @@ function LanguageDialog({
   );
 }
 
-/* ─── Admin PIN Dialog ─── */
-function AdminDialog({ onClose }: { onClose: () => void }) {
+/* ─── Care Team Access PIN Dialog ─── */
+function CareTeamAccessDialog({ onClose }: { onClose: () => void }) {
   const { theme: t } = useTheme();
   const { t: tr } = useLocale();
   const [pin, setPin] = useState("");
@@ -1104,9 +1107,11 @@ function AdminDialog({ onClose }: { onClose: () => void }) {
       const newPin = pin + d;
       setPin(newPin);
       setError(false);
-      if (newPin.length === 4) {
-        // Mock: accept "0000" as valid PIN
-        if (newPin === "0000") {
+        if (newPin === "2580") {
+          setActiveCareRole("nurse");
+          onClose();
+        } else if (newPin === "0000") {
+          setActiveCareRole("doctor");
           onClose();
         } else {
           setTimeout(() => {
@@ -1135,11 +1140,11 @@ function AdminDialog({ onClose }: { onClose: () => void }) {
             width: "56px",
             height: "56px",
             borderRadius: t.radiusLg,
-            backgroundColor: t.accentSubtle,
+            backgroundColor: "#E0F2FE",
             marginBottom: "16px",
           }}
         >
-          <ShieldAlert size={28} style={{ color: t.accent }} />
+          <Users size={28} style={{ color: t.primary }} />
         </div>
         <span
           style={{
@@ -1150,7 +1155,7 @@ function AdminDialog({ onClose }: { onClose: () => void }) {
             textAlign: "center",
           }}
         >
-          {tr("admin.title")}
+          {tr("careteam.title")}
         </span>
         <span
           style={{
@@ -1164,7 +1169,7 @@ function AdminDialog({ onClose }: { onClose: () => void }) {
             transition: "color 0.2s",
           }}
         >
-          {error ? tr("admin.incorrect") : tr("admin.enterPin")}
+          {error ? tr("careteam.incorrect") : tr("careteam.enterPin")}
         </span>
       </div>
 
@@ -1529,7 +1534,8 @@ export function SettingsPanel({
   const [showCastDialog, setShowCastDialog] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showLangDialog, setShowLangDialog] = useState(false);
-  const [showAdminDialog, setShowAdminDialog] = useState(false);
+  const [showCareTeamDialog, setShowCareTeamDialog] = useState(false);
+  const [activeCareRole, setActiveCareRole] = useState<"nurse" | "doctor" | null>(null);
 
   // Get connected names for subtitles
   const connectedCastName = castDevice
@@ -1741,11 +1747,11 @@ export function SettingsPanel({
               onClick={() => setShowLangDialog(true)}
             />
             <ActionButton
-              icon={<ShieldAlert size={20} style={{ color: "#D10044" }} />}
-              label={tr("settings.adminOnly")}
-              subtitle={tr("settings.adminOnly.subtitle")}
-              variant="destructive"
-              onClick={() => setShowAdminDialog(true)}
+              icon={<Stethoscope size={20} style={{ color: t.primary }} />}
+              label={tr("settings.careTeamOnly")}
+              subtitle={tr("settings.careTeamOnly.subtitle")}
+              variant="primary"
+              onClick={() => setShowCareTeamDialog(true)}
             />
           </div>
 
@@ -1860,8 +1866,15 @@ export function SettingsPanel({
         />
       )}
 
-      {showAdminDialog && (
-        <AdminDialog onClose={() => setShowAdminDialog(false)} />
+      {showCareTeamDialog && (
+        <CareTeamAccessDialog onClose={() => setShowCareTeamDialog(false)} />
+      )}
+
+      {activeCareRole && (
+        <CareTeamInterface 
+          role={activeCareRole} 
+          onClose={() => setActiveCareRole(null)} 
+        />
       )}
 
       <style>{`
