@@ -895,6 +895,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
       {/* Slide Content */}
       <div 
         className="flex-1 min-h-0 overflow-hidden relative"
+        dir="ltr"
         style={{
           filter: isBlurred ? "blur(12px)" : "none",
           transition: "filter 0.3s ease",
