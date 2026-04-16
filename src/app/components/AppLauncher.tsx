@@ -935,8 +935,8 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
             url: `https://care.med.sa/${locale}/view/${item.viewId}`,
             customRender: () => (
               <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "#fff", borderRadius: theme.radiusXl }}>
-                <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#fff", border: "2px solid #E8453C", borderRadius: theme.radiusLg }}>
-                  <BookOpenText size={32} color="#E8453C" strokeWidth={2} />
+                <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#E8453C", borderRadius: theme.radiusLg }}>
+                  <BookOpenText size={32} color="#fff" strokeWidth={1.5} />
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 800, color: "#E8453C", letterSpacing: 0.5 }}>PDF</span>
               </div>
@@ -1007,8 +1007,8 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
             pdfSource: item.pdf,
             customRender: () => (
               <div className="flex flex-col items-center justify-center text-center" style={{ width: 150, height: 150, padding: 12, background: "#fff", borderRadius: theme.radiusXl }}>
-                <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#fff", border: "2px solid #E8453C", borderRadius: theme.radiusLg }}>
-                  <FileText size={32} color="#E8453C" strokeWidth={2} />
+                <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#E8453C", borderRadius: theme.radiusLg }}>
+                  <FileText size={32} color="#fff" strokeWidth={1.5} />
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 800, color: "#E8453C", letterSpacing: 0.5 }}>PDF</span>
               </div>
@@ -1043,8 +1043,8 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
               customRender: item.type === "pdf"
                 ? () => (
                   <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "#fff", borderRadius: theme.radiusXl }}>
-                    <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#fff", border: "2px solid #E8453C", borderRadius: theme.radiusLg }}>
-                      <FileText size={32} color="#E8453C" strokeWidth={2} />
+                    <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#E8453C", borderRadius: theme.radiusLg }}>
+                      <FileText size={32} color="#fff" strokeWidth={1.5} />
                     </div>
                     <span style={{ fontSize: 13, fontWeight: 800, color: "#E8453C", letterSpacing: 0.5 }}>PDF</span>
                   </div>
