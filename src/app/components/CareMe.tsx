@@ -673,6 +673,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isBlurred, setIsBlurred] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
   const touchStartX = useRef(0);
   const touchDeltaX = useRef(0);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -713,11 +714,30 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
     [goTo, pauseAutoRotate]
   );
 
-  const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; touchDeltaX.current = 0; };
-  const handleTouchMove = (e: React.TouchEvent) => { touchDeltaX.current = e.touches[0].clientX - touchStartX.current; };
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchDeltaX.current = 0;
+    setDragOffset(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const delta = e.touches[0].clientX - touchStartX.current;
+    // Only allow horizontal drag if it's the primary intent
+    if (Math.abs(delta) > 10) {
+      touchDeltaX.current = delta;
+      setDragOffset(delta);
+      pauseAutoRotate();
+    }
+  };
+
   const handleTouchEnd = () => {
-    if (touchDeltaX.current < -50) handleManualNav(activeIndex + 1);
-    else if (touchDeltaX.current > 50) handleManualNav(activeIndex - 1);
+    const threshold = 100; 
+    if (touchDeltaX.current < -threshold) {
+      handleManualNav(activeIndex + 1);
+    } else if (touchDeltaX.current > threshold) {
+      handleManualNav(activeIndex - 1);
+    }
+    setDragOffset(0);
     touchDeltaX.current = 0;
   };
 
@@ -748,12 +768,16 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
 
   return (
     <div
-      className="flex flex-col overflow-hidden flex-1 min-h-0"
+      className="flex flex-col overflow-hidden flex-1 min-h-0 relative select-none"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       style={{
         backgroundColor: theme.surface,
         borderRadius: theme.radiusCard,
         boxShadow: SHADOW.md,
         border: theme.cardBorder,
+        touchAction: "pan-y", // Prevent horizontal ghosting
       }}
     >
       {/* Header */}
@@ -842,12 +866,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
       </div>
 
       {/* Slide Content */}
-      <div
-        className="flex-1 min-h-0 overflow-hidden"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
+      <div className="flex-1 min-h-0 overflow-hidden">
         <div
           key={activeSlide.key}
           className="h-full py-3 overflow-y-auto careme-scroll"
@@ -855,7 +874,8 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
             padding: "12px 22px",
             animation: "caremeSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
             filter: isBlurred ? "blur(10px)" : "none",
-            transition: "filter 0.3s ease",
+            transition: "filter 0.3s ease, transform 0.1s ease-out",
+            transform: `translateX(${dragOffset}px)`,
             pointerEvents: isBlurred ? "none" : "auto",
           }}
         >
