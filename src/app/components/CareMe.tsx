@@ -670,21 +670,28 @@ function DateStrip() {
 export function CareMe({ onExpand }: { onExpand?: () => void }) {
   const { theme } = useTheme();
   const { t, isRTL } = useLocale();
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(1); // Start at index 1 because of clones
   const [isBlurred, setIsBlurred] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isSnapping, setIsSnapping] = useState(false);
   const touchStartX = useRef(0);
   const touchDeltaX = useRef(0);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [paused, setPaused] = useState(false);
   const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Extended slides for circular carousel: [Last, S0, S1, S2, S3, S4, S5, S6, First]
+  const extendedSlides = useMemo(() => [
+    slides[slides.length - 1],
+    ...slides,
+    slides[0]
+  ], []);
+
   const goTo = useCallback(
     (idx: number) => {
-      const next = idx >= slides.length ? 0 : idx < 0 ? slides.length - 1 : idx;
-      setActiveIndex(next);
+      setActiveIndex(idx);
     },
     []
   );
@@ -693,7 +700,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
   useEffect(() => {
     if (paused || isPinned) return;
     autoTimerRef.current = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % slides.length);
+      setActiveIndex((prev) => prev + 1);
     }, 6000);
     return () => {
       if (autoTimerRef.current) clearInterval(autoTimerRef.current);
@@ -715,39 +722,52 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
     [goTo, pauseAutoRotate]
   );
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
+  const handlePointerDown = (e: React.PointerEvent) => {
+    touchStartX.current = e.clientX;
     touchDeltaX.current = 0;
     setDragOffset(0);
     setIsDragging(true);
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    let delta = e.touches[0].clientX - touchStartX.current;
-
-    // Resistance at boundaries
-    if ((activeIndex === 0 && delta > 0) || (activeIndex === slides.length - 1 && delta < 0)) {
-      delta *= 0.35;
-    }
-
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    const delta = e.clientX - touchStartX.current;
     touchDeltaX.current = delta;
     setDragOffset(delta);
     pauseAutoRotate();
   };
 
-  const handleTouchEnd = () => {
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!isDragging) return;
     setIsDragging(false);
+    (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
+    
     const threshold = 80; 
-    if (touchDeltaX.current < -threshold && activeIndex < slides.length - 1) {
+    if (touchDeltaX.current < -threshold) {
       handleManualNav(activeIndex + 1);
-    } else if (touchDeltaX.current > threshold && activeIndex > 0) {
+    } else if (touchDeltaX.current > threshold) {
       handleManualNav(activeIndex - 1);
     }
     setDragOffset(0);
     touchDeltaX.current = 0;
   };
 
-  const activeSlide = slides[activeIndex];
+  // Teleportation for circular wrap-around
+  const handleTransitionEnd = () => {
+    if (activeIndex === 0) {
+      setIsSnapping(true);
+      setActiveIndex(slides.length);
+      setTimeout(() => setIsSnapping(false), 50);
+    } else if (activeIndex === extendedSlides.length - 1) {
+      setIsSnapping(true);
+      setActiveIndex(1);
+      setTimeout(() => setIsSnapping(false), 50);
+    }
+  };
+
+  const activeSlide = extendedSlides[activeIndex];
+  const realIndex = activeIndex === 0 ? slides.length - 1 : activeIndex === extendedSlides.length - 1 ? 0 : activeIndex - 1;
 
   const renderSlideContentItem = (key: string) => {
     switch (key) {
@@ -775,15 +795,16 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
   return (
     <div
       className="flex flex-col overflow-hidden flex-1 min-h-0 relative select-none"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       style={{
         backgroundColor: theme.surface,
         borderRadius: theme.radiusCard,
         boxShadow: SHADOW.md,
         border: theme.cardBorder,
-        touchAction: "pan-y", // Prevent horizontal ghosting
+        touchAction: "pan-y",
       }}
     >
       {/* Header */}
@@ -867,7 +888,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
         <SlideIcon slideKey={activeSlide.key} />
         <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.subtitle, color: theme.primary }}>{t(activeSlide.titleKey)}</span>
         <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted, marginLeft: "auto" }}>
-          {activeIndex + 1} / {slides.length}
+          {realIndex + 1} / {slides.length}
         </span>
       </div>
 
@@ -881,18 +902,19 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
       >
         <div
           className="flex h-full"
+          onTransitionEnd={handleTransitionEnd}
           style={{
-            width: `${slides.length * 100}%`,
-            transition: isDragging ? "none" : "transform 0.5s cubic-bezier(0.2, 1, 0.2, 1)",
-            transform: `translateX(calc(-${(activeIndex * 100) / slides.length}% + ${dragOffset}px))`,
+            width: `${extendedSlides.length * 100}%`,
+            transition: (isDragging || isSnapping) ? "none" : "transform 0.5s cubic-bezier(0.2, 1, 0.2, 1)",
+            transform: `translateX(calc(-${(activeIndex * 100) / extendedSlides.length}% + ${dragOffset}px))`,
           }}
         >
-          {slides.map((slide) => (
+          {extendedSlides.map((slide, i) => (
             <div
-              key={slide.key}
+              key={`${slide.key}-${i}`}
               className="h-full overflow-y-auto careme-scroll shrink-0"
               style={{
-                width: `${100 / slides.length}%`,
+                width: `${100 / extendedSlides.length}%`,
                 padding: "12px 22px",
                 pointerEvents: isBlurred ? "none" : "auto",
               }}
@@ -908,12 +930,12 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
         {slides.map((s, i) => (
           <button
             key={s.key}
-            onClick={() => handleManualNav(i)}
+            onClick={() => handleManualNav(i + 1)}
             className="rounded-full transition-all duration-300 cursor-pointer"
             style={{
-              width: i === activeIndex ? "20px" : "6px",
+              width: i === realIndex ? "20px" : "6px",
               height: "6px",
-              backgroundColor: i === activeIndex ? theme.primary : "rgba(0,0,0,0.08)",
+              backgroundColor: i === realIndex ? theme.primary : "rgba(0,0,0,0.08)",
             }}
             aria-label={`Go to ${t(s.titleKey)}`}
           />
