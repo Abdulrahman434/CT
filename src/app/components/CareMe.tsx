@@ -674,6 +674,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
   const [isBlurred, setIsBlurred] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const touchStartX = useRef(0);
   const touchDeltaX = useRef(0);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -718,23 +719,28 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
     touchStartX.current = e.touches[0].clientX;
     touchDeltaX.current = 0;
     setDragOffset(0);
+    setIsDragging(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    const delta = e.touches[0].clientX - touchStartX.current;
-    // Only allow horizontal drag if it's the primary intent
-    if (Math.abs(delta) > 10) {
-      touchDeltaX.current = delta;
-      setDragOffset(delta);
-      pauseAutoRotate();
+    let delta = e.touches[0].clientX - touchStartX.current;
+
+    // Resistance at boundaries
+    if ((activeIndex === 0 && delta > 0) || (activeIndex === slides.length - 1 && delta < 0)) {
+      delta *= 0.35;
     }
+
+    touchDeltaX.current = delta;
+    setDragOffset(delta);
+    pauseAutoRotate();
   };
 
   const handleTouchEnd = () => {
-    const threshold = 100; 
-    if (touchDeltaX.current < -threshold) {
+    setIsDragging(false);
+    const threshold = 80; 
+    if (touchDeltaX.current < -threshold && activeIndex < slides.length - 1) {
       handleManualNav(activeIndex + 1);
-    } else if (touchDeltaX.current > threshold) {
+    } else if (touchDeltaX.current > threshold && activeIndex > 0) {
       handleManualNav(activeIndex - 1);
     }
     setDragOffset(0);
@@ -743,8 +749,8 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
 
   const activeSlide = slides[activeIndex];
 
-  const renderSlideContent = () => {
-    switch (activeSlide.key) {
+  const renderSlideContentItem = (key: string) => {
+    switch (key) {
       case "team": return <CareTeamSlide theme={theme} />;
       case "plan": return <TimelineSlide items={carePlan} theme={theme} />;
       case "dietAllergy": return (
@@ -866,20 +872,34 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
       </div>
 
       {/* Slide Content */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div 
+        className="flex-1 min-h-0 overflow-hidden relative"
+        style={{
+          filter: isBlurred ? "blur(12px)" : "none",
+          transition: "filter 0.3s ease",
+        }}
+      >
         <div
-          key={activeSlide.key}
-          className="h-full py-3 overflow-y-auto careme-scroll"
+          className="flex h-full"
           style={{
-            padding: "12px 22px",
-            animation: "caremeSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
-            filter: isBlurred ? "blur(10px)" : "none",
-            transition: "filter 0.3s ease, transform 0.1s ease-out",
-            transform: `translateX(${dragOffset}px)`,
-            pointerEvents: isBlurred ? "none" : "auto",
+            width: `${slides.length * 100}%`,
+            transition: isDragging ? "none" : "transform 0.5s cubic-bezier(0.2, 1, 0.2, 1)",
+            transform: `translateX(calc(-${(activeIndex * 100) / slides.length}% + ${dragOffset}px))`,
           }}
         >
-          {renderSlideContent()}
+          {slides.map((slide) => (
+            <div
+              key={slide.key}
+              className="h-full overflow-y-auto careme-scroll shrink-0"
+              style={{
+                width: `${100 / slides.length}%`,
+                padding: "12px 22px",
+                pointerEvents: isBlurred ? "none" : "auto",
+              }}
+            >
+              {renderSlideContentItem(slide.key)}
+            </div>
+          ))}
         </div>
       </div>
 
