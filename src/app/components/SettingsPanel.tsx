@@ -375,11 +375,11 @@ function CenteredDialog({
         className="relative flex flex-col"
         style={{
           width: `${width}px`,
+          maxHeight: "90vh",
+          overflowY: "auto",
           borderRadius: t.radiusXl,
-          backgroundColor: t.panelBg,
-          backdropFilter: "blur(40px)",
-          WebkitBackdropFilter: "blur(40px)",
-          boxShadow: "0 16px 48px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.5)",
+          backgroundColor: "#FFFFFF",
+          boxShadow: "0 16px 48px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.06)",
           animation: "castDialogIn 0.2s ease-out",
           overflow: "hidden",
         }}
@@ -1096,7 +1096,13 @@ function LanguageDialog({
 }
 
 /* ─── Care Team Access PIN Dialog ─── */
-function CareTeamAccessDialog({ onClose }: { onClose: () => void }) {
+function CareTeamAccessDialog({ 
+  onClose, 
+  onSuccess 
+}: { 
+  onClose: () => void; 
+  onSuccess: (role: "nurse" | "doctor") => void;
+}) {
   const { theme: t } = useTheme();
   const { t: tr } = useLocale();
   const [pin, setPin] = useState("");
@@ -1110,10 +1116,10 @@ function CareTeamAccessDialog({ onClose }: { onClose: () => void }) {
 
       if (newPin.length === 4) {
         if (newPin === "2580") {
-          setActiveCareRole("nurse");
+          onSuccess("nurse");
           onClose();
         } else if (newPin === "0000") {
-          setActiveCareRole("doctor");
+          onSuccess("doctor");
           onClose();
         } else {
           setTimeout(() => {
@@ -1146,7 +1152,7 @@ function CareTeamAccessDialog({ onClose }: { onClose: () => void }) {
             marginBottom: "16px",
           }}
         >
-          <Users size={28} style={{ color: t.primary }} />
+          <Stethoscope size={28} style={{ color: t.primary }} />
         </div>
         <span
           style={{
@@ -1227,7 +1233,7 @@ function CareTeamAccessDialog({ onClose }: { onClose: () => void }) {
                       color: key === "del" ? t.accent : t.textHeading,
                     }}
                   >
-                    {key === "del" ? tr("admin.del") : key}
+                    {key === "del" ? tr("careteam.del") : key}
                   </span>
                 </button>
               );
@@ -1749,10 +1755,10 @@ export function SettingsPanel({
               onClick={() => setShowLangDialog(true)}
             />
             <ActionButton
-              icon={<Stethoscope size={20} style={{ color: t.primary }} />}
-              label={tr("settings.careTeamOnly")}
-              subtitle={tr("settings.careTeamOnly.subtitle")}
-              variant="primary"
+              icon={<Stethoscope size={20} style={{ color: "#D10044" }} />}
+              label={tr("settings.careTeam")}
+              subtitle={tr("settings.careTeam.subtitle")}
+              variant="destructive"
               onClick={() => setShowCareTeamDialog(true)}
             />
           </div>
@@ -1869,7 +1875,10 @@ export function SettingsPanel({
       )}
 
       {showCareTeamDialog && (
-        <CareTeamAccessDialog onClose={() => setShowCareTeamDialog(false)} />
+        <CareTeamAccessDialog 
+          onClose={() => setShowCareTeamDialog(false)} 
+          onSuccess={(role) => setActiveCareRole(role)}
+        />
       )}
 
       {activeCareRole && (

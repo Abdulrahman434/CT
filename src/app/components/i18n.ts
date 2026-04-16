@@ -225,8 +225,9 @@ const translations: Record<string, TranslationEntry> = {
   "settings.language": { en: "Language", ar: "اللغة", ur: "زبان" },
   "settings.language.select": { en: "Select your preferred display language", ar: "اختر لغة العرض المفضلة", ur: "اپنی پسندیدہ زبان منتخب کریں" },
   /* ─── Care Team Only (formerly Admin) ─── */
-  "settings.careTeamOnly": { en: "Care Team Only", ar: "فريق الرعاية فقط", ur: "صرف کیئر ٹیم" },
-  "settings.careTeamOnly.subtitle": { en: "PIN required", ar: "رمز الدخول مطلوب", ur: "پن درکار ہے" },
+  "settings.careTeam": { en: "Care Team", ar: "فريق الرعاية", ur: "کیئر ٹیم" },
+  "settings.careTeam.subtitle": { en: "PIN required", ar: "رمز الدخول مطلوب", ur: "پن درکار ہے" },
+  "settings.clearData": { en: "Clear Data", ar: "مسح البيانات", ur: "ڈیٹا صاف کریں" },
 
   /* ─── Care Team Access Dialog ─── */
   "careteam.title": { en: "Care Team Access", ar: "دخول فريق الرعاية", ur: "کیئر ٹیم رسائی" },
@@ -234,6 +235,10 @@ const translations: Record<string, TranslationEntry> = {
   "careteam.incorrect": { en: "Incorrect PIN. Please try again.", ar: "رمز خاطئ. يرجى المحاولة مرة أخرى.", ur: "غلط پن۔ دوبارہ کوشش کریں۔" },
   "careteam.nurseRole": { en: "Nurse Interface", ar: "واجهة التمريض", ur: "نرس انٹرفیس" },
   "careteam.doctorRole": { en: "Physician Interface", ar: "واجهة الطبيب", ur: "ڈاکٹر انٹرفیس" },
+  "careteam.del": { en: "DEL", ar: "حذف", ur: "حذف" },
+  "careteam.history": { en: "Clinical History", ar: "السجل السريري", ur: "طبی تاریخ" },
+  "careteam.addRecord": { en: "Add New Observation", ar: "إضافة ملاحظة جديدة", ur: "نیا مشاہدہ شامل کریں" },
+  "patient.attached": { en: "Attached Documents", ar: "المستندات المرفقة", ur: "منسلک دستاویزات" },
 
   /* ─── Clinical Interface ─── */
   "clinical.patientInfo": { en: "Patient Information", ar: "معلومات المريض", ur: "مریض کی معلومات" },
@@ -246,7 +251,7 @@ const translations: Record<string, TranslationEntry> = {
   "clinical.temp": { en: "Temperature", ar: "الحرارة", ur: "درجہ حرارت" },
   "clinical.spo2": { en: "Oxygen Saturation", ar: "تشبع الأكسجين", ur: "آکسیجن کی سطح" },
   "clinical.notesPlaceholder": { en: "Enter clinical observations...", ar: "أدخل الملاحظات السريرية...", ur: "طبی مشاہدات درج کریں..." },
-  "clinical.save": { en: "Save Records", ar: "حفظ السجلات", ur: "ریکارڈ محفوظ کریں" },
+  "clinical.save": { en: "Save Observation", ar: "حفظ الملاحظة", ur: "مشاہدہ محفوظ کریں" },
   "clinical.lastNurseNote": { en: "Last Nurse Entry", ar: "آخر إدخال للتمريض", ur: "آخری نرس اندراج" },
   "clinical.addDocNote": { en: "Add Physician Note", ar: "إضافة ملاحظة طبيب", ur: "ڈاکٹر کا نوٹ شامل کریں" },
   "clinical.fallRisk": { en: "Fall Risk", ar: "خطر السقوط", ur: "گرنے کا خطرہ" },
