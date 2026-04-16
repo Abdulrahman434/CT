@@ -39,6 +39,8 @@ import { StopwatchTool } from "./components/tools/StopwatchTool";
 import { UnitConverterTool } from "./components/tools/UnitConverterTool";
 import { BreathingTool } from "./components/tools/BreathingTool";
 import { WhiteboardTool } from "./components/tools/WhiteboardTool";
+import { getPrayerStatus, PRAYER_NAMES, formatPrayerTime } from "./utils/prayerUtils";
+import { Prayer } from "adhan";
 
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
@@ -62,7 +64,7 @@ function useScreenScale() {
 }
 
 function BedsideScreen() {
-  const { patientAdmitted, setPatientAdmitted, theme, darkMode, switchConfig } = useTheme();
+  const { patientAdmitted, setPatientAdmitted, theme, darkMode, switchConfig, prayerAlarm } = useTheme();
   const { isFullAccess, lockedHospitalId } = useAuth();
   const { t, isRTL, dir, fontFamily } = useLocale();
   const scale = useScreenScale();
@@ -99,6 +101,68 @@ function BedsideScreen() {
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+  
+  /* ── Prayer Monitoring / Azan Alarm ── */
+  const lastPrayerRef = useRef<Prayer>(Prayer.None);
+  const azanAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const loadAzan = () => {
+      const audio = new Audio("https://www.islamcan.com/audio/adhan/azan20.mp3");
+      audio.preload = "auto";
+      audio.onerror = (e) => console.error("Azan Audio Load Error:", e);
+      azanAudioRef.current = audio;
+    };
+    loadAzan();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const status = getPrayerStatus(now);
+      
+      // Check if a prayer has just started
+      if (status.current !== Prayer.None && status.current !== lastPrayerRef.current) {
+        // TRICK: Only trigger if the previous one wasn't None (prevents double trigger on load)
+        // OR if it's the first time we detect any prayer (which always happens on load)
+        if (lastPrayerRef.current !== Prayer.None) {
+          handlePrayerTimeReached(status.current);
+        }
+        lastPrayerRef.current = status.current;
+      } else if (lastPrayerRef.current === Prayer.None) {
+        // Initial load
+        lastPrayerRef.current = status.current;
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [prayerAlarm]);
+
+  const handlePrayerTimeReached = useCallback((pKey: Prayer) => {
+    const prayerNameEn = t(PRAYER_NAMES[pKey], "en");
+    const prayerNameAr = t(PRAYER_NAMES[pKey], "ar");
+
+    // 1. Show Broadcast
+    setActiveBroadcast({
+      id: "prayer-" + Date.now(),
+      type: "prayer",
+      title: {
+        en: `${prayerNameEn} Prayer Time`,
+        ar: `حان الآن موعد أذان ${prayerNameAr}`
+      },
+      body: {
+        en: `Now it is time for the ${prayerNameEn} prayer.`,
+        ar: `يرجى التوجه لأداء فريضة ${prayerNameAr} كما في الموعد المحدد.`
+      },
+      priority: "info",
+      timestamp: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
+    });
+
+    // 2. Play Azan if alarm enabled
+    if (prayerAlarm && azanAudioRef.current) {
+      azanAudioRef.current.currentTime = 0;
+      azanAudioRef.current.play().catch(e => console.error("Azan play failed:", e));
+    }
+  }, [prayerAlarm, t]);
 
   useEffect(() => {
     const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -107,6 +171,11 @@ function BedsideScreen() {
   }, []);
 
   const handleBroadcastAcknowledge = useCallback((id: string) => {
+    if (azanAudioRef.current) {
+      azanAudioRef.current.pause();
+      azanAudioRef.current.currentTime = 0;
+    }
+
     setActiveBroadcast((prev) => {
       if (prev && prev.id === id) {
         const acknowledged = {
@@ -413,11 +482,12 @@ function BedsideScreen() {
         <TopBar
           onFajrTap={() => setLayoutVersion((v) => (v === 3 ? 1 : 3))}
           onDhuhrTap={isFullAccess ? () => setShowConfigurator(true) : undefined}
+          onAsrTap={() => handlePrayerTimeReached(Prayer.Asr)}
+          onMaghribTap={() => handlePrayerTimeReached(Prayer.Maghrib)}
           onIshaTap={() => setShowTasbih(true)}
           onWeatherTap={() => setLayoutVersion((v) => (v === 1 ? 2 : 1))}
           onSettingsTap={() => setShowSettings(true)}
           onBellTap={() => setShowNotifications(true)}
-          onMaghribTap={handleMaghribTap}
         />
 
         {/* News Ticker */}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTheme, TYPE_SCALE, WEIGHT, TEXT_STYLE, SHADOW } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { CheckCircle2, AlertTriangle, Info, Megaphone, ShieldCheck } from "lucide-react";
+import imgMosque from "../../assets/b51acb5e2ec4a2c930572c53103b020b12e76ee2.png";
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * HospitalBroadcast — Full-screen urgent notification overlay
@@ -32,6 +33,7 @@ export interface BroadcastNotification {
   priority: BroadcastPriority;
   timestamp: string; // display time
   acknowledgedAt?: string;
+  type?: "prayer" | "general";
 }
 
 const PRIORITY_CONFIG: Record<BroadcastPriority, {
@@ -72,8 +74,15 @@ const PRIORITY_CONFIG: Record<BroadcastPriority, {
   },
 };
 
-function PriorityIcon({ priority, size = 28, color }: { priority: BroadcastPriority; size?: number; color?: string }) {
+function PriorityIcon({ priority, type, size = 28, color }: { priority: BroadcastPriority; type?: string; size?: number; color?: string }) {
   const c = color || PRIORITY_CONFIG[priority].iconColor;
+  if (type === "prayer") {
+    return (
+      <div style={{ width: size + 4, height: size + 4, borderRadius: "50%", overflow: "hidden" }}>
+        <img src={imgMosque} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </div>
+    );
+  }
   switch (priority) {
     case "urgent":  return <AlertTriangle size={size} style={{ color: c }} />;
     case "warning": return <AlertTriangle size={size} style={{ color: c }} />;
@@ -192,7 +201,7 @@ export function HospitalBroadcast({
                 boxShadow: `0 2px 8px ${cfg.glowColor}`,
               }}
             >
-              <PriorityIcon priority={notification.priority} size={26} color={theme.primary} />
+              <PriorityIcon priority={notification.priority} type={notification.type} size={26} color={theme.primary} />
             </div>
           </div>
 

@@ -34,6 +34,7 @@ import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import type { Locale } from "./i18n";
 import imgMosque from "../../assets/b51acb5e2ec4a2c930572c53103b020b12e76ee2.png";
+import { getPrayerStatus, getCountdown, formatPrayerTime, PRAYER_NAMES } from "../utils/prayerUtils";
 
 /* ═══════════════════════════════════════════════════════════════
  * All colors/fonts/radii in this file come from ThemeContext.
@@ -1209,16 +1210,18 @@ function AdminDialog({ onClose }: { onClose: () => void }) {
 
 /* ─── Upcoming Prayer Card ─── */
 function PrayerCard({
+  prayerData,
   countdown,
   prayerAlarm,
   onToggleAlarm,
 }: {
+  prayerData: ReturnType<typeof getPrayerStatus>;
   countdown: string;
   prayerAlarm: boolean;
   onToggleAlarm: () => void;
 }) {
   const { theme: t } = useTheme();
-  const { t: tr, isRTL, fontFamily } = useLocale();
+  const { t: tr, isRTL, fontFamily, locale } = useLocale();
   return (
     <div
       style={{
@@ -1290,19 +1293,20 @@ function PrayerCard({
                 letterSpacing: "-0.5px",
               }}
             >
-              {tr("prayer.maghrib")}
+              {tr(PRAYER_NAMES[prayerData.next])}
             </span>
             <span
               style={{
                 fontFamily: t.fontFamily,
                 fontSize: "20px",
                 fontWeight: 700,
-                color: t.textInverse,
+                color: "rgba(255,255,255,0.7)",
                 letterSpacing: "0.5px",
                 fontVariantNumeric: "tabular-nums",
+                marginLeft: "4px",
               }}
             >
-              {countdown}
+              {formatPrayerTime(prayerData.targetTime, locale)}
             </span>
           </div>
         </div>
@@ -1468,8 +1472,8 @@ export function SettingsPanel({
   onFullscreenTap?: () => void;
   isFullscreen?: boolean;
 }) {
-  const { theme: t, darkMode, setDarkMode, castDevice, setCastDevice, locale: currentLocale, setLocale } = useTheme();
-  const { t: tr, isRTL, fontFamily } = useLocale();
+  const { theme: t, darkMode, setDarkMode, castDevice, setCastDevice, locale: currentLocale, setLocale, prayerAlarm, setPrayerAlarm } = useTheme();
+  const { t: tr, isRTL, fontFamily, locale } = useLocale();
 
   const [brightness, setBrightness] = useState(80);
   const [volume, setVolume] = useState(60);
@@ -1479,21 +1483,18 @@ export function SettingsPanel({
   const [btDevice, setBtDevice] = useState<string | null>("bt-speaker");
   const [dnd, setDnd] = useState(false);
   const [nightMode, setNightMode] = useState(false);
-  const [selectedLang, setSelectedLang] = useState<"en" | "ar">(currentLocale);
-  const [prayerAlarm, setPrayerAlarm] = useState(false);
+  const [selectedLang, setSelectedLang] = useState<"en" | "ar" | "ur">(currentLocale);
 
   // Prayer countdown timer
-  const [countdown, setCountdown] = useState("00:12:04");
+  const [prayerData, setPrayerData] = useState(() => getPrayerStatus(new Date()));
+  const [countdown, setCountdown] = useState(() => getCountdown(new Date(), getPrayerStatus(new Date()).targetTime));
+
   useEffect(() => {
-    let totalSecs = 12 * 60 + 4;
     const interval = setInterval(() => {
-      totalSecs = Math.max(0, totalSecs - 1);
-      const h = Math.floor(totalSecs / 3600);
-      const m = Math.floor((totalSecs % 3600) / 60);
-      const s = totalSecs % 60;
-      setCountdown(
-        `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
-      );
+      const now = new Date();
+      const status = getPrayerStatus(now);
+      setPrayerData(status);
+      setCountdown(getCountdown(now, status.targetTime));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -1611,6 +1612,7 @@ export function SettingsPanel({
         >
           {/* Upcoming Prayer */}
           <PrayerCard
+            prayerData={prayerData}
             countdown={countdown}
             prayerAlarm={prayerAlarm}
             onToggleAlarm={() => setPrayerAlarm(!prayerAlarm)}

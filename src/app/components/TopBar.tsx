@@ -3,23 +3,12 @@ import { Settings, Globe, Bell, Cast } from "lucide-react";
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, TEXT_STYLE, SPACE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import svgPaths from "../../imports/svg-ca68x68c4i";
+import { getPrayerTimes, PRAYER_KEYS, PRAYER_NAMES, formatPrayerTime, getPrayerStatus } from "../utils/prayerUtils";
+import { Prayer } from "adhan";
 
-const prayerTimes = [
-  { nameKey: "prayer.fajr", time: "05:46", hour: 5, min: 46 },
-  { nameKey: "prayer.dhuhr", time: "12:36", hour: 12, min: 36 },
-  { nameKey: "prayer.asr", time: "15:56", hour: 15, min: 56 },
-  { nameKey: "prayer.maghrib", time: "18:26", hour: 18, min: 26 },
-  { nameKey: "prayer.isha", time: "19:27", hour: 19, min: 27 },
-];
+// Removed hardcoded prayerTimes
 
-function getNextPrayerIndex(now: Date): number {
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  for (let i = 0; i < prayerTimes.length; i++) {
-    const pm = prayerTimes[i].hour * 60 + prayerTimes[i].min;
-    if (currentMinutes < pm) return i;
-  }
-  return 0;
-}
+// Removed getNextPrayerIndex helper as we use prayerUtils now
 
 function SunIcon() {
   return (
@@ -46,15 +35,17 @@ function SunIcon() {
   );
 }
 
-export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onWeatherTap, onSettingsTap, onBellTap, onIshaTap, onMaghribTap, unreadCount = 3 }: { showPrayer?: boolean; onFajrTap?: () => void; onDhuhrTap?: () => void; onWeatherTap?: () => void; onSettingsTap?: () => void; onBellTap?: () => void; onIshaTap?: () => void; onMaghribTap?: () => void; unreadCount?: number }) {
+export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onMaghribTap, onIshaTap, onWeatherTap, onSettingsTap, onBellTap, unreadCount = 3 }: { showPrayer?: boolean; onFajrTap?: () => void; onDhuhrTap?: () => void; onAsrTap?: () => void; onMaghribTap?: () => void; onIshaTap?: () => void; onWeatherTap?: () => void; onSettingsTap?: () => void; onBellTap?: () => void; unreadCount?: number }) {
   const { theme, castDevice, setLocale, locale: currentLocale } = useTheme();
   const { t, locale, isRTL, fontFamily } = useLocale();
   const [time, setTime] = useState(new Date());
-  const [nextPrayer, setNextPrayer] = useState(() => getNextPrayerIndex(new Date()));
+  const [prayerData, setPrayerData] = useState(() => getPrayerStatus(new Date()));
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setTime(new Date());
-      setNextPrayer(getNextPrayerIndex(new Date()));
+      const now = new Date();
+      setTime(now);
+      setPrayerData(getPrayerStatus(now));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -101,17 +92,24 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onWeatherTap,
       {/* Center: Prayer Times — always dead-center on screen */}
       {showPrayer ? (
         <div className="flex items-center justify-center gap-1">
-          {prayerTimes.map((p, i) => {
-            const isNext = i === nextPrayer;
-            const prayerName = t(p.nameKey);
+          {PRAYER_KEYS.map((pKey) => {
+            const isNext = pKey === prayerData.next;
+            const prayerName = t(PRAYER_NAMES[pKey]);
+            const prayerTime = formatPrayerTime(prayerData.times.timeForPrayer(pKey), locale);
+            
+            let onTap = undefined;
+            if (pKey === Prayer.Fajr) onTap = onFajrTap;
+            else if (pKey === Prayer.Dhuhr) onTap = onDhuhrTap;
+            else if (pKey === Prayer.Asr) onTap = onAsrTap;
+            else if (pKey === Prayer.Maghrib) onTap = onMaghribTap;
+            else if (pKey === Prayer.Isha) onTap = onIshaTap;
+
             return (
-              <div key={p.nameKey} className="flex items-center">
+              <div key={pKey} className="flex items-center">
                 <div
-                  className={`flex flex-col items-center px-4 py-1.5 rounded-xl${p.nameKey === "prayer.fajr" || p.nameKey === "prayer.dhuhr" || p.nameKey === "prayer.isha" || p.nameKey === "prayer.maghrib" ? " cursor-pointer" : ""}`}
-                  style={{
-                    backgroundColor: "transparent",
-                  }}
-                  onClick={p.nameKey === "prayer.fajr" ? onFajrTap : p.nameKey === "prayer.dhuhr" ? onDhuhrTap : p.nameKey === "prayer.isha" ? onIshaTap : p.nameKey === "prayer.maghrib" ? onMaghribTap : undefined}
+                  className={`flex flex-col items-center px-4 py-1.5 rounded-xl${onTap ? " cursor-pointer" : ""}`}
+                  style={{ backgroundColor: "transparent" }}
+                  onClick={onTap}
                 >
                   <span
                     style={{
@@ -134,7 +132,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onWeatherTap,
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    {p.time}
+                    {prayerTime}
                   </span>
                 </div>
               </div>

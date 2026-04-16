@@ -692,6 +692,8 @@ interface ThemeContextType {
   setCastDevice: (v: string | null) => void;
   locale: Locale;
   setLocale: (v: Locale) => void;
+  prayerAlarm: boolean;
+  setPrayerAlarm: (v: boolean) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
@@ -709,6 +711,8 @@ const ThemeContext = createContext<ThemeContextType>({
   setCastDevice: () => {},
   locale: "en",
   setLocale: () => {},
+  prayerAlarm: true,
+  setPrayerAlarm: () => {},
 });
 
 /* ── Inject CSS Custom Properties ──
@@ -775,6 +779,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [darkMode, setDarkMode] = useState(false);
   const [castDevice, setCastDevice] = useState<string | null>(null);
   const [locale, setLocale] = useState<Locale>("en");
+  const [prayerAlarm, setPrayerAlarm] = useState(() => {
+    const saved = localStorage.getItem("prayer-alarm");
+    return saved === null ? true : saved === "true";
+  });
+
+  const updatePrayerAlarm = (val: boolean) => {
+    setPrayerAlarm(val);
+    localStorage.setItem("prayer-alarm", val ? "true" : "false");
+  };
 
   // All configs = built-in presets (overridable by saved versions) + user-created configs
   const allConfigs: HospitalCoreConfig[] = (() => {
@@ -872,6 +885,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setCastDevice,
       locale,
       setLocale,
+      prayerAlarm,
+      setPrayerAlarm: updatePrayerAlarm,
     }}>
       {children}
     </ThemeContext.Provider>
