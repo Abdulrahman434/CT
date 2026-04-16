@@ -934,9 +934,11 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
             textColor: "#333",
             url: `https://care.med.sa/${locale}/view/${item.viewId}`,
             customRender: () => (
-              <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "linear-gradient(135deg, #1D234D 0%, #00A3C1 100%)" }}>
-                <BookOpenText size={48} color="#fff" strokeWidth={1.5} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginTop: 6, letterSpacing: 0.5 }}>ARTICLE</span>
+              <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "#fff", borderRadius: theme.radiusXl }}>
+                <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#E8453C", borderRadius: theme.radiusLg }}>
+                  <BookOpenText size={32} color="#fff" strokeWidth={1.5} />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 800, color: "#E8453C", letterSpacing: 0.5 }}>PDF</span>
               </div>
             ),
           }))
@@ -1004,9 +1006,11 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
             textColor: "#333",
             pdfSource: item.pdf,
             customRender: () => (
-              <div className="flex flex-col items-center justify-center text-center" style={{ width: 150, height: 150, padding: 12, background: "linear-gradient(135deg, #E8453C 0%, #C62828 100%)" }}>
-                <FileText size={42} color="#fff" strokeWidth={1.5} />
-                <span style={{ fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.7)", marginTop: 4, letterSpacing: 0.5, textTransform: "uppercase" }}>GUIDE</span>
+              <div className="flex flex-col items-center justify-center text-center" style={{ width: 150, height: 150, padding: 12, background: "#fff", borderRadius: theme.radiusXl }}>
+                <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#E8453C", borderRadius: theme.radiusLg }}>
+                  <FileText size={32} color="#fff" strokeWidth={1.5} />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 800, color: "#E8453C", letterSpacing: 0.5 }}>PDF</span>
               </div>
             ),
           }))
@@ -1038,9 +1042,11 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
               textColor: "#333",
               customRender: item.type === "pdf"
                 ? () => (
-                  <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "linear-gradient(135deg, #E8453C 0%, #C62828 100%)" }}>
-                    <FileText size={48} color="#fff" strokeWidth={1.5} />
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginTop: 6, letterSpacing: 0.5 }}>PDF</span>
+                  <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "#fff", borderRadius: theme.radiusXl }}>
+                    <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#E8453C", borderRadius: theme.radiusLg }}>
+                      <FileText size={32} color="#fff" strokeWidth={1.5} />
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "#E8453C", letterSpacing: 0.5 }}>PDF</span>
                   </div>
                 )
                 : () => (
@@ -1253,7 +1259,7 @@ export function AppLauncher({
           <div
             className="grid gap-x-12 gap-y-10"
             style={{
-              gridTemplateColumns: `repeat(6, 160px)`,
+              gridTemplateColumns: `repeat(${Math.min(currentApps.length, 6)}, 160px)`,
               gridTemplateRows: `repeat(3, auto)`, // Force max 3 rows implicitly by slicing
               justifyContent: "center",
               justifyItems: "center",
