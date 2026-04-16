@@ -1107,6 +1107,8 @@ function CareTeamAccessDialog({ onClose }: { onClose: () => void }) {
       const newPin = pin + d;
       setPin(newPin);
       setError(false);
+
+      if (newPin.length === 4) {
         if (newPin === "2580") {
           setActiveCareRole("nurse");
           onClose();
