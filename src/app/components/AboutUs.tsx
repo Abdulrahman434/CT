@@ -466,7 +466,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                   fontSize: TYPE_SCALE.md,
                   fontWeight: WEIGHT.medium,
                   color: "#1B2A32",
-                  lineHeight: "26px",
+                  lineHeight: 1.8,
                   whiteSpace: "pre-line",
                 }}
               >
