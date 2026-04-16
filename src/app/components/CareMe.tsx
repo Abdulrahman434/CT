@@ -493,7 +493,7 @@ function BabyCameraSlide() {
         {/* Connected badge */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ backgroundColor: theme.primarySubtle }}>
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: theme.success, boxShadow: `0 0 6px ${theme.success}` }} />
-          <span style={{ fontFamily: theme.fontFamily, fontSize: "11px", fontWeight: 700, color: theme.primary }}>Connected</span>
+          <span style={{ fontFamily: theme.fontFamily, fontSize: "11px", fontWeight: 700, color: theme.primary }}>{t("care.baby.connected")}</span>
         </div>
       </div>
 

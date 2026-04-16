@@ -190,6 +190,7 @@ const translations: Record<string, TranslationEntry> = {
   "care.admitted": { en: "Admitted", ar: "تاريخ الدخول", ur: "داخلہ" },
   "care.discharge": { en: "Discharge", ar: "الخروج المتوقع", ur: "ڈسچارج" },
   "care.mrn": { en: "MRN", ar: "رقم الملف", ur: "ایم آر این" },
+  "care.room": { en: "Room", ar: "الغرفة", ur: "کمرہ" },
 
   /* ─── Discharge Plan ─── */
   "care.discharge.order": { en: "Discharge Order by Doctor", ar: "أمر الخروج من الطبيب", ur: "ڈاکٹر کے ذریعہ ڈسچارج کا حکم" },
