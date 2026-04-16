@@ -723,6 +723,10 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
   );
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    // If clicking a button or something with data-nav, don't start dragging
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-nav="true"]')) return;
+
     touchStartX.current = e.clientX;
     touchDeltaX.current = 0;
     setDragOffset(0);
@@ -933,6 +937,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
         {slides.map((s, i) => (
           <button
             key={s.key}
+            data-nav="true"
             onClick={() => handleManualNav(i + 1)}
             className="rounded-full transition-all duration-300 cursor-pointer"
             style={{
