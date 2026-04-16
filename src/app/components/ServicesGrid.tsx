@@ -450,7 +450,7 @@ function ShortcutTile({ item, contained }: { item: ShortcutItem; contained?: boo
             alignItems: "center",
             justifyContent: "center",
             padding: 4,
-            boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+            border: "1px solid #eeeeee",
           }}
         >
           <img
@@ -532,7 +532,7 @@ function ShortcutTileCompact({ item }: { item: ShortcutItem }) {
             alignItems: "center",
             justifyContent: "center",
             padding: 6,
-            boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+            border: "1px solid #eeeeee",
           }}
         >
           <img
