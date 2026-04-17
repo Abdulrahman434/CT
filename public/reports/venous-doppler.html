@@ -88,7 +88,7 @@
       <div class="field"><span class="label">MRN</span><span class="value">DH-2026-08452</span></div>
       <div class="field"><span class="label">Date of Birth</span><span class="value">15 Jul 1994</span></div>
       <div class="field"><span class="label">Age / Sex</span><span class="value">31 years / Female</span></div>
-      <div class="field"><span class="label">Referring Physician</span><span class="value">Dr. Layla Al-Harbi</span></div>
+      <div class="field"><span class="label">Referring Physician</span><span class="value">Dr. Omar Abdulhalim</span></div>
       <div class="field"><span class="label">Ward / Bed</span><span class="value">Maternity 3 / 312-A</span></div>
       <div class="field"><span class="label">Exam Date</span><span class="value">12 March 2026</span></div>
       <div class="field"><span class="label">Report Date</span><span class="value">12 March 2026</span></div>
@@ -287,5 +287,22 @@
     <div style="margin-top: 6px;">Generated: 12 March 2026 16:05 AST &nbsp;|&nbsp; Report ID: DH-VD-2026-05612</div>
   </div>
 </div>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const hospital = params.get('h');
+  const configs = {
+    'dallah': { name: 'Dallah Hospital', sub: 'Department of Radiology & Diagnostic Imaging', logo: '/dallah-hospital-logo.png' },
+    'caremed': { name: 'Care Medical Hospital', sub: 'Radiology & Medical Imaging Services', logo: '/care-medical-logo.png' },
+    'dsfh': { name: 'Soliman Fakeeh Hospital', sub: 'Department of Radiology', logo: '/dsfh-logo.png' },
+    'burjeel': { name: 'Burjeel Hospital', sub: 'Imaging & Diagnostics', logo: '/burjeel-logo.png' },
+    'slh': { name: 'Saint Louis Hospital', sub: 'Radiology Department', logo: '/slh-logo.png' }
+  };
+  if (hospital && configs[hospital]) {
+    const config = configs[hospital];
+    document.querySelector('.hospital-name').textContent = config.name;
+    document.querySelector('.hospital-sub').textContent = config.sub;
+    document.querySelector('.hospital-logo-img').src = config.logo;
+  }
+</script>
 </body>
 </html>

@@ -481,7 +481,7 @@ function BedsideScreen() {
         {/* System Header */}
         <TopBar
           onFajrTap={() => setLayoutVersion((v) => (v === 3 ? 1 : 3))}
-          onDhuhrTap={isFullAccess ? () => setShowConfigurator(true) : undefined}
+          onDhuhrTap={() => setShowConfigurator(true)}
           onAsrTap={() => handlePrayerTimeReached(Prayer.Asr)}
           onMaghribTap={() => handlePrayerTimeReached(Prayer.Maghrib)}
           onIshaTap={() => setShowTasbih(true)}

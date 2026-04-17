@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   X, Stethoscope, Activity, Thermometer, Wind, Droplet,
   Save, User, ClipboardList, CheckCircle2, Clock, Plus,
-  History, Trash2, FileText, AlertTriangle,
+  History, Trash2, FileText, AlertTriangle, Hash, DoorOpen
 } from "lucide-react";
 import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
@@ -36,7 +36,7 @@ const clinicalStore = (() => {
     {
       id: "seed-1",
       timestamp: new Date(Date.now() - 3600000 * 4),
-      nurseName: "RN Nura Al-Rashid",
+      nurseName: "clinical.nurse.nura",
       vitals: { bp: "118/78", hr: "68", temp: "37.0", spo2: "99" },
       painLevel: 1,
       risks: { fall: true, pressure: false, allergies: true, other: false },
@@ -44,7 +44,7 @@ const clinicalStore = (() => {
       doctorNote: {
         text: "Continue current plan. Reassess in the morning.",
         addedAt: new Date(Date.now() - 3600000 * 2),
-        doctorName: "Dr. Khalid Al-Ghamdi",
+        doctorName: "Dr. Omar Abdulhalim",
       },
     },
   ];
@@ -92,18 +92,103 @@ function fmtFull(d: Date) {
 
 // ─── painLabel ─────────────────────────────────────────────────────────────────
 function painLabel(n: number) {
-  if (n === 0) return "None";
+  if (n <= 0) return "None";
   if (n < 4)  return "Mild";
   if (n < 7)  return "Moderate";
   return "Severe";
 }
 function painColor(n: number) {
-  if (n === 0) return "#22C55E";
-  if (n < 4)  return "#F59E0B";
-  if (n < 7)  return "#F97316";
-  return "#EF4444";
+  if (n <= 0) return "#94A3B8";
+  if (n < 4)  return "#10B981"; // Success/Green
+  if (n < 7)  return "#F59E0B"; // Warning/Orange
+  return "#EF4444"; // Error/Red
 }
 
+function DraggablePainSlider({ value, onChange, theme: t, isRTL }: { value: number; onChange: (v: number) => void; theme: any; isRTL: boolean }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const calcValue = (e: React.PointerEvent | PointerEvent) => {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect) return value;
+    
+    let percentage: number;
+    if (isRTL) {
+      percentage = (rect.right - (e as any).clientX) / rect.width;
+    } else {
+      percentage = ((e as any).clientX - rect.left) / rect.width;
+    }
+    
+    // For pain (0-10)
+    const val = Math.max(0, Math.min(10, Math.round(percentage * 10)));
+    return val;
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setIsDragging(true);
+    onChange(calcValue(e));
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    onChange(calcValue(e));
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    setIsDragging(false);
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  };
+
+  const pc = painColor(value);
+
+  return (
+    <div
+      ref={trackRef}
+      className="flex-1 relative cursor-pointer"
+      style={{ 
+        height: "12px", 
+        borderRadius: t.radiusSm, 
+        backgroundColor: "rgba(0,0,0,0.05)", 
+        touchAction: "none" 
+      }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+    >
+      {/* Track fill */}
+      <div
+        style={{
+          height: "100%",
+          borderRadius: "inherit",
+          backgroundColor: pc,
+          width: `${value * 10}%`,
+          transition: isDragging ? "none" : "width 0.2s ease-out",
+          [isRTL ? "marginRight" : "marginLeft"]: 0,
+          position: "absolute",
+          [isRTL ? "right" : "left"]: 0
+        }}
+      />
+      {/* Thumb */}
+      <div
+        className="absolute top-1/2"
+        style={{
+          [isRTL ? "right" : "left"]: `${value * 10}%`,
+          transform: `translate(${isRTL ? "50%" : "-50%"}, -50%)`,
+          width: isDragging ? "24px" : "20px",
+          height: isDragging ? "24px" : "20px",
+          borderRadius: "50%",
+          backgroundColor: "#fff",
+          border: `3px solid ${pc}`,
+          boxShadow: isDragging ? `0 4px 12px ${pc}44` : `0 2px 6px rgba(0,0,0,0.15)`,
+          transition: isDragging ? "width 0.1s, height 0.1s" : "all 0.2s ease-out",
+          zIndex: 10,
+        }}
+      />
+    </div>
+  );
+}
 // ─── Main Component ────────────────────────────────────────────────────────────
 interface CareTeamInterfaceProps {
   role: "nurse" | "doctor";
@@ -116,8 +201,12 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
   const observations = useClinicalStore();
 
   const patient = {
-    name: "Sara Ahmed", age: "32",
-    mrn: "1022340", room: "412-A", admissionDate: "15 Apr 2026",
+    nameKey: "clinical.patient.sara",
+    age: "32",
+    mrn: "00-284619",
+    room: "412",
+    admissionDate: "10 Mar 2026",
+    extension: "4217"
   };
 
   // ── Selection State ──────────────────────────────────────────────────────────
@@ -153,7 +242,7 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
     const obs: ClinicalObservation = {
       id: Date.now().toString(36),
       timestamp: new Date(),
-      nurseName: "RN Nura Al-Rashid",
+      nurseName: "clinical.nurse.nura",
       vitals: form.vitals,
       painLevel: form.painLevel,
       risks: form.risks,
@@ -174,7 +263,7 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
     clinicalStore.addDoctorNote(activeRecord.id, {
       text: doctorNoteText.trim(),
       addedAt: new Date(),
-      doctorName: "Dr. Khalid Al-Ghamdi",
+      doctorName: "Dr. Omar Abdulhalim",
     });
     setDoctorNoteText("");
     setDoctorSaved(true);
@@ -236,61 +325,92 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
           </button>
         </div>
 
-        {/* ── Patient Info Banner — below header, inside popup content ── */}
+        {/* ── Patient Info Banner ── */}
         <div
-          className="flex items-center justify-between px-8 py-4 shrink-0"
+          className="flex items-center px-10 py-5 shrink-0"
           style={{ backgroundColor: t.surface, borderBottom: `1px solid ${t.borderDefault}` }}
         >
-          <div className="flex items-center gap-10">
+          <div className="flex-1 grid grid-cols-4 gap-0">
             {[
-              { label: "MRN",                icon: <User size={14} style={{ color: t.primary }} />, value: patient.mrn },
-              { label: "Patient",            icon: null, value: `${patient.name} (${patient.age}y)` },
-              { label: "Room",              icon: null, value: patient.room },
-              { label: "Admitted",          icon: <Clock size={14} style={{ color: t.primary }} />, value: patient.admissionDate },
-            ].map(({ label, icon, value }, i) => (
-              <React.Fragment key={i}>
-                {i > 0 && <div style={{ width: 1, height: 36, backgroundColor: t.borderDefault }} />}
-                <div className="flex flex-col gap-0.5">
-                  <span className="flex items-center gap-1" style={{ fontSize: "11px", fontWeight: 600, color: t.textMuted }}>
-                    {icon}{label}
+              { labelKey: "clinical.mrn",      value: patient.mrn,           icon: <Hash size={16} /> },
+              { labelKey: "clinical.patient",  value: `${tr(patient.nameKey)} (${patient.age}y)`, icon: <User size={16} /> },
+              { labelKey: "clinical.room",     value: patient.room,          icon: <DoorOpen size={16} /> },
+              { labelKey: "clinical.admitted", value: patient.admissionDate, icon: <Clock size={16} /> },
+            ].map(({ labelKey, value, icon }, i) => (
+              <div key={i} className="flex relative items-center justify-center">
+                {i > 0 && (
+                  <div 
+                    className="absolute inset-inline-start-0 top-1/2 -translate-y-1/2 w-[1.5px] h-10" 
+                    style={{ backgroundColor: t.borderDefault, opacity: 0.6 }} 
+                  />
+                )}
+                <div className="flex flex-col items-center">
+                  <span className="flex items-center gap-1.5 mb-1" style={{ fontSize: "12px", fontWeight: 600, color: t.textMuted }}>
+                    {icon && <span style={{ color: t.primary }}>{icon}</span>} {tr(labelKey)}
                   </span>
-                  <span style={{ fontSize: "15px", fontWeight: 700, color: t.textHeading }}>{value}</span>
+                  <span style={{ fontSize: "18px", fontWeight: 800, color: t.textHeading, letterSpacing: "-0.2px" }}>
+                    {value}
+                  </span>
                 </div>
-              </React.Fragment>
+              </div>
             ))}
           </div>
-
+          
+          {/* Moved Add Observation Button here for Nurse */}
           {role === "nurse" && !isAddingNew && (
-            <AddBtn onClick={() => setIsAddingNew(true)} label="+ Add New Observation" t={t} />
+            <div className="ps-6">
+              <AddBtn onClick={() => setIsAddingNew(true)} label={tr("clinical.addObs")} t={t} tr={tr} />
+            </div>
           )}
         </div>
 
         {/* ── Body ── */}
         <div className="flex flex-1 overflow-hidden">
+          {/* Main Content Area */}
+          <div className="flex-1 overflow-y-auto p-10 custom-scrollbar" style={{ backgroundColor: "#F9FAFB" }}>
+            <div className="mx-auto" style={{ maxWidth: "800px" }}>
+              {isAddingNew ? (
+                <NurseForm form={form} setForm={setForm} tr={tr} t={t}
+                  onSave={handleNurseSave}
+                  onCancel={() => { setIsAddingNew(false); setForm(blankForm); }}
+                  saved={nurseSaved}
+                />
+              ) : (
+                <>
+                  {/* Status Indicator / Role Action Area */}
+                  <div className="flex justify-start mb-8">
+                    
+                    {activeRecord && (
+                      <div className="flex flex-col items-start w-full">
+                        <span style={{ fontSize: "12px", fontWeight: 700, color: t.primary, opacity: 0.9, letterSpacing: "0.5px" }}>
+                          {tr("clinical.reviewing")}
+                        </span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span style={{ fontSize: "17px", fontWeight: 800, color: t.textHeading }}>
+                            {tr(activeRecord.nurseName)}
+                          </span>
+                          <span style={{ color: t.textMuted, opacity: 0.3 }}>|</span>
+                          <span style={{ fontSize: "13px", color: t.textMuted, fontWeight: 500 }}>
+                            {fmtFull(activeRecord.timestamp)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-          {/* ── Main content ── */}
-          <div className="flex-1 overflow-y-auto px-8 py-7 custom-scrollbar">
-            {role === "nurse" && (
-              <>
-                {isAddingNew ? (
-                  <NurseForm form={form} setForm={setForm} tr={tr} t={t}
-                    onSave={handleNurseSave}
-                    onCancel={() => { setIsAddingNew(false); setForm(blankForm); }}
-                    saved={nurseSaved}
-                  />
-                ) : (
-                  <NurseView record={activeRecord} tr={tr} t={t} />
-                )}
-              </>
-            )}
-            {role === "doctor" && (
-              <DoctorView record={activeRecord} tr={tr} t={t}
-                doctorNoteText={doctorNoteText}
-                setDoctorNoteText={setDoctorNoteText}
-                onSave={handleDoctorSave}
-                saved={doctorSaved}
-              />
-            )}
+                  {role === "nurse" ? (
+                    <NurseView record={activeRecord} tr={tr} t={t} />
+                  ) : (
+                    <DoctorView record={activeRecord} tr={tr} t={t}
+                      doctorNoteText={doctorNoteText}
+                      setDoctorNoteText={setDoctorNoteText}
+                      onSave={handleDoctorSave}
+                      saved={doctorSaved}
+                    />
+                  )}
+                </>
+              )}
+            </div>
           </div>
 
           {/* ── History Sidebar ── */}
@@ -331,7 +451,7 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
               {observations.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 opacity-50">
                   <FileText size={30} style={{ color: t.textMuted }} />
-                  <p style={{ fontSize: "13px", color: t.textMuted, marginTop: 10 }}>No observations yet</p>
+                  <p style={{ fontSize: "13px", color: t.textMuted, marginTop: 10 }}>{tr("clinical.noObs")}</p>
                 </div>
               )}
               {[...observations].reverse().map((obs) => (
@@ -342,6 +462,7 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
                   onDelete={role === "nurse" ? (e: any) => handleDelete(obs.id, e) : null}
                   onClick={() => { setSelectedObsId(obs.id); setIsAddingNew(false); }}
                   t={t}
+                  tr={tr}
                 />
               ))}
             </div>
@@ -363,27 +484,13 @@ function NurseView({ record, tr, t }: any) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-5 opacity-60">
         <ClipboardList size={40} style={{ color: t.textMuted }} />
-        <p style={{ fontSize: "15px", color: t.textMuted }}>No observations available.</p>
+        <p style={{ fontSize: "15px", color: t.textMuted }}>{tr("clinical.noObs")}</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-400">
-      {/* Observation header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <p style={{ fontSize: "12px", fontWeight: 600, color: t.textMuted, letterSpacing: "0.2px" }}>
-            Viewing Observation
-          </p>
-          <p style={{ fontSize: "14px", color: t.textBody, marginTop: 2 }}>
-            <span style={{ fontWeight: 700, color: t.textHeading }}>{record.nurseName}</span>
-            {" — "}
-            <span style={{ color: t.textMuted }}>{fmtFull(record.timestamp)}</span>
-          </p>
-        </div>
-      </div>
-
       {/* Vitals */}
       <VitalsSection vitals={record.vitals} tr={tr} t={t} readOnly />
 
@@ -403,7 +510,7 @@ function NurseView({ record, tr, t }: any) {
         <div className="flex items-center gap-2 mb-3">
           <Stethoscope size={16} style={{ color: t.primary }} />
           <span style={{ fontSize: "16px", fontWeight: 700, color: t.textHeading }}>
-            Physician Note
+            {tr("clinical.docNote")}
           </span>
         </div>
         {record.doctorNote ? (
@@ -421,7 +528,7 @@ function NurseView({ record, tr, t }: any) {
         ) : (
           <div className="p-4 rounded-2xl" style={{ border: `1.5px dashed ${t.borderDefault}`, backgroundColor: "#FAFAFA" }}>
             <p style={{ fontSize: "14px", color: t.textMuted, fontStyle: "italic" }}>
-              No physician note has been added yet.
+              {tr("clinical.noDocNote")}
             </p>
           </div>
         )}
@@ -436,23 +543,13 @@ function DoctorView({ record, tr, t, doctorNoteText, setDoctorNoteText, onSave, 
     return (
       <div className="flex flex-col items-center justify-center py-24 opacity-60">
         <ClipboardList size={40} style={{ color: t.textMuted }} />
-        <p style={{ fontSize: "15px", color: t.textMuted, marginTop: 12 }}>No nurse observations available yet.</p>
+        <p style={{ fontSize: "15px", color: t.textMuted, marginTop: 12 }}>{tr("clinical.noObs")}</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-400">
-      {/* Header */}
-      <div>
-        <p style={{ fontSize: "12px", fontWeight: 600, color: t.textMuted }}>Reviewing observation</p>
-        <p style={{ fontSize: "14px", color: t.textBody, marginTop: 2 }}>
-          <span style={{ fontWeight: 700, color: t.textHeading }}>{record.nurseName}</span>
-          {" — "}
-          <span style={{ color: t.textMuted }}>{fmtFull(record.timestamp)}</span>
-        </p>
-      </div>
-
       <VitalsSection vitals={record.vitals} tr={tr} t={t} readOnly />
 
       <div className="grid grid-cols-2 gap-5">
@@ -469,7 +566,7 @@ function DoctorView({ record, tr, t, doctorNoteText, setDoctorNoteText, onSave, 
         <div style={{ borderTop: `1px solid ${t.borderDefault}`, paddingTop: 20 }}>
           <div className="flex items-center gap-2 mb-3">
             <Stethoscope size={16} style={{ color: t.primary }} />
-            <span style={{ fontSize: "15px", fontWeight: 700, color: t.textHeading }}>Previous Physician Note</span>
+            <span style={{ fontSize: "15px", fontWeight: 700, color: t.textHeading }}>{tr("clinical.previousDocNote")}</span>
           </div>
           <div className="p-4 rounded-2xl" style={{ backgroundColor: t.primarySubtle, border: `1px solid ${t.borderDefault}` }}>
             <p style={{ fontSize: "15px", color: t.textBody, lineHeight: 1.75, fontStyle: "italic" }}>
@@ -536,7 +633,7 @@ function NurseForm({ form, setForm, tr, t, onSave, onCancel, saved }: any) {
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-3 duration-400">
       <div>
-        <p style={{ fontSize: "12px", fontWeight: 600, color: t.textMuted }}>New Observation</p>
+        <p style={{ fontSize: "12px", fontWeight: 700, color: t.primary, letterSpacing: "0.5px" }}>{tr("careteam.addRecord")}</p>
         <p style={{ fontSize: "14px", color: t.textMuted, marginTop: 2 }}>{fmtFull(new Date())}</p>
       </div>
 
@@ -571,15 +668,15 @@ function NurseForm({ form, setForm, tr, t, onSave, onCancel, saved }: any) {
       <div className="flex items-center gap-3" style={{ borderTop: `1px solid ${t.borderDefault}`, paddingTop: 20 }}>
         <button
           onClick={onSave}
-          className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all active:scale-95"
-          style={{ backgroundColor: saved ? t.success : t.primary, color: "#fff", fontSize: "14px" }}
+          className="flex items-center gap-2 px-8 py-3.5 rounded-2xl font-bold transition-all active:scale-95 shadow-md shadow-blue-500/20"
+          style={{ backgroundColor: saved ? t.success : t.primary, color: "#fff", fontSize: "15px" }}
         >
-          {saved ? <CheckCircle2 size={17} /> : <Save size={17} />}
+          {saved ? <CheckCircle2 size={18} /> : <Save size={18} />}
           {saved ? tr("general.done") : tr("clinical.save")}
         </button>
         <button
           onClick={onCancel}
-          style={{ fontSize: "14px", fontWeight: 600, color: t.textMuted, padding: "12px 20px", borderRadius: "16px", border: `1px solid ${t.borderDefault}`, backgroundColor: t.surface }}
+          style={{ fontSize: "15px", fontWeight: 700, color: t.textMuted, padding: "14px 24px", borderRadius: "18px", border: `1.5px solid ${t.borderDefault}`, backgroundColor: t.surface }}
         >
           {tr("general.cancel")}
         </button>
@@ -625,10 +722,10 @@ function VitalsSection({ vitals, tr, t, readOnly, onChange }: any) {
     { key: "spo2", label: tr("clinical.spo2"), unit: "%",    icon: <Wind size={14} color={t.primary} /> },
   ];
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-3">
-        <Activity size={17} style={{ color: t.primary }} />
-        <span style={{ fontSize: "16px", fontWeight: 700, color: t.textHeading }}>{tr("clinical.vitals")}</span>
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 mb-1">
+        <Activity size={18} style={{ color: t.primary }} />
+        <h3 style={{ fontSize: "16px", fontWeight: 700, color: t.textHeading }}>{tr("clinical.vitals")}</h3>
       </div>
       <div className="grid grid-cols-4 gap-3">
         {fields.map(({ key, label, unit, icon }) => (
@@ -695,7 +792,7 @@ function PainSection({ painLevel, tr, t, readOnly, onChange }: any) {
         </div>
         {/* Read-only: show static bar. Edit mode: show slider only (slider IS the bar) */}
         {readOnly ? (
-          <div style={{ width: "100%", height: 8, borderRadius: 99, backgroundColor: "rgba(0,0,0,0.05)", overflow: "hidden" }}>
+          <div style={{ width: "100%", height: 10, borderRadius: 99, backgroundColor: "rgba(0,0,0,0.05)", overflow: "hidden", display: "flex", direction: "ltr" }}>
             <div style={{
               width: `${painLevel * 10}%`,
               height: "100%",
@@ -705,22 +802,12 @@ function PainSection({ painLevel, tr, t, readOnly, onChange }: any) {
             }} />
           </div>
         ) : (
-          <div className="relative flex items-center h-8">
-            <input
-              type="range" min={0} max={10}
-              value={painLevel}
-              onChange={(e) => onChange(parseInt(e.target.value))}
-              className="pain-slider w-full cursor-pointer accent-transparent"
-              style={{ 
-                height: 8, 
-                borderRadius: 4, 
-                background: `linear-gradient(to right, ${pc} ${painLevel * 10}%, rgba(0,0,0,0.05) ${painLevel * 10}%)`,
-                outline: 'none',
-                appearance: 'none',
-                WebkitAppearance: 'none'
-              }}
-            />
-          </div>
+          <DraggablePainSlider 
+            value={painLevel} 
+            onChange={onChange} 
+            theme={t} 
+            isRTL={t.direction === 'rtl'} 
+          />
         )}
       </div>
     </div>
@@ -736,7 +823,7 @@ function NotesSection({ notes, tr, t, readOnly, onChange }: any) {
       {readOnly ? (
         <div className="mt-2 p-4 rounded-2xl min-h-[100px]" style={{ backgroundColor: t.surface, border: `1px solid ${t.borderDefault}` }}>
           <p style={{ fontSize: "15px", color: notes ? t.textBody : t.textMuted, lineHeight: 1.7, fontStyle: notes ? "normal" : "italic" }}>
-            {notes || "No notes entered."}
+            {notes || tr("clinical.noNotes")}
           </p>
         </div>
       ) : (
@@ -769,7 +856,7 @@ function RisksSection({ risks, otherRiskNotes, tr, t, readOnly, onChange, onOthe
     { key: "fall",     label: tr("clinical.fallRisk") },
     { key: "pressure", label: tr("clinical.pressureUlcer") },
     { key: "allergies",label: tr("care.allergies") },
-    { key: "other",    label: "Other" },
+    { key: "other",    label: tr("clinical.otherRisk") },
   ];
   return (
     <div className="space-y-3">
@@ -782,11 +869,11 @@ function RisksSection({ risks, otherRiskNotes, tr, t, readOnly, onChange, onOthe
             items.filter((i) => risks[i.key]).map(({ key, label }) => (
               <span key={key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
                 style={{ fontSize: "13px", fontWeight: 700, color: "#EF4444", backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
-                <AlertTriangle size={13} /> {label === "Other" && otherRiskNotes ? `${label}: ${otherRiskNotes}` : label}
+                <AlertTriangle size={13} /> {label === tr("clinical.otherRisk") && otherRiskNotes ? `${label}: ${otherRiskNotes}` : label}
               </span>
             ))
           ) : (
-            <span style={{ fontSize: "14px", color: t.textMuted, fontStyle: "italic" }}>No active risk flags</span>
+            <span style={{ fontSize: "14px", color: t.textMuted, fontStyle: "italic" }}>{tr("clinical.noRisks")}</span>
           )
         ) : (
           items.map(({ key, label }) => (
@@ -811,7 +898,7 @@ function RisksSection({ risks, otherRiskNotes, tr, t, readOnly, onChange, onOthe
         <textarea
           value={otherRiskNotes || ""}
           onChange={(e) => onOtherChange(e.target.value)}
-          placeholder="Specify other risk factors..."
+          placeholder={tr("clinical.otherRiskPlaceholder")}
           className="w-full p-4 rounded-xl border outline-none transition-all animate-in fade-in slide-in-from-top-2"
           style={{ 
             backgroundColor: t.surface, 
@@ -832,8 +919,15 @@ function AddBtn({ onClick, label, t }: any) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold transition-all active:scale-95"
-      style={{ backgroundColor: t.primary, color: "#fff", fontSize: "13px" }}
+      className="flex items-center gap-2 px-6 py-3 cursor-pointer transition-all active:scale-95 shadow-md shadow-blue-500/20"
+      style={{ 
+        backgroundColor: t.primary, 
+        color: "#fff", 
+        fontSize: "15px", 
+        fontWeight: 800,
+        borderRadius: "16px",
+        border: "none"
+      }}
     >
       {label}
     </button>
@@ -841,7 +935,7 @@ function AddBtn({ onClick, label, t }: any) {
 }
 
 // ─── History Card ──────────────────────────────────────────────────────────────
-function HistoryCard({ obs, isLatest, onDelete, onClick, t }: any) {
+function HistoryCard({ obs, isLatest, onDelete, onClick, t, tr }: any) {
   return (
     <div
       onClick={onClick}
@@ -864,7 +958,7 @@ function HistoryCard({ obs, isLatest, onDelete, onClick, t }: any) {
               NURSE
             </span>
             <p style={{ fontSize: "12.5px", fontWeight: 700, color: t.textHeading, marginTop: 5 }}>
-              {obs.nurseName}
+              {tr(obs.nurseName)}
             </p>
             <p className="flex items-center gap-1 mt-0.5" style={{ fontSize: "11px", color: t.textMuted }}>
               <Clock size={10} /> {fmtFull(obs.timestamp)}
@@ -901,7 +995,7 @@ function HistoryCard({ obs, isLatest, onDelete, onClick, t }: any) {
         {/* Pain mini bar */}
         <div className="flex items-center gap-2 mb-2">
           <span style={{ fontSize: "11px", color: t.textMuted, fontWeight: 600, whiteSpace: "nowrap" }}>
-            Pain {obs.painLevel}/10
+            {tr("clinical.painLevel")} {obs.painLevel}/10
           </span>
           <div style={{ flex: 1, height: 5, borderRadius: 99, backgroundColor: t.borderDefault, overflow: "hidden" }}>
             <div style={{
@@ -926,7 +1020,7 @@ function HistoryCard({ obs, isLatest, onDelete, onClick, t }: any) {
           <div className="flex items-center gap-1.5 mb-1.5">
             <Stethoscope size={11} style={{ color: t.primary }} />
             <span style={{ fontSize: "10px", fontWeight: 800, color: t.primary, letterSpacing: "0.3px" }}>
-              PHYSICIAN NOTE
+              {tr("clinical.docNote").toUpperCase()}
             </span>
           </div>
           <p style={{ fontSize: "12.5px", color: t.textBody, lineHeight: 1.5, fontStyle: "italic" }} className="line-clamp-2">

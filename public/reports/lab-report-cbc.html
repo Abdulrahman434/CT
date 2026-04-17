@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratory Report — CBC — Sara Saleh</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #fff; color: #1a1a2e; padding: 0; }
+  .report { max-width: 800px; margin: 0 auto; padding: 40px 48px; }
+
+  /* Header */
+  .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0d4f6b; padding-bottom: 20px; margin-bottom: 24px; }
+  .hospital-info { display: flex; align-items: center; gap: 20px; }
+  .hospital-logo-img { height: 65px; width: auto; object-fit: contain; }
+  .hospital-name { font-size: 20px; font-weight: 700; color: #0d4f6b; }
+  .hospital-sub { font-size: 12px; color: #666; margin-top: 2px; }
+  .report-type { text-align: right; }
+  .report-type h2 { font-size: 16px; font-weight: 700; color: #0d4f6b; text-transform: uppercase; letter-spacing: 1px; }
+  .report-type .ref { font-size: 11px; color: #999; margin-top: 4px; }
+
+  .confidential { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 8px 16px; text-align: center; font-size: 11px; font-weight: 600; color: #92400e; margin-bottom: 24px; letter-spacing: 0.5px; }
+
+  .patient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px 24px; margin-bottom: 24px; }
+  .patient-grid .field { display: flex; justify-content: space-between; }
+  .patient-grid .label { font-size: 12px; color: #64748b; font-weight: 500; }
+  .patient-grid .value { font-size: 12px; color: #1e293b; font-weight: 600; }
+
+  .section-title { font-size: 13px; font-weight: 700; color: #0d4f6b; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  th { background: #f1f5f9; font-size: 11px; font-weight: 700; color: #475569; text-align: left; padding: 12px; border: 1px solid #e2e8f0; text-transform: uppercase; }
+  td { font-size: 12px; padding: 12px; border: 1px solid #e2e8f0; color: #334155; }
+  .status-normal { color: #16a34a; font-weight: 700; }
+  .status-low { color: #dc2626; font-weight: 700; }
+  .status-high { color: #dc2626; font-weight: 700; }
+  .value-bold { font-weight: 700; color: #1e293b; }
+
+  .impression { background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 24px; }
+  .impression h4 { font-size: 13px; font-weight: 700; color: #1e40af; margin-bottom: 6px; }
+  .impression p { font-size: 12px; color: #334155; line-height: 1.7; }
+
+  .signature-block { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 32px; padding-top: 20px; border-top: 2px solid #e2e8f0; }
+  .sig { text-align: center; }
+  .sig .line { width: 180px; border-bottom: 1px solid #94a3b8; margin-bottom: 6px; padding-bottom: 4px; font-style: italic; font-size: 14px; color: #475569; }
+  .sig .name { font-size: 12px; font-weight: 700; color: #1e293b; }
+
+  .footer { margin-top: 32px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 16px; }
+</style>
+</head>
+<body>
+<div class="report">
+  <div class="header">
+    <div class="hospital-info">
+      <img src="/dallah-hospital-logo.png" alt="Dallah Hospital Logo" class="hospital-logo-img">
+      <div>
+        <div class="hospital-name">Dallah Hospital</div>
+        <div class="hospital-sub">Department of Laboratory Medicine & Pathology</div>
+      </div>
+    </div>
+    <div class="report-type">
+      <h2>Laboratory Report</h2>
+      <div class="ref">Ref: DH-LAB-2026-04122</div>
+    </div>
+  </div>
+
+  <div class="confidential">⚠ CONFIDENTIAL MEDICAL DOCUMENT — AUTHORIZED PERSONNEL ONLY</div>
+
+  <div class="section-title">Patient Information</div>
+  <div class="patient-grid">
+    <div class="field"><span class="label">Patient Name</span><span class="value">Sara Saleh</span></div>
+    <div class="field"><span class="label">MRN</span><span class="value">DH-2026-08452</span></div>
+    <div class="field"><span class="label">Referring Physician</span><span class="value">Dr. Omar Abdulhalim</span></div>
+    <div class="field"><span class="label">Collection Date</span><span class="value">10 March 2026 08:30 AST</span></div>
+  </div>
+
+  <div class="section-title">Test Results: Complete Blood Count</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Test Description</th>
+        <th>Result</th>
+        <th>Units</th>
+        <th>Reference Range</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>White Blood Cell (WBC)</td>
+        <td class="value-bold">7.2</td>
+        <td>x10³/µL</td>
+        <td>4.5 - 11.0</td>
+        <td class="status-normal">NORMAL</td>
+      </tr>
+      <tr>
+        <td>Red Blood Cell (RBC)</td>
+        <td class="value-bold">4.10</td>
+        <td>x10⁶/µL</td>
+        <td>4.20 - 5.40</td>
+        <td class="status-low">LOW</td>
+      </tr>
+      <tr>
+        <td>Hemoglobin (Hgb)</td>
+        <td class="value-bold">11.2</td>
+        <td>g/dL</td>
+        <td>12.0 - 16.0</td>
+        <td class="status-low">LOW</td>
+      </tr>
+      <tr>
+        <td>Hematocrit (Hct)</td>
+        <td class="value-bold">34.1</td>
+        <td>%</td>
+        <td>37.0 - 47.0</td>
+        <td class="status-low">LOW</td>
+      </tr>
+      <tr>
+        <td>Platelets</td>
+        <td class="value-bold">245</td>
+        <td>x10³/µL</td>
+        <td>150 - 450</td>
+        <td class="status-normal">NORMAL</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="impression">
+    <h4>PATHOLOGIST'S INTERPRETATION</h4>
+    <p>
+      Normocytic, normochromic anemia noted. Hemoglobin level of 11.2 g/dL is slightly below the reference range for the patient's age and clinical status. White cell count and differential are within normal limits. Platelet count is adequate. Recommend clinical correlation with iron studies and ferritin levels.
+    </p>
+  </div>
+
+  <div class="signature-block">
+    <div class="sig">
+      <div class="line">Dr. Mansour Al-Fahad</div>
+      <div class="name">Dr. Mansour Al-Fahad, MD, FCAP</div>
+      <div class="title">Consultant Pathologist</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>Dallah Hospital — Laboratory Department — Riyadh, KSA — Tel: +966 11 444 8000</div>
+    <div style="margin-top: 6px;">Generated: 10 March 2026 14:45 AST &nbsp;|&nbsp; Report ID: DH-LAB-2026-04122</div>
+  </div>
+</div>
+<script>
+  // Dynamic Hospital Branding
+  const params = new URLSearchParams(window.location.search);
+  const hospital = params.get('h');
+  
+  const configs = {
+    'dallah': { name: 'Dallah Hospital', sub: 'Department of Laboratory Medicine & Pathology', logo: '/dallah-hospital-logo.png' },
+    'caremed': { name: 'Care Medical Hospital', sub: 'Division of Clinical Chemistry & Hematology', logo: '/care-medical-logo.png' },
+    'dsfh': { name: 'Soliman Fakeeh Hospital', sub: 'Laboratory Medicine Department', logo: '/dsfh-logo.png' },
+    'burjeel': { name: 'Burjeel Hospital', sub: 'Specialized Laboratory Services', logo: '/burjeel-logo.png' },
+    'slh': { name: 'Saint Louis Hospital', sub: 'Clinical Pathology Department', logo: '/slh-logo.png' }
+  };
+
+  if (hospital && configs[hospital]) {
+    const config = configs[hospital];
+    document.querySelector('.hospital-name').textContent = config.name;
+    document.querySelector('.hospital-sub').textContent = config.sub;
+    document.querySelector('.hospital-logo-img').src = config.logo;
+  }
+</script>
+</body>
+</html>

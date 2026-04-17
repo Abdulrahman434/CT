@@ -177,5 +177,22 @@
     <div style="margin-top: 6px;">Generated: 05 March 2026 10:18 AST &nbsp;|&nbsp; Report ID: DH-XR-2026-03298</div>
   </div>
 </div>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const hospital = params.get('h');
+  const configs = {
+    'dallah': { name: 'Dallah Hospital', sub: 'Department of Radiology & Diagnostic Imaging', logo: '/dallah-hospital-logo.png' },
+    'caremed': { name: 'Care Medical Hospital', sub: 'Radiology & Medical Imaging Services', logo: '/care-medical-logo.png' },
+    'dsfh': { name: 'Soliman Fakeeh Hospital', sub: 'Department of Radiology', logo: '/dsfh-logo.png' },
+    'burjeel': { name: 'Burjeel Hospital', sub: 'Imaging & Diagnostics', logo: '/burjeel-logo.png' },
+    'slh': { name: 'Saint Louis Hospital', sub: 'Radiology Department', logo: '/slh-logo.png' }
+  };
+  if (hospital && configs[hospital]) {
+    const config = configs[hospital];
+    document.querySelector('.hospital-name').textContent = config.name;
+    document.querySelector('.hospital-sub').textContent = config.sub;
+    document.querySelector('.hospital-logo-img').src = config.logo;
+  }
+</script>
 </body>
 </html>

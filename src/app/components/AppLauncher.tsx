@@ -1145,7 +1145,10 @@ export function AppLauncher({
   const [pdfSource, setPdfSource] = useState<string | undefined>(undefined);
   const [pdfTitle, setPdfTitle] = useState<string>("");
   const [pageIndex, setPageIndex] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
   const swipeStartX = useRef<number | null>(null);
+  const touchOffset = useRef<number>(0);
 
   // Reset page index when switching categories
   useEffect(() => {
@@ -1160,14 +1163,33 @@ export function AppLauncher({
   const handlePointerDown = (e: React.PointerEvent) => {
     if (numPages <= 1) return;
     swipeStartX.current = e.clientX;
+    setIsSwiping(true);
+    touchOffset.current = 0;
   };
 
-  const handlePointerUp = (e: React.PointerEvent) => {
+  const handlePointerMove = (e: React.PointerEvent) => {
     if (swipeStartX.current === null) return;
     const deltaX = e.clientX - swipeStartX.current;
+    
+    // Rubber band at edges
+    let finalDelta = deltaX;
+    if ((pageIndex === 0 && deltaX > 0) || (pageIndex === numPages - 1 && deltaX < 0)) {
+      finalDelta = deltaX * 0.3;
+    }
+    
+    setDragOffset(finalDelta);
+    touchOffset.current = deltaX;
+  };
+
+  const handlePointerUp = () => {
+    if (swipeStartX.current === null) return;
+    const deltaX = touchOffset.current;
+    const threshold = 100;
+    
+    setIsSwiping(false);
+    setDragOffset(0);
     swipeStartX.current = null;
 
-    const threshold = 60;
     if (deltaX > threshold && pageIndex > 0) {
       setPageIndex(prev => prev - 1);
     } else if (deltaX < -threshold && pageIndex < numPages - 1) {
@@ -1267,42 +1289,55 @@ export function AppLauncher({
 
       {/* Apps grid */}
       <div 
-        className="flex-1 min-h-0 px-16 pb-4 flex flex-col items-center justify-center" 
-        style={{ position: "relative", zIndex: 10, touchAction: "pan-y" }}
+        className="flex-1 min-h-0 px-16 pb-4 flex flex-col overflow-hidden" 
+        style={{ position: "relative", zIndex: 10, touchAction: "none" }}
         onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
       >
-        {/* Main Grid Wrapper */}
+        {/* Main Grid Wrapper with Swipeable Strip */}
         <div 
-          key={`page-${activeKey}-${pageIndex}`}
-          className="flex-1 flex flex-col items-center justify-center w-full"
+          className="flex-1 flex"
           style={{ 
-            animation: "appsFadeIn 0.3s ease-out",
-            pointerEvents: "none", // Allow swipes to pass through to container, but AppTile overrides this
+            display: 'flex',
+            flexDirection: 'row',
+            transform: `translateX(calc(-${(pageIndex / numPages) * 100}% + ${dragOffset}px))`,
+            transition: isSwiping ? 'none' : 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            pointerEvents: "auto",
+            width: `${numPages * 100}%`
           }}
         >
-          <div
-            className="grid gap-x-12 gap-y-10"
-            style={{
-              gridTemplateColumns: `repeat(${Math.min(currentApps.length, 6)}, 160px)`,
-              gridTemplateRows: `repeat(3, auto)`,
-              justifyContent: "center",
-              justifyItems: "center",
-              marginTop: "-40px",
-              pointerEvents: "auto", // Re-enable pointer events for inner tiles
-            }}
-          >
-            {currentApps.map((app) => (
-              <AppTile key={app.id} app={app} onTap={() => handleAppTap(app)} />
-            ))}
-            
-            {/* Fill empty slots to maintain grid alignment if needed (not strictly necessary with justify-center but helps) */}
-          </div>
+          {Array.from({ length: numPages }).map((_, pIdx) => {
+            const pageApps = category.apps.slice(pIdx * appsPerPage, (pIdx + 1) * appsPerPage);
+            return (
+              <div 
+                key={`page-${pIdx}`}
+                className="flex-shrink-0 w-full h-full flex flex-col items-center justify-center"
+                style={{ width: `${100 / numPages}%` }}
+              >
+                <div
+                  className="grid gap-x-12 gap-y-10"
+                  style={{
+                    gridTemplateColumns: `repeat(${Math.min(pageApps.length, 6)}, 160px)`,
+                    gridTemplateRows: `repeat(3, auto)`,
+                    justifyContent: "center",
+                    justifyItems: "center",
+                    marginTop: "-40px"
+                  }}
+                >
+                  {pageApps.map((app) => (
+                    <AppTile key={app.id} app={app} onTap={() => handleAppTap(app)} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Page Indicators (if more than 1 page) */}
         {numPages > 1 && (
-          <div className="flex items-center gap-3 py-6">
+          <div className="flex items-center justify-center gap-3 py-6 w-full">
             {Array.from({ length: numPages }).map((_, i) => (
               <button
                 key={i}

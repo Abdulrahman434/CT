@@ -16,6 +16,7 @@ import {
   Crosshair,
 } from "lucide-react";
 import { useTheme, type HospitalCoreConfig, DSFH_CORE, BUILTIN_PRESETS, autoDarken, autoLighten } from "./ThemeContext";
+import { useAuth } from "./AuthContext";
 import { TokenGallery } from "./TokenGallery";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -657,6 +658,7 @@ function ConfigCard({
 export function HospitalConfigurator({ onClose }: { onClose: () => void }) {
   const { theme: t, allConfigs, activeConfigId, switchConfig, saveConfig, deleteConfig } =
     useTheme();
+  const { isFullAccess, lockedHospitalId } = useAuth();
 
   const [view, setView] = useState<"list" | "edit">("list");
   const [editingConfig, setEditingConfig] = useState<HospitalCoreConfig | null>(null);
@@ -830,17 +832,19 @@ export function HospitalConfigurator({ onClose }: { onClose: () => void }) {
               className="flex-1 overflow-y-auto flex flex-col gap-2"
               style={{ padding: "20px 24px", scrollbarWidth: "none" }}
             >
-              {allConfigs.map((config) => (
-                <ConfigCard
-                  key={config.id}
-                  config={config}
-                  isActive={config.id === activeConfigId}
-                  isBuiltIn={BUILTIN_PRESETS.some((p) => p.id === config.id)}
-                  onSwitch={() => switchConfig(config.id)}
-                  onEdit={() => startEdit(config, false)}
-                  onDelete={() => deleteConfig(config.id)}
-                />
-              ))}
+              {Object.values(allConfigs)
+                .filter(c => isFullAccess || c.id === lockedHospitalId)
+                .map((config) => (
+                  <ConfigCard
+                    key={config.id}
+                    config={config}
+                    isActive={config.id === activeConfigId}
+                    isBuiltIn={BUILTIN_PRESETS.some((p) => p.id === config.id)}
+                    onSwitch={() => switchConfig(config.id)}
+                    onEdit={() => startEdit(config, false)}
+                    onDelete={() => deleteConfig(config.id)}
+                  />
+                ))}
             </div>
 
             {/* Footer */}
@@ -870,29 +874,31 @@ export function HospitalConfigurator({ onClose }: { onClose: () => void }) {
                   </span>
                 </button>
               )}
-              <button
-                onClick={() => startEdit({ ...EMPTY_CONFIG, id: "" }, true)}
-                className="flex items-center justify-center gap-2 w-full cursor-pointer active:scale-[0.97] transition-transform"
-                style={{
-                  height: "52px",
-                  borderRadius: "14px",
-                  backgroundColor: t.primary,
-                  border: "none",
-                  boxShadow: `0 4px 16px ${t.primarySubtle}`,
-                }}
-              >
-                <Plus size={20} style={{ color: t.textInverse }} />
-                <span
+              {isFullAccess && (
+                <button
+                  onClick={() => startEdit({ ...EMPTY_CONFIG, id: "" }, true)}
+                  className="flex items-center justify-center gap-2 w-full cursor-pointer active:scale-[0.97] transition-transform"
                   style={{
-                    fontFamily: t.fontFamily,
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    color: t.textInverse,
+                    height: "52px",
+                    borderRadius: "14px",
+                    backgroundColor: t.primary,
+                    border: "none",
+                    boxShadow: `0 4px 16px ${t.primarySubtle}`,
                   }}
                 >
-                  New Hospital Config
-                </span>
-              </button>
+                  <Plus size={20} style={{ color: t.textInverse }} />
+                  <span
+                    style={{
+                      fontFamily: t.fontFamily,
+                      fontSize: "15px",
+                      fontWeight: 700,
+                      color: t.textInverse,
+                    }}
+                  >
+                    New Hospital Config
+                  </span>
+                </button>
+              )}
               <button
                 onClick={() => setShowTokenGallery(true)}
                 className="flex items-center justify-center gap-2 w-full cursor-pointer active:scale-[0.97] transition-transform"
