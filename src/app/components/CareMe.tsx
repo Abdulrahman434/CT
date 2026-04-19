@@ -1693,7 +1693,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
           {extendedSlides.map((slide, i) => (
             <div
               key={`${slide.key}-${i}`}
-              className={`h-full seamless-scroll shrink-0 careme-slide-${i}`}
+              className={`h-full overflow-y-auto careme-scroll shrink-0 careme-slide-${i}`}
               dir={dir}
               style={{
                 width: `${100 / extendedSlides.length}%`,
@@ -1735,16 +1735,16 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
           margin: 4px 0;
         }
         .careme-scroll::-webkit-scrollbar-thumb {
-          background: var(--hbs-primary-subtle);
+          background: ${theme.primary}4D; /* 30% opacity */
           border-radius: 100px;
         }
         .careme-scroll::-webkit-scrollbar-thumb:active {
-          background: var(--hbs-primary);
+          background: ${theme.primary};
           opacity: 0.35;
         }
         .careme-scroll {
           scrollbar-width: thin;
-          scrollbar-color: var(--hbs-primary-subtle) transparent;
+          scrollbar-color: ${theme.primary}4D transparent;
         }
       `}</style>
     </div>
@@ -1941,16 +1941,16 @@ export function CareMeExpanded({ onClose }: { onClose: () => void }) {
           margin: 4px 0;
         }
         .careme-scroll::-webkit-scrollbar-thumb {
-          background: var(--hbs-primary-subtle);
+          background: ${theme.primary}4D;
           border-radius: 100px;
         }
         .careme-scroll::-webkit-scrollbar-thumb:active {
-          background: var(--hbs-primary);
+          background: ${theme.primary};
           opacity: 0.35;
         }
         .careme-scroll {
           scrollbar-width: thin;
-          scrollbar-color: var(--hbs-primary-subtle) transparent;
+          scrollbar-color: ${theme.primary}4D transparent;
         }
       `}</style>
     </div>
