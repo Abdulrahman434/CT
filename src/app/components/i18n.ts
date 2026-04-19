@@ -45,6 +45,8 @@ const translations: Record<string, TranslationEntry> = {
   "idle.ready": { en: "This bedside terminal is ready for use.", ar: "هذه الشاشة جاهزة للاستخدام.", ur: "یہ بیڈ سائیڈ ٹرمینل استعمال کے لیے تیار ہے۔" },
   "idle.awaiting": { en: "Awaiting Patient", ar: "في انتظار المريض", ur: "مریض کا انتظار ہے" },
   "idle.awaitingDesc": { en: "This terminal will activate once\na patient is admitted to this room.", ar: "ستعمل هذه الشاشة بمجرد\nقبول مريض في هذه الغرفة.", ur: "اس کمرے میں مریض کے داخل ہونے\nکے بعد یہ ٹرمینل فعال ہو جائے گا۔" },
+  "idle.blankPage": { en: "Blank Page", ar: "شاشة سوداء", ur: "خالی صفحہ" },
+  "idle.tapToExit": { en: "Tap anywhere to wake screen", ar: "اضغط في أي مكان لتنبيه الشاشة", ur: "اسکرین جگانے کے لیے کہیں بھی تھپتھپائیں" },
 
   /* ─── Patient Greeting ─── */
   "greeting.mrn": { en: "MRN", ar: "رقم الملف", ur: "ایم آر این" },
@@ -131,6 +133,8 @@ const translations: Record<string, TranslationEntry> = {
   /* ─── CareMe Slides ─── */
   "care.title": { en: "CareMe", ar: "رعايتي", ur: "میری دیکھ بھال" },
   "care.subtitle": { en: "Your health journey at a glance", ar: "رحلتك الصحية في لمحة", ur: "آپ کی صحت کا سفر ایک نظر میں" },
+  "care.profile.title": { en: "Patient Profile", ar: "ملف المريض", ur: "مریض کی پروفائل" },
+  "care.overview.title": { en: "Care Overview", ar: "ملخص الرعاية", ur: "دیکھ بھال کا جائزہ" },
   "care.team.title": { en: "My Care Team", ar: "فريق الرعاية", ur: "میری نگہداشت کی ٹیم" },
   "care.plan.title": { en: "My Care Plan", ar: "خطة الرعاية", ur: "میرا کیئر پلان" },
   "care.diet.title": { en: "Diet Codes", ar: "النظام الغذائي", ur: "خوراک کے قوانین" },
@@ -139,12 +143,35 @@ const translations: Record<string, TranslationEntry> = {
   "care.imaging.title": { en: "Scans & Imaging", ar: "الأشعة والتصوير", ur: "کین اور امیجنگ" },
   "care.discharge.title": { en: "Discharge Plan", ar: "خطة الخروج", ur: "ڈسچارج پلان" },
   "care.extension": { en: "Extension", ar: "التحويلة", ur: "ایکسٹینشن" },
+  "care.age": { en: "Age", ar: "العمر", ur: "عمر" },
+  "care.ageUnits": { en: "{0} Yrs", ar: "{0} سنة", ur: "{0} سال" },
+  "care.fullName": { en: "Full Name", ar: "الاسم الكامل", ur: "مکمل نام" },
+  "care.dob": { en: "Date Of Birth", ar: "تاريخ الميلاد", ur: "تاریخ پیدائش" },
+  "care.birthDateVal": { en: "19 Jan 1993", ar: "١٩ يناير ١٩٩٣", ur: "19 جنوری 1993" },
+  "care.emergencyContact": { en: "Emergency Contact", ar: "جهة اتصال الطوارئ", ur: "ہنگامی رابطہ" },
+  "care.patientName": { en: "Sara Saleh", ar: "سارة صالح", ur: "سارہ صالح" },
+  "care.emergencyName": { en: "Layla Mansour (Mother)", ar: "ليلى منصور (الأم)", ur: "لیلیٰ منصور (والدہ)" },
+  "care.sex": { en: "Sex", ar: "الجنس", ur: "جنس" },
+  "care.gender": { en: "Gender", ar: "الجنس", ur: "جنس" },
+  "care.gender.male": { en: "Male", ar: "ذكر", ur: "مرد" },
+  "care.gender.female": { en: "Female", ar: "أنثى", ur: "عورت" },
+  "care.bed": { en: "Bed", ar: "السرير", ur: "بستر" },
+  "care.insurance": { en: "Insurance", ar: "التأمين", ur: "انشورنس" },
+  "care.insurance.tawuniya": { en: "Tawuniya", ar: "التعاونية", ur: "تاونیہ" },
   "care.diet.nas": { en: "No Added Salt", ar: "بدون ملح مضاف", ur: "نک کے بغیر" },
   "care.diet.dm": { en: "Diabetic Menu", ar: "قائمة السكري", ur: "ذیابیطس کا مینو" },
   "care.allergies": { en: "Allergies", ar: "معلومات الحساسية", ur: "الرجی" },
   "care.allergy.penicillin": { en: "Penicillin", ar: "البنسلين", ur: "پینسلیلن" },
   "care.allergy.latex": { en: "Latex", ar: "اللاتكس", ur: "لیٹیکس" },
   "care.allergy.shellfish": { en: "Shellfish", ar: "المحار", ur: "شیل فش" },
+  "care.relative": { en: "Relationship", ar: "صلة القرابة", ur: "رشتہ" },
+  "care.mobile": { en: "Mobile", ar: "رقم الجوال", ur: "موبائل نمبر" },
+  "care.pain.score": { en: "Pain Score", ar: "مقياس الألم", ur: "درد کا اسکور" },
+  "care.fallRisk": { en: "Fall Risk", ar: "خطر السقوط", ur: "گرنے کا خطرہ" },
+  "care.fallRisk.high": { en: "High", ar: "مرتفع", ur: "زیادہ" },
+  "care.mobility": { en: "Patient Mobility", ar: "حركة المريض", ur: "مریض کی نقل و حرکت" },
+  "care.mobility.bedRest": { en: "Complete Bed Rest", ar: "راحة تامة في السرير", ur: "مکمل بیڈ ریسٹ" },
+  "care.assistance.bed": { en: "Do not leave bed without nursing assistance", ar: "يرجى عدم مغادرة السرير بدون مساعدة التمريض", ur: "نرسنگ امداد کے بغیر بستر نہ چھوڑیں" },
 
   /* ─── Lab Results ─── */
   "care.labs.cbc": { en: "Complete Blood Count", ar: "تعداد الدم الكامل", ur: "خون کا مکمل ٹیسٹ" },
@@ -178,11 +205,13 @@ const translations: Record<string, TranslationEntry> = {
 
   /* ─── Care Plan Steps ─── */
   "care.plan.initialAssessment": { en: "Initial Assessment", ar: "التقييم الأولي", ur: "ابتدائی تشخیص" },
-  "care.plan.bloodWork": { en: "Blood Work & Labs", ar: "تحاليل الدم والمختبر", ur: "خون کے ٹیسٹ اور لیب" },
-  "care.plan.medicationRound": { en: "Medication Round", ar: "جولة الأدوية", ur: "ادویات کا چکر" },
-  "care.plan.checkup": { en: "Check-up by Nurse", ar: "فحص الممرضة", ur: "نرس کے ذریعے معائنہ" },
-  "care.plan.physicalTherapy": { en: "Physical Therapy", ar: "العلاج الطبيعي", ur: "فزیوتھراپی" },
-  "care.plan.doctorReview": { en: "Doctor Review", ar: "مراجعة الطبيب", ur: "ڈاکٹر کا جائزہ" },
+  "care.plan.labTests": { en: "Lab Tests", ar: "الفحوصات المخبرية", ur: "لیبارٹری ٹیسٹ" },
+  "care.plan.scansImaging": { en: "Scans & Imaging", ar: "الأشعة والتصوير الطبي", ur: "اسکین اور امیجنگ" },
+  "care.plan.medicationPrep": { en: "Medication Preparation", ar: "تجهيز الأدوية", ur: "ادویات کی تیاری" },
+  "care.plan.laborMonitoring": { en: "Labor Monitoring", ar: "متابعة المخاض", ur: "لیبر کی نگرانی" },
+  "care.plan.delivery": { en: "Delivery", ar: "الولادة", ur: "پیدائش" },
+  "care.plan.recoveryObservation": { en: "Recovery & Observation", ar: "التعافي والملاحظة", ur: "صحت یابی اور مشاہدہ" },
+  "care.plan.motherBabyCheck": { en: "Mother & Baby Check", ar: "فحص الأم والطفل", ur: "ماں اور بچے کا معائنہ" },
   "care.plan.min": { en: "Min", ar: "دقيقة", ur: "منٹ" },
   "care.plan.done": { en: "Done", ar: "تم", ur: "ہو گیا" },
 
@@ -193,17 +222,45 @@ const translations: Record<string, TranslationEntry> = {
   "care.room": { en: "Room", ar: "الغرفة", ur: "کمرہ" },
 
   /* ─── Discharge Plan ─── */
-  "care.discharge.order": { en: "Discharge Order by Doctor", ar: "أمر الخروج من الطبيب", ur: "ڈاکٹر کے ذریعہ ڈسچارج کا حکم" },
-  "care.discharge.insurance": { en: "Insurance & Billing Clearance", ar: "تسوية التأمين والفواتير", ur: "انشورنس اور بلنگ کی کلیئرنس" },
-  "care.discharge.medication": { en: "Medication Preparation", ar: "تحضير الأدوية", ur: "ادویات کی تیاری" },
-  "care.discharge.education": { en: "Patient Education & Instructions", ar: "تثقيف المريض والإرشادات", ur: "مریض کی تعلیم اور ہدایات" },
-  "care.discharge.finalCheckup": { en: "Final Check-up", ar: "الفحص النهائي", ur: "آخری معائنہ" },
+  "care.discharge.finalCheck": { en: "Final Mother & Baby Check", ar: "الفحص النهائي للأم والطفل", ur: "ماں اور بچے کا حتمی معائنہ" },
+  "care.discharge.medicationPrep": { en: "Medication Preparation", ar: "تجهيز الأدوية", ur: "ادویات کی تیاری" },
+  "care.discharge.education": { en: "Discharge Education", ar: "التثقيف قبل الخروج", ur: "ڈسچارج کی تعلیم" },
+  "care.discharge.homeCare": { en: "Home Care Guidance", ar: "إرشادات العناية المنزلية", ur: "ہوم کیئر گائیڈنس" },
+  "care.discharge.followup": { en: "Follow-up Arrangements", ar: "ترتيبات المتابعة", ur: "فالو اپ کے انتظامات" },
+  "care.discharge.billing": { en: "Billing & Insurance Clearance", ar: "إنهاء إجراءات الفاتورة والتأمين", ur: "بلنگ اور انشورنس کلیئرنس" },
+  "care.discharge.docsReady": { en: "Discharge Documents Ready", ar: "تجهيز مستندات الخروج", ur: "ڈسچارج دستاویزات تیار ہیں" },
   "care.discharge.confirm": { en: "Confirm Discharge", ar: "تأكيد الخروج", ur: "ڈسچارج کی تصدیق کریں" },
+  "care.nutritional.fasting": { en: "Fasting Status", ar: "حالة الصيام", ur: "روزے کی حالت" },
+  "care.dietary.regime": { en: "Dietary Regime", ar: "البرنامج الغذائي", ur: "خوراک کا نظام" },
+  "care.fasting.yes": { en: "Yes", ar: "نعم", ur: "ہاں" },
+  "care.fasting.no": { en: "No", ar: "لا", ur: "نہیں" },
+
 
   /* ─── Pain ─── */
   "care.pain.score": { en: "Pain Score", ar: "مقياس الألم", ur: "درد کا اسکور" },
   "care.pain.lastUpdated": { en: "Last updated 2h ago", ar: "آخر تحديث منذ ساعتين", ur: "آخری بار 2 گھنٹے پہلے اپ ڈیٹ ہوا" },
   "care.pain.reported": { en: "Reported Pain", ar: "مؤشر الألم", ur: "رپورٹ کردہ درد" },
+
+  /* ─── Billing ─── */
+  "care.billing.title": { en: "Financial Summary", ar: "الملخص المالي", ur: "مالی خلاصہ" },
+  "care.billing.status": { en: "Billing Status", ar: "حالة الفاتورة", ur: "بلنگ کی حیثیت" },
+  "care.billing.pendingApproval": { en: "Awaiting Approval", ar: "بانتظار الموافقة", ur: "منظوری کا منتظر" },
+  "care.billing.totalDue": { en: "Net Amount Due", ar: "المبلغ الصافي المستحق", ur: "کل واجب الادا رقم" },
+  "care.billing.breakdown": { en: "Medical Services Breakdown", ar: "تفصيل الخدمات الطبية", ur: "طبی خدمات کی تفصیل" },
+  "care.billing.subtotal": { en: "Hospital Charges", ar: "رسوم المستشفى", ur: "ہسپتال کے اخراجات" },
+  "care.billing.vat": { en: "VAT (15%)", ar: "ضريبة القيمة المضافة (١٥%)", ur: "ویٹ (15%)" },
+  "care.billing.totalInclVat": { en: "Total (incl. VAT)", ar: "الإجمالي (شامل الضريبة)", ur: "کل (بشمول ویٹ)" },
+  "care.billing.insuranceCredit": { en: "Insurance Coverage Deduction", ar: "خصم التغطية التأمينية", ur: "انشورنس کوریج کٹوتی" },
+  "care.billing.patientPayable": { en: "Amount Due", ar: "المبلغ المستحق", ur: "واجب الادا رقم" },
+  "care.billing.viewDetailedInvoice": { en: "View Detailed Invoice", ar: "عرض الفاتورة التفصيلية", ur: "تفصیلی انوائس دیکھیں" },
+  "care.billing.invoiceTitle": { en: "Hospital Service Invoice", ar: "فاتورة خدمات المستشفى", ur: "ہسپتال سروس انوائس" },
+  "care.billing.payNow": { en: "Proceed to Payment", ar: "المتابعة لإتمام الدفع", ur: "ادائیگی کے لیے آگے بڑھیں" },
+  "care.currency": { en: "SAR", ar: "﷼", ur: "SAR" },
+  "bill.item.room": { en: "Premium Suite Room", ar: "غرفة تنويم متميزة", ur: "پریمیم سویٹ روم" },
+  "bill.item.delivery": { en: "Standard Delivery Package", ar: "باقة الولادة القياسية", ur: "معیاری ڈیلیوری پیکیج" },
+  "bill.item.labs": { en: "Post-Natal Lab Panel", ar: "تحاليل ما بعد الولادة", ur: "پوسٹ نیٹل لیب پینل" },
+  "bill.item.pharmacy": { en: "In-Patient Medications", ar: "أدوية التنويم", ur: "ان پیشنٹ ادویات" },
+  "bill.item.qty": { en: "Qty", ar: "العدد", ur: "تعداد" },
 
   /* ─── Baby Camera ─── */
   "care.baby.live": { en: "LIVE", ar: "مباشر", ur: "براہ راست" },
@@ -405,8 +462,9 @@ const translations: Record<string, TranslationEntry> = {
 
   /* ─── Dates ─── */
   "date.mar": { en: "Mar", ar: "مارس", ur: "مارچ" },
-  "date.5mar2026": { en: "5 Mar 2026", ar: "5 مارس 2026", ur: "5 مارچ 2026" },
-  "date.12mar2026": { en: "~12 Mar 2026", ar: "~12 مارس 2026", ur: "~12 مارچ 2026" },
+  "date.marFull": { en: "March", ar: "مارس", ur: "مارچ" },
+  "date.5mar2026": { en: "05 Mar 2026", ar: "٥ مارس ٢٠٢٦", ur: "05 مارچ 2026" },
+  "date.12mar2026": { en: "12 Mar 2026", ar: "١٢ مارس ٢٠٢٦", ur: "12 مارچ 2026" },
 
   /* ─── Education Apps ─── */
   "edu.cesareanRecovery": { en: "5 Steps to Recovery\nAfter Cesarean", ar: "5 خطوات للتعافي\nبعد القيصرية", ur: "سیزرین کے بعد\nصحت یابی کے 5 اقدامات" },
@@ -488,6 +546,15 @@ const translations: Record<string, TranslationEntry> = {
   "call.all": { en: "All", ar: "الكل", ur: "تمام" },
   "call.noHistory": { en: "No call history", ar: "لا يوجد سجل مكالمات", ur: "کال کی کوئی تاریخ نہیں" },
 };
+ 
+/* ── Number Localization ── */
+export function localizeNumber(n: number | string, locale: Locale): string {
+  const s = String(n);
+  if (locale === "ar") {
+    return s.replace(/[0-9]/g, w => "٠١٢٣٤٥٦٧٨٩"[+w]);
+  }
+  return s;
+}
 
 /* ── Translator function factory ── */
 function createT(locale: Locale) {
@@ -510,5 +577,5 @@ export function useLocale() {
   const dir = isRTL ? "rtl" : "ltr";
   const fontFamily = isRTL ? theme.fontFamilyAr : theme.fontFamily;
   const t = createT(locale);
-  return { t, locale, isRTL, dir, fontFamily };
+  return { t, locale, isRTL, dir, fontFamily, localizeNumber: (n: number | string) => localizeNumber(n, locale) };
 }

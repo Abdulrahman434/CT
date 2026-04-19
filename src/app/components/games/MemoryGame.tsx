@@ -199,7 +199,7 @@ export function MemoryGame({ onClose, onBackToGames }: { onClose: () => void; on
               key={card.id}
               onClick={() => handleCardClick(card.id)}
               disabled={card.isMatched}
-              className="relative overflow-hidden cursor-pointer transition-all duration-300"
+              className="relative overflow-hidden cursor-pointer transition-all duration-300 active:scale-95 select-none"
               style={{
                 width: "160px",
                 height: "160px",
@@ -210,6 +210,8 @@ export function MemoryGame({ onClose, onBackToGames }: { onClose: () => void; on
                 outline: "none",
                 transform: card.isFlipped || card.isMatched ? "rotateY(0deg)" : "rotateY(0deg)",
                 opacity: card.isMatched ? 0.5 : 1,
+                WebkitTapHighlightColor: "transparent",
+                touchAction: "manipulation",
               }}
             >
               <div

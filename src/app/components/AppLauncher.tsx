@@ -14,6 +14,8 @@ import {
   Hash,
   Download,
   Info,
+  Moon,
+  Edit2,
 } from "lucide-react";
 import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
@@ -965,11 +967,11 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
                 { id: "d-edu-warts",    name: "الثآليل الجلدية",           pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/Skin%20warts.pdf" },
                 { id: "d-edu-tb",       name: "السل",                      pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/Tuberculosis.pdf" },
                 { id: "d-edu-vitd",     name: "نقص فيتامين د",             pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/Vitamin%20D%20Deficiency.pdf" },
-                { id: "d-edu-csect",    name: "الولادة القيصرية",           pdf: "https://www.dallah-hospital.com/assets/Library/Gallery/Educational%20Content%20AR/C-section%20%28cesarean%20birth%29%20AR.pdf" },
-                { id: "d-edu-diadiet",  name: "حمية السكري",               pdf: "https://www.dallah-hospital.com/assets/Library/Gallery/Educational%20Content%20AR/Diabetes%20Diet%20AR%20%28coded%29.pdf" },
+                { id: "d-edu-csect",    name: "الولادة القيصرية",           pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/C-section%20%28cesarean%20birth%29%20AR.pdf" },
+                { id: "d-edu-diadiet",  name: "حمية السكري",               pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/Diabetes%20Diet%20AR%20%28coded%29.pdf" },
                 { id: "d-edu-falls",    name: "الوقاية من السقوط",         pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/Fall%20Prevention.pdf" },
                 { id: "d-edu-gdiabetes",name: "سكري الحمل",               pdf: "https://www.dallah-hospital.com/Assets/library/Gallery/AR%20GESTATIONAL%20DIABETES-083537.pdf" },
-                { id: "d-edu-labor",    name: "الولادة الطبيعية",           pdf: "https://www.dallah-hospital.com/assets/Library/Gallery/Educational%20Content%20AR/Labor%20and%20delivery%20%28childbirth%20AR.pdf" },
+                { id: "d-edu-labor",    name: "الولادة الطبيعية",           pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/Labor%20and%20delivery%20%28childbirth%20AR.pdf" },
                 { id: "d-edu-neonatal", name: "تغذية الرضيع",              pdf: "https://www.dallah-hospital.com/Assets/library/Gallery/AR_Neonatal%20Weight%20Gain%20and%20Nutrition.pdf" },
               ]
             : [
@@ -1136,7 +1138,7 @@ export function AppLauncher({
   onLaunchTool?: (toolId: string) => void;
 }) {
   const { theme } = useTheme();
-  const { t, locale } = useLocale();
+  const { t, locale, isRTL } = useLocale();
   const [activeKey, setActiveKey] = useState(categoryKey);
   const allCategories = getCategories(theme, locale);
   const category = allCategories[activeKey];
@@ -1302,7 +1304,7 @@ export function AppLauncher({
           style={{ 
             display: 'flex',
             flexDirection: 'row',
-            transform: `translateX(calc(-${(pageIndex / numPages) * 100}% + ${dragOffset}px))`,
+            transform: `translateX(calc(${(isRTL ? 1 : -1) * (pageIndex / numPages) * 100}% + ${dragOffset}px))`,
             transition: isSwiping ? 'none' : 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
             pointerEvents: "auto",
             width: `${numPages * 100}%`

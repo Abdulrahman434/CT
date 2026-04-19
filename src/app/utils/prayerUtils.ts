@@ -37,7 +37,8 @@ export const PRAYER_KEYS = [
 /**
  * Format prayer time as HH:mm
  */
-export function formatPrayerTime(time: Date, locale: string = "en") {
+export function formatPrayerTime(time: Date | null, locale: string = "en") {
+  if (!time) return "--:--";
   return format(time, "HH:mm");
 }
 

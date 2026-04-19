@@ -202,7 +202,6 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
             data-nav="true"
             onClick={() => {
               if (currentLocale === "en") setLocale("ar");
-              else if (currentLocale === "ar") setLocale("ur");
               else setLocale("en");
             }}
             className="rounded-full cursor-pointer flex items-center justify-center transition-all active:scale-90"

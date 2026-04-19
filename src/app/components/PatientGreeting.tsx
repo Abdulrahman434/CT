@@ -99,55 +99,9 @@ export function PatientGreeting({ onOpenAboutUs, onOpenTour, fillImage }: { onOp
             }}
           >{t("general.welcome", theme.hospitalShortName)}</p>
         </div>
-
-        {/* Badges */}
-        <div className="flex items-center flex-wrap gap-2" style={{ paddingTop: SPACE[2] }}>
-          <div
-            className="flex items-center px-3 py-1.5"
-            style={{ backgroundColor: theme.primarySubtle, borderRadius: theme.radiusFull }}
-          >
-            <span
-              style={{
-                fontFamily: fontFamily,
-                ...TEXT_STYLE.pill,
-                color: theme.primary,
-              }}
-            >
-              {t("greeting.mrn")} 00–284619
-            </span>
-          </div>
-          <div
-            className="flex items-center px-3 py-1.5"
-            style={{ backgroundColor: theme.primarySubtle, borderRadius: theme.radiusFull }}
-          >
-            <span
-              style={{
-                fontFamily: fontFamily,
-                ...TEXT_STYLE.pill,
-                color: theme.primary,
-              }}
-            >
-              {t("greeting.room", "412")}
-            </span>
-          </div>
-          <div
-            className="flex items-center px-3 py-1.5"
-            style={{ backgroundColor: theme.primarySubtle, borderRadius: theme.radiusFull }}
-          >
-            <span
-              style={{
-                fontFamily: fontFamily,
-                ...TEXT_STYLE.pill,
-                color: theme.primary,
-              }}
-            >
-              {t("greeting.ext", "4217")}
-            </span>
-          </div>
         </div>
-      </div>
-
-      {/* Hospital image */}
+ 
+      {/* Hospital image — Increased height by absorbing badge space */}
       <div
         className={`overflow-hidden mx-4 mb-4 ${fillImage ? "flex-1 min-h-[120px]" : "shrink-0"}`}
         style={{

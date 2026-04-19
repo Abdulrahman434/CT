@@ -37,3 +37,27 @@ button:active {
   transform: scale(0.97);
   transition: transform 0.1s ease;
 }
+
+/* ─── Seamless Scroll Correction ─── */
+.seamless-scroll {
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+}
+
+.seamless-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.seamless-scroll::-webkit-scrollbar-track {
+  background: transparent; /* No visible container */
+}
+
+.seamless-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.05); /* Very light, seamless bar */
+  border-radius: 10px;
+}
+
+.seamless-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.15);
+}

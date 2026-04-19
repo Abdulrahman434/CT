@@ -1506,8 +1506,8 @@ export function SettingsPanel({
   isFullscreen,
 }: {
   onClose: () => void;
-  onFullscreenTap?: () => void;
-  isFullscreen?: boolean;
+  onFullscreenTap: () => void;
+  isFullscreen: boolean;
 }) {
   const { theme: t, darkMode, setDarkMode, castDevice, setCastDevice, locale: currentLocale, setLocale, prayerAlarm, setPrayerAlarm } = useTheme();
   const { t: tr, isRTL, fontFamily, locale } = useLocale();
@@ -1725,7 +1725,7 @@ export function SettingsPanel({
                 onTap={() => setDnd(!dnd)}
               />
               <QuickTile
-                icon={<Moon size={24} style={{ color: nightMode ? t.tileActiveText : t.iconDefault }} />}
+                icon={<Sun size={24} style={{ color: nightMode ? t.tileActiveText : t.iconDefault }} />}
                 label={tr("settings.nightLight")}
                 active={nightMode}
                 onTap={() => setNightMode(!nightMode)}
@@ -1737,6 +1737,7 @@ export function SettingsPanel({
                 onTap={() => setDarkMode(!darkMode)}
               />
             </div>
+
             {/* Status line */}
             {castDevice && connectedCastName && (
               null

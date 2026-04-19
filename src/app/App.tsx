@@ -92,7 +92,7 @@ function BedsideScreen() {
     }
   });
   const [showConfigurator, setShowConfigurator] = useState(false);
-  const [showCareMe, setShowCareMe] = useState(false);
+  const [showCareMeExpanded, setShowCareMeExpanded] = useState(false);
   const [showCall, setShowCall] = useState(false);
   const [showFoodOrder, setShowFoodOrder] = useState(false);
   const [layoutVersion, setLayoutVersion] = useState<1 | 2 | 3>(1);
@@ -100,6 +100,7 @@ function BedsideScreen() {
   const [acknowledgedBroadcasts, setAcknowledgedBroadcasts] = useState<BroadcastNotification[]>([]);
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [activeTool, setActiveTool] = useState<string | null>(null);
+  const [showBlankPage, setShowBlankPage] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
   
   /* ── Prayer Monitoring / Azan Alarm ── */
@@ -297,9 +298,7 @@ function BedsideScreen() {
         console.error(`Error attempting to enable full-screen mode: ${err.message}`);
       });
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
+      if (document.exitFullscreen) document.exitFullscreen();
     }
   }, []);
 
@@ -308,7 +307,7 @@ function BedsideScreen() {
     const anyOverlayOpen =
       openCategory || showSurvey || showAboutUs || showSettings ||
       showNotifications || showTour || showTasbih || showConfigurator ||
-      showCareMe || showCall || showFoodOrder || activeBroadcast ||
+      showCareMeExpanded || showCall || showFoodOrder || activeBroadcast ||
       activeGame || activeTool;
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -319,7 +318,7 @@ function BedsideScreen() {
         if (activeBroadcast) { setActiveBroadcast(null); return; }
         if (showFoodOrder) { setShowFoodOrder(false); return; }
         if (showCall) { setShowCall(false); return; }
-        if (showCareMe) { setShowCareMe(false); return; }
+        if (showCareMeExpanded) { setShowCareMeExpanded(false); return; }
         if (showConfigurator) { setShowConfigurator(false); return; }
         if (showTasbih) { setShowTasbih(false); return; }
         if (showTour) { setShowTour(false); setTourDismissed(true); return; }
@@ -419,7 +418,7 @@ function BedsideScreen() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [openCategory, showSurvey, showAboutUs, showSettings,
       showNotifications, showTour, showTasbih, showConfigurator,
-      showCareMe, showCall, showFoodOrder, activeBroadcast,
+      showCareMeExpanded, showCall, showFoodOrder, activeBroadcast,
       activeGame, activeTool]);
 
   return (
@@ -512,7 +511,7 @@ function BedsideScreen() {
                       <PatientGreeting onOpenAboutUs={() => setShowAboutUs(true)} onOpenTour={() => setShowTour(true)} fillImage />
                     </div>
                     <div className="flex-1 min-w-0 min-h-0 flex flex-col">
-                      <CareMe onExpand={() => setShowCareMe(true)} />
+                      <CareMe onExpand={() => setShowCareMeExpanded(true)} />
                     </div>
                   </div>
                   {/* Bottom: Service cards row */}
@@ -527,9 +526,11 @@ function BedsideScreen() {
             ) : layoutVersion === 1 ? (
               <>
                 {/* Left Column — PatientGreeting + CareMe */}
-                <div className="flex flex-col gap-5 shrink-0 min-h-0" style={{ width: "400px" }}>
+                <div className="flex flex-col gap-5 shrink-0 min-h-0 h-full" style={{ width: "400px" }}>
                   <PatientGreeting onOpenAboutUs={() => setShowAboutUs(true)} onOpenTour={() => setShowTour(true)} />
-                  <CareMe onExpand={() => setShowCareMe(true)} />
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    <CareMe onExpand={() => setShowCareMeExpanded(true)} />
+                  </div>
                 </div>
 
                 {/* Center + Right Column */}
@@ -549,9 +550,11 @@ function BedsideScreen() {
               /* ─── V2 Layout: Shortcuts in container ─── */
               <>
                 {/* Left Column — PatientGreeting + CareMe */}
-                <div className="flex flex-col gap-5 shrink-0 min-h-0" style={{ width: "400px" }}>
+                <div className="flex flex-col gap-5 shrink-0 min-h-0 h-full" style={{ width: "400px" }}>
                   <PatientGreeting onOpenAboutUs={() => setShowAboutUs(true)} onOpenTour={() => setShowTour(true)} />
-                  <CareMe onExpand={() => setShowCareMe(true)} />
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    <CareMe onExpand={() => setShowCareMeExpanded(true)} />
+                  </div>
                 </div>
 
                 <div className="flex-1 flex gap-[40px] min-w-0 min-h-0">
@@ -661,8 +664,8 @@ function BedsideScreen() {
         )}
 
         {/* CareMe Expanded Overlay */}
-        {showCareMe && (
-          <CareMeExpanded onClose={() => setShowCareMe(false)} />
+        {showCareMeExpanded && (
+          <CareMeExpanded onClose={() => setShowCareMeExpanded(false)} />
         )}
 
         {/* Call Screen Overlay */}
@@ -704,6 +707,19 @@ function BedsideScreen() {
         {activeTool === "unitconverter" && <UnitConverterTool onClose={() => setActiveTool(null)} onBackToTools={() => { setActiveTool(null); setOpenCategory("Tools"); }} />}
         {activeTool === "breathing" && <BreathingTool onClose={() => setActiveTool(null)} onBackToTools={() => { setActiveTool(null); setOpenCategory("Tools"); }} />}
         {activeTool === "whiteboard" && <WhiteboardTool onClose={() => setActiveTool(null)} onBackToTools={() => { setActiveTool(null); setOpenCategory("Tools"); }} />}
+
+        {/* Blank Page Overlay */}
+        {showBlankPage && (
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center cursor-none"
+            style={{ backgroundColor: "#000000" }}
+            onClick={() => setShowBlankPage(false)}
+          >
+            <div className="text-white/20 font-medium text-lg animate-pulse">
+              {t("idle.tapToExit")}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Survey Modal */}
@@ -728,10 +744,46 @@ function BedsideScreen() {
           z-index: 50 !important;
           border-color: transparent !important;
         }
+        * {
+          -webkit-tap-highlight-color: transparent;
+          -webkit-touch-callout: none;
+        }
       `}</style>
       <RippleStyles />
     </div>
   );
+}
+
+import { Component, ReactNode } from "react";
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="fixed inset-0 bg-slate-900 text-white flex flex-col items-center justify-center p-10 text-center font-sans">
+          <h1 className="text-4xl font-black mb-4">System Recovered</h1>
+          <p className="text-slate-400 mb-8 max-w-md">An unexpected interface error occurred. The system has automatically rebooted to a stable state.</p>
+          <div className="bg-slate-800 p-4 rounded-lg text-left text-xs font-mono text-red-400 mb-8 select-all max-w-xl overflow-auto max-h-[300px]">
+             {this.state.error?.stack}
+          </div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-8 py-4 bg-blue-600 rounded-2xl font-bold hover:bg-blue-500 transition-colors"
+          >
+            Refresh Dashboard
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 function AuthenticatedApp() {
@@ -744,7 +796,9 @@ function AuthenticatedApp() {
   return (
     <ThemeProvider>
       <OrderProvider>
-        <BedsideScreen />
+        <ErrorBoundary>
+          <BedsideScreen />
+        </ErrorBoundary>
       </OrderProvider>
     </ThemeProvider>
   );

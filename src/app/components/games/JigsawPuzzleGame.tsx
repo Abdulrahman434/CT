@@ -238,7 +238,7 @@ export function JigsawPuzzleGame({ onClose, onBackToGames }: { onClose: () => vo
                   key={tile.id}
                   onClick={() => handleTileClick(index)}
                   disabled={tile.id === TILE_COUNT - 1}
-                  className="flex items-center justify-center cursor-pointer transition-all duration-200"
+                  className="flex items-center justify-center cursor-pointer transition-all duration-200 active:scale-95 select-none"
                   style={{
                     backgroundColor: tile.id === TILE_COUNT - 1 ? "transparent" : getTileColor(tile.id),
                     borderRadius: theme.radiusMd,
@@ -246,6 +246,8 @@ export function JigsawPuzzleGame({ onClose, onBackToGames }: { onClose: () => vo
                     boxShadow: tile.id === TILE_COUNT - 1 ? "none" : SHADOW.sm,
                     outline: "none",
                     opacity: tile.id === TILE_COUNT - 1 ? 0.3 : 1,
+                    WebkitTapHighlightColor: "transparent",
+                    touchAction: "manipulation",
                   }}
                 >
                   {tile.id !== TILE_COUNT - 1 && (
