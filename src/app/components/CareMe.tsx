@@ -330,7 +330,7 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
                  <img src={m.img} alt={t(m.nameKey)} className="w-full h-full object-cover" />
               </div>
               <div className="flex flex-col">
-                 <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.textMuted, lineHeight: 1.2 }}>{t(m.roleKey)}</p>
+                 <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.primary, fontWeight: 700, lineHeight: 1.2 }}>{t(m.roleKey)}</p>
                  <p style={{ 
                    fontFamily: theme.fontFamily, 
                    ...(isExpanded ? { fontSize: "18px" } : { fontSize: "15.5px" }), 
