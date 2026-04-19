@@ -40,6 +40,7 @@ import {
   Wallet,
   IdCard,
   User,
+  ShieldCheck,
 } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import svgPaths from "../../imports/svg-ca68x68c4i";
@@ -1020,6 +1021,7 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
           
           <div className="mt-6 pt-2 border-t border-dashed" style={{ borderColor: theme.borderSubtle }}>
             <button
+              data-nav="true"
               onClick={() => setShowPdf(true)}
               className="flex items-center justify-center gap-2 w-full py-3 border transition-transform hover:scale-[1.01] active:scale-98"
               style={{ borderRadius: theme.radiusLg, borderColor: `${theme.primary}40`, backgroundColor: theme.surface, cursor: 'pointer' }}
@@ -1042,6 +1044,7 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
            </div>
            
            <button
+             data-nav="true"
              onClick={() => setShowPayment(true)}
              className="flex items-center justify-center gap-2 w-full py-4 shadow-lg transition-transform hover:scale-[1.01] active:scale-[0.96]"
              style={{ backgroundColor: theme.primary, cursor: 'pointer', borderRadius: theme.radiusLg }}
