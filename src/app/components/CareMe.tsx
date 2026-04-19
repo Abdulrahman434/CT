@@ -1477,32 +1477,57 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
     [goTo, pauseAutoRotate]
   );
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    // If clicking a button or something with data-nav, don't start dragging
+  /* ─── Touch-based swipe (more reliable than pointer events with nested scrollables) ─── */
+  const touchStartY = useRef(0);
+  const swipeLocked = useRef<"none" | "horizontal" | "vertical">("none");
+
+  const handleTouchStart = (e: React.TouchEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest('[data-nav="true"]')) return;
 
-    touchStartX.current = e.clientX;
+    const touch = e.touches[0];
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
     touchDeltaX.current = 0;
+    swipeLocked.current = "none";
     setDragOffset(0);
     setIsDragging(true);
-    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
   };
 
-  const handlePointerMove = (e: React.PointerEvent) => {
+  const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return;
-    const delta = e.clientX - touchStartX.current;
-    touchDeltaX.current = delta;
-    setDragOffset(delta);
-    pauseAutoRotate();
+    const touch = e.touches[0];
+    const dx = touch.clientX - touchStartX.current;
+    const dy = touch.clientY - touchStartY.current;
+
+    // Determine swipe direction on first significant movement
+    if (swipeLocked.current === "none") {
+      if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+        swipeLocked.current = Math.abs(dx) > Math.abs(dy) ? "horizontal" : "vertical";
+      }
+    }
+
+    // If vertical — let the browser scroll natively, bail out
+    if (swipeLocked.current === "vertical") {
+      setIsDragging(false);
+      setDragOffset(0);
+      return;
+    }
+
+    // If horizontal — take over
+    if (swipeLocked.current === "horizontal") {
+      e.preventDefault(); // prevent vertical scroll while swiping horizontally
+      touchDeltaX.current = dx;
+      setDragOffset(dx);
+      pauseAutoRotate();
+    }
   };
 
-  const handlePointerUp = (e: React.PointerEvent) => {
+  const handleTouchEnd = () => {
     if (!isDragging) return;
     setIsDragging(false);
-    (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
-    
-    const threshold = 80; 
+
+    const threshold = 40;
     if (touchDeltaX.current < -threshold) {
       handleManualNav(activeIndex + 1);
     } else if (touchDeltaX.current > threshold) {
@@ -1510,6 +1535,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
     }
     setDragOffset(0);
     touchDeltaX.current = 0;
+    swipeLocked.current = "none";
   };
 
   // Teleportation for circular wrap-around
@@ -1554,16 +1580,16 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
   return (
     <div 
       className="flex flex-col overflow-hidden relative select-none flex-1 min-h-0"
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       style={{
         backgroundColor: theme.surface,
         borderRadius: theme.radiusCard,
         boxShadow: SHADOW.md,
         border: theme.cardBorder,
-        touchAction: "auto",
+        touchAction: "pan-y",
       }}
     >
       {/* Header */}

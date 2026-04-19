@@ -126,7 +126,7 @@ function BedsideScreen() {
       if (status.current !== Prayer.None && status.current !== lastPrayerRef.current) {
         // TRICK: Only trigger if the previous one wasn't None (prevents double trigger on load)
         // OR if it's the first time we detect any prayer (which always happens on load)
-        if (lastPrayerRef.current !== Prayer.None) {
+        if (lastPrayerRef.current !== Prayer.None && status.current !== Prayer.Asr) {
           handlePrayerTimeReached(status.current);
         }
         lastPrayerRef.current = status.current;
@@ -481,7 +481,7 @@ function BedsideScreen() {
         <TopBar
           onFajrTap={() => setLayoutVersion((v) => (v === 3 ? 1 : 3))}
           onDhuhrTap={() => setShowConfigurator(true)}
-          onAsrTap={() => handlePrayerTimeReached(Prayer.Asr)}
+          onAsrTap={undefined}
           onMaghribTap={() => handlePrayerTimeReached(Prayer.Maghrib)}
           onIshaTap={() => setShowTasbih(true)}
           onWeatherTap={() => setLayoutVersion((v) => (v === 1 ? 2 : 1))}
