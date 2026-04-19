@@ -200,7 +200,6 @@ function SettingsSlider({
   );
 }
 
-/* ─── Quick Settings Tile (Android-style) ─── */
 function QuickTile({
   icon,
   label,
@@ -218,7 +217,7 @@ function QuickTile({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
 
-  const handlePointerDown = useCallback(() => {
+  const startLongPress = useCallback(() => {
     didLongPress.current = false;
     if (onLongPress) {
       timerRef.current = setTimeout(() => {
@@ -228,28 +227,29 @@ function QuickTile({
     }
   }, [onLongPress]);
 
-  const handlePointerUp = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    if (!didLongPress.current) {
-      onTap();
-    }
-  }, [onTap]);
-
-  const handlePointerLeave = useCallback(() => {
+  const cancelLongPress = useCallback(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
   }, []);
 
+  const handleClick = useCallback(() => {
+    if (!didLongPress.current) {
+      onTap();
+    }
+    didLongPress.current = false;
+  }, [onTap]);
+
   return (
     <button
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerLeave}
+      onTouchStart={startLongPress}
+      onTouchEnd={cancelLongPress}
+      onTouchCancel={cancelLongPress}
+      onMouseDown={startLongPress}
+      onMouseUp={cancelLongPress}
+      onMouseLeave={cancelLongPress}
+      onClick={handleClick}
       className="flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-[0.92] select-none"
       style={{
         flex: 1,
@@ -1713,7 +1713,14 @@ export function SettingsPanel({
                 icon={<Cast size={24} style={{ color: castDevice ? t.tileActiveText : t.iconDefault }} />}
                 label={tr("settings.cast")}
                 active={!!castDevice}
-                onTap={() => setShowCastDialog(true)}
+                onTap={() => {
+                  if (castDevice) {
+                    setCastDevice(null);
+                  } else {
+                    setShowCastDialog(true);
+                  }
+                }}
+                onLongPress={() => setShowCastDialog(true)}
               />
             </div>
             {/* Row 2: Modes */}
