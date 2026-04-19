@@ -121,7 +121,7 @@ export function PatientGreeting({ onOpenAboutUs, onOpenTour, fillImage }: { onOp
       <div className="mx-4 mb-4" style={{ position: "relative", zIndex: 10 }}>
         <button
           data-nav="true"
-          className="flex items-center justify-center gap-2.5 w-full py-3 cursor-pointer transition-all duration-150"
+          className="flex items-center justify-center gap-2.5 w-full py-3 cursor-pointer transition-transform duration-150"
           style={{
             backgroundColor: pressed ? theme.primaryDark : theme.primary,
             transform: pressed ? "scale(0.96)" : "scale(1)",

@@ -152,7 +152,7 @@ function HubCard({
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onClick={onTap}
-      className={`relative overflow-hidden flex flex-col items-center justify-center ${compact ? "gap-1.5" : "gap-3"} transition-all duration-100 ease-out cursor-pointer h-full w-full`}
+      className={`relative overflow-hidden flex flex-col items-center justify-center ${compact ? "gap-1.5" : "gap-3"} transition-transform duration-100 ease-out cursor-pointer h-full w-full`}
       style={{
         backgroundColor: pressed ? theme.primary : contained ? theme.surfaceElevated : theme.surface,
         borderRadius: theme.radiusCard,
@@ -218,7 +218,7 @@ function ServiceCard({ item, onTap, square, contained, compact }: { item: (typeo
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onClick={onTap}
-      className={`relative overflow-hidden flex flex-col items-center justify-center gap-${gapSize} transition-all duration-100 ease-out cursor-pointer${square ? " flex-1 w-full" : " w-full h-full"}`}
+      className={`relative overflow-hidden flex flex-col items-center justify-center gap-${gapSize} transition-transform duration-100 ease-out cursor-pointer${square ? " flex-1 w-full" : " w-full h-full"}`}
       style={{
         height: square ? undefined : undefined,
         padding: square ? "0 28px 0 18px" : "0",
@@ -310,7 +310,7 @@ function SurveyCardFilled({ onOpen, compact }: { onOpen: () => void; compact?: b
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onClick={onOpen}
-      className={`relative overflow-hidden flex flex-col items-center justify-center ${compact ? "gap-1" : "gap-3"} w-full h-full transition-all duration-150 cursor-pointer`}
+      className={`relative overflow-hidden flex flex-col items-center justify-center ${compact ? "gap-1" : "gap-3"} w-full h-full transition-transform duration-150 cursor-pointer`}
       style={{
         backgroundColor: pressed ? theme.accent : theme.surface,
         borderRadius: theme.radiusCard,
@@ -361,7 +361,7 @@ function SurveyCard({ square, contained }: { square?: boolean; contained?: boole
       onPointerDown={(e) => { onPointerDown(e); setPressed(true); }}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
-      className={`relative overflow-hidden flex flex-col items-center justify-center gap-3 w-full transition-all duration-150 cursor-pointer${square ? " flex-1" : ""}`}
+      className={`relative overflow-hidden flex flex-col items-center justify-center gap-3 w-full transition-transform duration-150 cursor-pointer${square ? " flex-1" : ""}`}
       style={{
         backgroundColor: pressed ? theme.accent : contained ? theme.accentSubtle : theme.surface,
         borderRadius: theme.radiusCard,
@@ -424,7 +424,7 @@ function ShortcutTile({ item, contained }: { item: ShortcutItem; contained?: boo
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onClick={handleTap}
-      className="relative overflow-hidden flex flex-col items-center justify-center gap-2 transition-all duration-150 cursor-pointer w-full h-full"
+      className="relative overflow-hidden flex flex-col items-center justify-center gap-2 transition-transform duration-150 cursor-pointer w-full h-full"
       style={{
         borderRadius: theme.radiusCard,
         backgroundColor: pressed ? theme.primary : contained ? theme.surfaceElevated : theme.surface,
@@ -510,7 +510,7 @@ function ShortcutTileCompact({ item }: { item: ShortcutItem }) {
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onClick={handleTap}
-      className="relative overflow-hidden flex flex-col items-center justify-center gap-2.5 transition-all duration-150 cursor-pointer w-full h-full"
+      className="relative overflow-hidden flex flex-col items-center justify-center gap-2.5 transition-transform duration-150 cursor-pointer w-full h-full"
       style={{
         borderRadius: theme.radiusLg,
         backgroundColor: pressed ? theme.primary : "transparent",
@@ -593,7 +593,7 @@ function ShortcutTileBare({ item }: { item: ShortcutItem }) {
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onClick={handleTap}
-      className="relative overflow-hidden flex flex-col items-center justify-center gap-2 transition-all duration-150 cursor-pointer w-full h-full"
+      className="relative overflow-hidden flex flex-col items-center justify-center gap-2 transition-transform duration-150 cursor-pointer w-full h-full"
       style={{
         borderRadius: theme.radiusXl,
         backgroundColor: pressed ? theme.primary : "transparent",
@@ -644,7 +644,7 @@ function AboutUsButton({ onTap }: { onTap: () => void }) {
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onClick={onTap}
-      className="relative overflow-hidden flex items-center gap-3 transition-all duration-150 cursor-pointer w-full h-full"
+      className="relative overflow-hidden flex items-center gap-3 transition-transform duration-150 cursor-pointer w-full h-full"
       style={{
         backgroundColor: pressed ? theme.primary : theme.surface,
         borderRadius: theme.radiusCard,

@@ -352,7 +352,7 @@ export function TasbihScreenSaver({ onClose }: TasbihScreenSaverProps) {
                         <button
                           key={dhikr.id}
                           onClick={(e) => { e.stopPropagation(); handleSelectDhikr(idx); }}
-                          className="w-full flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-all"
+                          className="w-full flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
                           style={{
                             padding: "10px 14px", border: "none", borderRadius: "12px",
                             backgroundColor: sel ? pal.glowSubtle : "transparent",

@@ -353,7 +353,7 @@ export function PatternMemoryGame({ onClose, onBackToGames }: { onClose: () => v
                   key={index}
                   onClick={() => handleCellClick(index)}
                   disabled={gameState !== "playing"}
-                  className="cursor-pointer transition-all duration-200 active:scale-95"
+                  className="cursor-pointer transition-transform duration-200 active:scale-95"
                   style={{
                     backgroundColor: activeCell === index ? color : `${color}80`,
                     borderRadius: theme.radiusLg,

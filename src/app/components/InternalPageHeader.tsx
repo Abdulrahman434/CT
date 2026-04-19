@@ -16,7 +16,7 @@ export function InternalPageHeader({ title, icon, onClose }: InternalPageHeaderP
     <div className="shrink-0 flex items-center gap-5 px-12 pt-10 pb-6 relative z-10">
       <button
         onClick={onClose}
-        className="flex items-center justify-center transition-all cursor-pointer active:scale-95"
+        className="flex items-center justify-center transition-transform cursor-pointer active:scale-95"
         style={{
           width: "52px",
           height: "52px",

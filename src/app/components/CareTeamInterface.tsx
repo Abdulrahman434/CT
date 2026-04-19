@@ -318,7 +318,7 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
 
           <button
             onClick={onClose}
-            className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
+            className="w-9 h-9 flex items-center justify-center rounded-full transition-transform"
             style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
           >
             <X size={20} color="rgba(255,255,255,0.9)" />
@@ -592,7 +592,7 @@ function DoctorView({ record, tr, t, doctorNoteText, setDoctorNoteText, onSave, 
           onChange={(e) => setDoctorNoteText(e.target.value)}
           placeholder="Enter physician orders, observations, or plan of care..."
           rows={2}
-          className="w-full resize-none outline-none transition-all"
+          className="w-full resize-none outline-none transition-transform"
           style={{
             padding: "10px 14px",
             borderRadius: "14px",
@@ -610,7 +610,7 @@ function DoctorView({ record, tr, t, doctorNoteText, setDoctorNoteText, onSave, 
           <button
             onClick={onSave}
             disabled={!doctorNoteText.trim()}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all active:scale-95"
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-transform active:scale-95"
             style={{
               backgroundColor: saved ? t.success : (doctorNoteText.trim() ? t.primary : t.borderDefault),
               color: "#fff",
@@ -668,7 +668,7 @@ function NurseForm({ form, setForm, tr, t, onSave, onCancel, saved }: any) {
       <div className="flex items-center gap-3" style={{ borderTop: `1px solid ${t.borderDefault}`, paddingTop: 20 }}>
         <button
           onClick={onSave}
-          className="flex items-center gap-2 px-8 py-3.5 rounded-2xl font-bold transition-all active:scale-95 shadow-md shadow-blue-500/20"
+          className="flex items-center gap-2 px-8 py-3.5 rounded-2xl font-bold transition-transform active:scale-95 shadow-md shadow-blue-500/20"
           style={{ backgroundColor: saved ? t.success : t.primary, color: "#fff", fontSize: "15px" }}
         >
           {saved ? <CheckCircle2 size={18} /> : <Save size={18} />}
@@ -731,7 +731,7 @@ function VitalsSection({ vitals, tr, t, readOnly, onChange }: any) {
         {fields.map(({ key, label, unit, icon }) => (
           <div
             key={key}
-            className="p-4 rounded-2xl transition-all"
+            className="p-4 rounded-2xl transition-transform"
             style={{ backgroundColor: t.surface, border: `1px solid ${t.borderDefault}` }}
           >
             <div className="flex items-center gap-1.5 mb-2">
@@ -832,7 +832,7 @@ function NotesSection({ notes, tr, t, readOnly, onChange }: any) {
           onChange={(e) => onChange(e.target.value)}
           placeholder={tr("clinical.notesPlaceholder")}
           rows={3}
-          className="w-full resize-none outline-none mt-2 transition-all"
+          className="w-full resize-none outline-none mt-2 transition-transform"
           style={{
             padding: "12px 14px",
             borderRadius: "14px",
@@ -880,7 +880,7 @@ function RisksSection({ risks, otherRiskNotes, tr, t, readOnly, onChange, onOthe
             <button
               key={key}
               onClick={() => onChange({ ...risks, [key]: !risks[key] })}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full font-bold transition-all active:scale-95"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full font-bold transition-transform active:scale-95"
               style={{
                 fontSize: "13px",
                 backgroundColor: risks[key] ? "rgba(239, 68, 68, 0.1)" : t.surface,
@@ -919,7 +919,7 @@ function AddBtn({ onClick, label, t }: any) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 px-6 py-3 cursor-pointer transition-all active:scale-95 shadow-md shadow-blue-500/20"
+      className="flex items-center gap-2 px-6 py-3 cursor-pointer transition-transform active:scale-95 shadow-md shadow-blue-500/20"
       style={{ 
         backgroundColor: t.primary, 
         color: "#fff", 
@@ -939,7 +939,7 @@ function HistoryCard({ obs, isLatest, onDelete, onClick, t, tr }: any) {
   return (
     <div
       onClick={onClick}
-      className="group relative rounded-2xl overflow-hidden transition-all cursor-pointer hover:shadow-lg active:scale-[0.98]"
+      className="group relative rounded-2xl overflow-hidden transition-transform cursor-pointer hover:shadow-lg active:scale-[0.98]"
       style={{
         backgroundColor: "#FFFFFF",
         border: isLatest ? `2px solid ${t.primary}` : `1px solid ${t.borderDefault}`,

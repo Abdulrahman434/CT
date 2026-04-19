@@ -329,7 +329,7 @@ export function ColorMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 <button
                   key={colorOption.color}
                   onClick={() => handleColorClick(colorOption)}
-                  className="cursor-pointer transition-all duration-200 active:scale-95"
+                  className="cursor-pointer transition-transform duration-200 active:scale-95"
                   style={{
                     backgroundColor: colorOption.color,
                     borderRadius: theme.radiusLg,

@@ -253,7 +253,7 @@ export function RemindersTool({ onClose, onBackToTools }: { onClose: () => void;
                 <button
                   key={cat}
                   onClick={() => setNewCategory(cat)}
-                  className="cursor-pointer transition-all"
+                  className="cursor-pointer transition-transform"
                   style={{
                     padding: "8px 16px",
                     backgroundColor: newCategory === cat ? getCategoryColor(cat) : theme.surfaceElevated,
@@ -320,7 +320,7 @@ export function RemindersTool({ onClose, onBackToTools }: { onClose: () => void;
                 >
                   <button
                     onClick={() => handleToggleComplete(reminder.id)}
-                    className="cursor-pointer transition-all"
+                    className="cursor-pointer transition-transform"
                     style={{
                       width: "48px",
                       height: "48px",
@@ -372,7 +372,7 @@ export function RemindersTool({ onClose, onBackToTools }: { onClose: () => void;
                   </div>
                   <button
                     onClick={() => handleDeleteReminder(reminder.id)}
-                    className="cursor-pointer transition-all"
+                    className="cursor-pointer transition-transform"
                     style={{
                       width: "40px",
                       height: "40px",
@@ -421,7 +421,7 @@ export function RemindersTool({ onClose, onBackToTools }: { onClose: () => void;
                 >
                   <button
                     onClick={() => handleToggleComplete(reminder.id)}
-                    className="cursor-pointer transition-all"
+                    className="cursor-pointer transition-transform"
                     style={{
                       width: "48px",
                       height: "48px",
@@ -474,7 +474,7 @@ export function RemindersTool({ onClose, onBackToTools }: { onClose: () => void;
                   </div>
                   <button
                     onClick={() => handleDeleteReminder(reminder.id)}
-                    className="cursor-pointer transition-all"
+                    className="cursor-pointer transition-transform"
                     style={{
                       width: "40px",
                       height: "40px",

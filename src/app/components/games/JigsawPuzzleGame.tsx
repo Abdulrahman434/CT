@@ -238,7 +238,7 @@ export function JigsawPuzzleGame({ onClose, onBackToGames }: { onClose: () => vo
                   key={tile.id}
                   onClick={() => handleTileClick(index)}
                   disabled={tile.id === TILE_COUNT - 1}
-                  className="flex items-center justify-center cursor-pointer transition-all duration-200 active:scale-95 select-none"
+                  className="flex items-center justify-center cursor-pointer transition-transform duration-200 active:scale-95 select-none"
                   style={{
                     backgroundColor: tile.id === TILE_COUNT - 1 ? "transparent" : getTileColor(tile.id),
                     borderRadius: theme.radiusMd,

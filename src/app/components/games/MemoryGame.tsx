@@ -199,7 +199,7 @@ export function MemoryGame({ onClose, onBackToGames }: { onClose: () => void; on
               key={card.id}
               onClick={() => handleCardClick(card.id)}
               disabled={card.isMatched}
-              className="relative overflow-hidden cursor-pointer transition-all duration-300 active:scale-95 select-none"
+              className="relative overflow-hidden cursor-pointer transition-transform duration-300 active:scale-95 select-none"
               style={{
                 width: "160px",
                 height: "160px",

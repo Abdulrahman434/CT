@@ -192,7 +192,7 @@ export function BreathingTool({ onClose, onBackToTools }: { onClose: () => void;
           >
             {/* Animated Circle */}
             <div
-              className="absolute transition-all duration-1000 ease-in-out"
+              className="absolute transition-transform duration-1000 ease-in-out"
               style={{
                 width: "100%",
                 height: "100%",
@@ -365,7 +365,7 @@ export function BreathingTool({ onClose, onBackToTools }: { onClose: () => void;
                 handleReset();
               }}
               disabled={isActive}
-              className="cursor-pointer text-left transition-all"
+              className="cursor-pointer text-left transition-transform"
               style={{
                 padding: "24px",
                 backgroundColor: selectedTechnique.name === tech.name ? theme.surface : theme.surfaceElevated,

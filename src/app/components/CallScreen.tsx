@@ -497,7 +497,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
         <div className="flex items-center gap-4 relative">
           <button
             onClick={onClose}
-            className="flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer absolute"
+            className="flex items-center justify-center hover:scale-105 active:scale-95 transition-transform cursor-pointer absolute"
             style={{
               width: "52px", height: "52px", borderRadius: theme.radiusLg,
               backgroundColor: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)",
@@ -526,7 +526,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
 
         <button 
           onClick={handleSimulateIncoming}
-          className="flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all hover:brightness-110" 
+          className="flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform hover:brightness-110" 
           style={{
             borderRadius: theme.radiusLg, backgroundColor: "rgba(255,255,255,0.1)",
             border: "1px solid rgba(255,255,255,0.15)", padding: "10px 24px 10px 16px", boxShadow: SHADOW.sm,
@@ -577,7 +577,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                   <button
                     key={key}
                     onClick={() => setHistoryTab(key)}
-                    className="flex-1 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                    className="flex-1 flex items-center justify-center gap-2 cursor-pointer transition-transform"
                     style={{
                       padding: "9px 12px", borderRadius: theme.radiusFull,
                       backgroundColor: active ? theme.primary : "transparent",
@@ -732,7 +732,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
             <div className="flex justify-center pt-4 w-full px-6">
               <button
                 onClick={handleDialCustom}
-                className="flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all duration-300"
+                className="flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform duration-300"
                 style={{
                   width: "100%", maxWidth: "320px", height: "72px", borderRadius: theme.radiusFull,
                   backgroundColor: dialInput ? "#22C55E" : theme.borderSubtle,
@@ -811,7 +811,7 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onClick={() => onDial(ext)}
-      className="flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
+      className="flex flex-col items-center justify-center gap-3 cursor-pointer transition-transform"
       style={{
         aspectRatio: "1 / 1",
         padding: "16px 12px",
@@ -970,7 +970,7 @@ function KeypadButton({ digit, onPress }: { digit: string; onPress: (digit: stri
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onClick={() => onPress(digit)}
-      className="flex items-center justify-center cursor-pointer transition-all duration-300"
+      className="flex items-center justify-center cursor-pointer transition-transform duration-300"
       style={{
         width: "88px", height: "88px", borderRadius: theme.radiusFull,
         backgroundColor: pressed ? theme.primary : "rgba(0,0,0,0.03)",

@@ -202,7 +202,7 @@ export function UnitConverterTool({ onClose, onBackToTools }: { onClose: () => v
                 setToUnit(1);
                 setFromValue("0");
               }}
-              className="cursor-pointer transition-all"
+              className="cursor-pointer transition-transform"
               style={{
                 padding: "16px 32px",
                 backgroundColor: category === cat ? theme.primary : theme.surface,

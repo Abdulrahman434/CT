@@ -187,7 +187,7 @@ export function WhiteboardTool({ onClose, onBackToTools }: { onClose: () => void
             <div className="flex flex-col gap-2">
               <button
                 onClick={() => setTool("pen")}
-                className="cursor-pointer transition-all"
+                className="cursor-pointer transition-transform"
                 style={{
                   width: "80px",
                   height: "80px",
@@ -204,7 +204,7 @@ export function WhiteboardTool({ onClose, onBackToTools }: { onClose: () => void
               </button>
               <button
                 onClick={() => setTool("eraser")}
-                className="cursor-pointer transition-all"
+                className="cursor-pointer transition-transform"
                 style={{
                   width: "80px",
                   height: "80px",
@@ -241,7 +241,7 @@ export function WhiteboardTool({ onClose, onBackToTools }: { onClose: () => void
                   <button
                     key={c}
                     onClick={() => setColor(c)}
-                    className="cursor-pointer transition-all"
+                    className="cursor-pointer transition-transform"
                     style={{
                       width: "80px",
                       height: "48px",
@@ -275,7 +275,7 @@ export function WhiteboardTool({ onClose, onBackToTools }: { onClose: () => void
                 <button
                   key={s}
                   onClick={() => setSize(s)}
-                  className="cursor-pointer transition-all"
+                  className="cursor-pointer transition-transform"
                   style={{
                     width: "80px",
                     height: "48px",

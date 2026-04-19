@@ -250,14 +250,14 @@ function QuickTile({
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerLeave}
-      className="flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-[0.92] transition-transform select-none"
+      className="flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-[0.92] select-none"
       style={{
         flex: 1,
         height: "100px",
         borderRadius: t.radiusLg,
         backgroundColor: active ? t.tileActiveBg : t.tileInactiveBg,
         border: "none",
-        transition: "background-color 0.2s",
+        WebkitTapHighlightColor: "transparent",
       }}
     >
       {icon}
@@ -301,7 +301,7 @@ function LanguagePicker({
           <button
             key={opt.key}
             onClick={() => onSelect(opt.key)}
-            className="flex items-center gap-3 w-full cursor-pointer active:scale-[0.98] transition-all"
+            className="flex items-center gap-3 w-full cursor-pointer active:scale-[0.98] transition-transform select-none"
             style={{
               padding: "10px 14px",
               borderRadius: t.radiusLg,
@@ -475,7 +475,7 @@ function DeviceListItem({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-3 w-full cursor-pointer active:scale-[0.97] transition-all"
+      className="flex items-center gap-3 w-full cursor-pointer active:scale-[0.97] transition-transform select-none"
       style={{
         padding: "12px 14px",
         borderRadius: t.radiusLg,

@@ -204,7 +204,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
               if (currentLocale === "en") setLocale("ar");
               else setLocale("en");
             }}
-            className="rounded-full cursor-pointer flex items-center justify-center transition-all active:scale-90"
+            className="rounded-full cursor-pointer flex items-center justify-center transition-transform active:scale-90"
             style={{ 
               backgroundColor: theme.primarySubtle, 
               width: theme.touchTargetMin, 
@@ -222,7 +222,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
         <div className="relative">
           <button
             data-nav="true"
-            className="rounded-full cursor-pointer flex items-center justify-center transition-all active:scale-90"
+            className="rounded-full cursor-pointer flex items-center justify-center transition-transform active:scale-90"
             style={{ 
               backgroundColor: theme.primarySubtle, 
               width: theme.touchTargetMin, 
@@ -298,7 +298,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
         <div className="relative">
           <button
             data-nav="true"
-            className="rounded-full cursor-pointer flex items-center justify-center transition-all active:scale-90"
+            className="rounded-full cursor-pointer flex items-center justify-center transition-transform active:scale-90"
             style={{ 
               backgroundColor: theme.primarySubtle, 
               width: theme.touchTargetMin, 

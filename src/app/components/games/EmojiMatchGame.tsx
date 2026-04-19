@@ -434,7 +434,7 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                   key={index}
                   onClick={() => handleLeftClick(index)}
                   disabled={item.matched}
-                  className="cursor-pointer transition-all duration-200 active:scale-95"
+                  className="cursor-pointer transition-transform duration-200 active:scale-95"
                   style={{
                     width: "200px",
                     height: "140px",
@@ -508,7 +508,7 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                   key={index}
                   onClick={() => handleRightClick(index)}
                   disabled={item.matched}
-                  className="cursor-pointer transition-all duration-200 active:scale-95"
+                  className="cursor-pointer transition-transform duration-200 active:scale-95"
                   style={{
                     width: "200px",
                     height: "140px",

@@ -16,26 +16,34 @@
 /* ─── Touch Interface Fixes ─── */
 * {
   -webkit-tap-highlight-color: transparent !important;
-  -webkit-focus-ring-color: transparent !important;
-  outline: none !important;
+  -webkit-touch-callout: none !important;
 }
 
-button:focus, a:focus, input:focus, select:focus, textarea:focus, div:focus {
+/* Suppress focus rings on touch (re-enabled for keyboard nav via data-nav) */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+div:focus:not(:focus-visible) {
   outline: none !important;
   box-shadow: none !important;
 }
 
-/* Hide persistent focus states on touch */
-@media (hover: none) {
-  button:hover, a:hover {
-    background-color: transparent !important;
+/* ─── Touch-only: neutralize hover states that "stick" after tap ─── */
+@media (hover: none) and (pointer: coarse) {
+  /* Prevent hover brightness/filter from sticking */
+  button:hover,
+  a:hover,
+  [role="button"]:hover,
+  [data-nav="true"]:hover {
+    filter: none !important;
+    -webkit-filter: none !important;
   }
 }
 
-/* Instant active feedback for all buttons without lingering */
-button:active {
-  transform: scale(0.97);
-  transition: transform 0.1s ease;
+/* Prevent user-select and double-tap-zoom issues on touch */
+button, a, [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 /* ─── Seamless Scroll Correction ─── */

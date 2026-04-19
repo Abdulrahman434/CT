@@ -40,7 +40,7 @@ function CompactCard({
       onPointerDown={(e) => { onPointerDown(e); setPressed(true); }}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
-      className="relative overflow-hidden flex-1 flex items-center justify-center gap-2.5 transition-all duration-150 cursor-pointer"
+      className="relative overflow-hidden flex-1 flex items-center justify-center gap-2.5 transition-transform duration-150 cursor-pointer"
       style={{
         backgroundColor: pressed ? theme.surfaceElevated : theme.surface,
         borderRadius: theme.radiusCard,

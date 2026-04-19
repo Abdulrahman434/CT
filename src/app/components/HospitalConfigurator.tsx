@@ -547,7 +547,7 @@ function ConfigCard({
   const { theme: t } = useTheme();
   return (
     <div
-      className="flex items-center gap-3 transition-all"
+      className="flex items-center gap-3 transition-transform"
       style={{
         padding: "14px 16px",
         borderRadius: "16px",

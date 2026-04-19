@@ -1075,7 +1075,7 @@ function AppTile({ app, onTap }: { app: AppItem; onTap: () => void }) {
     <button
       onPointerDown={onPointerDown}
       onClick={onTap}
-      className="relative overflow-hidden flex flex-col items-center gap-3 hover:scale-[1.05] active:scale-[0.94] transition-all duration-200 cursor-pointer"
+      className="relative overflow-hidden flex flex-col items-center gap-3 hover:scale-[1.05] active:scale-[0.94] transition-transform duration-200 cursor-pointer"
     >
       {rippleElements}
       <div
@@ -1344,7 +1344,7 @@ export function AppLauncher({
               <button
                 key={i}
                 onClick={() => setPageIndex(i)}
-                className="transition-all duration-300"
+                className="transition-transform duration-300"
                 style={{
                   width: i === pageIndex ? 24 : 10,
                   height: 10,
@@ -1379,7 +1379,7 @@ export function AppLauncher({
             <button
               key={key}
               onClick={() => setActiveKey(key)}
-              className="flex flex-col items-center justify-center transition-all duration-200 active:scale-90"
+              className="flex flex-col items-center justify-center transition-transform duration-200 active:scale-90"
               style={{
                 width: isActive ? 130 : 90,
                 height: 72,

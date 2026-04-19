@@ -524,7 +524,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
             <div className="shrink-0 flex items-center gap-5 px-12 pt-10 pb-4 relative z-10">
               <button
                 onClick={onClose}
-                className="flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                className="flex items-center justify-center hover:scale-105 active:scale-95 transition-transform cursor-pointer"
                 style={{
                   width: "52px", height: "52px",
                   borderRadius: theme.radiusMd,
@@ -591,7 +591,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
                     <button
                       key={cat.id}
                       onClick={() => { setActiveCategory(cat.id); setSliderIndex(1); }}
-                      className="flex items-center justify-center gap-3 flex-1 cursor-pointer active:scale-95 transition-all"
+                      className="flex items-center justify-center gap-3 flex-1 cursor-pointer active:scale-95 transition-transform"
                       style={{
                         height: "64px",
                         padding: "0 24px",
@@ -671,7 +671,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
                       <button
                         key={i}
                         onClick={() => setSliderIndex(i)}
-                        className="cursor-pointer transition-all active:scale-90"
+                        className="cursor-pointer transition-transform active:scale-90"
                         style={{
                           width: i === clampedSliderIndex ? "28px" : "8px",
                           height: "8px",
@@ -801,7 +801,7 @@ function FoodCarousel({
       {/* Prev arrow */}
       <button
         onClick={isRTL ? goNext : goPrev}
-        className="shrink-0 flex items-center justify-center cursor-pointer active:scale-90 transition-all"
+        className="shrink-0 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
         style={{
           width: "48px",
           height: "48px",
@@ -856,7 +856,7 @@ function FoodCarousel({
       {/* Next arrow */}
       <button
         onClick={isRTL ? goPrev : goNext}
-        className="shrink-0 flex items-center justify-center cursor-pointer active:scale-90 transition-all"
+        className="shrink-0 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
         style={{
           width: "48px",
           height: "48px",
@@ -949,7 +949,7 @@ function FoodCard({
         {isCenter && (
           <button
             onClick={(e) => { e.stopPropagation(); setShowInfo(!showInfo); }}
-            className="absolute flex items-center justify-center cursor-pointer active:scale-90 transition-all"
+            className="absolute flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
             style={{
               top: "10px",
               [isRTL ? "left" : "right"]: "10px",
@@ -1535,7 +1535,7 @@ function OrdersLogStep({ onBack, onClose, onReorder }: {
       <div className="shrink-0 flex items-center gap-5 px-12 pt-10 pb-6 relative z-10">
         <button
           onClick={onBack}
-          className="flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          className="flex items-center justify-center hover:scale-105 active:scale-95 transition-transform cursor-pointer"
           style={{
             width: "52px", height: "52px",
             borderRadius: theme.radiusMd,
@@ -1579,7 +1579,7 @@ function OrdersLogStep({ onBack, onClose, onReorder }: {
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className="flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
+                className="flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"
                 style={{
                   height: "48px",
                   padding: "0 24px",

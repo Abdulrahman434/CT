@@ -308,7 +308,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                 <button
                   key={section.id}
                   onClick={() => handleSectionChange(section.id)}
-                  className="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.98]"
+                  className="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-transform cursor-pointer hover:scale-[1.01] active:scale-[0.98]"
                   style={{
                     backgroundColor: isActive
                       ? "rgba(255,255,255,0.2)"

@@ -212,7 +212,7 @@ export function TicTacToeGame({ onClose, onBackToGames }: { onClose: () => void;
                 key={i}
                 onClick={() => handleClick(i)}
                 disabled={!!square || !!winner}
-                className="flex items-center justify-center cursor-pointer active:scale-95 transition-all duration-200"
+                className="flex items-center justify-center cursor-pointer active:scale-95 transition-transform duration-200"
                 style={{
                   backgroundColor: theme.surface,
                   borderRadius: theme.radiusLg,

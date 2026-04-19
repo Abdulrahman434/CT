@@ -269,7 +269,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
                   {Array.from(new Array(numPages), (el, index) => (
                     <div 
                       key={`thumb_${index + 1}`}
-                      className={`cursor-pointer rounded-lg p-2 border-2 transition-all ${pageNumber === index + 1 ? "border-blue-500 bg-blue-500/10" : "border-transparent hover:bg-white/5"}`}
+                      className={`cursor-pointer rounded-lg p-2 border-2 transition-transform ${pageNumber === index + 1 ? "border-blue-500 bg-blue-500/10" : "border-transparent hover:bg-white/5"}`}
                       onClick={() => setPageNumber(index + 1)}
                     >
                       <div className="flex flex-col items-center gap-2">

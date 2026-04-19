@@ -204,7 +204,7 @@ export function NotesTool({ onClose, onBackToTools }: { onClose: () => void; onB
               <button
                 key={note.id}
                 onClick={() => handleSelectNote(note)}
-                className="cursor-pointer text-left transition-all"
+                className="cursor-pointer text-left transition-transform"
                 style={{
                   padding: "20px",
                   backgroundColor: selectedNote?.id === note.id ? theme.primarySubtle : theme.surface,

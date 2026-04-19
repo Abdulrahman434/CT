@@ -99,7 +99,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
         }}
       >
         <div
-          className="h-full transition-all duration-500 ease-out"
+          className="h-full transition-transform duration-500 ease-out"
           style={{
             width: `${progress}%`,
             backgroundColor: BRAND,
@@ -209,7 +209,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
                 <button
                   key={idx}
                   onClick={() => handleAnswer(question.id, idx)}
-                  className="transition-all duration-200"
+                  className="transition-transform duration-200"
                   style={{
                     width: "140px",
                     height: "140px",
@@ -238,7 +238,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
                     <button
                       key={idx}
                       onClick={() => handleAnswer(question.id, option)}
-                      className="transition-all duration-200"
+                      className="transition-transform duration-200"
                       style={{
                         minWidth: "220px",
                         padding: "20px 32px",
@@ -266,7 +266,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
                       <button
                         key={idx + 4}
                         onClick={() => handleAnswer(question.id, option)}
-                        className="transition-all duration-200"
+                        className="transition-transform duration-200"
                         style={{
                           minWidth: "220px",
                           padding: "20px 32px",
@@ -417,7 +417,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-8 p-3 transition-all duration-200"
+        className="absolute top-8 p-3 transition-transform duration-200"
         style={{
           borderRadius: theme.radiusLg,
           backgroundColor: theme.tileInactiveBg,
@@ -452,7 +452,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
           currentSlide === 8 ? (
             <button
               onClick={handleSubmit}
-              className="flex items-center gap-2 transition-all duration-200"
+              className="flex items-center gap-2 transition-transform duration-200"
               style={{
                 fontFamily: fontFamily,
                 fontSize: TYPE_SCALE.lg,
@@ -476,7 +476,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
           ) : currentSlide === 9 ? (
             <button
               onClick={onClose}
-              className="flex items-center gap-2 transition-all duration-200"
+              className="flex items-center gap-2 transition-transform duration-200"
               style={{
                 fontFamily: fontFamily,
                 fontSize: TYPE_SCALE.lg,
@@ -499,7 +499,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
           ) : (
             <button
               onClick={handleNext}
-              className="flex items-center gap-2 transition-all duration-200"
+              className="flex items-center gap-2 transition-transform duration-200"
               style={{
                 fontFamily: fontFamily,
                 fontSize: TYPE_SCALE.lg,
@@ -525,7 +525,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
           <button
             onClick={handlePrevious}
             disabled={currentSlide === 0 || currentSlide === 9}
-            className="flex items-center gap-2 transition-all duration-200"
+            className="flex items-center gap-2 transition-transform duration-200"
             style={{
               fontFamily: fontFamily,
               fontSize: TYPE_SCALE.lg,
@@ -558,7 +558,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
           {Array.from({ length: totalSlides + 1 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-full transition-all duration-300"
+              className="rounded-full transition-transform duration-300"
               style={{
                 width: i === currentSlide ? "28px" : "8px",
                 height: "8px",
@@ -573,7 +573,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
           <button
             onClick={handlePrevious}
             disabled={currentSlide === 0 || currentSlide === 9}
-            className="flex items-center gap-2 transition-all duration-200"
+            className="flex items-center gap-2 transition-transform duration-200"
             style={{
               fontFamily: fontFamily,
               fontSize: TYPE_SCALE.lg,
@@ -602,7 +602,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
         ) : currentSlide === 8 ? (
           <button
             onClick={handleSubmit}
-            className="flex items-center gap-2 transition-all duration-200"
+            className="flex items-center gap-2 transition-transform duration-200"
             style={{
               fontFamily: fontFamily,
               fontSize: TYPE_SCALE.lg,
@@ -626,7 +626,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
         ) : currentSlide === 9 ? (
           <button
             onClick={onClose}
-            className="flex items-center gap-2 transition-all duration-200"
+            className="flex items-center gap-2 transition-transform duration-200"
             style={{
               fontFamily: fontFamily,
               fontSize: TYPE_SCALE.lg,
@@ -649,7 +649,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
         ) : (
           <button
             onClick={handleNext}
-            className="flex items-center gap-2 transition-all duration-200"
+            className="flex items-center gap-2 transition-transform duration-200"
             style={{
               fontFamily: fontFamily,
               fontSize: TYPE_SCALE.lg,

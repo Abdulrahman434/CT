@@ -157,7 +157,7 @@ function SwipeableRow({
       {/* Swipeable content row */}
       <div
         ref={rowRef}
-        className="relative flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all"
+        className="relative flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform"
         style={{
           padding: "14px 16px",
           borderRadius: "14px",

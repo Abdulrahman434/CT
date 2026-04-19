@@ -428,7 +428,7 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
                     </div>
                     <div className="relative h-2.5 w-full rounded-full overflow-hidden" style={{ backgroundColor: theme.primarySubtle }}>
                         <div 
-                          className="h-full rounded-full transition-all duration-500" 
+                          className="h-full rounded-full transition-transform duration-500" 
                           style={{ 
                             width: '50%', 
                             background: `linear-gradient(90deg, #4ADE80 0%, #FACC15 50%, #EF4444 100%)`,
@@ -691,7 +691,7 @@ function LabResultsSlide({ theme, isExpanded = false }: { theme: any, isExpanded
                 </div>
 
                 <div 
-                  className="mt-2.5 flex items-center justify-center gap-2 self-start px-4 py-2 pointer-events-none border transition-all" 
+                  className="mt-2.5 flex items-center justify-center gap-2 self-start px-4 py-2 pointer-events-none border transition-transform" 
                   style={{ borderRadius: theme.radiusLg, backgroundColor: theme.surface, borderColor: `${theme.primary}40` }}
                 >
                   <FileText size={isExpanded ? 16 : 14} style={{ color: theme.primary }} />
@@ -728,7 +728,7 @@ function PdfViewerModal({ url, title, onClose }: { url: string; title: string; o
         <button
           onClick={(e) => { e.stopPropagation(); onClose(); }}
           data-nav="true"
-          className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer"
+          className="w-9 h-9 rounded-full flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer"
           style={{ backgroundColor: theme.surfaceAlt }}
         >
           <X size={18} style={{ color: theme.textMuted }} />
@@ -795,7 +795,7 @@ function ImagingSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
                   lineHeight: "1.4"
                 }}>{t(img.summaryKey)}</p>
                 <div 
-                  className="mt-2.5 flex items-center justify-center gap-2 self-start px-4 py-2 pointer-events-none border transition-all" 
+                  className="mt-2.5 flex items-center justify-center gap-2 self-start px-4 py-2 pointer-events-none border transition-transform" 
                   style={{ borderRadius: theme.radiusLg, backgroundColor: theme.surface, borderColor: `${theme.primary}40` }}
                 >
                   <FileText size={isExpanded ? 16 : 14} style={{ color: theme.primary }} />
@@ -1021,7 +1021,7 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
           <div className="mt-6 pt-2 border-t border-dashed" style={{ borderColor: theme.borderSubtle }}>
             <button
               onClick={() => setShowPdf(true)}
-              className="flex items-center justify-center gap-2 w-full py-3 border transition-all hover:scale-[1.01] active:scale-98"
+              className="flex items-center justify-center gap-2 w-full py-3 border transition-transform hover:scale-[1.01] active:scale-98"
               style={{ borderRadius: theme.radiusLg, borderColor: `${theme.primary}40`, backgroundColor: theme.surface, cursor: 'pointer' }}
             >
               <FileText size={18} style={{ color: theme.primary }} />
@@ -1043,7 +1043,7 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
            
            <button
              onClick={() => setShowPayment(true)}
-             className="flex items-center justify-center gap-2 w-full py-4 shadow-lg transition-all hover:scale-[1.01] active:scale-[0.96]"
+             className="flex items-center justify-center gap-2 w-full py-4 shadow-lg transition-transform hover:scale-[1.01] active:scale-[0.96]"
              style={{ backgroundColor: theme.primary, cursor: 'pointer', borderRadius: theme.radiusLg }}
            >
              <CreditCard size={18} style={{ color: "#fff" }} />
@@ -1149,7 +1149,7 @@ function HospitalInvoiceOverlay({ theme, onClose }: { theme: any, onClose: () =>
               </p>
             </div>
             <button 
-              className="px-8 py-3 flex items-center gap-3 text-white shadow-xl hover:scale-105 active:scale-95 transition-all"
+              className="px-8 py-3 flex items-center gap-3 text-white shadow-xl hover:scale-105 active:scale-95 transition-transform"
               style={{ backgroundColor: theme.primary, borderRadius: theme.radiusLg }}
             >
               <FileText size={20} />
@@ -1246,7 +1246,7 @@ function PaymentPortal({ theme, onClose, amount }: { theme: any, onClose: () => 
 
                <button 
                 onClick={handlePay}
-                className="w-full py-4 shadow-xl transition-all hover:brightness-110 active:scale-95 mt-2"
+                className="w-full py-4 shadow-xl transition-transform hover:brightness-110 active:scale-95 mt-2"
                 style={{ backgroundColor: theme.primary, borderRadius: theme.radiusLg }}
                >
                  <span className="text-white font-bold text-lg">Pay Securely</span>
@@ -1279,7 +1279,7 @@ function PaymentPortal({ theme, onClose, amount }: { theme: any, onClose: () => 
              </div>
              <button 
               onClick={onClose}
-              className="px-12 py-4 rounded-xl font-bold transition-all hover:scale-105"
+              className="px-12 py-4 rounded-xl font-bold transition-transform hover:scale-105"
               style={{ backgroundColor: theme.surfaceAlt, color: theme.textHeading }}
              >
                Return to Hub
@@ -1691,7 +1691,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
             key={s.key}
             data-nav="true"
             onClick={() => handleManualNav(i + 1)}
-            className="rounded-full transition-all duration-300 cursor-pointer"
+            className="rounded-full transition-transform duration-300 cursor-pointer"
             style={{
               width: i === realIndex ? "20px" : "6px",
               height: "6px",
@@ -1788,7 +1788,7 @@ export function CareMeExpanded({ onClose }: { onClose: () => void }) {
         <div className="flex items-center gap-4 relative">
           <button
             onClick={onClose}
-            className="flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer absolute"
+            className="flex items-center justify-center hover:scale-105 active:scale-95 transition-transform cursor-pointer absolute"
             style={{
               width: "52px",
               height: "52px",
