@@ -276,6 +276,7 @@ const translations: Record<string, TranslationEntry> = {
   "settings.wifi": { en: "Wi-Fi", ar: "واي فاي", ur: "وائی فائی" },
   "settings.bluetooth": { en: "Bluetooth", ar: "بلوتوث", ur: "بلوٹوتھ" },
   "settings.cast": { en: "Cast", ar: "عرض الشاشة", ur: "کاسٹ" },
+  "settings.castScreen": { en: "Cast Screen", ar: "مشاركة الشاشة", ur: "کاسٹ سکرین" },
   "settings.dnd": { en: "DND", ar: "عدم الإزعاج", ur: "پریشان نہ کریں" },
   "settings.nightLight": { en: "Night Light", ar: "ضوء ليلي", ur: "نائٹ لائٹ" },
   "settings.darkMode": { en: "Dark Mode", ar: "الوضع الداكن", ur: "ڈارک موڈ" },
