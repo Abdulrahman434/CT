@@ -126,7 +126,7 @@ function BedsideScreen() {
       if (status.current !== Prayer.None && status.current !== lastPrayerRef.current) {
         // TRICK: Only trigger if the previous one wasn't None (prevents double trigger on load)
         // OR if it's the first time we detect any prayer (which always happens on load)
-        if (lastPrayerRef.current !== Prayer.None && status.current !== Prayer.Asr) {
+        if (lastPrayerRef.current !== Prayer.None) {
           handlePrayerTimeReached(status.current);
         }
         lastPrayerRef.current = status.current;

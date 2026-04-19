@@ -1579,6 +1579,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
 
   return (
     <div 
+      dir="ltr"
       className="flex flex-col overflow-hidden relative select-none flex-1 min-h-0"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -1593,7 +1594,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between shrink-0" style={{ padding: "22px 22px 12px 22px" }}>
+      <div dir={dir} className="flex items-center justify-between shrink-0" style={{ padding: "22px 22px 12px 22px" }}>
         <div className="flex items-center gap-2">
           <HeartIcon />
           <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.sectionTitle, color: theme.textHeading }}>CareMe</span>
@@ -1669,7 +1670,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
       <div style={{ height: "4px" }} />
 
       {/* Slide Title */}
-      <div className="flex items-center gap-2 shrink-0" style={{ padding: "0 22px" }}>
+      <div dir={dir} className="flex items-center gap-2 shrink-0" style={{ padding: "0 22px" }}>
         <SlideIcon slideKey={activeSlide.key} />
         <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.subtitle, color: theme.primary }}>{t(activeSlide.titleKey)}</span>
         <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted, marginLeft: "auto" }}>
