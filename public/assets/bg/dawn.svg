@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF6E7"></stop>
+      <stop offset="45%" stop-color="#FAE4B8"></stop>
+      <stop offset="70%" stop-color="#F5B72A" stop-opacity="0.55"></stop>
+      <stop offset="100%" stop-color="#1B2A5B" stop-opacity="0.3"></stop>
+    </linearGradient>
+    <radialGradient id="sun" cx="78%" cy="32%" r="38%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"></stop>
+      <stop offset="25%" stop-color="#FDE9B4" stop-opacity="0.95"></stop>
+      <stop offset="60%" stop-color="#F5B72A" stop-opacity="0.35"></stop>
+      <stop offset="100%" stop-color="#F5B72A" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="mist" cx="25%" cy="75%" r="55%">
+      <stop offset="0%" stop-color="#6CC4E0" stop-opacity="0.45"></stop>
+      <stop offset="100%" stop-color="#6CC4E0" stop-opacity="0"></stop>
+    </radialGradient>
+    <filter id="bb"><feGaussianBlur stdDeviation="60"></feGaussianBlur></filter>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#sky)"></rect>
+  <rect width="1920" height="1080" fill="url(#sun)" filter="url(#bb)"></rect>
+  <rect width="1920" height="1080" fill="url(#mist)" filter="url(#bb)"></rect>
+  
+  <line x1="0" y1="720" x2="1920" y2="720" stroke="#1B2A5B" stroke-width="1" opacity="0.1"></line>
+</svg>

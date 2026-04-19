@@ -92,6 +92,7 @@ function BedsideScreen() {
     }
   });
   const [showConfigurator, setShowConfigurator] = useState(false);
+
   const [showCareMeExpanded, setShowCareMeExpanded] = useState(false);
   const [showCall, setShowCall] = useState(false);
   const [showFoodOrder, setShowFoodOrder] = useState(false);
@@ -721,6 +722,8 @@ function BedsideScreen() {
           </div>
         )}
       </div>
+
+
 
       {/* Survey Modal */}
       {showSurvey && (

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "./AuthContext";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Play, X } from "lucide-react";
 import careinnLogo from "../../assets/careinn-logo.png";
 import heroImage from "../../assets/careinn-hero.jpg";
 
@@ -21,6 +21,7 @@ export function PasswordGate() {
   const [error, setError] = useState(false);
   const [shaking, setShaking] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showSlideshow, setShowSlideshow] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -283,6 +284,42 @@ export function PasswordGate() {
                 Sign in
               </button>
             </form>
+
+            {/* ─── Welcome Slideshow Button ─── */}
+            <button
+              type="button"
+              onClick={() => setShowSlideshow(true)}
+              style={{
+                width: "100%",
+                height: "44px",
+                marginTop: "14px",
+                border: `1.5px solid ${SKY}`,
+                borderRadius: "10px",
+                background: "transparent",
+                color: SKY,
+                fontSize: "14px",
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                letterSpacing: "0.3px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = `${SKY}12`;
+                e.currentTarget.style.borderColor = "#5BB8D6";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = SKY;
+              }}
+            >
+              <Play size={16} />
+              Welcome Slideshow
+            </button>
           </div>
         </div>
 
@@ -301,6 +338,56 @@ export function PasswordGate() {
           Hospital Bedside Companion by CareInn &copy; {new Date().getFullYear()}
         </div>
       </div>
+
+      {/* ─── Welcome Slideshow Overlay ─── */}
+      {showSlideshow && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 100000,
+            background: "#000",
+            animation: "slideshowIn 0.35s ease-out both",
+          }}
+        >
+          <button
+            onClick={() => setShowSlideshow(false)}
+            style={{
+              position: "absolute",
+              top: "24px",
+              right: "24px",
+              zIndex: 100001,
+              width: "48px",
+              height: "48px",
+              borderRadius: "50%",
+              border: "none",
+              background: "rgba(255,255,255,0.12)",
+              color: "#FFF",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "background 0.2s ease",
+              backdropFilter: "blur(8px)",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.25)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; }}
+            title="Close Slideshow"
+          >
+            <X size={22} />
+          </button>
+          <iframe
+            src="/CareInn%20Welcome%20Slideshow.html"
+            style={{
+              width: "100%",
+              height: "100%",
+              border: "none",
+            }}
+            allow="fullscreen"
+            title="CareInn Welcome Slideshow"
+          />
+        </div>
+      )}
 
       {/* CSS animations */}
       <style>{`
@@ -327,6 +414,11 @@ export function PasswordGate() {
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-4px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideshowIn {
+          from { opacity: 0; transform: scale(1.03); }
+          to { opacity: 1; transform: scale(1); }
         }
       `}</style>
     </div>

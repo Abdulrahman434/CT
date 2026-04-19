@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>CareInn — Welcome Slideshow</title>
+<meta name="viewport" content="width=1920, initial-scale=1" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Poppins','Mulish',sans-serif; }
+
+  .slideshow {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .slide img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  /* Navigation overlay */
+  .nav-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+  }
+  .nav-zone {
+    flex: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-zone:hover { background: rgba(255,255,255,0.02); }
+
+  /* Bottom bar */
+  .bottom-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(12px);
+    border-radius: 999px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    user-select: none;
+  }
+  .bottom-bar.visible { opacity: 1; }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  .dot.active {
+    background: #6CC4E0;
+    width: 24px;
+    border-radius: 4px;
+  }
+
+  .counter {
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+    min-width: 50px;
+    text-align: center;
+  }
+
+  .nav-btn {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  .nav-btn:hover { color: #FFF; background: rgba(255,255,255,0.1); }
+  .nav-btn svg { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+
+<div class="slideshow" id="slideshow"></div>
+
+<div class="nav-overlay">
+  <div class="nav-zone" id="prev-zone"></div>
+  <div class="nav-zone" style="pointer-events:none"></div>
+  <div class="nav-zone" id="next-zone"></div>
+</div>
+
+<div class="bottom-bar" id="bottom-bar">
+  <button class="nav-btn" id="btn-prev" title="Previous">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div id="dots"></div>
+  <span class="counter" id="counter">1 / 10</span>
+  <button class="nav-btn" id="btn-next" title="Next">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+</div>
+
+<script>
+(function() {
+  const TOTAL = 10;
+  const SLIDES = [];
+  for (let i = 1; i <= TOTAL; i++) {
+    SLIDES.push('assets/welcome-slides/image-' + i + '-1.png');
+  }
+
+  let current = 0;
+  let hideTimer = null;
+  const container = document.getElementById('slideshow');
+  const dotsEl = document.getElementById('dots');
+  const counterEl = document.getElementById('counter');
+  const bar = document.getElementById('bottom-bar');
+
+  // Build slides
+  SLIDES.forEach(function(src, i) {
+    const div = document.createElement('div');
+    div.className = 'slide' + (i === 0 ? ' active' : '');
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = 'Slide ' + (i + 1);
+    img.draggable = false;
+    div.appendChild(img);
+    container.appendChild(div);
+  });
+
+  // Build dots
+  dotsEl.style.display = 'flex';
+  dotsEl.style.gap = '6px';
+  dotsEl.style.alignItems = 'center';
+  for (let i = 0; i < TOTAL; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', function() { goTo(i); });
+    dotsEl.appendChild(dot);
+  }
+
+  function goTo(idx) {
+    if (idx < 0 || idx >= TOTAL) return;
+    const slides = container.querySelectorAll('.slide');
+    const dots = dotsEl.querySelectorAll('.dot');
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = idx;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+    counterEl.textContent = (current + 1) + ' / ' + TOTAL;
+    flashBar();
+  }
+
+  function flashBar() {
+    bar.classList.add('visible');
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(function() {
+      bar.classList.remove('visible');
+    }, 2500);
+  }
+
+  // Navigation
+  document.getElementById('prev-zone').addEventListener('click', function() { goTo(current - 1); });
+  document.getElementById('next-zone').addEventListener('click', function() { goTo(current + 1); });
+  document.getElementById('btn-prev').addEventListener('click', function() { goTo(current - 1); });
+  document.getElementById('btn-next').addEventListener('click', function() { goTo(current + 1); });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { goTo(current + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft') { goTo(current - 1); e.preventDefault(); }
+    else if (e.key === 'Home') { goTo(0); e.preventDefault(); }
+    else if (e.key === 'End') { goTo(TOTAL - 1); e.preventDefault(); }
+  });
+
+  document.addEventListener('mousemove', flashBar);
+
+  // Show bar initially
+  flashBar();
+})();
+</script>
+</body>
+</html>

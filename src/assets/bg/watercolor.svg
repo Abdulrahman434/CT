@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="1.8" numOctaves="2" seed="3"></feTurbulence>
+      <feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.09 0"></feColorMatrix>
+      <feComposite in2="SourceGraphic" operator="in"></feComposite>
+    </filter>
+    <filter id="smear">
+      <feTurbulence type="fractalNoise" baseFrequency="0.008" numOctaves="3" seed="7"></feTurbulence>
+      <feDisplacementMap in="SourceGraphic" scale="200"></feDisplacementMap>
+      <feGaussianBlur stdDeviation="30"></feGaussianBlur>
+    </filter>
+  </defs>
+  <rect width="1920" height="1080" fill="#F6F1E4" opacity="0.3"></rect>
+  <g filter="url(#smear)" opacity="0.7">
+    <ellipse cx="400" cy="300" rx="500" ry="340" fill="#1B2A5B" opacity="0.18"></ellipse>
+    <ellipse cx="1550" cy="220" rx="420" ry="280" fill="#F5B72A" opacity="0.45"></ellipse>
+    <ellipse cx="1720" cy="880" rx="520" ry="380" fill="#6CC4E0" opacity="0.35"></ellipse>
+    <ellipse cx="350" cy="900" rx="480" ry="340" fill="#E05A3B" opacity="0.28"></ellipse>
+    <ellipse cx="960" cy="540" rx="600" ry="320" fill="#FFFFFF" opacity="0.7"></ellipse>
+  </g>
+  <rect width="1920" height="1080" fill="#1B2A5B" filter="url(#grain)" opacity="0.15"></rect>
+</svg>
