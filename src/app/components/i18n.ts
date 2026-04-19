@@ -282,6 +282,13 @@ const translations: Record<string, TranslationEntry> = {
   "settings.darkMode": { en: "Dark Mode", ar: "الوضع الداكن", ur: "ڈارک موڈ" },
   "settings.language": { en: "Language", ar: "اللغة", ur: "زبان" },
   "settings.language.select": { en: "Select your preferred display language", ar: "اختر لغة العرض المفضلة", ur: "اپنی پسندیدہ زبان منتخب کریں" },
+  "settings.disconnect": { en: "Disconnect", ar: "قطع الاتصال", ur: "منقطع کریں" },
+  "settings.stopCasting": { en: "Stop Casting", ar: "إيقاف العرض", ur: "کاسٹنگ بند کریں" },
+  "wifi.connected": { en: "Connected", ar: "متصل", ur: "منسلک" },
+  "bt.searchDevices": { en: "Search Devices", ar: "البحث عن أجهزة", ur: "آلات تلاش کریں" },
+  "bt.paired": { en: "Paired Devices", ar: "الأجهزة المقترنة", ur: "جوڑا بنائے گئے آلات" },
+  "bt.pairedStatus": { en: "Paired", ar: "مقترن", ur: "جوڑا بن گیا" },
+  "bt.available": { en: "Available Devices", ar: "الأجهزة المتاحة", ur: "دستیاب آلات" },
   /* ─── Care Team Only (formerly Admin) ─── */
   "settings.careTeam": { en: "Care Team", ar: "فريق الرعاية", ur: "کیئر ٹیم" },
   "settings.careTeam.subtitle": { en: "PIN required", ar: "رمز الدخول مطلوب", ur: "پن درکار ہے" },
