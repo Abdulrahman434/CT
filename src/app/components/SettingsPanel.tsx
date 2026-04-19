@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
+import { useAuth } from "./AuthContext";
 import { CareTeamInterface } from "./CareTeamInterface";
 import type { Locale } from "./i18n";
 import imgMosque from "../../assets/b51acb5e2ec4a2c930572c53103b020b12e76ee2.png";
@@ -1511,6 +1512,7 @@ export function SettingsPanel({
 }) {
   const { theme: t, darkMode, setDarkMode, castDevice, setCastDevice, locale: currentLocale, setLocale, prayerAlarm, setPrayerAlarm } = useTheme();
   const { t: tr, isRTL, fontFamily, locale } = useLocale();
+  const { logout } = useAuth();
 
   const [brightness, setBrightness] = useState(80);
   const [volume, setVolume] = useState(60);
@@ -1870,7 +1872,10 @@ export function SettingsPanel({
       {showClearConfirm && (
         <ClearDataDialog
           onClose={() => setShowClearConfirm(false)}
-          onConfirm={() => setShowClearConfirm(false)}
+          onConfirm={() => {
+            setShowClearConfirm(false);
+            logout();
+          }}
         />
       )}
 
