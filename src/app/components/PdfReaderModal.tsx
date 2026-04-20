@@ -132,7 +132,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
     const ro = new ResizeObserver(calc);
     ro.observe(scrollRef.current);
     return () => ro.disconnect();
-  }, [pageDims, zoomMode, rotation, showSidebar, railVisible]);
+  }, [pageDims, zoomMode, rotation, showSidebar]);
 
   // ═══════════════════════════════════════════════════════════
   // Canvas Rendering
