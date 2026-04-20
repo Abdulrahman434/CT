@@ -35,6 +35,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const isProgrammaticScroll = useRef(false);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentPageRef = useRef(1);
 
   // Load saved page on mount or source change
   useEffect(() => {
@@ -93,6 +94,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
       localStorage.setItem(`pdf_page_${pdfSource}`, page.toString());
     }
     scrollToPage(page);
+    currentPageRef.current = page;
   }, [pdfSource, scrollToPage]);
 
   // Track visible page via scroll position
@@ -102,7 +104,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
     const container = scrollContainerRef.current;
     const containerTop = container.scrollTop;
     const containerHeight = container.clientHeight;
-    const viewMidpoint = containerTop + containerHeight * 0.35; // Read at ~35% from top
+    const viewMidpoint = containerTop + containerHeight * 0.35;
     
     let closestPage = 1;
     let minDist = Infinity;
@@ -117,14 +119,15 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
       }
     });
     
-    if (closestPage !== pageNumber) {
+    if (closestPage !== currentPageRef.current) {
+      currentPageRef.current = closestPage;
       setPageNumber(closestPage);
       setInputPage(closestPage.toString());
       if (pdfSource) {
         localStorage.setItem(`pdf_page_${pdfSource}`, closestPage.toString());
       }
     }
-  }, [numPages, pageNumber, pdfSource]);
+  }, [numPages, pdfSource]);
 
   // Scroll to saved page once document loads
   useEffect(() => {
@@ -350,20 +353,37 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
             <div className="flex-1 overflow-y-auto p-4 pdf-sidebar-scroll">
               {sidebarTab === 'pages' ? (
                 <div className="space-y-4">
-                  {Array.from(new Array(numPages), (el, index) => (
-                    <div 
-                      key={`thumb_${index + 1}`}
-                      className={`cursor-pointer rounded-lg p-2 border-2 transition-all ${pageNumber === index + 1 ? "border-blue-500 bg-blue-500/10" : "border-transparent hover:bg-white/5"}`}
-                      onClick={() => navigateToPage(index + 1)}
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Document file={{ url: pdfSource }} loading={null}>
-                          <Page pageNumber={index + 1} width={220} renderTextLayer={false} renderAnnotationLayer={false} loading="" />
-                        </Document>
-                        <span className="text-xs text-white/50">{index + 1}</span>
+                  {Array.from(new Array(numPages), (el, index) => {
+                    const pg = index + 1;
+                    const isActive = pageNumber === pg;
+                    return (
+                      <div 
+                        key={`thumb_${pg}`}
+                        className={`cursor-pointer rounded-lg p-2 border-2 transition-all ${isActive ? "border-blue-500 bg-blue-500/10" : "border-transparent hover:bg-white/5"}`}
+                        onClick={() => navigateToPage(pg)}
+                      >
+                        <div className="flex flex-col items-center gap-2">
+                          <div 
+                            style={{ 
+                              width: "220px", 
+                              height: "310px", 
+                              backgroundColor: "#3a3d3f",
+                              borderRadius: "4px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              border: isActive ? "none" : "1px solid rgba(255,255,255,0.08)",
+                            }}
+                          >
+                            <span style={{ fontSize: "48px", fontWeight: 700, color: isActive ? "#60a5fa" : "rgba(255,255,255,0.15)" }}>
+                              {pg}
+                            </span>
+                          </div>
+                          <span className="text-xs" style={{ color: isActive ? "#60a5fa" : "rgba(255,255,255,0.5)", fontWeight: isActive ? 700 : 400 }}>{pg}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="space-y-2">
