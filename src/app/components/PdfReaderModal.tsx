@@ -66,6 +66,8 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
   const thumbRendered = useRef<Set<number>>(new Set());
   const visiblePages = useRef<Set<number>>(new Set());
   const activeThumbRef = useRef<HTMLDivElement>(null);
+  const searchQueryRef = useRef("");
+  const highlightRef = useRef<(pg: number) => void>(() => {});
   const currentPageRef = useRef(1);
   const scaleRef = useRef(1.0);
   const rotationRef = useRef(0);
@@ -179,12 +181,85 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
         wrapper.querySelectorAll("canvas").forEach((c: any) => c.remove());
         wrapper.appendChild(canvas);
         renderedKeys.current.add(key);
+        // Apply search highlights if active
+        if (searchQueryRef.current) highlightRef.current(pg);
       }
     } catch (e: any) {
       if (e?.name === "RenderingCancelledException") return;
       renderTasks.current.delete(pg);
     }
   }, []);
+
+  // ═══════════════════════════════════════════════════════════
+  // On-Page Search Highlighting
+  // ═══════════════════════════════════════════════════════════
+  const highlightSearchOnPage = useCallback(async (pg: number) => {
+    const doc = docRef.current;
+    const wrapper = pageWrappers.current.get(pg);
+    if (!doc || !wrapper) return;
+
+    // Remove old highlights
+    wrapper.querySelectorAll(".search-hl").forEach(el => el.remove());
+
+    const q = searchQueryRef.current;
+    if (!q) return;
+
+    try {
+      const page = await doc.getPage(pg);
+      const s = scaleRef.current;
+      const r = rotationRef.current;
+      const vp = page.getViewport({ scale: s, rotation: r });
+      const tc = await page.getTextContent();
+
+      tc.items.forEach((item: any) => {
+        if (!item.str) return;
+        const text = item.str;
+        const qLower = q.toLowerCase();
+        let searchIdx = 0;
+
+        while ((searchIdx = text.toLowerCase().indexOf(qLower, searchIdx)) !== -1) {
+          // item.transform = [scaleX, skewX, skewY, scaleY, x, y]
+          const tx = pdfjsLib.Util.transform(vp.transform, item.transform);
+          const charWidth = (item.width || 0) * s;
+          const itemHeight = (item.height || 12) * s;
+          const matchFraction = searchIdx / Math.max(text.length, 1);
+          const matchLen = q.length / Math.max(text.length, 1);
+
+          const hlDiv = document.createElement("div");
+          hlDiv.className = "search-hl";
+          Object.assign(hlDiv.style, {
+            position: "absolute",
+            left: `${tx[4] + charWidth * matchFraction}px`,
+            top: `${tx[5] - itemHeight}px`,
+            width: `${charWidth * matchLen}px`,
+            height: `${itemHeight + 2}px`,
+            backgroundColor: "rgba(250, 204, 21, 0.4)",
+            borderRadius: "2px",
+            pointerEvents: "none",
+            zIndex: "5",
+            mixBlendMode: "multiply",
+          });
+          wrapper.appendChild(hlDiv);
+          searchIdx += q.length;
+        }
+      });
+    } catch {}
+  }, []);
+
+  // Keep ref in sync
+  highlightRef.current = highlightSearchOnPage;
+
+  // Apply highlights when search results change
+  useEffect(() => {
+    searchQueryRef.current = searchQuery;
+    if (searchResults.length > 0) {
+      // Highlight on all currently rendered pages
+      pageWrappers.current.forEach((_, pg) => highlightSearchOnPage(pg));
+    } else {
+      // Clear all highlights
+      pageWrappers.current.forEach(w => w.querySelectorAll(".search-hl").forEach(el => el.remove()));
+    }
+  }, [searchResults, searchQuery, highlightSearchOnPage]);
 
   // ═══════════════════════════════════════════════════════════
   // IntersectionObserver — virtual rendering
