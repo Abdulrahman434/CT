@@ -354,7 +354,11 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
     if (pdfSource) localStorage.setItem(`pdf_pg_${pdfSource}`, String(p));
     const el = pageWrappers.current.get(p);
     if (el && scrollRef.current) {
-      scrollRef.current.scrollTo({ top: el.offsetTop - 8, behavior: scrollEnabled ? "smooth" : "auto" });
+      if (scrollEnabled) {
+        scrollRef.current.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
+      } else {
+        scrollRef.current.scrollTop = el.offsetTop - 8;
+      }
     }
   }, [numPages, pdfSource, scrollEnabled]);
 
@@ -618,9 +622,9 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
       {/* ═══ MAIN PDF AREA ═══ */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto overflow-x-auto pdf-main"
+        className={`flex-1 overflow-x-auto pdf-main ${scrollEnabled ? "overflow-y-auto" : "overflow-y-hidden"}`}
         onScroll={handleScroll}
-        style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" } as any}
+        style={{ WebkitOverflowScrolling: scrollEnabled ? "touch" : "auto", overscrollBehavior: "contain" } as any}
       >
         {loading ? (
           <div className="flex flex-col items-center justify-center h-full gap-4" style={{ color: "#fff" }}>
