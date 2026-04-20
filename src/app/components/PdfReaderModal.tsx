@@ -159,7 +159,6 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
         .pdf-btn:hover{background:rgba(255,255,255,.1)}
         .pdf-btn:active{background:rgba(255,255,255,.15);transform:scale(.95)}
         .react-pdf__Page{box-shadow:0 2px 20px rgba(0,0,0,.35);background:#fff!important}
-        .react-pdf__Document{display:flex;flex-direction:column;align-items:center}
         .pdf-side::-webkit-scrollbar{width:6px}
         .pdf-side::-webkit-scrollbar-track{background:transparent}
         .pdf-side::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:3px}
@@ -204,10 +203,11 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
         ) : (
           <Document
             file={{ url: pdfSource }}
+            className="flex-1 flex flex-row overflow-hidden w-full h-full"
             onLoadSuccess={onLoadSuccess}
             onLoadError={(err) => console.error("PDF load error", err)}
             loading={
-              <div className="flex-1 flex flex-col items-center justify-center gap-4" style={{ color: "#fff" }}>
+              <div className="flex-1 flex flex-col items-center justify-center gap-4 w-full h-full" style={{ color: "#fff" }}>
                 <Loader2 className="animate-spin text-blue-400" size={56} />
                 <span style={{ fontSize: 16, fontWeight: 500, opacity: .7 }}>Loading…</span>
               </div>
