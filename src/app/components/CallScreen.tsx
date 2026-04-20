@@ -680,13 +680,13 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
              <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>{t("call.keypadHint")}</span>
           </div>
 
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{
+          <div className="flex-1 flex flex-col justify-center min-h-0 overflow-hidden pb-4" style={{
             backgroundColor: theme.surface, borderRadius: theme.radiusXl, boxShadow: SHADOW.xl,
             minWidth: 0,
           }}>
 
           {/* Display */}
-          <div className="shrink-0 flex items-center justify-center px-5 pt-[14px] pb-1" style={{ minHeight: "60px" }}>
+          <div className="shrink-0 flex items-center justify-center px-5 mb-4" style={{ minHeight: "60px" }}>
             <span style={{
               fontFamily: theme.fontFamilyMono, fontSize: "48px", fontWeight: WEIGHT.bold,
               color: dialInput ? theme.primary : theme.textDisabled,
@@ -699,7 +699,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* Keypad grid */}
-          <div dir="ltr" className="flex-1 flex flex-col justify-center items-center px-4 pb-4 gap-3">
+          <div dir="ltr" className="flex flex-col justify-center items-center px-4 gap-3">
             {[["1","2","3"],["4","5","6"],["7","8","9"]].map((row, ri) => (
               <div key={ri} className="flex gap-3 justify-center">
                 {row.map((digit) => (
