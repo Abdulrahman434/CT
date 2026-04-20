@@ -68,6 +68,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
   const activeThumbRef = useRef<HTMLDivElement>(null);
   const searchQueryRef = useRef("");
   const highlightRef = useRef<(pg: number) => void>(() => {});
+  const touchStartY = useRef(0);
   const currentPageRef = useRef(1);
   const scaleRef = useRef(1.0);
   const rotationRef = useRef(0);
@@ -354,13 +355,42 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
     if (pdfSource) localStorage.setItem(`pdf_pg_${pdfSource}`, String(p));
     const el = pageWrappers.current.get(p);
     if (el && scrollRef.current) {
+      const c = scrollRef.current;
       if (scrollEnabled) {
-        scrollRef.current.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
+        c.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
       } else {
-        scrollRef.current.scrollTop = el.offsetTop - 8;
+        // Temporarily allow scroll, set position, re-lock
+        c.style.overflowY = "auto";
+        c.scrollTop = el.offsetTop - 8;
+        requestAnimationFrame(() => { c.style.overflowY = "hidden"; });
       }
     }
   }, [numPages, pdfSource, scrollEnabled]);
+
+  // Page step for arrow navigation (2 in two-page view)
+  const pageStep = viewMode === "two" ? 2 : 1;
+
+  // ═══════════════════════════════════════════════════════════
+  // Swipe-to-Navigate (when scrolling disabled)
+  // ═══════════════════════════════════════════════════════════
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    if (scrollEnabled) return;
+    touchStartY.current = e.touches[0].clientY;
+  }, [scrollEnabled]);
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (scrollEnabled) return;
+    const dy = touchStartY.current - e.changedTouches[0].clientY;
+    const threshold = 40; // min px to count as swipe
+    if (Math.abs(dy) < threshold) return;
+    if (dy > 0) {
+      // Swipe up → next page
+      goTo(currentPageRef.current + pageStep);
+    } else {
+      // Swipe down → prev page
+      goTo(currentPageRef.current - pageStep);
+    }
+  }, [scrollEnabled, goTo, pageStep]);
 
   const zoomTo = useCallback((mode: string, s?: number) => {
     setZoomMode(mode);
@@ -624,6 +654,8 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
         ref={scrollRef}
         className={`flex-1 overflow-x-auto pdf-main ${scrollEnabled ? "overflow-y-auto" : "overflow-y-hidden"}`}
         onScroll={handleScroll}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
         style={{ WebkitOverflowScrolling: scrollEnabled ? "touch" : "auto", overscrollBehavior: "contain" } as any}
       >
         {loading ? (
@@ -738,11 +770,11 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
               {currentPage}
             </button>
             <span style={{ fontSize: 12, color: "#8A8A8A", lineHeight: 1.2, marginTop: 2, marginBottom: 2 }}>{numPages || "–"}</span>
-            <button className="rail-btn" onClick={() => goTo(currentPage - 1)} disabled={currentPage <= 1}
+            <button className="rail-btn" onClick={() => goTo(currentPage - pageStep)} disabled={currentPage <= 1}
               style={{ opacity: currentPage <= 1 ? .25 : 1 }}>
               <ChevronUp size={22} />
             </button>
-            <button className="rail-btn" onClick={() => goTo(currentPage + 1)} disabled={currentPage >= numPages}
+            <button className="rail-btn" onClick={() => goTo(currentPage + pageStep)} disabled={currentPage >= numPages}
               style={{ opacity: currentPage >= numPages ? .25 : 1 }}>
               <ChevronDown size={22} />
             </button>
