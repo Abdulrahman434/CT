@@ -4,7 +4,7 @@ import {
   X, ChevronUp, ChevronDown, ZoomIn, ZoomOut,
   Bookmark, RotateCw, Search, Loader2,
   LayoutGrid, Check, Maximize, Minimize2,
-  FileText, ScrollText, Eye, Monitor,
+  FileText, ScrollText, Monitor,
 } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════════
@@ -44,7 +44,8 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
   const [scrollEnabled, setScrollEnabled] = useState(true);
 
   // ─── UI state ───
-  const [showSidebar, setShowSidebar] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [sidebarTab, setSidebarTab] = useState<"pages" | "bookmarks">("pages");
   const [showViewMenu, setShowViewMenu] = useState(false);
   const [showKeypad, setShowKeypad] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -52,8 +53,6 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<{ page: number; snippet: string }[]>([]);
   const [bookmarks, setBookmarks] = useState<number[]>([]);
-  const [railVisible, setRailVisible] = useState(true);
-  const [readMode, setReadMode] = useState(false);
 
   // ─── Refs ───
   const docRef = useRef<any>(null);
@@ -65,7 +64,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
   const renderedKeys = useRef<Set<string>>(new Set());
   const thumbRendered = useRef<Set<number>>(new Set());
   const visiblePages = useRef<Set<number>>(new Set());
-  const railTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeThumbRef = useRef<HTMLDivElement>(null);
   const currentPageRef = useRef(1);
   const scaleRef = useRef(1.0);
   const rotationRef = useRef(0);
@@ -304,17 +303,12 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
     });
   };
 
-  // ═══════════════════════════════════════════════════════════
-  // Rail Auto-Hide
-  // ═══════════════════════════════════════════════════════════
-  const resetRail = useCallback(() => {
-    if (readMode) return;
-    setRailVisible(true);
-    if (railTimer.current) clearTimeout(railTimer.current);
-    railTimer.current = setTimeout(() => setRailVisible(false), 5000);
-  }, [readMode]);
-
-  useEffect(() => { resetRail(); return () => { if (railTimer.current) clearTimeout(railTimer.current); }; }, []);
+  // ─── Scroll active thumbnail into view ───
+  useEffect(() => {
+    if (activeThumbRef.current && showSidebar && sidebarTab === "pages") {
+      activeThumbRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [currentPage, showSidebar, sidebarTab]);
 
   // ═══════════════════════════════════════════════════════════
   // Rotation
@@ -410,10 +404,9 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
   // ═══════════════════════════════════════════════════════════
   return (
     <div
-      className="absolute inset-0 z-[100] flex flex-row overflow-hidden"
+      className="absolute inset-0 z-[100] flex flex-col overflow-hidden"
       style={{ backgroundColor: "#525659", touchAction: "manipulation", userSelect: "none", WebkitTouchCallout: "none" } as any}
       onContextMenu={e => e.preventDefault()}
-      onPointerDown={resetRail}
     >
       {/* ═══ CSS ═══ */}
       <style>{`
@@ -441,41 +434,99 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
         .kp-go:active{background:#3580d9}
       `}</style>
 
-      {/* ═══ THUMBNAIL SIDEBAR ═══ */}
+      {/* ═══ TOP BAR ═══ */}
+      <div className="shrink-0 flex items-center justify-between px-5"
+        style={{ height: 52, backgroundColor: "#2b2d30", borderBottom: "1px solid #1a1a1a", zIndex: 20, color: "#fff", boxShadow: "0 2px 12px rgba(0,0,0,0.4)" }}>
+        <div className="flex items-center gap-3">
+          <button className="rail-btn" style={{ width: 36, height: 36 }} onClick={() => setShowSidebar(s => !s)}>
+            <LayoutGrid size={18} />
+          </button>
+          <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: ".3px", opacity: .9 }}>
+            {title || "Document Viewer"}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="rail-btn" onClick={onClose}
+            style={{ backgroundColor: "#dc2626", borderRadius: 10, width: 40, height: 40 }}>
+            <X size={18} />
+          </button>
+        </div>
+      </div>
+
+      {/* ═══ BODY: sidebar + pdf + rail ═══ */}
+      <div className="flex-1 flex flex-row overflow-hidden">
+
+      {/* ═══ THUMBNAIL / BOOKMARKS SIDEBAR ═══ */}
       {showSidebar && (
         <div className="shrink-0 flex flex-col" style={{ width: SIDEBAR_W, backgroundColor: "#1E1F22", borderRight: "1px solid #3A3A3A" }}>
-          <div className="shrink-0 flex items-center justify-between px-3" style={{ height: 48, borderBottom: "1px solid #2A2A2A" }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#999", textTransform: "uppercase", letterSpacing: 1 }}>Pages</span>
-            <button className="rail-btn" style={{ width: 32, height: 32 }} onClick={() => setShowSidebar(false)}><X size={14} color="#888" /></button>
+          {/* Tabs */}
+          <div className="shrink-0 flex border-b" style={{ borderColor: "#2A2A2A" }}>
+            <button onClick={() => setSidebarTab("pages")}
+              style={{ flex: 1, padding: "12px 0", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", background: "transparent", color: sidebarTab === "pages" ? "#fff" : "#666", borderBottom: sidebarTab === "pages" ? "2px solid #4A9EFF" : "2px solid transparent", transition: "all .15s" }}>
+              PAGES
+            </button>
+            <button onClick={() => setSidebarTab("bookmarks")}
+              style={{ flex: 1, padding: "12px 0", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", background: "transparent", color: sidebarTab === "bookmarks" ? "#fff" : "#666", borderBottom: sidebarTab === "bookmarks" ? "2px solid #4A9EFF" : "2px solid transparent", transition: "all .15s" }}>
+              BOOKMARKS
+            </button>
           </div>
+
           <div ref={sidebarScrollRef} className="flex-1 overflow-y-auto pdf-side" style={{ padding: "8px 6px" }}>
-            {pageDims.map((_, i) => {
-              const pg = i + 1;
-              const active = pg === currentPage;
-              const bm = bookmarks.includes(pg);
-              const sz = pgSize(pageDims[i]);
-              const thumbH = Math.floor((THUMB_W / sz.w) * sz.h);
-              return (
-                <div
-                  key={pg} onClick={() => goTo(pg)}
-                  style={{ padding: 4, marginBottom: 6, borderRadius: 6, cursor: "pointer",
-                    border: active ? "2px solid #4A9EFF" : "2px solid transparent",
-                    backgroundColor: active ? "rgba(74,158,255,.08)" : "transparent" }}
-                >
+            {sidebarTab === "pages" ? (
+              /* ── Pages tab ── */
+              pageDims.map((_, i) => {
+                const pg = i + 1;
+                const active = pg === currentPage;
+                const bm = bookmarks.includes(pg);
+                const sz = pgSize(pageDims[i]);
+                const thumbH = Math.floor((THUMB_W / sz.w) * sz.h);
+                return (
                   <div
-                    data-thumb={pg} ref={el => setThumb(pg, el)}
-                    style={{ width: THUMB_W, height: thumbH, backgroundColor: "#2A2A2A", borderRadius: 3, overflow: "hidden", position: "relative", margin: "0 auto" }}
+                    key={pg} onClick={() => goTo(pg)}
+                    ref={active ? activeThumbRef : undefined}
+                    style={{ padding: 4, marginBottom: 6, borderRadius: 6, cursor: "pointer",
+                      border: active ? "2px solid #4A9EFF" : "2px solid transparent",
+                      backgroundColor: active ? "rgba(74,158,255,.08)" : "transparent" }}
                   >
-                    {bm && (
-                      <div style={{ position: "absolute", top: 3, right: 3, zIndex: 2 }}>
-                        <Bookmark size={10} className="fill-yellow-400 text-yellow-400" />
-                      </div>
-                    )}
+                    <div
+                      data-thumb={pg} ref={el => setThumb(pg, el)}
+                      style={{ width: THUMB_W, height: thumbH, backgroundColor: "#2A2A2A", borderRadius: 3, overflow: "hidden", position: "relative", margin: "0 auto" }}
+                    >
+                      {bm && (
+                        <div style={{ position: "absolute", top: 3, right: 3, zIndex: 2 }}>
+                          <Bookmark size={10} className="fill-yellow-400 text-yellow-400" />
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ textAlign: "center", marginTop: 4, fontSize: 11, fontWeight: active ? 700 : 400, color: active ? "#4A9EFF" : "#888" }}>{pg}</div>
                   </div>
-                  <div style={{ textAlign: "center", marginTop: 4, fontSize: 11, fontWeight: active ? 700 : 400, color: active ? "#4A9EFF" : "#888" }}>{pg}</div>
+                );
+              })
+            ) : (
+              /* ── Bookmarks tab ── */
+              bookmarks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-8 gap-3" style={{ marginTop: 40, opacity: .35 }}>
+                  <Bookmark size={32} color="#fff" />
+                  <span style={{ fontSize: 12, textAlign: "center", color: "#fff" }}>No bookmarks yet.<br />Use the bookmark button in the toolbar.</span>
                 </div>
-              );
-            })}
+              ) : (
+                bookmarks.map(p => (
+                  <div key={p} onClick={() => goTo(p)}
+                    className="group"
+                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 10px", borderRadius: 8, cursor: "pointer", marginBottom: 4, backgroundColor: p === currentPage ? "rgba(74,158,255,.1)" : "transparent", transition: "background .1s" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <Bookmark size={14} className="fill-yellow-400 text-yellow-400" />
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.9)" }}>Page {p}</span>
+                    </div>
+                    <button onClick={(e) => { e.stopPropagation(); setBookmarks(b => { const n = b.filter(x => x !== p); if (pdfSource) localStorage.setItem(`pdf_bm_${pdfSource}`, JSON.stringify(n)); return n; }); }}
+                      style={{ padding: 4, opacity: 0, background: "transparent", border: "none", cursor: "pointer", color: "#888", transition: "opacity .15s" }}
+                      className="group-hover:!opacity-100">
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))
+              )
+            )}
           </div>
         </div>
       )}
@@ -522,20 +573,15 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
         )}
       </div>
 
-      {/* ═══ RIGHT RAIL ═══ */}
+      {/* ═══ RIGHT RAIL (always visible) ═══ */}
       <div
         className="shrink-0 flex flex-col items-center"
         style={{
-          width: railVisible ? RAIL_W : 0, overflow: "hidden",
+          width: RAIL_W,
           backgroundColor: "#2A2A2A", borderLeft: "0.5px solid #3A3A3A",
-          transition: "width 0.2s ease",
         }}
       >
         <div className="flex flex-col items-center h-full" style={{ width: RAIL_W, paddingTop: 8, paddingBottom: 8 }}>
-          {/* Close */}
-          <button className="rail-btn" onClick={onClose} title="Close" style={{ marginBottom: 4 }}>
-            <X size={20} />
-          </button>
 
           {/* ─── GROUP 1: Document aids ─── */}
           <div className="flex flex-col items-center" style={{ gap: 4 }}>
@@ -593,6 +639,8 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
         </div>
       </div>
 
+      </div>{/* end BODY flex row */}
+
       {/* ═══ VIEW MENU ═══ */}
       {showViewMenu && (
         <>
@@ -628,16 +676,6 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
             ))}
 
             <div style={{ height: 0.5, backgroundColor: "#3A3A3A", margin: "4px 0" }} />
-
-            {/* Read mode */}
-            <button className="vm-row" onClick={() => {
-              setReadMode(r => !r);
-              setRailVisible(false);
-              setShowViewMenu(false);
-            }}>
-              <div style={{ width: 20 }}>{readMode && <Check size={16} color="#4A9EFF" />}</div>
-              <Eye size={16} /><span>Read mode</span>
-            </button>
 
             {/* Fullscreen */}
             <button className="vm-row" onClick={() => {
