@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="a" cx="18%" cy="22%" r="65%">
+      <stop offset="0%" stop-color="#6CC4E0" stop-opacity="1"></stop>
+      <stop offset="100%" stop-color="#6CC4E0" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="b" cx="85%" cy="15%" r="55%">
+      <stop offset="0%" stop-color="#F5B72A" stop-opacity="0.85"></stop>
+      <stop offset="100%" stop-color="#F5B72A" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="c" cx="70%" cy="90%" r="70%">
+      <stop offset="0%" stop-color="#1B2A5B" stop-opacity="0.55"></stop>
+      <stop offset="100%" stop-color="#1B2A5B" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="d" cx="15%" cy="95%" r="60%">
+      <stop offset="0%" stop-color="#E05A3B" stop-opacity="0.6"></stop>
+      <stop offset="100%" stop-color="#E05A3B" stop-opacity="0"></stop>
+    </radialGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="80"></feGaussianBlur></filter>
+  </defs>
+  <rect width="1920" height="1080" fill="#FAF8F3"></rect>
+  <g filter="url(#blur)">
+    <rect width="1920" height="1080" fill="url(#a)"></rect>
+    <rect width="1920" height="1080" fill="url(#b)"></rect>
+    <rect width="1920" height="1080" fill="url(#c)"></rect>
+    <rect width="1920" height="1080" fill="url(#d)"></rect>
+  </g>
+</svg>

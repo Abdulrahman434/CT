@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="dot" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"></stop>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.25"></stop>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="gold" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F5B72A" stop-opacity="0.9"></stop>
+      <stop offset="60%" stop-color="#F5B72A" stop-opacity="0.15"></stop>
+      <stop offset="100%" stop-color="#F5B72A" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="cy" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6CC4E0" stop-opacity="0.8"></stop>
+      <stop offset="60%" stop-color="#6CC4E0" stop-opacity="0.12"></stop>
+      <stop offset="100%" stop-color="#6CC4E0" stop-opacity="0"></stop>
+    </radialGradient>
+    <linearGradient id="bgsky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0A1440"></stop>
+      <stop offset="55%" stop-color="#1B2A5B"></stop>
+      <stop offset="100%" stop-color="#2E3F7A"></stop>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="#FFFFFF" fill-opacity="0"></rect>
+  
+  <circle cx="280" cy="180" r="220" fill="url(#gold)"></circle>
+  <circle cx="1620" cy="260" r="300" fill="url(#dot)"></circle>
+  <circle cx="760" cy="620" r="340" fill="url(#cy)"></circle>
+  <circle cx="1420" cy="820" r="260" fill="url(#gold)"></circle>
+  <circle cx="180" cy="860" r="240" fill="url(#dot)"></circle>
+  
+  <circle cx="940" cy="160" r="90" fill="url(#dot)"></circle>
+  <circle cx="480" cy="460" r="70" fill="url(#gold)"></circle>
+  <circle cx="1780" cy="560" r="110" fill="url(#cy)"></circle>
+  <circle cx="1180" cy="340" r="60" fill="url(#dot)"></circle>
+  <circle cx="1080" cy="900" r="80" fill="url(#cy)"></circle>
+  <circle cx="600" cy="1000" r="50" fill="url(#gold)"></circle>
+  
+  <circle cx="1500" cy="140" r="14" fill="#FFFFFF" opacity="0.9"></circle>
+  <circle cx="340" cy="640" r="10" fill="#F5B72A" opacity="0.9"></circle>
+  <circle cx="1860" cy="420" r="12" fill="#FFFFFF" opacity="0.85"></circle>
+  <circle cx="860" cy="920" r="8" fill="#FFFFFF" opacity="0.85"></circle>
+  <circle cx="1280" cy="600" r="11" fill="#F5B72A" opacity="0.85"></circle>
+</svg>
