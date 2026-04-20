@@ -227,12 +227,13 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
       }
     }, { root: scrollRef.current, rootMargin: "500px 0px", threshold: 0.01 });
 
-    requestAnimationFrame(() => {
+    // Observe with a small delay to ensure refs are registered
+    const attachTimer = setTimeout(() => {
       pageWrappers.current.forEach(el => obs.observe(el));
-    });
+    }, 100);
 
-    return () => obs.disconnect();
-  }, [numPages, scale, rotation, renderPageCanvas]);
+    return () => { clearTimeout(attachTimer); obs.disconnect(); };
+  }, [numPages, scale, rotation, viewMode, renderPageCanvas]);
 
   // Scroll to saved page on first load
   useEffect(() => {
@@ -439,8 +440,8 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
       `}</style>
 
       {/* ═══ TOP BAR ═══ */}
-      <div className="shrink-0 flex items-center px-5"
-        style={{ height: 48, backgroundColor: "#2b2d30", borderBottom: "1px solid #1a1a1a", zIndex: 20, color: "#fff" }}>
+      <div className="shrink-0 flex items-center justify-between"
+        style={{ height: 48, backgroundColor: "#2b2d30", borderBottom: "1px solid #1a1a1a", zIndex: 20, color: "#fff", paddingLeft: 20, paddingRight: 4 }}>
         <div className="flex items-center gap-3">
           <button className="rail-btn" style={{ width: 36, height: 36 }} onClick={() => setShowSidebar(s => !s)}>
             <LayoutGrid size={18} />
@@ -448,6 +449,13 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
           <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: ".3px", opacity: .9 }}>
             {title || "Document Viewer"}
           </span>
+        </div>
+        {/* Close X aligned with right rail */}
+        <div style={{ width: RAIL_W, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <button className="rail-btn" onClick={onClose}
+            style={{ backgroundColor: "#dc2626", borderRadius: 10, width: 44, height: 44 }}>
+            <X size={18} />
+          </button>
         </div>
       </div>
 
@@ -616,12 +624,6 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
         }}
       >
         <div className="flex flex-col items-center h-full" style={{ width: RAIL_W, paddingTop: 4, paddingBottom: 8 }}>
-
-          {/* Close — aligned with rail buttons */}
-          <button className="rail-btn" onClick={onClose} title="Close"
-            style={{ backgroundColor: "#dc2626", borderRadius: 10, width: 44, height: 44, marginBottom: 4 }}>
-            <X size={18} />
-          </button>
 
           {/* ─── GROUP 1: Document aids ─── */}
           <div className="flex flex-col items-center" style={{ gap: 4 }}>
