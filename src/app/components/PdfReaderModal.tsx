@@ -80,42 +80,32 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
     if (pdfSource) localStorage.setItem(`pdf_bookmarks_${pdfSource}`, JSON.stringify(bookmarks));
   }, [bookmarks, pdfSource]);
 
-  /* ─── IntersectionObserver for Scroll Tracking ─── */
-  useEffect(() => {
-    if (!numPages || !scrollRef.current) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      if (isNavScroll.current) return;
-      
-      let best: IntersectionObserverEntry | null = null;
-      for (const e of entries) {
-        if (!best || e.intersectionRatio > best.intersectionRatio) {
-          best = e;
-        }
+  /* ─── Scroll Tracking ─── */
+  const handleScroll = useCallback(() => {
+    if (isNavScroll.current || !scrollRef.current || !numPages) return;
+    
+    const container = scrollRef.current;
+    // We check which page element crosses the center-top (1/3 down the viewport)
+    const viewMidpoint = container.scrollTop + container.clientHeight / 3;
+    
+    let closestPage = 1;
+    let minDist = Infinity;
+    
+    pageEls.current.forEach((el, pageNum) => {
+      const elMid = el.offsetTop + el.offsetHeight / 2;
+      const dist = Math.abs(elMid - viewMidpoint);
+      if (dist < minDist) {
+        minDist = dist;
+        closestPage = pageNum;
       }
-      
-      if (best && best.intersectionRatio > 0) {
-        const pg = Number((best.target as HTMLElement).dataset.page);
-        if (pg && pg !== currentPage) {
-          setCurrentPage(pg);
-          setInputPage(String(pg));
-          if (pdfSource) localStorage.setItem(`pdf_page_${pdfSource}`, String(pg));
-        }
-      }
-    }, {
-      root: scrollRef.current,
-      rootMargin: "-20% 0px -50% 0px", // triggers when page hits top 20-50% of view
-      threshold: [0, 0.1, 0.3, 0.5, 0.7, 1],
     });
 
-    const els = Array.from(pageEls.current.values());
-    els.forEach((el) => observer.observe(el));
-    if (els.length > 0) {
-      // Refresh observer mapping if pages rendered
+    if (closestPage !== currentPage) {
+      setCurrentPage(closestPage);
+      setInputPage(String(closestPage));
+      if (pdfSource) localStorage.setItem(`pdf_page_${pdfSource}`, String(closestPage));
     }
-    return () => observer.disconnect();
-  }, [numPages, currentPage, pdfSource, scale]); 
-  // added `scale` dependency so changing zoom re-observes the elements if needed
+  }, [currentPage, numPages, pdfSource]);
 
   /* ─── Scroll to active thumbnail ─── */
   useEffect(() => {
@@ -131,7 +121,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
     if (!el || !container) return;
 
     isNavScroll.current = true;
-    container.scrollTo({ top: el.offsetTop - container.offsetTop - 20, behavior: "smooth" });
+    container.scrollTo({ top: el.offsetTop - 20, behavior: "smooth" });
 
     setTimeout(() => { isNavScroll.current = false; }, 800);
   }, []);
@@ -214,9 +204,6 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <button className="pdf-btn" onClick={toggleBookmark} title="Bookmark current page">
-            <Bookmark size={18} className={bookmarks.includes(currentPage) ? "fill-yellow-400 text-yellow-400" : ""} />
-          </button>
           <button className="pdf-btn" onClick={onClose} style={{ backgroundColor: "#dc2626", borderRadius: 10 }}>
             <X size={18} />
           </button>
@@ -324,8 +311,9 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
             {numPages && (
               <div 
                 ref={scrollRef} 
+                onScroll={handleScroll}
                 className="flex-1 overflow-y-auto pdf-main flex flex-col items-center"
-                style={{ padding: "40px 20px" }}
+                style={{ padding: "40px 20px", position: "relative" }}
               >
                 {Array.from({ length: numPages }, (_, i) => {
                   const pg = i + 1;
@@ -385,6 +373,13 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
             disabled={currentPage >= numPages}
             style={{ width: 34, height: 34, opacity: currentPage >= numPages ? .25 : 1 }}>
             {isRTL ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+          </button>
+
+          <div style={{ width: 1, height: 24, backgroundColor: "rgba(255,255,255,.15)", margin: "0 6px" }} />
+
+          {/* Bookmark */}
+          <button className="pdf-btn" onClick={toggleBookmark} title="Bookmark current page">
+            <Bookmark size={20} className={bookmarks.includes(currentPage) ? "fill-yellow-400 text-yellow-400" : ""} />
           </button>
         </div>
       )}
