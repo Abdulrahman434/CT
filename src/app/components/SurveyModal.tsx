@@ -1,66 +1,199 @@
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, LEADING, TEXT_STYLE } from "./ThemeContext";
 import { useLocale } from "./i18n";
-import { useState } from "react";
-import { ChevronLeft, ChevronRight, X, FileText, AlertTriangle, Heart, Mic, CheckCircle2 } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { ChevronLeft, ChevronRight, X, FileText, AlertTriangle, Heart, Mic, CheckCircle2, Play, Pause, Square, RotateCcw, Trash2 } from "lucide-react";
 import thankYouImage from "../../assets/23db5e568918c9a319b272caa7a9e865d4fbd418.png";
-import { Play, Square, RotateCcw } from "lucide-react";
 
-function VoiceRecorder({ color, label }: { color: string, label: string }) {
+/* ═══════════════════════════════════════════════════════════════
+ * REAL VOICE RECORDER (uses MediaRecorder API)
+ * ═══════════════════════════════════════════════════════════════ */
+function VoiceRecorder({ color, label, onRecordingChange }: {
+  color: string;
+  label: string;
+  onRecordingChange?: (hasRecording: boolean) => void;
+}) {
   const { fontFamily } = useLocale();
-  const [state, setState] = useState<"idle" | "recording" | "recorded">("idle");
-  const [progress, setProgress] = useState(0);
+  const [state, setState] = useState<"idle" | "recording" | "recorded" | "playing">("idle");
+  const [duration, setDuration] = useState(0);
+  const [playbackProgress, setPlaybackProgress] = useState(0);
 
-  const startRecording = () => {
-    setState("recording");
-    setProgress(0);
-    const interval = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 100) {
-          clearInterval(interval);
-          setState("recorded");
-          return 100;
-        }
-        return p + 2.5; 
-      });
-    }, 100);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const audioUrlRef = useRef<string | null>(null);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const playbackTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+      if (audioElRef.current) { audioElRef.current.pause(); audioElRef.current = null; }
+    };
+  }, []);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+      setDuration(0);
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+        audioUrlRef.current = URL.createObjectURL(blob);
+        setState("recorded");
+        onRecordingChange?.(true);
+      };
+
+      mediaRecorder.start();
+      setState("recording");
+
+      timerRef.current = setInterval(() => {
+        setDuration((d) => d + 1);
+      }, 1000);
+    } catch {
+      console.warn("Microphone access denied or unavailable");
+    }
+  }, [onRecordingChange]);
+
+  const stopRecording = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    mediaRecorderRef.current?.stop();
+  }, []);
+
+  const playRecording = useCallback(() => {
+    if (!audioUrlRef.current) return;
+    const audio = new Audio(audioUrlRef.current);
+    audioElRef.current = audio;
+    setPlaybackProgress(0);
+    setState("playing");
+
+    audio.play();
+    playbackTimerRef.current = setInterval(() => {
+      if (audio.duration) {
+        setPlaybackProgress((audio.currentTime / audio.duration) * 100);
+      }
+    }, 100);
+
+    audio.onended = () => {
+      if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+      setPlaybackProgress(0);
+      setState("recorded");
+    };
+  }, []);
+
+  const pausePlayback = useCallback(() => {
+    audioElRef.current?.pause();
+    if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+    setState("recorded");
+  }, []);
+
+  const deleteRecording = useCallback(() => {
+    if (audioElRef.current) { audioElRef.current.pause(); audioElRef.current = null; }
+    if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+    if (audioUrlRef.current) { URL.revokeObjectURL(audioUrlRef.current); audioUrlRef.current = null; }
+    chunksRef.current = [];
+    setDuration(0);
+    setPlaybackProgress(0);
+    setState("idle");
+    onRecordingChange?.(false);
+  }, [onRecordingChange]);
+
+  /* ── Idle: show "Record voice" button ── */
   if (state === "idle") {
     return (
-      <button onClick={startRecording} className="flex items-center gap-2 mt-4 cursor-pointer transition-transform duration-200 active:scale-[0.98]" style={{ padding: "10px 20px", borderRadius: "100px", border: `1.5px solid ${color}`, backgroundColor: `${color}08`, width: "fit-content" }}>
+      <button
+        onClick={startRecording}
+        className="flex items-center gap-2 mt-4 cursor-pointer transition-transform duration-200 active:scale-[0.98]"
+        style={{ padding: "10px 20px", borderRadius: "100px", border: `1.5px solid ${color}`, backgroundColor: `${color}08`, width: "fit-content" }}
+      >
         <Mic size={18} style={{ color }} />
         <span style={{ fontFamily, fontSize: "14px", fontWeight: 700, color }}>{label}</span>
       </button>
     );
   }
 
+  /* ── Recording in progress ── */
   if (state === "recording") {
     return (
-      <div className="flex items-center gap-3 mt-4" style={{ padding: "8px 20px", width: "fit-content", borderRadius: "100px", border: `1.5px solid ${color}`, backgroundColor: `${color}08` }}>
-        <button onClick={() => setState("recorded")} className="cursor-pointer bg-white rounded flex items-center justify-center shadow-sm" style={{ width: 26, height: 26, border: "none" }}>
+      <div className="flex items-center gap-3 mt-4" style={{ padding: "8px 20px", width: "fit-content", borderRadius: "100px", border: "1.5px solid #D10044", backgroundColor: "rgba(209,0,68,0.06)" }}>
+        <button
+          onClick={stopRecording}
+          className="cursor-pointer bg-white rounded flex items-center justify-center shadow-sm"
+          style={{ width: 28, height: 28, border: "none" }}
+        >
           <Square size={12} style={{ color: "#D10044" }} fill="#D10044" />
         </button>
-        <div style={{ width: "100px", height: "4px", backgroundColor: "rgba(0,0,0,0.06)", borderRadius: "2px", overflow: "hidden" }}>
-          <div style={{ width: `${progress}%`, height: "100%", backgroundColor: "#D10044", transition: "width 0.1s linear" }} />
-        </div>
         <div className="animate-pulse" style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#D10044" }} />
+        <span style={{ fontFamily, fontSize: "13px", fontWeight: 700, color: "#D10044", minWidth: "36px" }}>
+          {formatTime(duration)}
+        </span>
       </div>
     );
   }
 
+  /* ── Recorded / Playing ── */
   return (
     <div className="flex items-center gap-3 mt-4" style={{ padding: "8px 20px", width: "fit-content", borderRadius: "100px", border: `1.5px solid ${color}`, backgroundColor: `${color}08` }}>
-      <button className="cursor-pointer bg-white rounded-full flex items-center justify-center shadow-sm relative" style={{ width: 32, height: 32, border: "none" }}>
-        <Play size={14} style={{ color, marginLeft: 2 }} fill={color} />
+      {/* Play / Pause */}
+      <button
+        onClick={state === "playing" ? pausePlayback : playRecording}
+        className="cursor-pointer bg-white rounded-full flex items-center justify-center shadow-sm"
+        style={{ width: 32, height: 32, border: "none" }}
+      >
+        {state === "playing"
+          ? <Pause size={14} style={{ color }} fill={color} />
+          : <Play size={14} style={{ color, marginLeft: 2 }} fill={color} />
+        }
       </button>
-      <div style={{ display: "flex", alignItems: "center", gap: "3px", height: "20px" }}>
-        {[30, 60, 40, 80, 50, 90, 40, 70, 30].map((h, i) => (
-          <div key={i} style={{ width: "3px", height: `${h}%`, backgroundColor: color, borderRadius: "2px", opacity: 0.6 }} />
-        ))}
+
+      {/* Waveform / progress */}
+      <div style={{ position: "relative", width: "80px", height: "20px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "2px", height: "100%" }}>
+          {[30, 60, 45, 80, 55, 90, 40, 75, 35, 65, 50, 85].map((h, i) => (
+            <div
+              key={i}
+              style={{
+                width: "3px",
+                height: `${h}%`,
+                backgroundColor: color,
+                borderRadius: "2px",
+                opacity: state === "playing" && (i / 12) * 100 <= playbackProgress ? 1 : 0.35,
+                transition: "opacity 0.15s",
+              }}
+            />
+          ))}
+        </div>
       </div>
-      <span style={{ fontFamily, fontSize: "12px", fontWeight: 700, color, marginRight: "8px" }}>0:04</span>
-      <button onClick={() => { setState("idle"); setProgress(0); }} className="cursor-pointer flex items-center justify-center transition-opacity hover:opacity-100" style={{ width: 28, height: 28, border: "none", background: "none", opacity: 0.6 }}>
-        <RotateCcw size={16} style={{ color }} />
+
+      {/* Duration */}
+      <span style={{ fontFamily, fontSize: "12px", fontWeight: 700, color, minWidth: "32px" }}>
+        {formatTime(duration)}
+      </span>
+
+      {/* Delete / Redo */}
+      <button
+        onClick={deleteRecording}
+        className="cursor-pointer flex items-center justify-center transition-opacity hover:opacity-100"
+        style={{ width: 28, height: 28, border: "none", background: "none", opacity: 0.6 }}
+      >
+        <Trash2 size={16} style={{ color }} />
       </button>
     </div>
   );
@@ -169,11 +302,13 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
   const [concernArea, setConcernArea] = useState<string | null>(null);
   const [concernText, setConcernText] = useState("");
   const [concernSubmitted, setConcernSubmitted] = useState(false);
+  const [concernHasRecording, setConcernHasRecording] = useState(false);
 
   // Appreciation state
   const [appreciationTarget, setAppreciationTarget] = useState<string | null>(null);
   const [appreciationText, setAppreciationText] = useState("");
   const [appreciationSubmitted, setAppreciationSubmitted] = useState(false);
+  const [appreciationHasRecording, setAppreciationHasRecording] = useState(false);
 
   /* ─── Survey Navigation ─── */
   const totalSlides = 9; // 7 questions + feedback + thank you (no intro, survey starts directly)
@@ -197,13 +332,13 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
 
   /* ─── Concern Submit ─── */
   const handleConcernSubmit = () => {
-    console.log("Concern submitted:", { area: concernArea, text: concernText });
+    console.log("Concern submitted:", { area: concernArea, text: concernText, hasRecording: concernHasRecording });
     setConcernSubmitted(true);
   };
 
   /* ─── Appreciation Submit ─── */
   const handleAppreciationSubmit = () => {
-    console.log("Appreciation submitted:", { target: appreciationTarget, text: appreciationText });
+    console.log("Appreciation submitted:", { target: appreciationTarget, text: appreciationText, hasRecording: appreciationHasRecording });
     setAppreciationSubmitted(true);
   };
 
@@ -727,7 +862,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
                   onFocus={(e) => { e.target.style.borderColor = CONCERN_COLOR; }}
                   onBlur={(e) => { e.target.style.borderColor = theme.borderDefault; }}
                 />
-                <VoiceRecorder color={CONCERN_COLOR} label={t("concern.recordVoice") || "Record voice"} />
+                <VoiceRecorder color={CONCERN_COLOR} label={t("concern.recordVoice") || "Record voice"} onRecordingChange={setConcernHasRecording} />
               </div>
             </div>
           </div>
@@ -739,13 +874,13 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
             <>
               <button
                 onClick={handleConcernSubmit}
-                disabled={!concernArea || !concernText.trim()}
+                disabled={!concernArea || (!concernText.trim() && !concernHasRecording)}
                 className="flex items-center gap-2 transition-transform duration-200 active:scale-[0.96] cursor-pointer"
                 style={{
                   fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: "#fff",
                   padding: "12px 32px", borderRadius: theme.radiusMd,
-                  backgroundColor: (!concernArea || !concernText.trim()) ? theme.textDisabled : CONCERN_COLOR,
-                  border: "none", opacity: (!concernArea || !concernText.trim()) ? 0.5 : 1,
+                  backgroundColor: (!concernArea || (!concernText.trim() && !concernHasRecording)) ? theme.textDisabled : CONCERN_COLOR,
+                  border: "none", opacity: (!concernArea || (!concernText.trim() && !concernHasRecording)) ? 0.5 : 1,
                   boxShadow: `0 4px 16px ${CONCERN_SUBTLE}`,
                 }}
               >
@@ -767,13 +902,13 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
               </button>
               <button
                 onClick={handleConcernSubmit}
-                disabled={!concernArea || !concernText.trim()}
+                disabled={!concernArea || (!concernText.trim() && !concernHasRecording)}
                 className="flex items-center gap-2 transition-transform duration-200 active:scale-[0.96] cursor-pointer"
                 style={{
                   fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: "#fff",
                   padding: "12px 32px", borderRadius: theme.radiusMd,
-                  backgroundColor: (!concernArea || !concernText.trim()) ? theme.textDisabled : CONCERN_COLOR,
-                  border: "none", opacity: (!concernArea || !concernText.trim()) ? 0.5 : 1,
+                  backgroundColor: (!concernArea || (!concernText.trim() && !concernHasRecording)) ? theme.textDisabled : CONCERN_COLOR,
+                  border: "none", opacity: (!concernArea || (!concernText.trim() && !concernHasRecording)) ? 0.5 : 1,
                   boxShadow: `0 4px 16px ${CONCERN_SUBTLE}`,
                 }}
               >
@@ -892,7 +1027,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
                   onFocus={(e) => { e.target.style.borderColor = APPRECIATION_COLOR; }}
                   onBlur={(e) => { e.target.style.borderColor = theme.borderDefault; }}
                 />
-                <VoiceRecorder color={APPRECIATION_COLOR} label={t("appreciation.recordVoice") || "Record voice"} />
+                <VoiceRecorder color={APPRECIATION_COLOR} label={t("appreciation.recordVoice") || "Record voice"} onRecordingChange={setAppreciationHasRecording} />
               </div>
             </div>
           </div>
@@ -904,13 +1039,13 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
             <>
               <button
                 onClick={handleAppreciationSubmit}
-                disabled={!appreciationTarget || !appreciationText.trim()}
+                disabled={!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)}
                 className="flex items-center gap-2 transition-transform duration-200 active:scale-[0.96] cursor-pointer"
                 style={{
                   fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: "#fff",
                   padding: "12px 32px", borderRadius: theme.radiusMd,
-                  backgroundColor: (!appreciationTarget || !appreciationText.trim()) ? theme.textDisabled : APPRECIATION_COLOR,
-                  border: "none", opacity: (!appreciationTarget || !appreciationText.trim()) ? 0.5 : 1,
+                  backgroundColor: (!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)) ? theme.textDisabled : APPRECIATION_COLOR,
+                  border: "none", opacity: (!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)) ? 0.5 : 1,
                   boxShadow: `0 4px 16px ${APPRECIATION_SUBTLE}`,
                 }}
               >
@@ -932,13 +1067,13 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
               </button>
               <button
                 onClick={handleAppreciationSubmit}
-                disabled={!appreciationTarget || !appreciationText.trim()}
+                disabled={!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)}
                 className="flex items-center gap-2 transition-transform duration-200 active:scale-[0.96] cursor-pointer"
                 style={{
                   fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: "#fff",
                   padding: "12px 32px", borderRadius: theme.radiusMd,
-                  backgroundColor: (!appreciationTarget || !appreciationText.trim()) ? theme.textDisabled : APPRECIATION_COLOR,
-                  border: "none", opacity: (!appreciationTarget || !appreciationText.trim()) ? 0.5 : 1,
+                  backgroundColor: (!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)) ? theme.textDisabled : APPRECIATION_COLOR,
+                  border: "none", opacity: (!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)) ? 0.5 : 1,
                   boxShadow: `0 4px 16px ${APPRECIATION_SUBTLE}`,
                 }}
               >
