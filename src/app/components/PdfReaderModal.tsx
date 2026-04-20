@@ -267,8 +267,11 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
   useEffect(() => {
     if (!scrollRef.current || numPages === 0 || !docRef.current) return;
 
-    // Clear old renders on scale/rotation change
-    pageWrappers.current.forEach(w => w.querySelectorAll("canvas").forEach((c: any) => c.remove()));
+    // Clear old renders on scale/rotation/viewMode change
+    pageWrappers.current.forEach(w => {
+      w.querySelectorAll("canvas").forEach((c: any) => c.remove());
+      w.querySelectorAll(".search-hl").forEach(el => el.remove());
+    });
     renderTasks.current.forEach(t => { try { t.cancel(); } catch {} });
     renderTasks.current.clear();
     renderedKeys.current.clear();
@@ -632,7 +635,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
           </div>
         ) : viewMode === "two" ? (
           /* Two-page view: pages side by side in rows */
-          <div className="flex flex-col items-center" style={{ padding: "20px 16px", minHeight: "100%" }}>
+          <div key="two" className="flex flex-col items-center" style={{ padding: "20px 16px", minHeight: "100%" }}>
             {Array.from({ length: Math.ceil(numPages / 2) }, (_, row) => {
               const left = row * 2 + 1;
               const right = row * 2 + 2;
@@ -667,7 +670,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
           </div>
         ) : (
           /* Single-page view */
-          <div className="flex flex-col items-center" style={{ padding: "20px 16px", minHeight: "100%" }}>
+          <div key="single" className="flex flex-col items-center" style={{ padding: "20px 16px", minHeight: "100%" }}>
             {pageDims.map((dim, i) => {
               const pg = i + 1;
               const sz = pgSize(dim);
