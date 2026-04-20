@@ -3,6 +3,68 @@ import { useLocale } from "./i18n";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, X, FileText, AlertTriangle, Heart, Mic, CheckCircle2 } from "lucide-react";
 import thankYouImage from "../../assets/23db5e568918c9a319b272caa7a9e865d4fbd418.png";
+import { Play, Square, RotateCcw } from "lucide-react";
+
+function VoiceRecorder({ color, label }: { color: string, label: string }) {
+  const { fontFamily } = useLocale();
+  const [state, setState] = useState<"idle" | "recording" | "recorded">("idle");
+  const [progress, setProgress] = useState(0);
+
+  const startRecording = () => {
+    setState("recording");
+    setProgress(0);
+    const interval = setInterval(() => {
+      setProgress((p) => {
+        if (p >= 100) {
+          clearInterval(interval);
+          setState("recorded");
+          return 100;
+        }
+        return p + 2.5; 
+      });
+    }, 100);
+  };
+
+  if (state === "idle") {
+    return (
+      <button onClick={startRecording} className="flex items-center gap-2 mt-4 cursor-pointer transition-transform duration-200 active:scale-[0.98]" style={{ padding: "10px 20px", borderRadius: "100px", border: `1.5px solid ${color}`, backgroundColor: `${color}08`, width: "fit-content" }}>
+        <Mic size={18} style={{ color }} />
+        <span style={{ fontFamily, fontSize: "14px", fontWeight: 700, color }}>{label}</span>
+      </button>
+    );
+  }
+
+  if (state === "recording") {
+    return (
+      <div className="flex items-center gap-3 mt-4" style={{ padding: "8px 20px", width: "fit-content", borderRadius: "100px", border: `1.5px solid ${color}`, backgroundColor: `${color}08` }}>
+        <button onClick={() => setState("recorded")} className="cursor-pointer bg-white rounded flex items-center justify-center shadow-sm" style={{ width: 26, height: 26, border: "none" }}>
+          <Square size={12} style={{ color: "#D10044" }} fill="#D10044" />
+        </button>
+        <div style={{ width: "100px", height: "4px", backgroundColor: "rgba(0,0,0,0.06)", borderRadius: "2px", overflow: "hidden" }}>
+          <div style={{ width: `${progress}%`, height: "100%", backgroundColor: "#D10044", transition: "width 0.1s linear" }} />
+        </div>
+        <div className="animate-pulse" style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#D10044" }} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-3 mt-4" style={{ padding: "8px 20px", width: "fit-content", borderRadius: "100px", border: `1.5px solid ${color}`, backgroundColor: `${color}08` }}>
+      <button className="cursor-pointer bg-white rounded-full flex items-center justify-center shadow-sm relative" style={{ width: 32, height: 32, border: "none" }}>
+        <Play size={14} style={{ color, marginLeft: 2 }} fill={color} />
+      </button>
+      <div style={{ display: "flex", alignItems: "center", gap: "3px", height: "20px" }}>
+        {[30, 60, 40, 80, 50, 90, 40, 70, 30].map((h, i) => (
+          <div key={i} style={{ width: "3px", height: `${h}%`, backgroundColor: color, borderRadius: "2px", opacity: 0.6 }} />
+        ))}
+      </div>
+      <span style={{ fontFamily, fontSize: "12px", fontWeight: 700, color, marginRight: "8px" }}>0:04</span>
+      <button onClick={() => { setState("idle"); setProgress(0); }} className="cursor-pointer flex items-center justify-center transition-opacity hover:opacity-100" style={{ width: 28, height: 28, border: "none", background: "none", opacity: 0.6 }}>
+        <RotateCcw size={16} style={{ color }} />
+      </button>
+    </div>
+  );
+}
 
 interface SurveyModalProps {
   onClose: () => void;
@@ -475,101 +537,87 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
       </div>
 
       {/* Survey footer nav */}
-      <div
-        className="flex items-center justify-between px-12 py-8 border-t"
-        style={{ borderColor: theme.borderDefault, zIndex: 20, direction: "ltr" }}
-      >
-        {/* LTR left = Previous / RTL left = Next */}
-        {isRTL ? (
-          currentSlide === 7 ? (
+      {currentSlide < 8 && (
+        <div
+          className="flex items-center justify-between px-12 py-8 border-t"
+          style={{ borderColor: theme.borderDefault, zIndex: 20, direction: "ltr" }}
+        >
+          {/* LTR left = Previous / RTL left = Next */}
+          {isRTL ? (
+            currentSlide === 7 ? (
+              <button onClick={handleSurveySubmit} className="flex items-center gap-2 transition-transform duration-200"
+                style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", padding: "12px 32px", borderRadius: theme.radiusMd, backgroundColor: BRAND }}>
+                <ChevronLeft size={22} />
+                {t("survey.submit")}
+              </button>
+            ) : (
+              <button onClick={handleNext} className="flex items-center gap-2 transition-transform duration-200"
+                style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", padding: "12px 32px", borderRadius: theme.radiusMd, backgroundColor: BRAND }}>
+                <ChevronLeft size={22} />
+                {t("survey.next")}
+              </button>
+            )
+          ) : (
+            <button
+              onClick={currentSlide === 0 ? () => setPath("hub") : handlePrevious}
+              className="flex items-center gap-2 transition-transform duration-200"
+              style={{
+                fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold,
+                color: BRAND, cursor: "pointer",
+                padding: "12px 24px", borderRadius: theme.radiusMd,
+                backgroundColor: theme.primarySubtle,
+              }}
+            >
+              <ChevronLeft size={22} />
+              {currentSlide === 0 ? t("feedback.back") : t("survey.previous")}
+            </button>
+          )}
+
+          {/* Progress dots */}
+          <div className="flex items-center justify-center gap-2">
+            {Array.from({ length: totalSlides - 2 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-full transition-transform duration-300"
+                style={{
+                  width: i === currentSlide ? "28px" : "8px",
+                  height: "8px",
+                  backgroundColor: i === currentSlide ? BRAND : theme.borderDefault,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* LTR right = Next / RTL right = Previous */}
+          {isRTL ? (
+            <button
+              onClick={currentSlide === 0 ? () => setPath("hub") : handlePrevious}
+              className="flex items-center gap-2 transition-transform duration-200"
+              style={{
+                fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold,
+                color: BRAND, cursor: "pointer",
+                padding: "12px 24px", borderRadius: theme.radiusMd,
+                backgroundColor: theme.primarySubtle,
+              }}
+            >
+              {currentSlide === 0 ? t("feedback.back") : t("survey.previous")}
+              <ChevronRight size={22} />
+            </button>
+          ) : currentSlide === 7 ? (
             <button onClick={handleSurveySubmit} className="flex items-center gap-2 transition-transform duration-200"
               style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", padding: "12px 32px", borderRadius: theme.radiusMd, backgroundColor: BRAND }}>
-              <ChevronLeft size={22} />
               {t("survey.submit")}
-            </button>
-          ) : currentSlide === 8 ? (
-            <button onClick={onClose} className="flex items-center gap-2 transition-transform duration-200"
-              style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", padding: "12px 32px", borderRadius: theme.radiusMd, backgroundColor: BRAND }}>
-              {t("survey.close")}
+              <ChevronRight size={22} />
             </button>
           ) : (
             <button onClick={handleNext} className="flex items-center gap-2 transition-transform duration-200"
               style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", padding: "12px 32px", borderRadius: theme.radiusMd, backgroundColor: BRAND }}>
-              <ChevronLeft size={22} />
               {t("survey.next")}
+              <ChevronRight size={22} />
             </button>
-          )
-        ) : (
-          <button
-            onClick={currentSlide === 0 ? () => setPath("hub") : handlePrevious}
-            disabled={currentSlide === 8}
-            className="flex items-center gap-2 transition-transform duration-200"
-            style={{
-              fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold,
-              color: currentSlide === 8 ? theme.textDisabled : BRAND,
-              cursor: currentSlide === 8 ? "not-allowed" : "pointer",
-              opacity: currentSlide === 8 ? 0.4 : 1,
-              padding: "12px 24px", borderRadius: theme.radiusMd,
-              backgroundColor: currentSlide === 8 ? "transparent" : theme.primarySubtle,
-            }}
-          >
-            <ChevronLeft size={22} />
-            {currentSlide === 0 ? t("feedback.back") : t("survey.previous")}
-          </button>
-        )}
-
-        {/* Progress dots */}
-        <div className="flex items-center justify-center gap-2">
-          {Array.from({ length: totalSlides - 1 }).map((_, i) => (
-            <div
-              key={i}
-              className="rounded-full transition-transform duration-300"
-              style={{
-                width: i === currentSlide ? "28px" : "8px",
-                height: "8px",
-                backgroundColor: i === currentSlide ? BRAND : theme.borderDefault,
-              }}
-            />
-          ))}
+          )}
         </div>
-
-        {/* LTR right = Next / RTL right = Previous */}
-        {isRTL ? (
-          <button
-            onClick={currentSlide === 0 ? () => setPath("hub") : handlePrevious}
-            disabled={currentSlide === 8}
-            className="flex items-center gap-2 transition-transform duration-200"
-            style={{
-              fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold,
-              color: currentSlide === 8 ? theme.textDisabled : BRAND,
-              cursor: currentSlide === 8 ? "not-allowed" : "pointer",
-              opacity: currentSlide === 8 ? 0.4 : 1,
-              padding: "12px 24px", borderRadius: theme.radiusMd,
-              backgroundColor: currentSlide === 8 ? "transparent" : theme.primarySubtle,
-            }}
-          >
-            {currentSlide === 0 ? t("feedback.back") : t("survey.previous")}
-            <ChevronRight size={22} />
-          </button>
-        ) : currentSlide === 7 ? (
-          <button onClick={handleSurveySubmit} className="flex items-center gap-2 transition-transform duration-200"
-            style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", padding: "12px 32px", borderRadius: theme.radiusMd, backgroundColor: BRAND }}>
-            {t("survey.submit")}
-            <ChevronRight size={22} />
-          </button>
-        ) : currentSlide === 8 ? (
-          <button onClick={onClose} className="flex items-center gap-2 transition-transform duration-200"
-            style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", padding: "12px 32px", borderRadius: theme.radiusMd, backgroundColor: BRAND }}>
-            {t("survey.close")}
-          </button>
-        ) : (
-          <button onClick={handleNext} className="flex items-center gap-2 transition-transform duration-200"
-            style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", padding: "12px 32px", borderRadius: theme.radiusMd, backgroundColor: BRAND }}>
-            {t("survey.next")}
-            <ChevronRight size={22} />
-          </button>
-        )}
-      </div>
+      )}
     </div>
   );
 
@@ -609,103 +657,131 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
     }
 
     return (
-      <div className="flex-1 flex flex-col overflow-hidden items-center justify-center">
-        <div className="w-full max-w-[800px] flex flex-col h-full">
-          {/* Header */}
-          <div className="shrink-0 flex items-center gap-4 px-0 pt-10 pb-4">
-            <div className="flex items-center justify-center"
-              style={{ width: 44, height: 44, borderRadius: theme.radiusLg, backgroundColor: CONCERN_SUBTLE }}>
-              <AlertTriangle size={22} style={{ color: CONCERN_COLOR }} />
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        <div className="flex-1 flex flex-col overflow-hidden items-center justify-center">
+          <div className="w-full max-w-[800px] flex flex-col h-full shrink-0">
+            {/* Header */}
+            <div className="shrink-0 flex items-center gap-4 px-0 pt-10 pb-4">
+              <div className="flex items-center justify-center"
+                style={{ width: 44, height: 44, borderRadius: theme.radiusLg, backgroundColor: CONCERN_SUBTLE }}>
+                <AlertTriangle size={22} style={{ color: CONCERN_COLOR }} />
+              </div>
+              <div className="flex flex-col">
+                <span style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading }}>
+                  {t("concern.title")}
+                </span>
+                <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, color: theme.textMuted }}>
+                  {t("concern.subtitle")}
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading }}>
-                {t("concern.title")}
-              </span>
-              <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, color: theme.textMuted }}>
-                {t("concern.subtitle")}
-              </span>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-0 pb-6 scrollbar-width-none">
+              {/* Area question */}
+              <h3 style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "20px", marginTop: "24px" }}>
+                {t("concern.areaQuestion")}
+              </h3>
+              <div className="flex flex-wrap gap-3 mb-10">
+                {concernAreas.map((area) => {
+                  const isSelected = concernArea === area;
+                  return (
+                    <button
+                      key={area}
+                      onClick={() => setConcernArea(area)}
+                      className="transition-transform duration-200 active:scale-[0.96] cursor-pointer"
+                      style={{
+                        padding: "12px 24px",
+                        borderRadius: theme.radiusLg,
+                        border: isSelected ? `2px solid ${CONCERN_COLOR}` : `1.5px solid ${theme.borderDefault}`,
+                        backgroundColor: isSelected ? CONCERN_SUBTLE : theme.surface,
+                        fontFamily,
+                        fontSize: TYPE_SCALE.base,
+                        fontWeight: isSelected ? WEIGHT.bold : WEIGHT.medium,
+                        color: isSelected ? CONCERN_COLOR : theme.textBody,
+                      }}
+                    >
+                      {t(area)}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Tell us */}
+              <h3 style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "16px" }}>
+                {t("concern.tellUs")}
+              </h3>
+              <div className="relative">
+                <textarea
+                  value={concernText}
+                  onChange={(e) => setConcernText(e.target.value)}
+                  placeholder={t("concern.placeholder")}
+                  style={{
+                    width: "100%", height: "140px", padding: "20px",
+                    borderRadius: theme.radiusLg,
+                    border: `1.5px solid ${theme.borderDefault}`,
+                    fontFamily, fontSize: TYPE_SCALE.base, color: theme.textHeading,
+                    resize: "none", outline: "none",
+                    direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
+                  }}
+                  onFocus={(e) => { e.target.style.borderColor = CONCERN_COLOR; }}
+                  onBlur={(e) => { e.target.style.borderColor = theme.borderDefault; }}
+                />
+                <VoiceRecorder color={CONCERN_COLOR} label={t("concern.recordVoice") || "Record voice"} />
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto px-0 pb-6 scrollbar-width-none">
-            {/* Area question */}
-            <h3 style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "20px", marginTop: "24px" }}>
-              {t("concern.areaQuestion")}
-            </h3>
-            <div className="flex flex-wrap gap-3 mb-10">
-              {concernAreas.map((area) => {
-                const isSelected = concernArea === area;
-                return (
-                  <button
-                    key={area}
-                    onClick={() => setConcernArea(area)}
-                    className="transition-transform duration-200 active:scale-[0.96] cursor-pointer"
-                    style={{
-                      padding: "12px 24px",
-                      borderRadius: theme.radiusLg,
-                      border: isSelected ? `2px solid ${CONCERN_COLOR}` : `1.5px solid ${theme.borderDefault}`,
-                      backgroundColor: isSelected ? CONCERN_SUBTLE : theme.surface,
-                      fontFamily,
-                      fontSize: TYPE_SCALE.base,
-                      fontWeight: isSelected ? WEIGHT.bold : WEIGHT.medium,
-                      color: isSelected ? CONCERN_COLOR : theme.textBody,
-                    }}
-                  >
-                    {t(area)}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Tell us */}
-            <h3 style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "16px" }}>
-              {t("concern.tellUs")}
-            </h3>
-            <div className="relative">
-              <textarea
-                value={concernText}
-                onChange={(e) => setConcernText(e.target.value)}
-                placeholder={t("concern.placeholder")}
+        {/* Footer */}
+        <div className="shrink-0 flex items-center justify-between px-12 py-8 border-t" style={{ borderColor: theme.borderDefault, direction: "ltr" }}>
+          {isRTL ? (
+            <>
+              <button
+                onClick={handleConcernSubmit}
+                disabled={!concernArea || !concernText.trim()}
+                className="flex items-center gap-2 transition-transform duration-200 active:scale-[0.96] cursor-pointer"
                 style={{
-                  width: "100%", height: "140px", padding: "20px",
-                  borderRadius: theme.radiusLg,
-                  border: `1.5px solid ${theme.borderDefault}`,
-                  fontFamily, fontSize: TYPE_SCALE.base, color: theme.textHeading,
-                  resize: "none", outline: "none",
-                  direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
+                  fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: "#fff",
+                  padding: "12px 32px", borderRadius: theme.radiusMd,
+                  backgroundColor: (!concernArea || !concernText.trim()) ? theme.textDisabled : CONCERN_COLOR,
+                  border: "none", opacity: (!concernArea || !concernText.trim()) ? 0.5 : 1,
+                  boxShadow: `0 4px 16px ${CONCERN_SUBTLE}`,
                 }}
-                onFocus={(e) => { e.target.style.borderColor = CONCERN_COLOR; }}
-                onBlur={(e) => { e.target.style.borderColor = theme.borderDefault; }}
-              />
-              <button className="flex items-center gap-2 mt-3 cursor-pointer" style={{ background: "none", border: "none" }}>
-                <Mic size={18} style={{ color: CONCERN_COLOR }} />
-                <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.bold, color: CONCERN_COLOR }}>{t("concern.recordVoice")}</span>
+              >
+                <ChevronLeft size={22} />
+                {t("survey.submit")}
               </button>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="shrink-0 flex items-center justify-between px-0 py-6 border-t" style={{ borderColor: theme.borderDefault }}>
-            <button onClick={() => setPath("hub")} className="flex items-center gap-2 cursor-pointer transition-transform duration-200"
-              style={{ background: "none", border: "none", fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
-              {isRTL ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-              {t("feedback.back")}
-            </button>
-            <button
-              onClick={handleConcernSubmit}
-              disabled={!concernArea || !concernText.trim()}
-              className="transition-transform duration-200 active:scale-[0.96] cursor-pointer"
-              style={{
-                padding: "14px 40px", borderRadius: theme.radiusMd,
-                backgroundColor: (!concernArea || !concernText.trim()) ? theme.textDisabled : CONCERN_COLOR,
-                border: "none", opacity: (!concernArea || !concernText.trim()) ? 0.5 : 1,
-                boxShadow: `0 4px 16px ${CONCERN_SUBTLE}`,
-              }}
-            >
-              <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: "#fff" }}>{t("survey.submit")}</span>
-            </button>
-          </div>
+              <button onClick={() => setPath("hub")} className="flex items-center gap-2 cursor-pointer transition-transform duration-200"
+                style={{ background: "none", border: "none", padding: "12px 24px", borderRadius: theme.radiusMd, backgroundColor: "transparent", fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
+                {t("feedback.back")}
+                <ChevronRight size={22} />
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setPath("hub")} className="flex items-center gap-2 cursor-pointer transition-transform duration-200"
+                style={{ background: "none", border: "none", padding: "12px 24px", borderRadius: theme.radiusMd, backgroundColor: "transparent", fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
+                <ChevronLeft size={22} />
+                {t("feedback.back")}
+              </button>
+              <button
+                onClick={handleConcernSubmit}
+                disabled={!concernArea || !concernText.trim()}
+                className="flex items-center gap-2 transition-transform duration-200 active:scale-[0.96] cursor-pointer"
+                style={{
+                  fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: "#fff",
+                  padding: "12px 32px", borderRadius: theme.radiusMd,
+                  backgroundColor: (!concernArea || !concernText.trim()) ? theme.textDisabled : CONCERN_COLOR,
+                  border: "none", opacity: (!concernArea || !concernText.trim()) ? 0.5 : 1,
+                  boxShadow: `0 4px 16px ${CONCERN_SUBTLE}`,
+                }}
+              >
+                {t("survey.submit")}
+                <ChevronRight size={22} />
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -746,103 +822,131 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
     }
 
     return (
-      <div className="flex-1 flex flex-col overflow-hidden items-center justify-center">
-        <div className="w-full max-w-[800px] flex flex-col h-full">
-          {/* Header */}
-          <div className="shrink-0 flex items-center gap-4 px-0 pt-10 pb-4">
-            <div className="flex items-center justify-center"
-              style={{ width: 44, height: 44, borderRadius: theme.radiusLg, backgroundColor: APPRECIATION_SUBTLE }}>
-              <Heart size={22} style={{ color: APPRECIATION_COLOR }} />
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        <div className="flex-1 flex flex-col overflow-hidden items-center justify-center">
+          <div className="w-full max-w-[800px] flex flex-col h-full shrink-0">
+            {/* Header */}
+            <div className="shrink-0 flex items-center gap-4 px-0 pt-10 pb-4">
+              <div className="flex items-center justify-center"
+                style={{ width: 44, height: 44, borderRadius: theme.radiusLg, backgroundColor: APPRECIATION_SUBTLE }}>
+                <Heart size={22} style={{ color: APPRECIATION_COLOR }} />
+              </div>
+              <div className="flex flex-col">
+                <span style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading }}>
+                  {t("appreciation.title")}
+                </span>
+                <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, color: theme.textMuted }}>
+                  {t("appreciation.subtitle")}
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading }}>
-                {t("appreciation.title")}
-              </span>
-              <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, color: theme.textMuted }}>
-                {t("appreciation.subtitle")}
-              </span>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-0 pb-6 scrollbar-width-none">
+              {/* Who to thank */}
+              <h3 style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "20px", marginTop: "24px" }}>
+                {t("appreciation.whoQuestion")}
+              </h3>
+              <div className="flex flex-wrap gap-3 mb-10">
+                {appreciationTargets.map((target) => {
+                  const isSelected = appreciationTarget === target;
+                  return (
+                    <button
+                      key={target}
+                      onClick={() => setAppreciationTarget(target)}
+                      className="transition-transform duration-200 active:scale-[0.96] cursor-pointer"
+                      style={{
+                        padding: "12px 24px",
+                        borderRadius: theme.radiusLg,
+                        border: isSelected ? `2px solid ${APPRECIATION_COLOR}` : `1.5px solid ${theme.borderDefault}`,
+                        backgroundColor: isSelected ? APPRECIATION_SUBTLE : theme.surface,
+                        fontFamily,
+                        fontSize: TYPE_SCALE.base,
+                        fontWeight: isSelected ? WEIGHT.bold : WEIGHT.medium,
+                        color: isSelected ? APPRECIATION_COLOR : theme.textBody,
+                      }}
+                    >
+                      {t(target)}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Message */}
+              <h3 style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "16px" }}>
+                {t("appreciation.yourMessage")}
+              </h3>
+              <div className="relative">
+                <textarea
+                  value={appreciationText}
+                  onChange={(e) => setAppreciationText(e.target.value)}
+                  placeholder={t("appreciation.placeholder")}
+                  style={{
+                    width: "100%", height: "140px", padding: "20px",
+                    borderRadius: theme.radiusLg,
+                    border: `1.5px solid ${theme.borderDefault}`,
+                    fontFamily, fontSize: TYPE_SCALE.base, color: theme.textHeading,
+                    resize: "none", outline: "none",
+                    direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
+                  }}
+                  onFocus={(e) => { e.target.style.borderColor = APPRECIATION_COLOR; }}
+                  onBlur={(e) => { e.target.style.borderColor = theme.borderDefault; }}
+                />
+                <VoiceRecorder color={APPRECIATION_COLOR} label={t("appreciation.recordVoice") || "Record voice"} />
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto px-0 pb-6 scrollbar-width-none">
-            {/* Who to thank */}
-            <h3 style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "20px", marginTop: "24px" }}>
-              {t("appreciation.whoQuestion")}
-            </h3>
-            <div className="flex flex-wrap gap-3 mb-10">
-              {appreciationTargets.map((target) => {
-                const isSelected = appreciationTarget === target;
-                return (
-                  <button
-                    key={target}
-                    onClick={() => setAppreciationTarget(target)}
-                    className="transition-transform duration-200 active:scale-[0.96] cursor-pointer"
-                    style={{
-                      padding: "12px 24px",
-                      borderRadius: theme.radiusLg,
-                      border: isSelected ? `2px solid ${APPRECIATION_COLOR}` : `1.5px solid ${theme.borderDefault}`,
-                      backgroundColor: isSelected ? APPRECIATION_SUBTLE : theme.surface,
-                      fontFamily,
-                      fontSize: TYPE_SCALE.base,
-                      fontWeight: isSelected ? WEIGHT.bold : WEIGHT.medium,
-                      color: isSelected ? APPRECIATION_COLOR : theme.textBody,
-                    }}
-                  >
-                    {t(target)}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Message */}
-            <h3 style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "16px" }}>
-              {t("appreciation.yourMessage")}
-            </h3>
-            <div className="relative">
-              <textarea
-                value={appreciationText}
-                onChange={(e) => setAppreciationText(e.target.value)}
-                placeholder={t("appreciation.placeholder")}
+        {/* Footer */}
+        <div className="shrink-0 flex items-center justify-between px-12 py-8 border-t" style={{ borderColor: theme.borderDefault, direction: "ltr" }}>
+          {isRTL ? (
+            <>
+              <button
+                onClick={handleAppreciationSubmit}
+                disabled={!appreciationTarget || !appreciationText.trim()}
+                className="flex items-center gap-2 transition-transform duration-200 active:scale-[0.96] cursor-pointer"
                 style={{
-                  width: "100%", height: "140px", padding: "20px",
-                  borderRadius: theme.radiusLg,
-                  border: `1.5px solid ${theme.borderDefault}`,
-                  fontFamily, fontSize: TYPE_SCALE.base, color: theme.textHeading,
-                  resize: "none", outline: "none",
-                  direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
+                  fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: "#fff",
+                  padding: "12px 32px", borderRadius: theme.radiusMd,
+                  backgroundColor: (!appreciationTarget || !appreciationText.trim()) ? theme.textDisabled : APPRECIATION_COLOR,
+                  border: "none", opacity: (!appreciationTarget || !appreciationText.trim()) ? 0.5 : 1,
+                  boxShadow: `0 4px 16px ${APPRECIATION_SUBTLE}`,
                 }}
-                onFocus={(e) => { e.target.style.borderColor = APPRECIATION_COLOR; }}
-                onBlur={(e) => { e.target.style.borderColor = theme.borderDefault; }}
-              />
-              <button className="flex items-center gap-2 mt-3 cursor-pointer" style={{ background: "none", border: "none" }}>
-                <Mic size={18} style={{ color: APPRECIATION_COLOR }} />
-                <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.bold, color: APPRECIATION_COLOR }}>{t("appreciation.recordVoice")}</span>
+              >
+                <ChevronLeft size={22} />
+                {t("appreciation.send")}
               </button>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="shrink-0 flex items-center justify-between px-0 py-6 border-t" style={{ borderColor: theme.borderDefault }}>
-            <button onClick={() => setPath("hub")} className="flex items-center gap-2 cursor-pointer transition-transform duration-200"
-              style={{ background: "none", border: "none", fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
-              {isRTL ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-              {t("feedback.back")}
-            </button>
-            <button
-              onClick={handleAppreciationSubmit}
-              disabled={!appreciationTarget || !appreciationText.trim()}
-              className="transition-transform duration-200 active:scale-[0.96] cursor-pointer"
-              style={{
-                padding: "14px 40px", borderRadius: theme.radiusMd,
-                backgroundColor: (!appreciationTarget || !appreciationText.trim()) ? theme.textDisabled : APPRECIATION_COLOR,
-                border: "none", opacity: (!appreciationTarget || !appreciationText.trim()) ? 0.5 : 1,
-                boxShadow: `0 4px 16px ${APPRECIATION_SUBTLE}`,
-              }}
-            >
-              <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: "#fff" }}>{t("appreciation.send")}</span>
-            </button>
-          </div>
+              <button onClick={() => setPath("hub")} className="flex items-center gap-2 cursor-pointer transition-transform duration-200"
+                style={{ background: "none", border: "none", padding: "12px 24px", borderRadius: theme.radiusMd, backgroundColor: "transparent", fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
+                {t("feedback.back")}
+                <ChevronRight size={22} />
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setPath("hub")} className="flex items-center gap-2 cursor-pointer transition-transform duration-200"
+                style={{ background: "none", border: "none", padding: "12px 24px", borderRadius: theme.radiusMd, backgroundColor: "transparent", fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
+                <ChevronLeft size={22} />
+                {t("feedback.back")}
+              </button>
+              <button
+                onClick={handleAppreciationSubmit}
+                disabled={!appreciationTarget || !appreciationText.trim()}
+                className="flex items-center gap-2 transition-transform duration-200 active:scale-[0.96] cursor-pointer"
+                style={{
+                  fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: "#fff",
+                  padding: "12px 32px", borderRadius: theme.radiusMd,
+                  backgroundColor: (!appreciationTarget || !appreciationText.trim()) ? theme.textDisabled : APPRECIATION_COLOR,
+                  border: "none", opacity: (!appreciationTarget || !appreciationText.trim()) ? 0.5 : 1,
+                  boxShadow: `0 4px 16px ${APPRECIATION_SUBTLE}`,
+                }}
+              >
+                {t("appreciation.send")}
+                <ChevronRight size={22} />
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
