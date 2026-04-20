@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "./AuthContext";
-import { Eye, EyeOff, Play, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import careinnLogo from "../../assets/careinn-logo.png";
 import heroImage from "../../assets/careinn-hero.jpg";
 
@@ -21,29 +21,12 @@ export function PasswordGate() {
   const [error, setError] = useState(false);
   const [shaking, setShaking] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [showSlideshow, setShowSlideshow] = useState(false);
-  const [slideIndex, setSlideIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const slides = [
-    { title: "Smart Room Controls", desc: "Adjust lights, blinds, and temperature right from your bed.", emoji: "🏠", bg: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" },
-    { title: "Entertainment Hub", desc: "Stream TV, movies, music, and games during your stay.", emoji: "🎬", bg: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" },
-    { title: "Meal Ordering", desc: "Browse menus and order meals delivered to your room.", emoji: "🍽️", bg: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" },
-    { title: "Patient Education", desc: "Access health resources and educational materials.", emoji: "📚", bg: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" },
-    { title: "Your Care Team", desc: "Connect with nurses and doctors at the touch of a button.", emoji: "👨‍⚕️", bg: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)" },
-  ];
 
   useEffect(() => {
     const timer = setTimeout(() => inputRef.current?.focus(), 500);
     return () => clearTimeout(timer);
   }, []);
-
-  // Auto-advance slideshow
-  useEffect(() => {
-    if (!showSlideshow) return;
-    const t = setInterval(() => setSlideIndex(i => (i + 1) % slides.length), 5000);
-    return () => clearInterval(t);
-  }, [showSlideshow, slides.length]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -300,34 +283,6 @@ export function PasswordGate() {
                 Sign in
               </button>
             </form>
-
-              {/* Welcome Slideshow button */}
-              <button
-                type="button"
-                onClick={() => { setShowSlideshow(true); setSlideIndex(0); }}
-                style={{
-                  width: "100%",
-                  height: "48px",
-                  border: `1.5px solid ${SKY}`,
-                  borderRadius: "10px",
-                  background: "transparent",
-                  color: SKY,
-                  fontSize: "15px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  letterSpacing: "0.3px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                  marginTop: "12px",
-                  transition: "background 0.2s, color 0.2s",
-                }}
-              >
-                <Play size={16} fill={SKY} />
-                Welcome Slideshow
-              </button>
           </div>
         </div>
 
@@ -373,112 +328,7 @@ export function PasswordGate() {
           from { opacity: 0; transform: translateY(-4px); }
           to { opacity: 1; transform: translateY(0); }
         }
-
-        @keyframes slideFadeIn {
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
-        }
       `}</style>
-
-      {/* ═══ WELCOME SLIDESHOW OVERLAY ═══ */}
-      {showSlideshow && (
-        <div
-          style={{
-            position: "fixed", inset: 0, zIndex: 100000,
-            background: "rgba(0,0,0,0.85)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            animation: "fadeIn 0.3s ease",
-          }}
-          onClick={() => setShowSlideshow(false)}
-        >
-          {/* Close button */}
-          <button
-            onClick={() => setShowSlideshow(false)}
-            style={{
-              position: "absolute", top: 24, right: 24,
-              width: 48, height: 48, borderRadius: 12,
-              background: "rgba(255,255,255,0.1)", border: "none",
-              color: "#fff", cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <X size={22} />
-          </button>
-
-          {/* Slide card */}
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              width: "70%", maxWidth: 800, borderRadius: 24,
-              background: slides[slideIndex].bg,
-              padding: "80px 60px",
-              display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center",
-              textAlign: "center", color: "#fff",
-              position: "relative", overflow: "hidden",
-              animation: "slideFadeIn 0.4s ease",
-              boxShadow: "0 32px 80px rgba(0,0,0,0.4)",
-            }}
-            key={slideIndex}
-          >
-            <div style={{ fontSize: 72, marginBottom: 24 }}>{slides[slideIndex].emoji}</div>
-            <h2 style={{
-              fontSize: 36, fontWeight: 800, margin: "0 0 16px",
-              letterSpacing: "-0.5px", textShadow: "0 2px 12px rgba(0,0,0,0.2)",
-            }}>
-              {slides[slideIndex].title}
-            </h2>
-            <p style={{
-              fontSize: 18, fontWeight: 400, opacity: 0.9,
-              maxWidth: 500, lineHeight: 1.6,
-            }}>
-              {slides[slideIndex].desc}
-            </p>
-
-            {/* Dot indicators */}
-            <div style={{ display: "flex", gap: 10, marginTop: 40 }}>
-              {slides.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSlideIndex(i)}
-                  style={{
-                    width: i === slideIndex ? 32 : 10, height: 10,
-                    borderRadius: 5, border: "none", cursor: "pointer",
-                    background: i === slideIndex ? "#fff" : "rgba(255,255,255,0.4)",
-                    transition: "all 0.3s ease",
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Nav arrows */}
-          <button
-            onClick={e => { e.stopPropagation(); setSlideIndex(i => (i - 1 + slides.length) % slides.length); }}
-            style={{
-              position: "absolute", left: 24, top: "50%", transform: "translateY(-50%)",
-              width: 56, height: 56, borderRadius: 16,
-              background: "rgba(255,255,255,0.1)", border: "none",
-              color: "#fff", cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <ChevronLeft size={28} />
-          </button>
-          <button
-            onClick={e => { e.stopPropagation(); setSlideIndex(i => (i + 1) % slides.length); }}
-            style={{
-              position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)",
-              width: 56, height: 56, borderRadius: 16,
-              background: "rgba(255,255,255,0.1)", border: "none",
-              color: "#fff", cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <ChevronRight size={28} />
-          </button>
-        </div>
-      )}
     </div>
   );
 }
