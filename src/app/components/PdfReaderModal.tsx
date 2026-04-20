@@ -194,7 +194,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
 
   return (
     <div
-      className="absolute inset-0 z-[100] flex flex-col"
+      className="fixed inset-0 z-[100] flex flex-col"
       style={{
         backgroundColor: "#525659", 
         animation: "pdfReaderIn 0.25s ease-out",
@@ -245,7 +245,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
           padding-top: 30px;
         }
         .pdf-page-wrapper:last-child {
-          padding-bottom: 80px;
+          padding-bottom: 100px;
         }
         .page-input {
           background-color: rgba(255,255,255,0.1);
