@@ -625,21 +625,46 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
               bookmarks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-8 gap-3" style={{ marginTop: 40, opacity: .35 }}>
                   <Bookmark size={32} color="#fff" />
-                  <span style={{ fontSize: 12, textAlign: "center", color: "#fff" }}>No bookmarks yet.<br />Use the bookmark button in the toolbar.</span>
+                  <span style={{ fontSize: 12, textAlign: "center", color: "#fff" }}>No bookmarks yet.<br />Tap the bookmark icon to add one.</span>
                 </div>
               ) : (
                 bookmarks.map(p => (
                   <div key={p} onClick={() => goTo(p)}
-                    className="group"
-                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 10px", borderRadius: 8, cursor: "pointer", marginBottom: 4, backgroundColor: p === currentPage ? "rgba(74,158,255,.1)" : "transparent", transition: "background .1s" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 8px", borderRadius: 8, cursor: "pointer", marginBottom: 4,
+                      backgroundColor: p === currentPage ? "rgba(74,158,255,.12)" : "rgba(255,255,255,.03)",
+                      border: p === currentPage ? "1px solid rgba(74,158,255,.3)" : "1px solid transparent",
+                      transition: "background .1s",
+                    }}>
+                    {/* Mini bookmark icon */}
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 6,
+                      backgroundColor: "#2A2A2A", display: "flex",
+                      alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}>
                       <Bookmark size={14} className="fill-yellow-400 text-yellow-400" />
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.9)" }}>Page {p}</span>
                     </div>
-                    <button onClick={(e) => { e.stopPropagation(); setBookmarks(b => { const n = b.filter(x => x !== p); if (pdfSource) localStorage.setItem(`pdf_bm_${pdfSource}`, JSON.stringify(n)); return n; }); }}
-                      style={{ padding: 4, opacity: 0, background: "transparent", border: "none", cursor: "pointer", color: "#888", transition: "opacity .15s" }}
-                      className="group-hover:!opacity-100">
-                      <X size={14} />
+                    {/* Page label */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>Page {p}</div>
+                    </div>
+                    {/* Delete button (always visible for touch) */}
+                    <button onClick={(e) => {
+                      e.stopPropagation();
+                      setBookmarks(b => {
+                        const n = b.filter(x => x !== p);
+                        if (pdfSource) localStorage.setItem(`pdf_bm_${pdfSource}`, JSON.stringify(n));
+                        return n;
+                      });
+                    }}
+                      style={{
+                        width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+                        background: "rgba(255,255,255,.05)", border: "none",
+                        cursor: "pointer", color: "#666", display: "flex",
+                        alignItems: "center", justifyContent: "center",
+                      }}>
+                      <X size={12} />
                     </button>
                   </div>
                 ))
