@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, Printer, Loader2, Info, Star, Bookmark, PanelLeft, PanelLeftClose, Book, BookOpen } from "lucide-react";
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW } from "./ThemeContext";
 import { useLocale } from "./i18n";
@@ -22,18 +22,19 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
   const { isRTL } = useLocale();
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
-  const [scale, setScale] = useState(1.6);
+  const [scale, setScale] = useState(1.4);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [useFallback, setUseFallback] = useState(false);
   const [inputPage, setInputPage] = useState("1");
   const [showSidebar, setShowSidebar] = useState(false);
-  const [dualPage, setDualPage] = useState(false); // New state for 2-page layout
   const [bookmarks, setBookmarks] = useState<number[]>([]);
-  const [sidebarTab, setSidebarTab] = useState<'pages' | 'bookmarks'>('pages'); // Tabs for sidebar
+  const [sidebarTab, setSidebarTab] = useState<'pages' | 'bookmarks'>('pages');
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const isProgrammaticScroll = useRef(false);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load saved page on mount or source change
   useEffect(() => {
@@ -65,29 +66,71 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
     }
   }, [bookmarks, pdfSource]);
 
-  // Save page whenever it changes and scroll to it
-  useEffect(() => {
-    if (pdfSource && pageNumber) {
-      localStorage.setItem(`pdf_page_${pdfSource}`, pageNumber.toString());
-      setInputPage(pageNumber.toString());
-      
-      // Auto-scroll to the page in the horizontal container
-      if (scrollContainerRef.current && !isProgrammaticScroll.current) {
-        const bundles = scrollContainerRef.current.querySelectorAll('.pdf-page-container');
-        const targetIndex = dualPage ? Math.floor((pageNumber - 1) / 2) : pageNumber - 1;
-        const target = bundles[targetIndex] as HTMLElement;
-        if (target) {
-          isProgrammaticScroll.current = true;
-          scrollContainerRef.current.scrollTo({
-            left: target.offsetLeft - 40,
-            behavior: "smooth"
-          });
-          // Reset after animation
-          setTimeout(() => { isProgrammaticScroll.current = false; }, 600);
-        }
+  // Scroll to a specific page
+  const scrollToPage = useCallback((page: number) => {
+    const el = pageRefs.current.get(page);
+    if (el && scrollContainerRef.current) {
+      isProgrammaticScroll.current = true;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Reset the flag after the scroll animation finishes
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        isProgrammaticScroll.current = false;
+      }, 800);
+    }
+  }, []);
+
+  // When pageNumber changes via nav buttons, scroll to that page
+  const navigateToPage = useCallback((page: number) => {
+    setPageNumber(page);
+    setInputPage(page.toString());
+    if (pdfSource) {
+      localStorage.setItem(`pdf_page_${pdfSource}`, page.toString());
+    }
+    scrollToPage(page);
+  }, [pdfSource, scrollToPage]);
+
+  // Track visible page via scroll position
+  const handleScroll = useCallback(() => {
+    if (isProgrammaticScroll.current || !scrollContainerRef.current || !numPages) return;
+    
+    const container = scrollContainerRef.current;
+    const containerTop = container.scrollTop;
+    const containerHeight = container.clientHeight;
+    const viewMidpoint = containerTop + containerHeight * 0.35; // Read at ~35% from top
+    
+    let closestPage = 1;
+    let minDist = Infinity;
+    
+    pageRefs.current.forEach((el, pageNum) => {
+      const elTop = el.offsetTop;
+      const elMid = elTop + el.offsetHeight / 2;
+      const dist = Math.abs(elMid - viewMidpoint);
+      if (dist < minDist) {
+        minDist = dist;
+        closestPage = pageNum;
+      }
+    });
+    
+    if (closestPage !== pageNumber) {
+      setPageNumber(closestPage);
+      setInputPage(closestPage.toString());
+      if (pdfSource) {
+        localStorage.setItem(`pdf_page_${pdfSource}`, closestPage.toString());
       }
     }
-  }, [pageNumber, pdfSource, dualPage]);
+  }, [numPages, pageNumber, pdfSource]);
+
+  // Scroll to saved page once document loads
+  useEffect(() => {
+    if (numPages && pageNumber > 1) {
+      // Small delay to let pages render
+      const timer = setTimeout(() => {
+        scrollToPage(pageNumber);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [numPages]); // Only run when doc first loads
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -102,22 +145,28 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
     setError(`Technical Issue: ${err.message || "Engine initialization failed"}`);
   };
 
-  const handleZoomIn = () => setScale(prev => Math.min(prev + 0.1, 2.0));
-  const handleZoomOut = () => setScale(prev => Math.max(prev - 0.1, 0.5));
+  const handleZoomIn = () => setScale(prev => Math.min(prev + 0.15, 3.0));
+  const handleZoomOut = () => setScale(prev => Math.max(prev - 0.15, 0.5));
 
   const handlePageInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       const val = parseInt(inputPage, 10);
       if (!isNaN(val) && val > 0 && val <= (numPages || 1)) {
-        setPageNumber(val);
+        navigateToPage(val);
       } else {
         setInputPage(pageNumber.toString());
       }
     }
   };
 
-  const goToNextPage = () => setPageNumber(prev => Math.min(prev + 1, numPages || 1));
-  const goToPrevPage = () => setPageNumber(prev => Math.max(prev - 1, 1));
+  const goToNextPage = () => {
+    const next = Math.min(pageNumber + 1, numPages || 1);
+    navigateToPage(next);
+  };
+  const goToPrevPage = () => {
+    const prev = Math.max(pageNumber - 1, 1);
+    navigateToPage(prev);
+  };
 
   const toggleBookmark = () => {
     let newBookmarks;
@@ -127,11 +176,20 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
       newBookmarks = [...bookmarks, pageNumber].sort((a, b) => a - b);
     }
     setBookmarks(newBookmarks);
-    setSidebarTab('bookmarks'); // Open bookmarks tab when bookmarking
+    setSidebarTab('bookmarks');
     setShowSidebar(true);
   };
 
-  // If no source is provided, use the hardcoded whitepaper sample simulation
+  // Register a page ref
+  const setPageRef = useCallback((pageNum: number, el: HTMLDivElement | null) => {
+    if (el) {
+      pageRefs.current.set(pageNum, el);
+    } else {
+      pageRefs.current.delete(pageNum);
+    }
+  }, []);
+
+  // If no source is provided, use a placeholder
   const isSimulated = !pdfSource;
 
   return (
@@ -157,6 +215,9 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
           border-radius: 8px;
           cursor: pointer;
           transition: all 0.2s;
+          border: none;
+          background: transparent;
+          color: #fff;
         }
         .pdf-toolbar-btn:hover {
           background-color: rgba(255,255,255,0.1);
@@ -169,13 +230,22 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 40px 0;
           width: 100%;
         }
         .react-pdf__Page {
-          box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-          margin-bottom: 20px;
+          box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.4);
           background-color: white;
+        }
+        .pdf-page-wrapper {
+          display: flex;
+          justify-content: center;
+          padding: 20px 0;
+        }
+        .pdf-page-wrapper:first-child {
+          padding-top: 30px;
+        }
+        .pdf-page-wrapper:last-child {
+          padding-bottom: 80px;
         }
         .page-input {
           background-color: rgba(255,255,255,0.1);
@@ -186,26 +256,35 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
           border-radius: 4px;
           font-weight: bold;
           outline: none;
-        }
-        .pdf-viewer-horizontal {
-          display: flex;
-          flex-direction: row;
-          align-items: flex-start;
-          padding: 40px;
-          gap: 24px;
-          scroll-snap-type: x mandatory;
-          -webkit-overflow-scrolling: touch;
-        }
-        .pdf-page-container {
-          scroll-snap-align: center;
-          flex-shrink: 0;
-          display: flex;
-          gap: 8px;
-          justify-content: center;
+          padding: 4px;
+          font-size: 14px;
         }
         .page-input:focus {
           border-color: white;
           background-color: rgba(255,255,255,0.2);
+        }
+        .pdf-scroll-container::-webkit-scrollbar {
+          width: 10px;
+        }
+        .pdf-scroll-container::-webkit-scrollbar-track {
+          background: rgba(0,0,0,0.1);
+        }
+        .pdf-scroll-container::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.2);
+          border-radius: 5px;
+        }
+        .pdf-scroll-container::-webkit-scrollbar-thumb:hover {
+          background: rgba(255,255,255,0.35);
+        }
+        .pdf-sidebar-scroll::-webkit-scrollbar {
+          width: 6px;
+        }
+        .pdf-sidebar-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .pdf-sidebar-scroll::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.15);
+          border-radius: 3px;
         }
       `}</style>
 
@@ -221,14 +300,14 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
         }}
       >
         <div className="flex items-center gap-4">
-          <div 
+          <button 
             className="pdf-toolbar-btn" 
             title="Toggle Sidebar" 
             onClick={() => setShowSidebar(!showSidebar)}
             style={{ backgroundColor: showSidebar ? "rgba(255,255,255,0.1)" : "transparent" }}
           >
             {showSidebar ? <PanelLeftClose size={22} color="#fff" /> : <PanelLeft size={22} color="#fff" />}
-          </div>
+          </button>
           <span style={{ fontSize: "16px", fontWeight: 700, letterSpacing: "0.5px" }}>
             {title || "Document Viewer"}
           </span>
@@ -263,14 +342,14 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 pdf-sidebar-scroll">
               {sidebarTab === 'pages' ? (
                 <div className="space-y-4">
                   {Array.from(new Array(numPages), (el, index) => (
                     <div 
                       key={`thumb_${index + 1}`}
-                      className={`cursor-pointer rounded-lg p-2 border-2 transition-transform ${pageNumber === index + 1 ? "border-blue-500 bg-blue-500/10" : "border-transparent hover:bg-white/5"}`}
-                      onClick={() => setPageNumber(index + 1)}
+                      className={`cursor-pointer rounded-lg p-2 border-2 transition-all ${pageNumber === index + 1 ? "border-blue-500 bg-blue-500/10" : "border-transparent hover:bg-white/5"}`}
+                      onClick={() => navigateToPage(index + 1)}
                     >
                       <div className="flex flex-col items-center gap-2">
                         <Document file={{ url: pdfSource }} loading={null}>
@@ -286,21 +365,21 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
                   {bookmarks.length === 0 ? (
                     <div className="flex flex-col items-center justify-center p-10 gap-3 opacity-30">
                       <Bookmark size={32} />
-                      <span className="text-xs text-center">No bookmarks yet.<br/>Use the button in the toolbar.</span>
+                      <span className="text-xs text-center text-white">No bookmarks yet.<br/>Use the button in the toolbar.</span>
                     </div>
                   ) : (
                     bookmarks.map((p) => (
                       <div 
                         key={`bookmark_${p}`}
                         className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer group"
-                        onClick={() => setPageNumber(p)}
+                        onClick={() => navigateToPage(p)}
                       >
                         <div className="flex items-center gap-3">
                           <Bookmark size={14} className="fill-blue-500 text-blue-500" />
                           <span className="text-sm font-bold text-white/80">Page {p}</span>
                         </div>
                         <button 
-                          className="p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-400"
+                          className="p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-400 bg-transparent border-none text-white cursor-pointer"
                           onClick={(e) => { e.stopPropagation(); setBookmarks(bookmarks.filter(b => b !== p)); }}
                         >
                           <X size={14} />
@@ -314,94 +393,67 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
           </div>
         )}
 
+        {/* Main PDF content area — vertical scroll */}
         <div 
           ref={scrollContainerRef}
-          onScroll={(e) => {
-            if (isProgrammaticScroll.current) return;
-            const container = e.currentTarget;
-            const scrollLeft = container.scrollLeft;
-            const bundles = container.querySelectorAll('.pdf-page-container');
-            if (bundles.length > 0) {
-              let closestIndex = 0;
-              let minDiff = Infinity;
-              bundles.forEach((b, i) => {
-                const diff = Math.abs((b as HTMLElement).offsetLeft - 40 - scrollLeft);
-                if (diff < minDiff) {
-                  minDiff = diff;
-                  closestIndex = i;
-                }
-              });
-              const newPage = dualPage ? closestIndex * 2 + 1 : closestIndex + 1;
-              if (newPage !== pageNumber && newPage <= (numPages || 1)) {
-                setPageNumber(newPage);
-              }
-            }
-          }}
-          className="flex-1 overflow-x-auto pdf-viewer-horizontal relative"
-          style={{ scrollBehavior: "smooth", backgroundColor: "#525659" }}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto pdf-scroll-container relative"
+          style={{ backgroundColor: "#525659" }}
         >
-        {loading && !isSimulated && (
-          <div className="fixed inset-0 flex flex-col items-center justify-center text-white gap-4 z-0 pointer-events-none" style={{ left: showSidebar ? "320px" : "0" }}>
-            <Loader2 className="animate-spin text-blue-400" size={56} />
-            <span style={{ fontSize: "18px", fontWeight: 500 }}>Loading Document...</span>
-          </div>
-        )}
+          {loading && !isSimulated && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-4 z-0 pointer-events-none">
+              <Loader2 className="animate-spin text-blue-400" size={56} />
+              <span style={{ fontSize: "18px", fontWeight: 500 }}>Loading Document...</span>
+            </div>
+          )}
 
-        {error && !isSimulated && (
-          <div className="fixed inset-0 flex flex-col items-center justify-center text-white p-10 text-center gap-6 z-0" style={{ left: showSidebar ? "320px" : "0" }}>
-            <X size={64} className="text-red-400" />
-            <h3 style={{ fontSize: "24px", fontWeight: 700 }}>Error Loading PDF</h3>
-            <button onClick={() => { setError(null); setLoading(true); }} className="px-8 py-3 bg-white text-gray-900 rounded-lg font-bold">Try Again</button>
-          </div>
-        )}
+          {error && !isSimulated && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-10 text-center gap-6 z-0">
+              <X size={64} className="text-red-400" />
+              <h3 style={{ fontSize: "24px", fontWeight: 700 }}>Error Loading PDF</h3>
+              <button onClick={() => { setError(null); setLoading(true); }} className="px-8 py-3 bg-white text-gray-900 rounded-lg font-bold border-none cursor-pointer">Try Again</button>
+            </div>
+          )}
 
-        {isSimulated ? (
-           <div className="pdf-page-container">
+          {isSimulated ? (
+            <div className="pdf-page-wrapper">
               <div className="bg-white shadow-2xl p-20" style={{ width: `${210 * scale}mm`, minHeight: `${297 * scale}mm` }}>
                 <h1 className="text-4xl font-bold mb-10">Sample Document</h1>
                 <p>Please select a PDF to view content.</p>
               </div>
-           </div>
-        ) : useFallback ? (
-           <div className="w-full h-full p-4">
+            </div>
+          ) : useFallback ? (
+            <div className="w-full h-full p-4">
               <iframe src={pdfSource} className="w-full h-full border-0 rounded-xl bg-white" title="PDF Fallback" />
-           </div>
-        ) : (
-          <Document
-            file={{ url: pdfSource }}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={onDocumentLoadError as any}
-            loading={null}
-          >
-            {/* Logic for 2-page or 1-page horizontal scrolling/swiping */}
-            {numPages && Array.from(new Array(Math.ceil(numPages / (dualPage ? 2 : 1))), (el, i) => {
-              const startPage = dualPage ? i * 2 + 1 : i + 1;
-              const isCurrent = dualPage ? (pageNumber === startPage || pageNumber === startPage + 1) : pageNumber === startPage;
-              
-              return (
-                <div key={`bundle_${i}`} className="pdf-page-container">
-                  <Page 
-                    pageNumber={startPage} 
-                    scale={scale} 
-                    renderAnnotationLayer={false}
-                    renderTextLayer={true}
-                  />
-                  {dualPage && startPage + 1 <= numPages && (
+            </div>
+          ) : (
+            <Document
+              file={{ url: pdfSource }}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError as any}
+              loading={null}
+            >
+              {numPages && Array.from(new Array(numPages), (_, index) => {
+                const pg = index + 1;
+                return (
+                  <div
+                    key={`page_${pg}`}
+                    className="pdf-page-wrapper"
+                    ref={(el) => setPageRef(pg, el)}
+                  >
                     <Page 
-                      pageNumber={startPage + 1} 
+                      pageNumber={pg} 
                       scale={scale} 
                       renderAnnotationLayer={false}
                       renderTextLayer={true}
                     />
-                  )}
-                </div>
-              );
-            })}
-          </Document>
-        )}
-        <div className="w-20 shrink-0" /> 
+                  </div>
+                );
+              })}
+            </Document>
+          )}
+        </div>
       </div>
-    </div>
 
       {/* Bottom Toolbar */}
       <div
@@ -417,20 +469,9 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
         }}
       >
         <div className="flex items-center gap-2">
-          <div className="pdf-toolbar-btn" onClick={handleZoomOut}><ZoomOut size={18} /></div>
+          <button className="pdf-toolbar-btn" onClick={handleZoomOut}><ZoomOut size={18} /></button>
           <span className="text-xs font-bold w-10 text-center">{Math.round(scale * 100)}%</span>
-          <div className="pdf-toolbar-btn" onClick={handleZoomIn}><ZoomIn size={18} /></div>
-          
-          <div className="border-l border-white/10 h-6 mx-1" />
-          
-          <button 
-            onClick={() => setDualPage(!dualPage)} 
-            className="pdf-toolbar-btn px-2" 
-            title={dualPage ? "Switch to single page" : "Switch to dual page"}
-            style={{ backgroundColor: dualPage ? "rgba(255,255,255,0.15)" : "transparent" }}
-          >
-            {dualPage ? <BookOpen size={20} /> : <Book size={20} />}
-          </button>
+          <button className="pdf-toolbar-btn" onClick={handleZoomIn}><ZoomIn size={18} /></button>
         </div>
 
         <div className="flex items-center gap-2 border-l border-white/10 pl-4">
@@ -448,9 +489,9 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
         </div>
 
         <div className="flex items-center gap-1 border-l border-white/10 pl-4">
-          <div className="pdf-toolbar-btn" onClick={toggleBookmark}>
+          <button className="pdf-toolbar-btn" onClick={toggleBookmark}>
             <Bookmark size={18} className={bookmarks.includes(pageNumber) ? "fill-blue-500 text-blue-500" : ""} />
-          </div>
+          </button>
         </div>
       </div>
     </div>
