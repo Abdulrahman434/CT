@@ -4,7 +4,7 @@ import {
   X, ChevronUp, ChevronDown, ZoomIn, ZoomOut,
   Bookmark, RotateCw, Search, Loader2,
   LayoutGrid, Check, Maximize, Minimize2,
-  FileText, ScrollText, Monitor,
+  FileText, ScrollText, Monitor, Columns,
 } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════════
@@ -40,8 +40,9 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
   const [fitWScale, setFitWScale] = useState(1.0);
   const [rotation, setRotation] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [zoomMode, setZoomMode] = useState("fit-width");
+  const [zoomMode, setZoomMode] = useState("fit-page");
   const [scrollEnabled, setScrollEnabled] = useState(true);
+  const [viewMode, setViewMode] = useState<"single" | "two">("single");
 
   // ─── UI state ───
   const [showSidebar, setShowSidebar] = useState(true);
@@ -119,14 +120,17 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
   useEffect(() => {
     if (!scrollRef.current || pageDims.length === 0) return;
     const calc = () => {
-      const cw = scrollRef.current!.clientWidth;
-      const avail = cw - 32;
+      const c = scrollRef.current!;
+      const cw = c.clientWidth;
+      const ch = c.clientHeight;
       const first = pageDims[0];
       const rotated = rotation % 180 !== 0;
       const pw = rotated ? first.h : first.w;
-      const fs = avail / pw;
-      setFitWScale(fs);
-      if (zoomMode === "fit-width") setScale(fs);
+      const ph = rotated ? first.w : first.h;
+      const fw = (cw - 32) / pw;
+      setFitWScale(fw);
+      if (zoomMode === "fit-width") setScale(fw);
+      else if (zoomMode === "fit-page") setScale(Math.min(fw, (ch - 40) / ph));
     };
     calc();
     const ro = new ResizeObserver(calc);
@@ -270,24 +274,24 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
     setCurrentPage(p);
     if (pdfSource) localStorage.setItem(`pdf_pg_${pdfSource}`, String(p));
     const el = pageWrappers.current.get(p);
-    if (el && scrollRef.current) scrollRef.current.scrollTo({ top: el.offsetTop - 20, behavior: "smooth" });
-  }, [numPages, pdfSource]);
+    if (el && scrollRef.current) {
+      scrollRef.current.scrollTo({ top: el.offsetTop - 8, behavior: scrollEnabled ? "smooth" : "auto" });
+    }
+  }, [numPages, pdfSource, scrollEnabled]);
 
   const zoomTo = useCallback((mode: string, s?: number) => {
     setZoomMode(mode);
     if (s !== undefined) setScale(s);
-    else if (mode === "fit-width") setScale(fitWScale);
     else if (mode === "actual") setScale(1.0);
     else if (mode === "fit-page" && scrollRef.current && pageDims.length > 0) {
-      const ch = scrollRef.current.clientHeight - 40;
+      const c = scrollRef.current;
       const r = rotation % 180 !== 0;
-      setScale(ch / (r ? pageDims[0].w : pageDims[0].h));
-    } else if (mode === "fit-height" && scrollRef.current && pageDims.length > 0) {
-      const ch = scrollRef.current.clientHeight;
-      const r = rotation % 180 !== 0;
-      setScale(ch / (r ? pageDims[0].w : pageDims[0].h));
+      const pw = r ? pageDims[0].h : pageDims[0].w;
+      const ph = r ? pageDims[0].w : pageDims[0].h;
+      const fw = (c.clientWidth - 32) / pw;
+      setScale(Math.min(fw, (c.clientHeight - 40) / ph));
     }
-  }, [fitWScale, pageDims, rotation]);
+  }, [pageDims, rotation]);
 
   const zoomIn = () => { setZoomMode("custom"); setScale(s => Math.min(s + 0.2, 4.0)); };
   const zoomOut = () => { setZoomMode("custom"); setScale(s => Math.max(s - 0.2, 0.5)); };
@@ -430,13 +434,13 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
           color:#fff;font-size:24px;font-weight:600;display:flex;align-items:center;justify-content:center;
           cursor:pointer;transition:background .1s;-webkit-tap-highlight-color:transparent}
         .kp-btn:active{background:#555}
-        .kp-go{background:#4A9EFF;border-color:#4A9EFF;color:#fff;font-size:18px;font-weight:700}
-        .kp-go:active{background:#3580d9}
+        .kp-go{background:#10b981;border-color:#10b981;color:#fff;font-size:18px;font-weight:700}
+        .kp-go:active{background:#059669}
       `}</style>
 
       {/* ═══ TOP BAR ═══ */}
-      <div className="shrink-0 flex items-center justify-between px-5"
-        style={{ height: 52, backgroundColor: "#2b2d30", borderBottom: "1px solid #1a1a1a", zIndex: 20, color: "#fff", boxShadow: "0 2px 12px rgba(0,0,0,0.4)" }}>
+      <div className="shrink-0 flex items-center px-5"
+        style={{ height: 48, backgroundColor: "#2b2d30", borderBottom: "1px solid #1a1a1a", zIndex: 20, color: "#fff" }}>
         <div className="flex items-center gap-3">
           <button className="rail-btn" style={{ width: 36, height: 36 }} onClick={() => setShowSidebar(s => !s)}>
             <LayoutGrid size={18} />
@@ -444,12 +448,6 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
           <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: ".3px", opacity: .9 }}>
             {title || "Document Viewer"}
           </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="rail-btn" onClick={onClose}
-            style={{ backgroundColor: "#dc2626", borderRadius: 10, width: 40, height: 40 }}>
-            <X size={18} />
-          </button>
         </div>
       </div>
 
@@ -549,7 +547,43 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
             <p style={{ fontSize: 16, fontWeight: 600 }}>Failed to load PDF</p>
             <p style={{ fontSize: 13, opacity: .5, maxWidth: 300 }}>{error}</p>
           </div>
+        ) : viewMode === "two" ? (
+          /* Two-page view: pages side by side in rows */
+          <div className="flex flex-col items-center" style={{ padding: "20px 16px", minHeight: "100%" }}>
+            {Array.from({ length: Math.ceil(numPages / 2) }, (_, row) => {
+              const left = row * 2 + 1;
+              const right = row * 2 + 2;
+              const szL = pgSize(pageDims[left - 1]);
+              const szR = right <= numPages ? pgSize(pageDims[right - 1]) : null;
+              return (
+                <div key={row} className="flex" style={{ gap: 8, marginBottom: PAGE_GAP }}>
+                  <div
+                    data-page={left} ref={el => setWrap(left, el)}
+                    style={{
+                      width: szL.w, height: szL.h,
+                      backgroundColor: "#e8e8e8", borderRadius: 2,
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                      position: "relative", overflow: "hidden", flexShrink: 0,
+                    }}
+                  />
+                  {szR && (
+                    <div
+                      data-page={right} ref={el => setWrap(right, el)}
+                      style={{
+                        width: szR.w, height: szR.h,
+                        backgroundColor: "#e8e8e8", borderRadius: 2,
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                        position: "relative", overflow: "hidden", flexShrink: 0,
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+            <div style={{ height: "40vh", flexShrink: 0 }} />
+          </div>
         ) : (
+          /* Single-page view */
           <div className="flex flex-col items-center" style={{ padding: "20px 16px", minHeight: "100%" }}>
             {pageDims.map((dim, i) => {
               const pg = i + 1;
@@ -581,7 +615,13 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
           backgroundColor: "#2A2A2A", borderLeft: "0.5px solid #3A3A3A",
         }}
       >
-        <div className="flex flex-col items-center h-full" style={{ width: RAIL_W, paddingTop: 8, paddingBottom: 8 }}>
+        <div className="flex flex-col items-center h-full" style={{ width: RAIL_W, paddingTop: 4, paddingBottom: 8 }}>
+
+          {/* Close — aligned with rail buttons */}
+          <button className="rail-btn" onClick={onClose} title="Close"
+            style={{ backgroundColor: "#dc2626", borderRadius: 10, width: 44, height: 44, marginBottom: 4 }}>
+            <X size={18} />
+          </button>
 
           {/* ─── GROUP 1: Document aids ─── */}
           <div className="flex flex-col items-center" style={{ gap: 4 }}>
@@ -599,15 +639,21 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
           {/* Divider */}
           <div style={{ width: 32, height: 0.5, backgroundColor: "#3A3A3A", margin: "12px 0" }} />
 
-          {/* ─── GROUP 2: Page navigation ─── */}
+          {/* ─── GROUP 2: Page navigation (Adobe-style) ─── */}
           <div className="flex flex-col items-center" style={{ gap: 2 }}>
             <button
-              className="rail-btn" onClick={() => setShowKeypad(true)} title="Go to page"
-              style={{ flexDirection: "column", height: "auto", padding: "6px 0", gap: 0 }}
+              onClick={() => setShowKeypad(true)} title="Go to page"
+              style={{
+                width: 44, minHeight: 32, borderRadius: 6,
+                border: "1px solid #555", background: "#1A1A1A",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: "#fff", fontSize: 16, fontWeight: 700,
+                padding: "4px 0",
+              }}
             >
-              <span style={{ fontSize: 18, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>{currentPage}</span>
-              <span style={{ fontSize: 12, color: "#8A8A8A", lineHeight: 1.2 }}>{numPages || "–"}</span>
+              {currentPage}
             </button>
+            <span style={{ fontSize: 12, color: "#8A8A8A", lineHeight: 1.2, marginTop: 2, marginBottom: 2 }}>{numPages || "–"}</span>
             <button className="rail-btn" onClick={() => goTo(currentPage - 1)} disabled={currentPage <= 1}
               style={{ opacity: currentPage <= 1 ? .25 : 1 }}>
               <ChevronUp size={22} />
@@ -654,6 +700,18 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
               paddingTop: 6, paddingBottom: 6, overflow: "hidden",
             }}
           >
+            {/* View mode */}
+            <button className="vm-row" onClick={() => { setViewMode("single"); setShowViewMenu(false); }}>
+              <div style={{ width: 20 }}>{viewMode === "single" && <Check size={16} color="#4A9EFF" />}</div>
+              <FileText size={16} /><span>Single page view</span>
+            </button>
+            <button className="vm-row" onClick={() => { setViewMode("two"); setShowViewMenu(false); }}>
+              <div style={{ width: 20 }}>{viewMode === "two" && <Check size={16} color="#4A9EFF" />}</div>
+              <Columns size={16} /><span>Two page view</span>
+            </button>
+
+            <div style={{ height: 0.5, backgroundColor: "#3A3A3A", margin: "4px 0" }} />
+
             {/* Scrolling toggle */}
             <button className="vm-row" onClick={() => { setScrollEnabled(e => !e); }}>
               <div style={{ width: 20 }}>{scrollEnabled && <Check size={16} color="#4A9EFF" />}</div>
@@ -663,17 +721,14 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
             <div style={{ height: 0.5, backgroundColor: "#3A3A3A", margin: "4px 0" }} />
 
             {/* Zoom modes */}
-            {([
-              ["actual", "Actual size", <Maximize size={16} key="a" />],
-              ["fit-page", "Zoom to page level", <Minimize2 size={16} key="p" />],
-              ["fit-width", "Fit to width", <FileText size={16} key="w" />],
-              ["fit-height", "Fit height", <Monitor size={16} key="h" />],
-            ] as [string, string, any][]).map(([mode, label, icon]) => (
-              <button key={mode} className="vm-row" onClick={() => { zoomTo(mode); setShowViewMenu(false); }}>
-                <div style={{ width: 20 }}>{zoomMode === mode && <Check size={16} color="#4A9EFF" />}</div>
-                {icon}<span>{label}</span>
-              </button>
-            ))}
+            <button className="vm-row" onClick={() => { zoomTo("actual"); setShowViewMenu(false); }}>
+              <div style={{ width: 20 }}>{zoomMode === "actual" && <Check size={16} color="#4A9EFF" />}</div>
+              <Maximize size={16} /><span>Actual size</span>
+            </button>
+            <button className="vm-row" onClick={() => { zoomTo("fit-page"); setShowViewMenu(false); }}>
+              <div style={{ width: 20 }}>{zoomMode === "fit-page" && <Check size={16} color="#4A9EFF" />}</div>
+              <Minimize2 size={16} /><span>Zoom to page level</span>
+            </button>
 
             <div style={{ height: 0.5, backgroundColor: "#3A3A3A", margin: "4px 0" }} />
 
