@@ -819,7 +819,19 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
                   transition: "background .1s",
                 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "#4A9EFF", marginBottom: 4 }}>Page {r.page}</div>
-                  <div style={{ fontSize: 12, color: "#999", lineHeight: 1.4, wordBreak: "break-word" }}>{r.snippet}</div>
+                  <div style={{ fontSize: 12, color: "#999", lineHeight: 1.4, wordBreak: "break-word" }}>
+                    {(() => {
+                      const q = searchQuery.trim();
+                      if (!q) return r.snippet;
+                      const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+                      const parts = r.snippet.split(regex);
+                      return parts.map((part, j) =>
+                        regex.test(part)
+                          ? <mark key={j} style={{ backgroundColor: "#facc15", color: "#1a1a1a", borderRadius: 2, padding: "0 2px", fontWeight: 600 }}>{part}</mark>
+                          : part
+                      );
+                    })()}
+                  </div>
                 </div>
               ))
             )}
