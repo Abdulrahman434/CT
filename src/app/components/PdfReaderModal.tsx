@@ -69,10 +69,15 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
   // Scroll to a specific page
   const scrollToPage = useCallback((page: number) => {
     const el = pageRefs.current.get(page);
-    if (el && scrollContainerRef.current) {
+    const container = scrollContainerRef.current;
+    if (el && container) {
       isProgrammaticScroll.current = true;
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-      // Reset the flag after the scroll animation finishes
+      // Calculate position relative to scroll container, not the viewport
+      const targetTop = el.offsetTop - container.offsetTop;
+      container.scrollTo({
+        top: targetTop,
+        behavior: "smooth"
+      });
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       scrollTimeoutRef.current = setTimeout(() => {
         isProgrammaticScroll.current = false;
@@ -194,7 +199,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
 
   return (
     <div
-      className="absolute inset-0 z-[100] flex flex-col"
+      className="absolute inset-0 z-[100] flex flex-col overflow-hidden"
       style={{
         backgroundColor: "#525659", 
         animation: "pdfReaderIn 0.25s ease-out",
