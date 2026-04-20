@@ -344,7 +344,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
                     border: isSelected ? `3px solid ${BRAND}` : `2px solid ${theme.borderDefault}`,
                     backgroundColor: isSelected ? theme.primarySubtle : theme.surface,
                     fontSize: "64px",
-                    display: "flex", alignItems: "center", justifyCenter: "center",
+                    display: "flex", alignItems: "center", justifyContent: "center",
                     cursor: "pointer",
                     transform: isSelected ? "scale(1.05)" : "scale(1)",
                   }}
@@ -442,14 +442,24 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
   );
 
   const renderSurveyThankYou = () => (
-    <div className="flex flex-col items-center justify-center h-full px-16 text-center">
-      <img src={thankYouImage} alt="Thank You" style={{ width: "280px", height: "auto", marginBottom: "64px" }} />
-      <h2 style={{ fontFamily, fontSize: TYPE_SCALE["2xl"], fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "24px", lineHeight: LEADING.tight }}>
+    <div className="flex flex-col items-center justify-center h-full px-16 text-center"
+      style={{ backgroundColor: theme.primarySubtle }}>
+      {/* Check icon */}
+      <div className="flex items-center justify-center mb-8"
+        style={{ width: 72, height: 72, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.4)", border: `2px solid ${BRAND}30` }}>
+        <CheckCircle2 size={36} style={{ color: BRAND }} />
+      </div>
+      <h2 style={{ fontFamily, fontSize: TYPE_SCALE["2xl"], fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "16px", lineHeight: LEADING.tight }}>
         {t("survey.thankYou")}
       </h2>
-      <p style={{ fontFamily, ...TEXT_STYLE.body, fontSize: TYPE_SCALE.md, color: theme.textMuted, lineHeight: LEADING.relaxed, maxWidth: "700px" }}>
+      <p style={{ fontFamily, ...TEXT_STYLE.body, fontSize: TYPE_SCALE.md, color: theme.textMuted, lineHeight: LEADING.relaxed, maxWidth: "500px", marginBottom: "40px" }}>
         {t("survey.thankYouDesc")}
       </p>
+      {/* Close button */}
+      <button onClick={onClose} className="transition-transform duration-200 active:scale-[0.96] cursor-pointer"
+        style={{ padding: "14px 48px", borderRadius: theme.radiusMd, backgroundColor: BRAND, border: "none", boxShadow: `0 4px 16px ${BRAND}40` }}>
+        <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: "#fff" }}>{t("survey.close")}</span>
+      </button>
     </div>
   );
 
@@ -510,7 +520,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
 
         {/* Progress dots */}
         <div className="flex items-center justify-center gap-2">
-          {Array.from({ length: totalSlides }).map((_, i) => (
+          {Array.from({ length: totalSlides - 1 }).map((_, i) => (
             <div
               key={i}
               className="rounded-full transition-transform duration-300"
@@ -712,7 +722,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
           {/* Heart icon */}
           <div className="flex items-center justify-center mb-8"
             style={{ width: 72, height: 72, borderRadius: "50%", backgroundColor: "rgba(27,127,90,0.12)", border: `2px solid ${APPRECIATION_BORDER}` }}>
-            <Heart size={36} style={{ color: APPRECIATION_COLOR }} fill={APPRECIATION_COLOR} />
+            <Heart size={36} style={{ color: APPRECIATION_COLOR }} />
           </div>
           <h2 style={{ fontFamily, fontSize: TYPE_SCALE["2xl"], fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "16px" }}>
             {t("appreciation.delivered")}

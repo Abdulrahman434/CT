@@ -428,7 +428,7 @@ const translations: Record<string, TranslationEntry> = {
   "concern.placeholder": { en: "Type here...", ar: "اكتب هنا...", ur: "یہاں لکھیں..." },
   "concern.recordVoice": { en: "Record voice", ar: "تسجيل صوتي", ur: "آواز ریکارڈ کریں" },
   "concern.received": { en: "We received your concern", ar: "تم استلام شكواك", ur: "ہمیں آپ کی شکایت موصول ہوئی" },
-  "concern.receivedDesc": { en: "A dedicated team member will review your message and contact you within 24 hours.", ar: "سيقوم الفريق المختص بمراجعة رسالتك والتواصل معك خلال 24 ساعة.", ur: "ایک مخصوص ٹیم ممبر آپ کے پیغام کا جائزہ لے کر 24 گھنٹے میں آپ سے رابطہ کرے گا۔" },
+  "concern.receivedDesc": { en: "A dedicated team member will review your message and contact you as soon as possible.", ar: "سيقوم الفريق المختص بمراجعة رسالتك والتواصل معك في أقرب وقت ممكن.", ur: "ایک مخصوص ٹیم ممبر آپ کے پیغام کا جائزہ لے کر جلد از جلد آپ سے رابطہ کرے گا۔" },
   "concern.refNumber": { en: "Reference number", ar: "الرقم المرجعي", ur: "حوالہ نمبر" },
   /* ─── Appreciation Path ─── */
   "appreciation.title": { en: "Send appreciation", ar: "شكر وتقدير", ur: "تعریف بھیجیں" },
