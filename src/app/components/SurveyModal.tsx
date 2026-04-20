@@ -297,6 +297,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string | number>>({});
   const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackHasRecording, setFeedbackHasRecording] = useState(false);
 
   // Concern state
   const [concernArea, setConcernArea] = useState<string | null>(null);
@@ -635,6 +636,11 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
       <p style={{ fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.normal, color: theme.textMuted, marginTop: "16px", maxWidth: "800px", width: "100%", textAlign: isRTL ? "right" : "left" }}>
         {feedbackText.length} / 500 characters
       </p>
+
+      {/* Voice recorder */}
+      <div style={{ maxWidth: "800px", width: "100%", marginTop: "16px" }}>
+        <VoiceRecorder color={BRAND} label={t("concern.recordVoice") || "Record voice"} onRecordingChange={setFeedbackHasRecording} />
+      </div>
     </div>
   );
 
@@ -796,7 +802,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
         <div className="flex-1 flex flex-col overflow-hidden items-center justify-center">
           <div className="w-full max-w-[800px] flex flex-col h-full shrink-0">
             {/* Header */}
-            <div className="shrink-0 flex items-center gap-4 px-0 pt-10 pb-4">
+            <div className="shrink-0 flex items-center gap-4 px-0 pt-20 pb-4">
               <div className="flex items-center justify-center"
                 style={{ width: 44, height: 44, borderRadius: theme.radiusLg, backgroundColor: CONCERN_SUBTLE }}>
                 <AlertTriangle size={22} style={{ color: CONCERN_COLOR }} />
@@ -961,7 +967,7 @@ export function SurveyModal({ onClose }: SurveyModalProps) {
         <div className="flex-1 flex flex-col overflow-hidden items-center justify-center">
           <div className="w-full max-w-[800px] flex flex-col h-full shrink-0">
             {/* Header */}
-            <div className="shrink-0 flex items-center gap-4 px-0 pt-10 pb-4">
+            <div className="shrink-0 flex items-center gap-4 px-0 pt-20 pb-4">
               <div className="flex items-center justify-center"
                 style={{ width: 44, height: 44, borderRadius: theme.radiusLg, backgroundColor: APPRECIATION_SUBTLE }}>
                 <Heart size={22} style={{ color: APPRECIATION_COLOR }} />
