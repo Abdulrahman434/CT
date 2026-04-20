@@ -194,7 +194,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col"
+      className="absolute inset-0 z-[100] flex flex-col"
       style={{
         backgroundColor: "#525659", 
         animation: "pdfReaderIn 0.25s ease-out",
@@ -457,7 +457,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: PdfReaderModalProp
 
       {/* Bottom Toolbar */}
       <div
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 px-6 py-3"
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 px-6 py-3"
         style={{
           backgroundColor: "rgba(40, 44, 47, 0.95)",
           backdropFilter: "blur(20px)",
