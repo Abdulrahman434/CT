@@ -545,7 +545,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* ── 3-Column Content ── */}
-      <div className={`min-h-0 flex pt-4 pb-12 relative z-10 ${isRTL ? "pr-[172px] pl-[172px]" : "pl-[172px] pr-[172px]"}`} style={{ flex: "1 1 0", maxHeight: "calc(100% - 120px)", gap: "20px" }}>
+      <div className={`min-h-0 flex pt-8 pb-20 relative z-10 ${isRTL ? "pr-[172px] pl-[172px]" : "pl-[172px] pr-[172px]"}`} style={{ flex: "1 1 0", maxHeight: "calc(100% - 130px)", gap: "20px" }}>
 
         <div className="flex-1 flex flex-col gap-4 min-w-0" style={{ flex: "1 1 0" }}>
            {/* Header Row */}
