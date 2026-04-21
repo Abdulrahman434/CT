@@ -848,7 +848,7 @@ function Overlay2() {
 
 function DrOmarAbdulhalim() {
   return (
-    <div className="max-w-[248px] relative rounded-[20px] shrink-0 size-[44px]" data-name="Dr. Omar Abdulhalim">
+    <div className="max-w-[248px] relative rounded-[20px] shrink-0 size-[44px]" data-name="Dr. Walt Disney">
       <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[20px]">
         <img alt="" className="absolute left-0 max-w-none size-full top-0" src={imgDrOmarAbdulhalim} />
       </div>
@@ -860,7 +860,7 @@ function Container47() {
   return (
     <div className="absolute content-stretch flex flex-col items-start left-0 right-0 top-0" data-name="Container">
       <div className="flex flex-col font-['Mulish:SemiBold',sans-serif] font-semibold justify-center leading-[0] relative shrink-0 text-[#1b2a32] text-[14px] whitespace-nowrap">
-        <p className="leading-[20px]">Dr. Omar Abdulhalim</p>
+        <p className="leading-[20px]">Dr. Walt Disney</p>
       </div>
     </div>
   );

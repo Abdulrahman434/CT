@@ -44,7 +44,7 @@ const clinicalStore = (() => {
       doctorNote: {
         text: "Continue current plan. Reassess in the morning.",
         addedAt: new Date(Date.now() - 3600000 * 2),
-        doctorName: "Dr. Omar Abdulhalim",
+        doctorName: "Dr. Walt Disney",
       },
     },
   ];
@@ -93,14 +93,14 @@ function fmtFull(d: Date) {
 // ─── painLabel ─────────────────────────────────────────────────────────────────
 function painLabel(n: number) {
   if (n <= 0) return "None";
-  if (n < 4)  return "Mild";
-  if (n < 7)  return "Moderate";
+  if (n < 4) return "Mild";
+  if (n < 7) return "Moderate";
   return "Severe";
 }
 function painColor(n: number) {
   if (n <= 0) return "#94A3B8";
-  if (n < 4)  return "#10B981"; // Success/Green
-  if (n < 7)  return "#F59E0B"; // Warning/Orange
+  if (n < 4) return "#10B981"; // Success/Green
+  if (n < 7) return "#F59E0B"; // Warning/Orange
   return "#EF4444"; // Error/Red
 }
 
@@ -111,14 +111,14 @@ function DraggablePainSlider({ value, onChange, theme: t, isRTL }: { value: numb
   const calcValue = (e: React.PointerEvent | PointerEvent) => {
     const rect = trackRef.current?.getBoundingClientRect();
     if (!rect) return value;
-    
+
     let percentage: number;
     if (isRTL) {
       percentage = (rect.right - (e as any).clientX) / rect.width;
     } else {
       percentage = ((e as any).clientX - rect.left) / rect.width;
     }
-    
+
     // For pain (0-10)
     const val = Math.max(0, Math.min(10, Math.round(percentage * 10)));
     return val;
@@ -146,11 +146,11 @@ function DraggablePainSlider({ value, onChange, theme: t, isRTL }: { value: numb
     <div
       ref={trackRef}
       className="flex-1 relative cursor-pointer"
-      style={{ 
-        height: "12px", 
-        borderRadius: t.radiusSm, 
-        backgroundColor: "rgba(0,0,0,0.05)", 
-        touchAction: "none" 
+      style={{
+        height: "12px",
+        borderRadius: t.radiusSm,
+        backgroundColor: "rgba(0,0,0,0.05)",
+        touchAction: "none"
       }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -211,7 +211,7 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
 
   // ── Selection State ──────────────────────────────────────────────────────────
   const [selectedObsId, setSelectedObsId] = useState<string | null>(null);
-  
+
   // Active observation: the selected one OR the latest one
   const activeRecord = observations.find(o => o.id === selectedObsId) || (observations[observations.length - 1] ?? null);
 
@@ -263,7 +263,7 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
     clinicalStore.addDoctorNote(activeRecord.id, {
       text: doctorNoteText.trim(),
       addedAt: new Date(),
-      doctorName: "Dr. Omar Abdulhalim",
+      doctorName: "Dr. Walt Disney",
     });
     setDoctorNoteText("");
     setDoctorSaved(true);
@@ -332,16 +332,16 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
         >
           <div className="flex-1 grid grid-cols-4 gap-0">
             {[
-              { labelKey: "clinical.mrn",      value: patient.mrn,           icon: <Hash size={16} /> },
-              { labelKey: "clinical.patient",  value: `${tr(patient.nameKey)} (${patient.age}y)`, icon: <User size={16} /> },
-              { labelKey: "clinical.room",     value: patient.room,          icon: <DoorOpen size={16} /> },
+              { labelKey: "clinical.mrn", value: patient.mrn, icon: <Hash size={16} /> },
+              { labelKey: "clinical.patient", value: `${tr(patient.nameKey)} (${patient.age}y)`, icon: <User size={16} /> },
+              { labelKey: "clinical.room", value: patient.room, icon: <DoorOpen size={16} /> },
               { labelKey: "clinical.admitted", value: patient.admissionDate, icon: <Clock size={16} /> },
             ].map(({ labelKey, value, icon }, i) => (
               <div key={i} className="flex relative items-center justify-center">
                 {i > 0 && (
-                  <div 
-                    className="absolute inset-inline-start-0 top-1/2 -translate-y-1/2 w-[1.5px] h-10" 
-                    style={{ backgroundColor: t.borderDefault, opacity: 0.6 }} 
+                  <div
+                    className="absolute inset-inline-start-0 top-1/2 -translate-y-1/2 w-[1.5px] h-10"
+                    style={{ backgroundColor: t.borderDefault, opacity: 0.6 }}
                   />
                 )}
                 <div className="flex flex-col items-center">
@@ -355,7 +355,7 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
               </div>
             ))}
           </div>
-          
+
           {/* Moved Add Observation Button here for Nurse */}
           {role === "nurse" && !isAddingNew && (
             <div className="ps-6">
@@ -379,7 +379,7 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
                 <>
                   {/* Status Indicator / Role Action Area */}
                   <div className="flex justify-start mb-8">
-                    
+
                     {activeRecord && (
                       <div className="flex flex-col items-start w-full">
                         <span style={{ fontSize: "12px", fontWeight: 700, color: t.primary, opacity: 0.9, letterSpacing: "0.5px" }}>
@@ -655,10 +655,10 @@ function NurseForm({ form, setForm, tr, t, onSave, onCancel, saved }: any) {
 
       <div className="-mt-2">
         <RisksSection
-          risks={form.risks} 
+          risks={form.risks}
           otherRiskNotes={form.otherRiskNotes}
-          tr={tr} 
-          t={t} 
+          tr={tr}
+          t={t}
           readOnly={false}
           onChange={(v: typeof form.risks) => setForm({ ...form, risks: v })}
           onOtherChange={(txt: string) => setForm({ ...form, otherRiskNotes: txt })}
@@ -716,10 +716,10 @@ function NurseForm({ form, setForm, tr, t, onSave, onCancel, saved }: any) {
 
 function VitalsSection({ vitals, tr, t, readOnly, onChange }: any) {
   const fields = [
-    { key: "bp",   label: tr("clinical.bp"),   unit: "mmHg", icon: <Droplet size={14} color="#EF4444" /> },
-    { key: "hr",   label: tr("clinical.hr"),   unit: "BPM",  icon: <Activity size={14} color="#F43F5E" /> },
-    { key: "temp", label: tr("clinical.temp"), unit: "°C",   icon: <Thermometer size={14} color="#F59E0B" /> },
-    { key: "spo2", label: tr("clinical.spo2"), unit: "%",    icon: <Wind size={14} color={t.primary} /> },
+    { key: "bp", label: tr("clinical.bp"), unit: "mmHg", icon: <Droplet size={14} color="#EF4444" /> },
+    { key: "hr", label: tr("clinical.hr"), unit: "BPM", icon: <Activity size={14} color="#F43F5E" /> },
+    { key: "temp", label: tr("clinical.temp"), unit: "°C", icon: <Thermometer size={14} color="#F59E0B" /> },
+    { key: "spo2", label: tr("clinical.spo2"), unit: "%", icon: <Wind size={14} color={t.primary} /> },
   ];
   return (
     <div className="space-y-4">
@@ -802,11 +802,11 @@ function PainSection({ painLevel, tr, t, readOnly, onChange }: any) {
             }} />
           </div>
         ) : (
-          <DraggablePainSlider 
-            value={painLevel} 
-            onChange={onChange} 
-            theme={t} 
-            isRTL={t.direction === 'rtl'} 
+          <DraggablePainSlider
+            value={painLevel}
+            onChange={onChange}
+            theme={t}
+            isRTL={t.direction === 'rtl'}
           />
         )}
       </div>
@@ -853,10 +853,10 @@ function NotesSection({ notes, tr, t, readOnly, onChange }: any) {
 
 function RisksSection({ risks, otherRiskNotes, tr, t, readOnly, onChange, onOtherChange }: any) {
   const items = [
-    { key: "fall",     label: tr("clinical.fallRisk") },
+    { key: "fall", label: tr("clinical.fallRisk") },
     { key: "pressure", label: tr("clinical.pressureUlcer") },
-    { key: "allergies",label: tr("care.allergies") },
-    { key: "other",    label: tr("clinical.otherRisk") },
+    { key: "allergies", label: tr("care.allergies") },
+    { key: "other", label: tr("clinical.otherRisk") },
   ];
   return (
     <div className="space-y-3">
@@ -900,8 +900,8 @@ function RisksSection({ risks, otherRiskNotes, tr, t, readOnly, onChange, onOthe
           onChange={(e) => onOtherChange(e.target.value)}
           placeholder={tr("clinical.otherRiskPlaceholder")}
           className="w-full p-4 rounded-xl border outline-none transition-all animate-in fade-in slide-in-from-top-2"
-          style={{ 
-            backgroundColor: t.surface, 
+          style={{
+            backgroundColor: t.surface,
             borderColor: t.borderDefault,
             fontSize: "14px",
             minHeight: "80px"
@@ -920,10 +920,10 @@ function AddBtn({ onClick, label, t }: any) {
     <button
       onClick={onClick}
       className="flex items-center gap-2 px-6 py-3 cursor-pointer transition-transform active:scale-95 shadow-md shadow-blue-500/20"
-      style={{ 
-        backgroundColor: t.primary, 
-        color: "#fff", 
-        fontSize: "15px", 
+      style={{
+        backgroundColor: t.primary,
+        color: "#fff",
+        fontSize: "15px",
         fontWeight: 800,
         borderRadius: "16px",
         border: "none"
@@ -979,8 +979,8 @@ function HistoryCard({ obs, isLatest, onDelete, onClick, t, tr }: any) {
         {/* Mini vitals */}
         <div className="grid grid-cols-4 gap-1 mb-3">
           {[
-            { val: obs.vitals.bp,   icon: <Droplet size={9} color="#EF4444" /> },
-            { val: obs.vitals.hr,   icon: <Activity size={9} color="#F43F5E" /> },
+            { val: obs.vitals.bp, icon: <Droplet size={9} color="#EF4444" /> },
+            { val: obs.vitals.hr, icon: <Activity size={9} color="#F43F5E" /> },
             { val: obs.vitals.temp + "°", icon: <Thermometer size={9} color="#F59E0B" /> },
             { val: obs.vitals.spo2 + "%", icon: <Wind size={9} color={t.primary} /> },
           ].map((v, i) => (
