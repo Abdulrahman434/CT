@@ -28,6 +28,7 @@ const EMPTY_CONFIG: HospitalCoreConfig = {
   id: "",
   hospitalName: "",
   hospitalShortName: "",
+  hospitalWebsiteUrl: "",
   fontFamily: "'Inter', sans-serif",
   fontFamilyAr: "'Almarai', sans-serif",
   logoUrl: "",
@@ -195,7 +196,8 @@ function ImageUploadField({
 }) {
   const { theme: t } = useTheme();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [urlMode, setUrlMode] = useState(value.startsWith("http"));
+  const safeValue = value || "";
+  const [urlMode, setUrlMode] = useState(safeValue.startsWith("http"));
 
   const handleFile = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,9 +242,9 @@ function ImageUploadField({
       {urlMode ? (
         <input
           type="text"
-          value={value.startsWith("data:") ? "" : value}
+          value={safeValue.startsWith("data:") ? "" : safeValue}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="https://example.com/logo.png"
+          placeholder="https://example.com/image.png"
           style={{
             height: "40px",
             borderRadius: "10px",
@@ -1011,6 +1013,25 @@ export function HospitalConfigurator({ onClose }: { onClose: () => void }) {
                   hint="Recommended: 360 × 190 px, PNG with transparent background"
                   previewHeight="60px"
                 />
+                
+                <div style={{ height: "1px", backgroundColor: "rgba(0,0,0,0.06)", margin: "8px 0" }} />
+
+                <ImageUploadField
+                  label="Hospital Background (Hero Image)"
+                  value={editingConfig.heroImageUrl}
+                  onChange={(v) => updateField("heroImageUrl", v)}
+                  hint="Main wallpaper. Recommended: 1920 × 600 px, landscape exterior photo"
+                  previewHeight="120px"
+                />
+                
+                <HeroCropPicker
+                  imageUrl={editingConfig.heroImageUrl}
+                  cropPosition={editingConfig.heroCropPosition || "50% 15%"}
+                  onChange={(pos) => updateField("heroCropPosition", pos)}
+                />
+
+                <div style={{ height: "1px", backgroundColor: "rgba(0,0,0,0.06)", margin: "8px 0" }} />
+
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <span
@@ -1022,54 +1043,46 @@ export function HospitalConfigurator({ onClose }: { onClose: () => void }) {
                         letterSpacing: "0.5px",
                       }}
                     >
-                      Hospital Hero Images (Auto-Carousel)
+                      Greeting Card Slideshow Images
                     </span>
                   </div>
                   <span style={{ fontSize: "11px", fontWeight: 500, color: "#C0CAD0", lineHeight: "16px" }}>
-                    Recommended: 1920 × 600 px, landscape exterior photo (JPG or PNG)
+                    These appear ONLY in the Patient Greeting card auto-carousel.
                   </span>
-                  {(editingConfig.heroImageUrls && editingConfig.heroImageUrls.length > 0
-                    ? editingConfig.heroImageUrls
-                    : [editingConfig.heroImageUrl]).map((url, i, arr) => (
+                  {(editingConfig.heroImageUrls || []).map((url, i, arr) => (
                     <div key={i} className="flex flex-col gap-2 relative" style={{ padding: "12px", border: "1px solid rgba(0,0,0,0.05)", borderRadius: "12px" }}>
                       <ImageUploadField
-                        label={`Image ${i + 1}`}
+                        label={`Slide Image ${i + 1}`}
                         value={url}
                         onChange={(v) => {
                           const newUrls = [...arr];
                           newUrls[i] = v;
                           updateField("heroImageUrls", newUrls);
-                          if (i === 0) updateField("heroImageUrl", v);
                         }}
                         hint=""
                         previewHeight="80px"
                       />
-                      {arr.length > 1 && (
-                        <button
-                          onClick={() => {
-                            const newUrls = arr.filter((_, index) => index !== i);
-                            updateField("heroImageUrls", newUrls);
-                            if (i === 0 && newUrls.length > 0) updateField("heroImageUrl", newUrls[0]);
-                          }}
-                          className="absolute top-3 right-3 cursor-pointer p-1.5 flex items-center justify-center transition-transform active:scale-95 z-20"
-                          style={{
-                            background: t.accentSubtle,
-                            color: t.accent,
-                            borderRadius: "6px",
-                            border: "none",
-                          }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => {
+                          const newUrls = arr.filter((_, index) => index !== i);
+                          updateField("heroImageUrls", newUrls);
+                        }}
+                        className="absolute top-3 right-3 cursor-pointer p-1.5 flex items-center justify-center transition-transform active:scale-95 z-20"
+                        style={{
+                          background: t.accentSubtle,
+                          color: t.accent,
+                          borderRadius: "6px",
+                          border: "none",
+                        }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   ))}
                   <button
                     onClick={() => {
-                      const arr = editingConfig.heroImageUrls && editingConfig.heroImageUrls.length > 0
-                        ? editingConfig.heroImageUrls
-                        : [editingConfig.heroImageUrl];
-                      updateField("heroImageUrls", [...arr, ""]);
+                      const currentUrls = editingConfig.heroImageUrls || [];
+                      updateField("heroImageUrls", [...currentUrls, ""]);
                     }}
                     className="flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-95"
                     style={{
@@ -1083,14 +1096,46 @@ export function HospitalConfigurator({ onClose }: { onClose: () => void }) {
                     }}
                   >
                     <Plus size={16} />
-                    Add Another Image
+                    Add Slideshow Image
                   </button>
+
+                  <div style={{ marginTop: "8px" }}>
+                    <div className="flex flex-col gap-1.5">
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          color: "#95A3AD",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                        }}
+                      >
+                        Slideshow Timer (Seconds)
+                      </span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="60"
+                        value={editingConfig.slideshowInterval || 5}
+                        onChange={(e) => updateField("slideshowInterval", parseInt(e.target.value) || 5)}
+                        style={{
+                          height: "40px",
+                          borderRadius: "10px",
+                          border: "1.5px solid rgba(0,0,0,0.08)",
+                          padding: "0 14px",
+                          fontSize: "14px",
+                          fontWeight: 500,
+                          color: "#1B2A32",
+                          backgroundColor: "rgba(0,0,0,0.02)",
+                          outline: "none",
+                        }}
+                      />
+                      <span style={{ fontSize: "11px", fontWeight: 500, color: "#C0CAD0", lineHeight: "16px" }}>
+                        Time between slide transitions. Default is 5 seconds.
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <HeroCropPicker
-                  imageUrl={editingConfig.heroImageUrl}
-                  cropPosition={editingConfig.heroCropPosition || "50% 15%"}
-                  onChange={(pos) => updateField("heroCropPosition", pos)}
-                />
 
                 {/* ── Brand Colors ── */}
                 <SectionHeader icon={<Palette size={15} />} label="Brand Colors" />

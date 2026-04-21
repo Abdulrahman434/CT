@@ -160,6 +160,7 @@ export function PatientGreeting({ onOpenAboutUs, onOpenTour, fillImage }: { onOp
           images={theme.heroImageUrls}
           objectPosition={theme.heroCropPosition || "50% 15%"}
           objectFit="cover"
+          intervalSeconds={theme.slideshowInterval}
         />
       </div>
 

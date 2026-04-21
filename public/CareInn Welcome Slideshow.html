@@ -33,12 +33,23 @@
   }
 
   .slide img {
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     user-select: none;
     -webkit-user-drag: none;
   }
+
+  .slide-content {
+    position: relative;
+    width: 100%;
+    max-width: 1920px;
+    aspect-ratio: 16/9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
 
   /* Navigation overlay */
   .nav-overlay {
@@ -54,8 +65,78 @@
   }
   .nav-zone:hover { background: rgba(255,255,255,0.02); }
 
+  /* Demo Loop Overlay */
+  .demo-overlay {
+    position: absolute;
+    /* Approximate coords for the screen in image-3-1.png. We will tweak these */
+    left: 4.0%;
+    top: 29.5%;
+    width: 42%;
+    height: 41.5%;
+    border-radius: 1.5vw;
+    overflow: hidden;
+    z-index: 5;
+    background: #1B2A5B;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.1);
+  }
+
+  .demo-screen {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+  }
+
+  .demo-dashboard { animation: animDash 12s infinite; opacity: 1; }
+  .demo-careme1 { animation: animCareMe1 12s infinite; }
+  .demo-careme2 { animation: animCareMe2 12s infinite; transform: translateX(100%); }
+
+  .demo-cursor {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background: rgba(255,255,255,0.8);
+    border: 2px solid #1B2A5B;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    top: 60%;
+    left: 40%;
+    opacity: 0;
+    animation: animCursor 12s infinite;
+    z-index: 6;
+  }
+
+  @keyframes animDash {
+    0%, 20% { opacity: 1; transform: scale(1); filter: blur(0); }
+    25%, 90% { opacity: 0; transform: scale(1.05); filter: blur(4px); }
+    95%, 100% { opacity: 1; transform: scale(1); filter: blur(0); }
+  }
+  @keyframes animCursor {
+    0%, 5% { opacity: 0; transform: translate(100px, 100px); }
+    10% { opacity: 1; transform: translate(50px, 50px); }
+    /* Cursor moves to CareMe expand button (approx coords on the dashboard) */
+    18% { opacity: 1; transform: translate(4vw, 15vw) scale(1); }
+    20% { opacity: 1; transform: translate(4vw, 15vw) scale(0.7); background: rgba(108,196,224,0.8); }
+    25%, 100% { opacity: 0; transform: translate(4vw, 15vw) scale(1); }
+  }
+  @keyframes animCareMe1 {
+    0%, 20% { opacity: 0; transform: translateY(20px) scale(0.95); }
+    25%, 55% { opacity: 1; transform: translateY(0) scale(1) translateX(0); }
+    60%, 90% { opacity: 1; transform: translateY(0) scale(1) translateX(-100%); }
+    95%, 100% { opacity: 0; transform: translateY(0) scale(1) translateX(-100%); }
+  }
+  @keyframes animCareMe2 {
+    0%, 55% { opacity: 1; transform: translateX(100%); }
+    60%, 90% { opacity: 1; transform: translateX(0); }
+    95%, 100% { opacity: 0; transform: translateX(0); }
+  }
+
   /* Bottom bar */
   .bottom-bar {
+
     position: fixed;
     bottom: 24px;
     left: 50%;
@@ -154,11 +235,31 @@
   SLIDES.forEach(function(src, i) {
     const div = document.createElement('div');
     div.className = 'slide' + (i === 0 ? ' active' : '');
+    
+    // Base static slide image
+    const content = document.createElement('div');
+    content.className = 'slide-content';
+    
     const img = document.createElement('img');
     img.src = src;
     img.alt = 'Slide ' + (i + 1);
     img.draggable = false;
-    div.appendChild(img);
+    content.appendChild(img);
+    
+    // Inject CSS Animation Mockup onto Slide 3 (Index 2)
+    if (i === 2) {
+      const demo = document.createElement('div');
+      demo.className = 'demo-overlay';
+      demo.innerHTML = `
+        <img src="assets/screens/01-dashboard.png" class="demo-screen demo-dashboard" draggable="false" />
+        <img src="assets/screens/02-careme-1.png" class="demo-screen demo-careme1" draggable="false" />
+        <img src="assets/screens/03-careme-2.png" class="demo-screen demo-careme2" draggable="false" />
+        <div class="demo-cursor">👆🏽</div>
+      `;
+      content.appendChild(demo);
+    }
+    
+    div.appendChild(content);
     container.appendChild(div);
   });
 

@@ -224,6 +224,7 @@ export interface ThemeConfig {
   heroImageUrl: string;      // hospital exterior photo (1920×600 recommended)
   heroImageUrls: string[];   // multiple hero images for carousel
   heroCropPosition: string;  // object-position for hero image crop, e.g. "50% 15%"
+  slideshowInterval: number; // custom interval for slides in seconds
 
   /* ── Brand Colors ── */
   primary: string;
@@ -310,6 +311,7 @@ function buildTheme(core: {
   heroImageUrl: string;
   heroImageUrls?: string[];
   heroCropPosition?: string;
+  slideshowInterval?: number;
   primary: string;
   primaryDark: string;
   primaryLight: string;
@@ -334,6 +336,7 @@ function buildTheme(core: {
     heroImageUrl: c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : ""),
     heroImageUrls: c.heroImageUrls && c.heroImageUrls.length > 0 ? c.heroImageUrls : [c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : "")],
     heroCropPosition: c.heroCropPosition || "50% 15%",
+    slideshowInterval: c.slideshowInterval || 5,
 
     primary: c.primary,
     primaryDark: c.primaryDark,
@@ -646,6 +649,7 @@ export interface HospitalCoreConfig {
   heroImageUrl: string;
   heroImageUrls?: string[];
   heroCropPosition?: string;
+  slideshowInterval?: number;
   primary: string;
   primaryDark: string;
   primaryLight: string;

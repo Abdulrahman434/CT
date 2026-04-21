@@ -11,12 +11,14 @@ export function AutoCarousel({
   opacity = 1,
   objectPosition = "50% 15%",
   objectFit = "cover",
+  intervalSeconds = 5,
   style = {},
 }: {
   images: string[];
   opacity?: number;
   objectPosition?: string;
   objectFit?: "cover" | "contain";
+  intervalSeconds?: number;
   /** Extra inline styles on the container (e.g. zIndex) */
   style?: React.CSSProperties;
 }) {
@@ -27,9 +29,9 @@ export function AutoCarousel({
     if (validImages.length <= 1) return;
     const interval = setInterval(() => {
       setIndex((i) => (i + 1) % validImages.length);
-    }, 5000);
+    }, intervalSeconds * 1000);
     return () => clearInterval(interval);
-  }, [validImages.length]);
+  }, [validImages.length, intervalSeconds]);
 
   if (validImages.length === 0) return null;
 

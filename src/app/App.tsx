@@ -441,7 +441,7 @@ function BedsideScreen() {
       >
         {/* Decorative hospital background photo — subtle texture */}
         <AutoCarousel
-          images={theme.heroImageUrls}
+          images={[theme.heroImageUrl]}
           opacity={darkMode ? 0.03 : 0.08}
           objectPosition={theme.heroCropPosition}
           style={{ zIndex: 0 }}
