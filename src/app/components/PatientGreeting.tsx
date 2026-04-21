@@ -113,7 +113,7 @@ export function PatientGreeting({ onOpenAboutUs, onOpenTour, fillImage }: { onOp
                 color: theme.primary,
               }}
             >
-              {t("greeting.mrn")} 00–284619
+              {t("greeting.mrn")} 1611605
             </span>
           </div>
           <div
@@ -146,7 +146,7 @@ export function PatientGreeting({ onOpenAboutUs, onOpenTour, fillImage }: { onOp
           </div>
         </div>
       </div>
- 
+
       {/* Hospital image */}
       <div
         className={`overflow-hidden mx-4 mb-4 ${fillImage ? "flex-1 min-h-[120px]" : "shrink-0"}`}

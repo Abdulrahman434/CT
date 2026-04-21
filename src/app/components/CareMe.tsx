@@ -131,7 +131,7 @@ const imagingResults = [
 /* ─── Helper for Inner Containers ─── */
 function SectionContainer({ children, theme, isExpanded, padding, bg, className = "" }: any) {
   return (
-    <div 
+    <div
       className={className}
       style={{
         backgroundColor: bg || "rgba(0,0,0,0.026)",
@@ -208,33 +208,33 @@ function GendersIcon({ size = 14, style }: { size?: number, style?: any }) {
 function PatientProfileSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: boolean }) {
   const { t, localizeNumber } = useLocale();
 
-    const infoRow = (icon: React.ComponentType<any>, label: string, val: string, customColor?: string) => {
+  const infoRow = (icon: React.ComponentType<any>, label: string, val: string, customColor?: string) => {
     const Icon = icon;
     const baseColor = customColor || theme.primary;
     const bgColor = customColor ? `${customColor}15` : theme.primarySubtle;
     const labelSize = isExpanded ? "16px" : "13px";
     const valueSize = isExpanded ? "16px" : "13.5px";
-    
+
     return (
       <div className="flex items-start gap-4">
-        <div 
-          className="flex items-center justify-center shrink-0" 
-          style={{ 
-            width: isExpanded ? "40px" : "36px", 
-            height: isExpanded ? "40px" : "36px", 
+        <div
+          className="flex items-center justify-center shrink-0"
+          style={{
+            width: isExpanded ? "40px" : "36px",
+            height: isExpanded ? "40px" : "36px",
             borderRadius: theme.radiusFull,
-            backgroundColor: bgColor 
+            backgroundColor: bgColor
           }}
         >
-           <Icon size={isExpanded ? 18 : 14} style={{ color: baseColor }} strokeWidth={2.5} />
+          <Icon size={isExpanded ? 18 : 14} style={{ color: baseColor }} strokeWidth={2.5} />
         </div>
         <div className="flex flex-col min-w-0" style={{ gap: "0px" }}>
           <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.textMuted, lineHeight: "1.2" }}>{label}</p>
-          <p style={{ 
-            fontFamily: theme.fontFamily, 
-            fontSize: valueSize, 
-            fontWeight: WEIGHT.bold, 
-            color: theme.textHeading, 
+          <p style={{
+            fontFamily: theme.fontFamily,
+            fontSize: valueSize,
+            fontWeight: WEIGHT.bold,
+            color: theme.textHeading,
             lineHeight: "1.2",
             marginTop: "2px"
           }}>{val}</p>
@@ -248,10 +248,10 @@ function PatientProfileSlide({ theme, isExpanded = false }: { theme: any, isExpa
       {/* Module 1: Stay Timeline */}
       <SectionContainer theme={theme} isExpanded={isExpanded} padding={isExpanded ? "16px 20px" : "12px 14px"}>
         <div className="flex flex-col gap-2">
-            <div className="grid grid-cols-2 gap-x-6">
-                {infoRow(LogIn, t("care.admitted"), t("date.5mar2026"), "#EF4444")}
-                {infoRow(LogOut, t("care.discharge"), t("date.12mar2026"), "#22C55E")}
-            </div>
+          <div className="grid grid-cols-2 gap-x-6">
+            {infoRow(LogIn, t("care.admitted"), t("date.5mar2026"), "#EF4444")}
+            {infoRow(LogOut, t("care.discharge"), t("date.12mar2026"), "#22C55E")}
+          </div>
         </div>
       </SectionContainer>
 
@@ -259,22 +259,22 @@ function PatientProfileSlide({ theme, isExpanded = false }: { theme: any, isExpa
       <SectionContainer theme={theme} isExpanded={isExpanded}>
         <div className="flex flex-col gap-5">
           <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: theme.primary }}>
-                  <User size={18} style={{ color: "#fff" }} strokeWidth={2.5} />
-              </div>
-              <div className="flex flex-col pt-0.5">
-                  <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "16px" : "13px", color: theme.textMuted, lineHeight: "1.2" }}>{t("care.fullName")}</p>
-                  <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "18px" : "15.5px", fontWeight: WEIGHT.bold, color: theme.textHeading, lineHeight: "1.4", marginTop: "2px" }}>{t("care.patientName")}</p>
-              </div>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: theme.primary }}>
+              <User size={18} style={{ color: "#fff" }} strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col pt-0.5">
+              <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "16px" : "13px", color: theme.textMuted, lineHeight: "1.2" }}>{t("care.fullName")}</p>
+              <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "18px" : "15.5px", fontWeight: WEIGHT.bold, color: theme.textHeading, lineHeight: "1.4", marginTop: "2px" }}>{t("care.patientName")}</p>
+            </div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-              {infoRow(Hash, t("greeting.mrn"), <span dir="ltr">00–284619</span>)}
-              {infoRow(Shield, t("care.insurance"), t("care.insurance.tawuniya"))}
-              {infoRow(CalendarDays, t("care.age"), t("care.ageUnits", localizeNumber(33)))}
-              {infoRow(GendersIcon, t("care.gender"), t("care.gender.female"))}
-              {infoRow(Clock, t("care.dob"), t("care.birthDateVal"))}
-              {infoRow(DoorOpen, t("care.room") + " / " + t("care.bed"), "412 / A")}
+            {infoRow(Hash, t("greeting.mrn"), <span dir="ltr">1611605</span>)}
+            {infoRow(Shield, t("care.insurance"), t("care.insurance.tawuniya"))}
+            {infoRow(CalendarDays, t("care.age"), t("care.ageUnits", localizeNumber(33)))}
+            {infoRow(GendersIcon, t("care.gender"), t("care.gender.female"))}
+            {infoRow(Clock, t("care.dob"), t("care.birthDateVal"))}
+            {infoRow(DoorOpen, t("care.room") + " / " + t("care.bed"), "412 / A")}
           </div>
         </div>
       </SectionContainer>
@@ -282,23 +282,23 @@ function PatientProfileSlide({ theme, isExpanded = false }: { theme: any, isExpa
       {/* Module 3: Emergency Contact */}
       <SectionContainer theme={theme} isExpanded={isExpanded} bg="rgba(239, 68, 68, 0.03)" className="mt-auto">
         <div className="flex flex-col gap-5">
-            <div className="flex items-start gap-3">
-                <div 
-                  className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" 
-                  style={{ backgroundColor: "#EF4444" }}
-                >
-                    <User size={16} style={{ color: "#fff" }} strokeWidth={2.5} />
-                </div>
-                <div className="flex flex-col pt-0.5">
-                    <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "16px" : "13px", color: theme.textMuted, lineHeight: "1.2" }}>{t("care.emergencyContact")}</p>
-                    <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "16px" : "14.5px", fontWeight: WEIGHT.bold, color: theme.textHeading, lineHeight: "1.4", marginTop: "2px" }}>{t("care.emergencyName").split(' (')[0]}</p>
-                </div>
+          <div className="flex items-start gap-3">
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "#EF4444" }}
+            >
+              <User size={16} style={{ color: "#fff" }} strokeWidth={2.5} />
             </div>
+            <div className="flex flex-col pt-0.5">
+              <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "16px" : "13px", color: theme.textMuted, lineHeight: "1.2" }}>{t("care.emergencyContact")}</p>
+              <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "16px" : "14.5px", fontWeight: WEIGHT.bold, color: theme.textHeading, lineHeight: "1.4", marginTop: "2px" }}>{t("care.emergencyName").split(' (')[0]}</p>
+            </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                {infoRow(Phone, t("care.mobile"), <span dir="ltr">050 123 4567</span>, "#EF4444")}
-                {infoRow(Heart, t("care.relative"), t("care.emergencyName").split('(')[1]?.replace(')', '') || "Mother", "#EF4444")}
-            </div>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+            {infoRow(Phone, t("care.mobile"), <span dir="ltr">050 123 4567</span>, "#EF4444")}
+            {infoRow(Heart, t("care.relative"), t("care.emergencyName").split('(')[1]?.replace(')', '') || "Mother", "#EF4444")}
+          </div>
         </div>
       </SectionContainer>
     </div>
@@ -319,7 +319,7 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
         <div className="flex flex-col gap-6">
           {careTeam.map((m, i) => (
             <div key={m.nameKey + i} className="flex items-center gap-4">
-              <div 
+              <div
                 className="overflow-hidden shrink-0 border border-white shadow-sm"
                 style={{
                   width: isExpanded ? "52px" : "40px",
@@ -327,17 +327,17 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
                   borderRadius: theme.radiusFull
                 }}
               >
-                 <img src={m.img} alt={t(m.nameKey)} className="w-full h-full object-cover" />
+                <img src={m.img} alt={t(m.nameKey)} className="w-full h-full object-cover" />
               </div>
               <div className="flex flex-col">
-                 <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.primary, fontWeight: 700, lineHeight: 1.2 }}>{t(m.roleKey)}</p>
-                 <p style={{ 
-                   fontFamily: theme.fontFamily, 
-                   ...(isExpanded ? { fontSize: "18px" } : { fontSize: "15.5px" }), 
-                   fontWeight: WEIGHT.bold, 
-                   color: theme.textHeading,
-                   marginTop: "2px"
-                 }}>{t(m.nameKey)}</p>
+                <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.primary, fontWeight: 700, lineHeight: 1.2 }}>{t(m.roleKey)}</p>
+                <p style={{
+                  fontFamily: theme.fontFamily,
+                  ...(isExpanded ? { fontSize: "18px" } : { fontSize: "15.5px" }),
+                  fontWeight: WEIGHT.bold,
+                  color: theme.textHeading,
+                  marginTop: "2px"
+                }}>{t(m.nameKey)}</p>
               </div>
             </div>
           ))}
@@ -347,124 +347,124 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
       {/* Module 3: Clinical Nutrition, Allergies & Pain */}
       <SectionContainer theme={theme} isExpanded={isExpanded}>
         <div className="flex flex-col gap-7">
-            {/* Diet Codes */}
-            <div className="flex items-start gap-4">
-                <div 
-                  className="flex items-center justify-center shrink-0" 
-                  style={{ 
-                    width: isExpanded ? "40px" : "36px", 
-                    height: isExpanded ? "40px" : "36px", 
-                    borderRadius: theme.radiusFull,
-                    backgroundColor: theme.primarySubtle 
-                  }}
-                >
-                    <Utensils size={isExpanded ? 18 : 14} style={{ color: theme.primary }} strokeWidth={2.5} />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.textMuted }}>{t("care.diet.title")}</p>
-                    <div className="flex flex-wrap gap-2.5">
-                        {dietCodes.map(d => (
-                          <span key={d} className="px-3 py-1.5 rounded-md border font-bold" style={{ 
-                            fontSize: isExpanded ? "15px" : "13px",
-                            backgroundColor: theme.primarySubtle, 
-                            borderColor: `${theme.primary}35`, 
-                            color: theme.primary 
-                          }}>{d}</span>
-                        ))}
-                    </div>
-                </div>
+          {/* Diet Codes */}
+          <div className="flex items-start gap-4">
+            <div
+              className="flex items-center justify-center shrink-0"
+              style={{
+                width: isExpanded ? "40px" : "36px",
+                height: isExpanded ? "40px" : "36px",
+                borderRadius: theme.radiusFull,
+                backgroundColor: theme.primarySubtle
+              }}
+            >
+              <Utensils size={isExpanded ? 18 : 14} style={{ color: theme.primary }} strokeWidth={2.5} />
             </div>
+            <div className="flex flex-col gap-2">
+              <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.textMuted }}>{t("care.diet.title")}</p>
+              <div className="flex flex-wrap gap-2.5">
+                {dietCodes.map(d => (
+                  <span key={d} className="px-3 py-1.5 rounded-md border font-bold" style={{
+                    fontSize: isExpanded ? "15px" : "13px",
+                    backgroundColor: theme.primarySubtle,
+                    borderColor: `${theme.primary}35`,
+                    color: theme.primary
+                  }}>{d}</span>
+                ))}
+              </div>
+            </div>
+          </div>
 
-            {/* Allergies - Full Width Row */}
-            <div className="flex items-start gap-4">
-                <div 
-                  className="flex items-center justify-center shrink-0" 
-                  style={{ 
-                    width: isExpanded ? "40px" : "36px", 
-                    height: isExpanded ? "40px" : "36px", 
-                    borderRadius: theme.radiusFull,
-                    backgroundColor: "#EF444415" 
-                  }}
-                >
-                    <AlertTriangle size={isExpanded ? 18 : 14} style={{ color: "#EF4444" }} strokeWidth={2.5} />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: "#EF4444", fontWeight: WEIGHT.bold }}>{t("care.allergies")}</p>
-                    <div className="flex flex-wrap gap-2">
-                        {allergies.map(a => (
-                          <span key={a} className="px-3 py-1 rounded-md font-bold" style={{
-                            fontSize: isExpanded ? "15px" : "13px",
-                            backgroundColor: "#EF444415",
-                            border: "1px solid #EF444440",
-                            color: "#EF4444"
-                          }}>{a}</span>
-                        ))}
-                    </div>
-                </div>
+          {/* Allergies - Full Width Row */}
+          <div className="flex items-start gap-4">
+            <div
+              className="flex items-center justify-center shrink-0"
+              style={{
+                width: isExpanded ? "40px" : "36px",
+                height: isExpanded ? "40px" : "36px",
+                borderRadius: theme.radiusFull,
+                backgroundColor: "#EF444415"
+              }}
+            >
+              <AlertTriangle size={isExpanded ? 18 : 14} style={{ color: "#EF4444" }} strokeWidth={2.5} />
             </div>
+            <div className="flex flex-col gap-2">
+              <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: "#EF4444", fontWeight: WEIGHT.bold }}>{t("care.allergies")}</p>
+              <div className="flex flex-wrap gap-2">
+                {allergies.map(a => (
+                  <span key={a} className="px-3 py-1 rounded-md font-bold" style={{
+                    fontSize: isExpanded ? "15px" : "13px",
+                    backgroundColor: "#EF444415",
+                    border: "1px solid #EF444440",
+                    color: "#EF4444"
+                  }}>{a}</span>
+                ))}
+              </div>
+            </div>
+          </div>
 
-            {/* Pain Score */}
-            <div className="flex items-start gap-4">
-                <div 
-                  className="flex items-center justify-center shrink-0" 
-                  style={{ 
-                    width: isExpanded ? "40px" : "36px", 
-                    height: isExpanded ? "40px" : "36px", 
-                    borderRadius: theme.radiusFull,
-                    backgroundColor: theme.primarySubtle 
-                  }}
-                >
-                    <Activity size={isExpanded ? 18 : 14} style={{ color: theme.primary }} strokeWidth={2.5} />
-                </div>
-                <div className="flex flex-col gap-2.5 flex-1">
-                    <div className="flex justify-between items-end">
-                        <span style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.textMuted }}>{t("care.pain.score")}</span>
-                        <span style={{ 
-                          fontFamily: theme.fontFamily, 
-                          fontSize: isExpanded ? "26px" : "18px", 
-                          color: theme.warning, 
-                          fontWeight: 900, 
-                          lineHeight: 1 
-                        }}>5 / 10</span>
-                    </div>
-                    <div className="relative h-2.5 w-full rounded-full overflow-hidden" style={{ backgroundColor: theme.primarySubtle }}>
-                        <div 
-                          className="h-full rounded-full transition-transform duration-500" 
-                          style={{ 
-                            width: '50%', 
-                            background: `linear-gradient(90deg, #4ADE80 0%, #FACC15 50%, #EF4444 100%)`,
-                            backgroundSize: '200% 100%'
-                          }}
-                        />
-                    </div>
-                </div>
+          {/* Pain Score */}
+          <div className="flex items-start gap-4">
+            <div
+              className="flex items-center justify-center shrink-0"
+              style={{
+                width: isExpanded ? "40px" : "36px",
+                height: isExpanded ? "40px" : "36px",
+                borderRadius: theme.radiusFull,
+                backgroundColor: theme.primarySubtle
+              }}
+            >
+              <Activity size={isExpanded ? 18 : 14} style={{ color: theme.primary }} strokeWidth={2.5} />
             </div>
+            <div className="flex flex-col gap-2.5 flex-1">
+              <div className="flex justify-between items-end">
+                <span style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.textMuted }}>{t("care.pain.score")}</span>
+                <span style={{
+                  fontFamily: theme.fontFamily,
+                  fontSize: isExpanded ? "26px" : "18px",
+                  color: theme.warning,
+                  fontWeight: 900,
+                  lineHeight: 1
+                }}>5 / 10</span>
+              </div>
+              <div className="relative h-2.5 w-full rounded-full overflow-hidden" style={{ backgroundColor: theme.primarySubtle }}>
+                <div
+                  className="h-full rounded-full transition-transform duration-500"
+                  style={{
+                    width: '50%',
+                    background: `linear-gradient(90deg, #4ADE80 0%, #FACC15 50%, #EF4444 100%)`,
+                    backgroundSize: '200% 100%'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </SectionContainer>
 
       {/* Module 4: Safety Alerts */}
       <SectionContainer theme={theme} isExpanded={isExpanded} bg="#EF444408" className="mt-auto">
-          <div className="flex flex-col gap-4">
-              <div className="flex items-start gap-4">
-                <div 
-                  className="flex items-center justify-center shrink-0" 
-                  style={{ 
-                    width: isExpanded ? "40px" : "36px", 
-                    height: isExpanded ? "40px" : "36px", 
-                    borderRadius: theme.radiusLg,
-                    backgroundColor: "#EF444420" 
-                  }}
-                >
-                    <AlertTriangle size={isExpanded ? 18 : 14} style={{ color: "#EF4444" }} />
-                </div>
-                <div className="flex flex-col">
-                    <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: "#EF4444", fontWeight: WEIGHT.bold }}>{t("care.fallRisk")}: {t("care.fallRisk.high")}</p>
-                    <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15px" : "12px", color: "#EF4444", lineHeight: "1.4", fontStyle: 'italic', opacity: 0.85 }}>
-                        "{t("care.assistance.bed")}"
-                    </p>
-                </div>
-              </div>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-4">
+            <div
+              className="flex items-center justify-center shrink-0"
+              style={{
+                width: isExpanded ? "40px" : "36px",
+                height: isExpanded ? "40px" : "36px",
+                borderRadius: theme.radiusLg,
+                backgroundColor: "#EF444420"
+              }}
+            >
+              <AlertTriangle size={isExpanded ? 18 : 14} style={{ color: "#EF4444" }} />
+            </div>
+            <div className="flex flex-col">
+              <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: "#EF4444", fontWeight: WEIGHT.bold }}>{t("care.fallRisk")}: {t("care.fallRisk.high")}</p>
+              <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15px" : "12px", color: "#EF4444", lineHeight: "1.4", fontStyle: 'italic', opacity: 0.85 }}>
+                "{t("care.assistance.bed")}"
+              </p>
+            </div>
           </div>
+        </div>
       </SectionContainer>
     </div>
   );
@@ -649,57 +649,57 @@ function LabResultsSlide({ theme, isExpanded = false }: { theme: any, isExpanded
     <>
       <div className="flex flex-col gap-4">
         {labResults.map((lab, i) => (
-            <SectionContainer key={lab.labelKey + i} theme={theme} isExpanded={isExpanded}>
-              <div 
-                className="flex flex-col gap-2 cursor-pointer"
-                onClick={() => setPdfModal({ url: `${lab.pdfUrl}?h=${theme.id}`, title: t(lab.labelKey) })}
-                data-nav="true"
-              >
-                <div className="flex items-center justify-between pointer-events-none">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="flex items-center justify-center shrink-0" 
-                      style={{ 
-                        backgroundColor: theme.primarySubtle,
-                        width: isExpanded ? "40px" : "36px",
-                        height: isExpanded ? "40px" : "36px",
-                        borderRadius: theme.radiusFull
-                      }}
-                    >
-                      <FlaskConical size={isExpanded ? 18 : 16} style={{ color: theme.primary }} />
-                    </div>
-                    <div>
-                      <span style={{ 
-                        fontFamily: theme.fontFamily, 
-                        fontSize: valueSize,
-                        fontWeight: WEIGHT.bold, 
-                        color: theme.textHeading 
-                      }}>{t(lab.labelKey)}</span>
-                      <div className="flex items-center gap-1.5 mt-[2px]">
-                        <span style={{ fontFamily: theme.fontFamily, fontSize: labelSize, fontWeight: 700, color: getStatusColor(lab.status) }}>
-                          {lab.value}
-                        </span>
-                        <span style={{ fontSize: "10px", color: theme.textDisabled }}>•</span>
-                        <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "14px" : "12px", fontWeight: 500, color: theme.textMuted }}>{lab.date}</span>
-                      </div>
-                    </div>
+          <SectionContainer key={lab.labelKey + i} theme={theme} isExpanded={isExpanded}>
+            <div
+              className="flex flex-col gap-2 cursor-pointer"
+              onClick={() => setPdfModal({ url: `${lab.pdfUrl}?h=${theme.id}`, title: t(lab.labelKey) })}
+              data-nav="true"
+            >
+              <div className="flex items-center justify-between pointer-events-none">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex items-center justify-center shrink-0"
+                    style={{
+                      backgroundColor: theme.primarySubtle,
+                      width: isExpanded ? "40px" : "36px",
+                      height: isExpanded ? "40px" : "36px",
+                      borderRadius: theme.radiusFull
+                    }}
+                  >
+                    <FlaskConical size={isExpanded ? 18 : 16} style={{ color: theme.primary }} />
                   </div>
-                  <div className="px-2 py-0.5 rounded-md shrink-0" style={{ backgroundColor: getStatusBg(lab.status) }}>
-                    <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "14px" : "12px", fontWeight: 800, color: getStatusColor(lab.status), letterSpacing: "0.5px" }}>
-                      {lab.status?.toUpperCase()}
-                    </span>
+                  <div>
+                    <span style={{
+                      fontFamily: theme.fontFamily,
+                      fontSize: valueSize,
+                      fontWeight: WEIGHT.bold,
+                      color: theme.textHeading
+                    }}>{t(lab.labelKey)}</span>
+                    <div className="flex items-center gap-1.5 mt-[2px]">
+                      <span style={{ fontFamily: theme.fontFamily, fontSize: labelSize, fontWeight: 700, color: getStatusColor(lab.status) }}>
+                        {lab.value}
+                      </span>
+                      <span style={{ fontSize: "10px", color: theme.textDisabled }}>•</span>
+                      <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "14px" : "12px", fontWeight: 500, color: theme.textMuted }}>{lab.date}</span>
+                    </div>
                   </div>
                 </div>
-
-                <div 
-                  className="mt-2.5 flex items-center justify-center gap-2 self-start px-4 py-2 pointer-events-none border transition-transform" 
-                  style={{ borderRadius: theme.radiusLg, backgroundColor: theme.surface, borderColor: `${theme.primary}40` }}
-                >
-                  <FileText size={isExpanded ? 16 : 14} style={{ color: theme.primary }} />
-                  <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15.5px" : "13px", fontWeight: WEIGHT.bold, color: theme.primary }}>{t("care.imaging.viewReport")}</span>
+                <div className="px-2 py-0.5 rounded-md shrink-0" style={{ backgroundColor: getStatusBg(lab.status) }}>
+                  <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "14px" : "12px", fontWeight: 800, color: getStatusColor(lab.status), letterSpacing: "0.5px" }}>
+                    {lab.status?.toUpperCase()}
+                  </span>
                 </div>
               </div>
-            </SectionContainer>
+
+              <div
+                className="mt-2.5 flex items-center justify-center gap-2 self-start px-4 py-2 pointer-events-none border transition-transform"
+                style={{ borderRadius: theme.radiusLg, backgroundColor: theme.surface, borderColor: `${theme.primary}40` }}
+              >
+                <FileText size={isExpanded ? 16 : 14} style={{ color: theme.primary }} />
+                <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15.5px" : "13px", fontWeight: WEIGHT.bold, color: theme.primary }}>{t("care.imaging.viewReport")}</span>
+              </div>
+            </div>
+          </SectionContainer>
         ))}
       </div>
       {pdfModal && <PdfViewerModal url={pdfModal.url} title={pdfModal.title} onClose={() => setPdfModal(null)} />}
@@ -760,50 +760,50 @@ function ImagingSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
     <>
       <div className="flex flex-col gap-4">
         {imagingResults.map((img, i) => (
-            <SectionContainer key={img.labelKey + i} theme={theme} isExpanded={isExpanded}>
-              <div 
-                className="flex flex-col gap-2 cursor-pointer"
-                onClick={() => setPdfModal({ url: `${img.pdfUrl}?h=${theme.id}`, title: t(img.labelKey) })}
-                data-nav="true"
-              >
-                <div className="flex items-center justify-between pointer-events-none">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="flex items-center justify-center shrink-0" 
-                      style={{ 
-                        backgroundColor: theme.primarySubtle,
-                        width: isExpanded ? "40px" : "36px",
-                        height: isExpanded ? "40px" : "36px",
-                        borderRadius: theme.radiusFull
-                      }}
-                    >
-                      <ImageIcon size={isExpanded ? 18 : 16} style={{ color: theme.primary }} />
-                    </div>
-                    <span style={{ 
-                      fontFamily: theme.fontFamily, 
-                      fontSize: valueSize,
-                      fontWeight: WEIGHT.bold, 
-                      color: theme.textHeading 
-                    }}>{t(img.labelKey)}</span>
+          <SectionContainer key={img.labelKey + i} theme={theme} isExpanded={isExpanded}>
+            <div
+              className="flex flex-col gap-2 cursor-pointer"
+              onClick={() => setPdfModal({ url: `${img.pdfUrl}?h=${theme.id}`, title: t(img.labelKey) })}
+              data-nav="true"
+            >
+              <div className="flex items-center justify-between pointer-events-none">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex items-center justify-center shrink-0"
+                    style={{
+                      backgroundColor: theme.primarySubtle,
+                      width: isExpanded ? "40px" : "36px",
+                      height: isExpanded ? "40px" : "36px",
+                      borderRadius: theme.radiusFull
+                    }}
+                  >
+                    <ImageIcon size={isExpanded ? 18 : 16} style={{ color: theme.primary }} />
                   </div>
-                  <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "14px" : "12px", color: theme.textMuted }}>{img.date}</span>
+                  <span style={{
+                    fontFamily: theme.fontFamily,
+                    fontSize: valueSize,
+                    fontWeight: WEIGHT.bold,
+                    color: theme.textHeading
+                  }}>{t(img.labelKey)}</span>
                 </div>
-                <p style={{ 
-                  fontFamily: theme.fontFamily, 
-                  fontSize: labelSize, 
-                  color: theme.textHeading, 
-                  paddingLeft: isExpanded ? 52 : 44,
-                  lineHeight: "1.4"
-                }}>{t(img.summaryKey)}</p>
-                <div 
-                  className="mt-2.5 flex items-center justify-center gap-2 self-start px-4 py-2 pointer-events-none border transition-transform" 
-                  style={{ borderRadius: theme.radiusLg, backgroundColor: theme.surface, borderColor: `${theme.primary}40` }}
-                >
-                  <FileText size={isExpanded ? 16 : 14} style={{ color: theme.primary }} />
-                  <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15.5px" : "13px", fontWeight: WEIGHT.bold, color: theme.primary }}>{t("care.imaging.viewReport")}</span>
-                </div>
+                <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "14px" : "12px", color: theme.textMuted }}>{img.date}</span>
               </div>
-            </SectionContainer>
+              <p style={{
+                fontFamily: theme.fontFamily,
+                fontSize: labelSize,
+                color: theme.textHeading,
+                paddingLeft: isExpanded ? 52 : 44,
+                lineHeight: "1.4"
+              }}>{t(img.summaryKey)}</p>
+              <div
+                className="mt-2.5 flex items-center justify-center gap-2 self-start px-4 py-2 pointer-events-none border transition-transform"
+                style={{ borderRadius: theme.radiusLg, backgroundColor: theme.surface, borderColor: `${theme.primary}40` }}
+              >
+                <FileText size={isExpanded ? 16 : 14} style={{ color: theme.primary }} />
+                <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15.5px" : "13px", fontWeight: WEIGHT.bold, color: theme.primary }}>{t("care.imaging.viewReport")}</span>
+              </div>
+            </div>
+          </SectionContainer>
         ))}
       </div>
       {pdfModal && <PdfViewerModal url={pdfModal.url} title={pdfModal.title} onClose={() => setPdfModal(null)} />}
@@ -815,7 +815,7 @@ function BabyCameraSlide({ isExpanded = false }: { isExpanded?: boolean }) {
   const { theme } = useTheme();
   const { t } = useLocale();
   const [fullscreen, setFullscreen] = useState(false);
-  
+
   const isDallah = theme.id === "dallah";
   const isCareMed = theme.id === "caremed";
   const cameraImage = isDallah ? imgDallahBabyCam : isCareMed ? imgCareMedBabyCam : imgBabyCam;
@@ -828,11 +828,11 @@ function BabyCameraSlide({ isExpanded = false }: { isExpanded?: boolean }) {
       {/* 1:1 Camera Feed */}
       <div
         className="relative w-full cursor-pointer overflow-hidden group"
-        style={{ 
+        style={{
           aspectRatio: "1 / 1",
-          backgroundColor: "#000", 
-          boxShadow: SHADOW.xl, 
-          borderRadius: theme.radiusLg 
+          backgroundColor: "#000",
+          boxShadow: SHADOW.xl,
+          borderRadius: theme.radiusLg
         }}
         onClick={() => setFullscreen(true)}
       >
@@ -841,7 +841,7 @@ function BabyCameraSlide({ isExpanded = false }: { isExpanded?: boolean }) {
           alt="Baby Camera Feed"
           className="w-full h-full object-cover absolute inset-0 transition-transform duration-500 group-hover:scale-105"
         />
-        
+
         {/* Image Overlays — LIVE badge + expand only */}
         <div className="absolute inset-0 p-3 flex flex-col justify-between pointer-events-none">
           {/* Top: LIVE badge */}
@@ -863,9 +863,9 @@ function BabyCameraSlide({ isExpanded = false }: { isExpanded?: boolean }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Baby icon avatar */}
-            <div 
-              className="rounded-full flex items-center justify-center shrink-0" 
-              style={{ 
+            <div
+              className="rounded-full flex items-center justify-center shrink-0"
+              style={{
                 backgroundColor: theme.primarySubtle,
                 width: isExpanded ? "40px" : "36px",
                 height: isExpanded ? "40px" : "36px"
@@ -874,18 +874,18 @@ function BabyCameraSlide({ isExpanded = false }: { isExpanded?: boolean }) {
               <Baby size={isExpanded ? 20 : 18} style={{ color: theme.primary }} />
             </div>
             <div>
-              <p style={{ 
-                fontFamily: theme.fontFamily, 
-                fontSize: titleSize, 
-                fontWeight: WEIGHT.bold, 
-                color: theme.textHeading, 
-                lineHeight: 1.2 
+              <p style={{
+                fontFamily: theme.fontFamily,
+                fontSize: titleSize,
+                fontWeight: WEIGHT.bold,
+                color: theme.textHeading,
+                lineHeight: 1.2
               }}>Baby Saleh</p>
-              <p style={{ 
-                fontFamily: theme.fontFamily, 
-                fontSize: subSize, 
-                color: theme.textMuted, 
-                marginTop: "2px" 
+              <p style={{
+                fontFamily: theme.fontFamily,
+                fontSize: subSize,
+                color: theme.textMuted,
+                marginTop: "2px"
               }}>Nursery · Crib 3A</p>
             </div>
           </div>
@@ -937,7 +937,7 @@ function BabyCameraFullscreen({ onClose, cameraImage }: { onClose: () => void, c
         />
 
         {/* Top bar overlay */}
-        <div 
+        <div
           className="absolute top-0 left-0 right-0 px-8 py-6 flex items-start justify-between z-10 pointer-events-none"
           style={{ background: "linear-gradient(rgba(0,0,0,0.6) 0%, transparent 100%)" }}
         >
@@ -983,9 +983,9 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
   const Row = ({ label, value, qty, isTotal = false, isHighlight = false, color }: any) => (
     <div className="flex items-center justify-between py-2" style={{ borderColor: theme.borderSubtle }}>
       <div className="flex flex-col" style={{ gap: "2px" }}>
-        <span style={{ 
-          fontFamily: theme.fontFamily, 
-          fontSize: labelSize, 
+        <span style={{
+          fontFamily: theme.fontFamily,
+          fontSize: labelSize,
           color: isTotal ? theme.textHeading : theme.textMuted,
           fontWeight: isTotal ? WEIGHT.bold : WEIGHT.medium,
           lineHeight: 1.2
@@ -996,11 +996,11 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
           </span>
         )}
       </div>
-      <span style={{ 
-        fontFamily: theme.fontFamily, 
-        fontSize: isTotal ? (isExpanded ? "24px" : "18px") : valueSize, 
+      <span style={{
+        fontFamily: theme.fontFamily,
+        fontSize: isTotal ? (isExpanded ? "24px" : "18px") : valueSize,
         color: color || theme.textHeading,
-        fontWeight: isTotal || isHighlight ? WEIGHT.bold : WEIGHT.bold 
+        fontWeight: isTotal || isHighlight ? WEIGHT.bold : WEIGHT.bold
       }}>{value}</span>
     </div>
   );
@@ -1018,7 +1018,7 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
           <Row label={t("care.billing.vat")} value={`2,923.5 ${t("care.currency")}`} />
           <Row label={t("care.billing.totalInclVat")} value={`22,413.5 ${t("care.currency")}`} />
           <Row label={t("care.billing.insuranceCredit").replace("Deduction", "").trim()} value={`- 18,515.5 ${t("care.currency")}`} color={theme.success} isHighlight />
-          
+
           <div className="mt-6 pt-2 border-t border-dashed" style={{ borderColor: theme.borderSubtle }}>
             <button
               data-nav="true"
@@ -1038,22 +1038,22 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
       {/* Module 2: Unified Payment Summary */}
       <SectionContainer theme={theme} isExpanded={isExpanded}>
         <div className="flex flex-col gap-5">
-           <div className="flex items-center justify-between px-1">
-              <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "16px" : "13.5px", color: theme.textMuted, fontWeight: WEIGHT.bold }}>{t("care.billing.patientPayable")}</span>
-              <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "26px" : "20px", color: theme.primary, fontWeight: 900 }}>3,898 <span style={{ fontSize: "0.6em" }}>{t("care.currency")}</span></span>
-           </div>
-           
-           <button
-             data-nav="true"
-             onClick={() => setShowPayment(true)}
-             className="flex items-center justify-center gap-2 w-full py-4 shadow-lg transition-transform hover:scale-[1.01] active:scale-[0.96]"
-             style={{ backgroundColor: theme.primary, cursor: 'pointer', borderRadius: theme.radiusLg }}
-           >
-             <CreditCard size={18} style={{ color: "#fff" }} />
-             <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "17px" : "15px", fontWeight: WEIGHT.bold, color: "#fff" }}>
-               {t("care.billing.payNow")}
-             </span>
-           </button>
+          <div className="flex items-center justify-between px-1">
+            <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "16px" : "13.5px", color: theme.textMuted, fontWeight: WEIGHT.bold }}>{t("care.billing.patientPayable")}</span>
+            <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "26px" : "20px", color: theme.primary, fontWeight: 900 }}>3,898 <span style={{ fontSize: "0.6em" }}>{t("care.currency")}</span></span>
+          </div>
+
+          <button
+            data-nav="true"
+            onClick={() => setShowPayment(true)}
+            className="flex items-center justify-center gap-2 w-full py-4 shadow-lg transition-transform hover:scale-[1.01] active:scale-[0.96]"
+            style={{ backgroundColor: theme.primary, cursor: 'pointer', borderRadius: theme.radiusLg }}
+          >
+            <CreditCard size={18} style={{ color: "#fff" }} />
+            <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "17px" : "15px", fontWeight: WEIGHT.bold, color: "#fff" }}>
+              {t("care.billing.payNow")}
+            </span>
+          </button>
         </div>
       </SectionContainer>
 
@@ -1066,8 +1066,8 @@ function HospitalInvoiceOverlay({ theme, onClose }: { theme: any, onClose: () =>
   const { t } = useLocale();
   return createPortal(
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-10" style={{ backgroundColor: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }} onClick={onClose}>
-      <div 
-        className="w-full max-w-4xl bg-white shadow-2xl relative flex flex-col overflow-hidden" 
+      <div
+        className="w-full max-w-4xl bg-white shadow-2xl relative flex flex-col overflow-hidden"
         style={{ borderRadius: theme.radiusXl, height: '90vh' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -1083,8 +1083,8 @@ function HospitalInvoiceOverlay({ theme, onClose }: { theme: any, onClose: () =>
             </div>
           </div>
           <div className="text-right flex flex-col gap-2">
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors self-end"
             >
               <X size={20} />
@@ -1145,12 +1145,12 @@ function HospitalInvoiceOverlay({ theme, onClose }: { theme: any, onClose: () =>
 
         {/* Invoice Footer */}
         <div className="p-10 bg-slate-50 border-t flex items-center">
-            <div className="flex items-center gap-4 text-slate-400">
-              <ShieldCheck size={40} strokeWidth={1} />
-              <p className="max-w-xs text-xs leading-relaxed">
-                This is an official clinical document generated by the {theme.hospitalName} Health Cloud. Verifiable via secure portal.
-              </p>
-            </div>
+          <div className="flex items-center gap-4 text-slate-400">
+            <ShieldCheck size={40} strokeWidth={1} />
+            <p className="max-w-xs text-xs leading-relaxed">
+              This is an official clinical document generated by the {theme.hospitalName} Health Cloud. Verifiable via secure portal.
+            </p>
+          </div>
         </div>
       </div>
     </div>,
@@ -1169,8 +1169,8 @@ function PaymentPortal({ theme, onClose, amount }: { theme: any, onClose: () => 
 
   return createPortal(
     <div className="fixed inset-0 z-[300] flex items-center justify-center p-6" style={{ backgroundColor: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }} onClick={onClose}>
-      <div 
-        className="w-full max-w-md bg-white shadow-3xl overflow-hidden" 
+      <div
+        className="w-full max-w-md bg-white shadow-3xl overflow-hidden"
         style={{ borderRadius: theme.radiusXl }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -1190,96 +1190,96 @@ function PaymentPortal({ theme, onClose, amount }: { theme: any, onClose: () => 
             </div>
 
             <div className="flex flex-col gap-4">
-               <div className="flex items-center gap-4 my-2">
-                 <div className="h-px bg-slate-100 flex-1" />
-                 <span className="text-xs font-bold text-slate-300">SECURE CARD PAYMENT</span>
-                 <div className="h-px bg-slate-100 flex-1" />
-               </div>
+              <div className="flex items-center gap-4 my-2">
+                <div className="h-px bg-slate-100 flex-1" />
+                <span className="text-xs font-bold text-slate-300">SECURE CARD PAYMENT</span>
+                <div className="h-px bg-slate-100 flex-1" />
+              </div>
 
-               <div className="flex flex-col gap-3">
-                 <div className="p-3 border border-slate-200 bg-white" style={{ borderRadius: theme.radiusLg }}>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Name on Card</p>
-                    <input 
+              <div className="flex flex-col gap-3">
+                <div className="p-3 border border-slate-200 bg-white" style={{ borderRadius: theme.radiusLg }}>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Name on Card</p>
+                  <input
+                    type="text"
+                    placeholder="J. SMITH"
+                    className="w-full text-slate-900 font-medium outline-none bg-transparent placeholder:text-slate-200"
+                  />
+                </div>
+                <div className="p-3 border border-slate-200 bg-white rounded-xl">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Card Number</p>
+                  <div className="flex items-center justify-between">
+                    <input
                       type="text"
-                      placeholder="J. SMITH"
+                      inputMode="numeric"
+                      placeholder="0000 0000 0000 0000"
                       className="w-full text-slate-900 font-medium outline-none bg-transparent placeholder:text-slate-200"
                     />
-                 </div>
-                 <div className="p-3 border border-slate-200 bg-white rounded-xl">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Card Number</p>
-                    <div className="flex items-center justify-between">
-                      <input 
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="0000 0000 0000 0000"
-                        className="w-full text-slate-900 font-medium outline-none bg-transparent placeholder:text-slate-200"
-                      />
-                      <CreditCard size={18} className="text-slate-300" />
-                    </div>
-                 </div>
-                 <div className="flex gap-3">
-                    <div className="flex-1 p-3 border border-slate-200 bg-white" style={{ borderRadius: theme.radiusLg }}>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Expiry</p>
-                      <input 
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="MM / YY"
-                        className="w-full text-slate-900 font-medium outline-none bg-transparent placeholder:text-slate-200"
-                      />
-                    </div>
-                    <div className="flex-1 p-3 border border-slate-200 bg-white" style={{ borderRadius: theme.radiusLg }}>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">CVC</p>
-                      <input 
-                        type="password"
-                        inputMode="numeric"
-                        maxLength={3}
-                        placeholder="•••"
-                        className="w-full text-slate-900 font-medium outline-none bg-transparent placeholder:text-slate-200"
-                      />
-                    </div>
-                 </div>
-               </div>
+                    <CreditCard size={18} className="text-slate-300" />
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="flex-1 p-3 border border-slate-200 bg-white" style={{ borderRadius: theme.radiusLg }}>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Expiry</p>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="MM / YY"
+                      className="w-full text-slate-900 font-medium outline-none bg-transparent placeholder:text-slate-200"
+                    />
+                  </div>
+                  <div className="flex-1 p-3 border border-slate-200 bg-white" style={{ borderRadius: theme.radiusLg }}>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">CVC</p>
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      maxLength={3}
+                      placeholder="•••"
+                      className="w-full text-slate-900 font-medium outline-none bg-transparent placeholder:text-slate-200"
+                    />
+                  </div>
+                </div>
+              </div>
 
-               <button 
+              <button
                 onClick={handlePay}
                 className="w-full py-4 shadow-xl transition-transform hover:brightness-110 active:scale-95 mt-2"
                 style={{ backgroundColor: theme.primary, borderRadius: theme.radiusLg }}
-               >
-                 <span className="text-white font-bold text-lg">Pay Securely</span>
-               </button>
+              >
+                <span className="text-white font-bold text-lg">Pay Securely</span>
+              </button>
             </div>
           </div>
         )}
 
         {step === 'processing' && (
           <div className="p-20 flex flex-col items-center justify-center gap-8 text-center h-[520px]">
-             <div className="w-20 h-20 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin" style={{ borderTopColor: theme.primary }} />
-             <div>
-               <h3 style={{ fontFamily: theme.fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold }}>Finalizing Payment</h3>
-               <p style={{ fontFamily: theme.fontFamily, fontSize: "14px", color: theme.textMuted }}>Securing your transaction...</p>
-             </div>
+            <div className="w-20 h-20 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin" style={{ borderTopColor: theme.primary }} />
+            <div>
+              <h3 style={{ fontFamily: theme.fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold }}>Finalizing Payment</h3>
+              <p style={{ fontFamily: theme.fontFamily, fontSize: "14px", color: theme.textMuted }}>Securing your transaction...</p>
+            </div>
           </div>
         )}
 
         {step === 'success' && (
           <div className="p-16 flex flex-col items-center justify-center gap-10 text-center h-[520px]">
-             <div 
-              className="w-24 h-24 rounded-full flex items-center justify-center shadow-inner" 
+            <div
+              className="w-24 h-24 rounded-full flex items-center justify-center shadow-inner"
               style={{ backgroundColor: theme.successSubtle, color: theme.success }}
-             >
-                <ShieldCheck size={48} />
-             </div>
-             <div>
-               <h3 style={{ fontFamily: theme.fontFamily, fontSize: "24px", fontWeight: WEIGHT.bold }}>Settlement Successful</h3>
-               <p style={{ fontFamily: theme.fontFamily, fontSize: "16px", color: theme.textMuted }}>Your invoice has been updated. A receipt will be sent to your registered email.</p>
-             </div>
-             <button 
+            >
+              <ShieldCheck size={48} />
+            </div>
+            <div>
+              <h3 style={{ fontFamily: theme.fontFamily, fontSize: "24px", fontWeight: WEIGHT.bold }}>Settlement Successful</h3>
+              <p style={{ fontFamily: theme.fontFamily, fontSize: "16px", color: theme.textMuted }}>Your invoice has been updated. A receipt will be sent to your registered email.</p>
+            </div>
+            <button
               onClick={onClose}
               className="px-12 py-4 rounded-xl font-bold transition-transform hover:scale-105"
               style={{ backgroundColor: theme.surfaceAlt, color: theme.textHeading }}
-             >
-               Return to Hub
-             </button>
+            >
+              Return to Hub
+            </button>
           </div>
         )}
       </div>
@@ -1551,10 +1551,10 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
   };
 
   const activeSlide = extendedSlides[activeIndex] || slides[0];
-  const realIndex = 
-    activeIndex <= 0 ? slides.length - 1 : 
-    activeIndex >= extendedSlides.length - 1 ? 0 : 
-    activeIndex - 1;
+  const realIndex =
+    activeIndex <= 0 ? slides.length - 1 :
+      activeIndex >= extendedSlides.length - 1 ? 0 :
+        activeIndex - 1;
 
   const renderSlideContentItem = (key: string) => {
     switch (key) {
@@ -1571,7 +1571,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
   };
 
   return (
-    <div 
+    <div
       dir="ltr"
       className="flex flex-col overflow-hidden relative select-none flex-1 min-h-0"
       onTouchStart={handleTouchStart}
@@ -1606,21 +1606,21 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
             data-nav="true"
             onClick={() => setIsPinned(prev => !prev)}
             className="p-1.5 cursor-pointer active:bg-black/10 transition-colors"
-            style={{ 
-              borderRadius: theme.radiusMd, 
+            style={{
+              borderRadius: theme.radiusMd,
               outline: 'none',
               backgroundColor: isPinned ? "rgba(0,0,0,0.05)" : "transparent"
             }}
             aria-label={isPinned ? "Unpin slider" : "Pin slider"}
           >
-            <Pin 
-              size={15} 
-              style={{ 
+            <Pin
+              size={15}
+              style={{
                 color: isPinned ? theme.accent : theme.primary,
                 fill: isPinned ? theme.accent : 'none',
                 transform: isPinned ? 'rotate(45deg)' : 'none',
                 transition: 'all 0.2s ease'
-              }} 
+              }}
             />
           </button>
           {onExpand && (
@@ -1672,7 +1672,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
       </div>
 
       {/* Slide Content */}
-      <div 
+      <div
         className="flex-1 min-h-0 overflow-hidden relative"
         dir="ltr"
         style={{
@@ -1875,7 +1875,7 @@ export function CareMeExpanded({ onClose }: { onClose: () => void }) {
               }}
             >
               {/* Header Box Overlay - Separate rounded box */}
-              <div 
+              <div
                 className="shrink-0 flex items-center gap-4"
                 style={{
                   backgroundColor: theme.surface,
@@ -1896,8 +1896,8 @@ export function CareMeExpanded({ onClose }: { onClose: () => void }) {
                 >
                   <ExpandedSlideIcon slideKey={slide.key} size={22} />
                 </div>
-                <span className="truncate" style={{ 
-                  fontFamily: theme.fontFamily, 
+                <span className="truncate" style={{
+                  fontFamily: theme.fontFamily,
                   fontSize: "18px",
                   fontWeight: WEIGHT.bold,
                   color: theme.textHeading,
