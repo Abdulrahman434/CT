@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Info, FileText, Play, Film } from "lucide-react";
+import { Info, FileText, Play, Film, Trophy, Star, Medal, Zap } from "lucide-react";
 import { useTheme, TYPE_SCALE, WEIGHT } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { InternalPageHeader } from "./InternalPageHeader";
@@ -17,6 +17,7 @@ import dallahAwardsAr from "../../assets/dallah-awards-ar.png";
 import dallahAwardsEn from "../../assets/dallah-awards-en.png";
 import dallahAccredsAr from "../../assets/dallah-accreds-ar.png";
 import dallahAccredsEn from "../../assets/dallah-accreds-en.png";
+import dsfhAchievementBanner from "../../assets/dsfh_jeddah_achievement_banner.png";
 
 interface AboutSection {
   id: string;
@@ -166,6 +167,15 @@ Smart Hospital Features
 • Robotic surgery capabilities
 • Advanced patient monitoring systems`,
   },
+  ...(themeId === "dsfh"
+    ? [
+        {
+          id: "achievements",
+          title: "Achievements",
+          titleKey: "about.achievements",
+        },
+      ]
+    : []),
 ];
 
 export function AboutUs({ onClose }: { onClose: () => void }) {
@@ -458,7 +468,66 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
             )}
 
             {/* Section Content */}
-            {currentSection.content && (
+            {currentSection.id === "achievements" && theme.id === "dsfh" ? (
+              <div className="flex-1 overflow-y-auto about-scrollable-content flex flex-col gap-6 pt-2">
+                {/* Achievement Banner */}
+                <div className="shrink-0 rounded-3xl overflow-hidden shadow-sm border border-gray-100" style={{ height: "240px" }}>
+                  <img 
+                    src={dsfhAchievementBanner} 
+                    alt="Latest achievements"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  {[1, 2, 3, 4].map((num) => (
+                    <div 
+                      key={num}
+                      className="p-8 rounded-3xl flex flex-col gap-4 transition-transform hover:scale-[1.02]"
+                      style={{ 
+                        backgroundColor: "#fff", 
+                        border: `1px solid ${theme.primarySubtle}`,
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.04)"
+                      }}
+                    >
+                    <div 
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                      style={{ backgroundColor: theme.primaryLight }}
+                    >
+                      {num === 1 && <Trophy size={28} color={theme.primary} />}
+                      {num === 2 && <Star size={28} color={theme.primary} />}
+                      {num === 3 && <Zap size={28} color={theme.primary} />}
+                      {num === 4 && <Medal size={28} color={theme.primary} />}
+                    </div>
+                    <div>
+                      <h4 
+                        style={{ 
+                          fontFamily: theme.fontFamily,
+                          fontSize: TYPE_SCALE.lg,
+                          fontWeight: 700,
+                          color: theme.primary,
+                          marginBottom: "8px"
+                        }}
+                      >
+                        {t(`about.dsfh.achievement${num}.title`)}
+                      </h4>
+                      <p 
+                        style={{ 
+                          fontFamily: theme.fontFamily,
+                          fontSize: "14px",
+                          fontWeight: 500,
+                          color: "#4A5568",
+                          lineHeight: 1.6
+                        }}
+                      >
+                        {t(`about.dsfh.achievement${num}.desc`)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </div>
+            ) : currentSection.content ? (
               <div
                 className="flex-1 overflow-y-auto about-scrollable-content"
                 style={{
@@ -472,7 +541,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
               >
                 {currentSection.content}
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

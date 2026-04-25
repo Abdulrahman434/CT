@@ -85,6 +85,14 @@ const translations: Record<string, TranslationEntry> = {
   "news.dallah.1": { en: "Dallah Hospitals awarded 'Leading Provider of Integrated Healthcare Services' in Saudi Arabia.", ar: "مستشفيات دله تحصل على جائزة «المزود الرائد لخدمات الرعاية الصحية المتكاملة» في المملكة.", ur: "دلہ ہسپتالوں کو سعودی عرب میں 'انٹیگریٹڈ ہیلتھ کیئر سروسز کے معروف فراہم کنندہ' کا ایوارڈ دیا گیا۔" },
   "news.dallah.2": { en: "Dallah Healthcare announces the construction of the new state-of-the-art Al-Arid Hospital in Riyadh.", ar: "دله الصحية تعلن عن إنشاء مستشفى العارض الجديد والمتطور في الرياض.", ur: "دلہ ہیلتھ کیئر نے ریاض میں نئے اسٹیٹ آف دی آرٹ العارض ہسپتال کی تعمیر کا اعلان کیا۔" },
   "news.dallah.3": { en: "Dallah Healthcare completes 100% acquisition of Care Shield Holding, reinforcing Riyadh presence.", ar: "دله الصحية تكمل استحواذها بنسبة ١٠٠٪ على شركة درع الرعاية، مما يعزز تواجدها في الرياض.", ur: "دلہ ہیلتھ کیئر نے کیئر شیلڈ ہولڈنگ کا 100% حصول مکمل کر لیا، جس سے ریاض میں موجودگی مضبوط ہوئی۔" },
+  "news.dsfh.1": { en: "Dr. Soliman Fakeeh Hospital – Riyadh Welcomes High-Level German Delegation.", ar: "استقبال وفد ألماني رفيع المستوى في مستشفى الدكتور سليمان فقيه – الرياض.", ur: "ریاض میں ڈاکٹر سلیمان فقیہ ہسپتال میں ایک اعلیٰ سطحی جرمن وفد کا استقبال کیا گیا۔" },
+  "news.dsfh.2": { en: "Dr. Soliman Fakeeh Hospital Riyadh Receives Prestigious 5-Star Global Rating.", ar: "مستشفى الدكتور سليمان فقيه بالرياض يحصل على تصنيف 5 نجوم عالميًا.", ur: "ریاض میں ڈاکٹر سلیمان فقیہ ہسپتال نے باوقار 5 اسٹار گلوبل ریٹنگ حاصل کی۔" },
+  "news.dsfh.3": { en: "Dr. Soliman Fakeeh Hospital - Riyadh Receives Best Measurement in Customer Experience Award.", ar: "مستشفى د. سليمان فقيه بالرياض يحصد جائزة \"أفضل قياس لتجربة العميل\".", ur: "ریاض میں ڈاکٹر سلیمان فقیہ ہسپتال نے بہترین کسٹمر ایکسپیرینس ایوارڈ حاصل کیا۔" },
+  "news.dsfh.jeddah.1": { en: "Dr. Soliman Fakeeh Hospital Jeddah ranked among World's Top 250 Hospitals by Newsweek.", ar: "مستشفى الدكتور سليمان فقيه بجدة ضمن أفضل 250 مستشفى في العالم حسب تصنيف نيوزويك.", ur: "جدہ میں ڈاکٹر سلیمان فقیہ ہسپتال کو نیوز ویک نے دنیا کے ٹاپ 250 ہسپتالوں میں شامل کیا۔" },
+  "news.dsfh.jeddah.2": { en: "DSFH Jeddah named #1 Private Hospital in Saudi Arabia for the 5th consecutive year.", ar: "مستشفى فقيه بجدة يتصدر كأفضل مستشفى خاص في المملكة للسنة الخامسة على التوالي.", ur: "جدہ میں فقیہ ہسپتال مسلسل پانچویں سال سعودی عرب کا نمبر 1 نجی ہسپتال قرار پایا۔" },
+  "news.dsfh.jeddah.3": { en: "Fakeeh Care Group expands with new Surgical Tower and 300-bed South Obhur hospital.", ar: "مجموعة فقيه للرعاية تتوسع ببرج جراحي جديد ومستشفى بسعة 300 سرير في جنوب أبحر.", ur: "فقیہ کیئر گروپ نے نئے سرجیکل ٹاور اور جنوبی ابحر میں 300 بستروں کے ہسپتال کے ساتھ توسیع کی۔" },
+  "news.dsfh.jeddah.4": { en: "DSFH Jeddah recognized among World's Best Smart Hospitals 2026 for digital leadership.", ar: "مستشفى فقيه بجدة ضمن أفضل المستشفيات الذكية عالمياً لعام 2026 لريادته الرقمية.", ur: "جدہ میں فقیہ ہسپتال کو ڈیجیٹل قیادت کے لیے 2026 کے دنیا کے بہترین سمارٹ ہسپتالوں میں تسلیم کیا گیا۔" },
+  "news.dsfh.jeddah.5": { en: "DSFH Jeddah ranked #1 private hospital in Neurology, Pediatrics, Orthopedics, and Oncology.", ar: "مستشفى فقيه بجدة الأول خاصاً في تخصصات الأعصاب، الأطفال، العظام، وعلم الأورام.", ur: "جدہ میں فقیہ ہسپتال نیورولوجی، اطفال، آرتھوپیڈکس اور آنکولوجی میں نمبر 1 نجی ہسپتال قرار پایا۔" },
 
   /* ─── Hub Items ─── */
   "hub.media": { en: "Media", ar: "الوسائط", ur: "میڈیا" },
@@ -237,7 +245,7 @@ const translations: Record<string, TranslationEntry> = {
 
 
   /* ─── Pain ─── */
-  "care.pain.score": { en: "Pain Score", ar: "مقياس الألم", ur: "درد کا اسکور" },
+
   "care.pain.lastUpdated": { en: "Last updated 2h ago", ar: "آخر تحديث منذ ساعتين", ur: "آخری بار 2 گھنٹے پہلے اپ ڈیٹ ہوا" },
   "care.pain.reported": { en: "Reported Pain", ar: "مؤشر الألم", ur: "رپورٹ کردہ درد" },
 
@@ -461,6 +469,15 @@ const translations: Record<string, TranslationEntry> = {
   "about.patientRights": { en: "Patient Rights", ar: "حقوق المريض", ur: "مریض کے حقوق" },
   "about.watchVideo": { en: "Watch Our Hospital Video", ar: "شاهد فيديو المستشفى", ur: "ہمارے ہسپتال کی ویڈیو دیکھیں" },
   "about.video": { en: "Video", ar: "فيديو", ur: "ویڈیو" },
+  "about.achievements": { en: "Achievements", ar: "الإنجازات والجوائز", ur: "کامیابیاں" },
+  "about.dsfh.achievement1.title": { en: "World's Top 250 Hospitals", ar: "ضمن أفضل 250 مستشفى عالمياً", ur: "دنیا کے ٹاپ 250 ہسپتالوں میں شامل" },
+  "about.dsfh.achievement1.desc": { en: "Dr. Soliman Fakeeh Hospital Jeddah is the first private hospital in Saudi Arabia to be included in Newsweek's World's Top 250 Hospitals list for 2026.", ar: "تصدر مستشفى الدكتور سليمان فقيه بجدة كأول مستشفى خاص في المملكة ينضم لقائمة نيوزويك لأفضل 250 مستشفى في العالم لعام 2026.", ur: "جدہ میں ڈاکٹر سلیمان فقیہ ہسپتال سعودی عرب کا پہلا نجی ہسپتال ہے جسے 2026 کے لیے نیوز ویک کے دنیا کے ٹاپ 250 ہسپتالوں کی فہرست میں شامل کیا گیا ہے۔" },
+  "about.dsfh.achievement2.title": { en: "Best Private Hospital in SA", ar: "أفضل مستشفى خاص في المملكة", ur: "سعودی عرب کا بہترین نجی ہسپتال" },
+  "about.dsfh.achievement2.desc": { en: "Ranked as the #1 Private Hospital in Saudi Arabia for the 5th consecutive year, ensuring unparalleled quality of care.", ar: "حصل المستشفى على المركز الأول كأفضل مستشفى خاص في المملكة العربية السعودية للسنة الخامسة على التوالي.", ur: "مسلسل پانچویں سال سعودی عرب میں نمبر 1 نجی ہسپتال کے طور پر درجہ بندی کی گئی، جو دیکھ بھال کے بے مثال معیار کو یقینی بناتی ہے۔" },
+  "about.dsfh.achievement3.title": { en: "World's Best Smart Hospitals", ar: "أفضل المستشفيات الذكية عالمياً", ur: "دنیا کے بہترین سمارٹ ہسپتال" },
+  "about.dsfh.achievement3.desc": { en: "Recognized among Newsweek's World's Best Smart Hospitals 2026 for leadership in digital health and AI-powered care.", ar: "تم اختياره ضمن قائمة نيوزويك لأفضل المستشفيات الذكية في العالم لعام 2026 لريادته في الصحة الرقمية والذكاء الاصطناعي.", ur: "ڈیجیٹل صحت اور AI سے چلنے والی دیکھ بھال میں قیادت کے لیے نیوز ویک کے 2026 کے دنیا کے بہترین سمارٹ ہسپتالوں میں تسلیم کیا گیا۔" },
+  "about.dsfh.achievement4.title": { en: "Specialty Leadership", ar: "الريادة في التخصصات الطبية", ur: "طبی خصوصیات میں قیادت" },
+  "about.dsfh.achievement4.desc": { en: "Ranked #1 among private hospitals in Neurology, Pediatrics, Orthopedics, and Oncology in the Middle East.", ar: "تصدر المستشفى كأفضل مستشفى خاص في الشرق الأوسط في تخصصات الأعصاب، الأطفال، العظام، وعلم الأورام.", ur: "مشرق وسطیٰ میں نیورولوجی، اطفال، آرتھوپیڈکس اور آنکولوجی میں نجی ہسپتالوں میں نمبر 1 قرار پایا۔" },
 
   /* ─── App Launcher ─── */
   "launcher.media": { en: "Media", ar: "الوسائط", ur: "میڈیا" },

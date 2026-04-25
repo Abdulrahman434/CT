@@ -29,6 +29,7 @@ const EMPTY_CONFIG: HospitalCoreConfig = {
   hospitalName: "",
   hospitalShortName: "",
   hospitalWebsiteUrl: "",
+  location: "",
   fontFamily: "'Inter', sans-serif",
   fontFamilyAr: "'Almarai', sans-serif",
   logoUrl: "",
@@ -605,6 +606,7 @@ function ConfigCard({
           }}
         >
           {isActive ? "Active" : config.hospitalShortName}
+          {config.location ? ` • ${config.location}` : ""}
           {isBuiltIn ? " (Built-in)" : ""}
         </span>
       </button>
@@ -985,6 +987,13 @@ export function HospitalConfigurator({ onClose }: { onClose: () => void }) {
                   value={editingConfig.hospitalShortName}
                   onChange={(v) => updateField("hospitalShortName", v)}
                   placeholder="e.g. KFMC"
+                />
+                <TextField
+                  label="City / Location"
+                  value={editingConfig.location || ""}
+                  onChange={(v) => updateField("location", v)}
+                  placeholder="e.g. Riyadh"
+                  hint="Used for weather and prayer times"
                 />
 
                 {/* ── Typography ── */}

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+﻿import { useEffect, useState, useCallback, useRef } from "react";
 import { ThemeProvider, useTheme, TYPE_SCALE, WEIGHT, SHADOW, SPACE } from "./components/ThemeContext";
 import { useLocale } from "./components/i18n";
 import { TopBar } from "./components/TopBar";
@@ -34,11 +34,15 @@ import { PatternMemoryGame } from "./components/games/PatternMemoryGame";
 import { EmojiMatchGame } from "./components/games/EmojiMatchGame";
 import { CalculatorTool } from "./components/tools/CalculatorTool";
 import { NotesTool } from "./components/tools/NotesTool";
-import { RemindersTool } from "./components/tools/RemindersTool";
+import { RemindersTool, DEFAULT_REMINDERS, parseReminderTime } from "./components/tools/RemindersTool";
+import type { Reminder } from "./components/tools/RemindersTool";
+
 import { StopwatchTool } from "./components/tools/StopwatchTool";
 import { UnitConverterTool } from "./components/tools/UnitConverterTool";
 import { BreathingTool } from "./components/tools/BreathingTool";
 import { WhiteboardTool } from "./components/tools/WhiteboardTool";
+import { MirrorTool } from "./components/tools/MirrorTool";
+
 import { getPrayerStatus, PRAYER_NAMES, formatPrayerTime } from "./utils/prayerUtils";
 import { Prayer } from "adhan";
 
@@ -103,6 +107,8 @@ function BedsideScreen() {
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [showBlankPage, setShowBlankPage] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+  const [reminders, setReminders] = useState<Reminder[]>(DEFAULT_REMINDERS);
+
   
   /* ── Prayer Monitoring / Azan Alarm ── */
   const lastPrayerRef = useRef<Prayer>(Prayer.None);
@@ -121,7 +127,7 @@ function BedsideScreen() {
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      const status = getPrayerStatus(now);
+      const status = getPrayerStatus(now, theme.location);
       
       // Check if a prayer has just started
       if (status.current !== Prayer.None && status.current !== lastPrayerRef.current) {
@@ -165,6 +171,60 @@ function BedsideScreen() {
       azanAudioRef.current.play().catch(e => console.error("Azan play failed:", e));
     }
   }, [prayerAlarm, t]);
+
+  /* ── Reminder Push Notification Timer (runs persistently) ── */
+  useEffect(() => {
+    const checkReminders = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+
+      setReminders((prev) => {
+        let changed = false;
+        const next = prev.map((r) => {
+          if (!r.pushNotify || r.completed || r.notified) return r;
+
+          const parsed = parseReminderTime(r.time);
+          if (!parsed) return r;
+
+          if (parsed.hour === currentHour && parsed.minute === currentMinute) {
+            changed = true;
+
+            const catEmoji =
+              r.category === "medication" ? "💊" : r.category === "appointment" ? "🏥" : "📌";
+
+            setActiveBroadcast({
+              id: "reminder-" + r.id + "-" + Date.now(),
+              type: "general",
+              title: {
+                en: `${catEmoji} Reminder`,
+                ar: `${catEmoji} تذكير`,
+              },
+              body: {
+                en: r.title,
+                ar: r.title,
+              },
+              priority: r.category === "medication" ? "warning" : "info",
+              timestamp: new Date().toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              }),
+            });
+
+            return { ...r, notified: true };
+          }
+          return r;
+        });
+        return changed ? next : prev;
+      });
+    };
+
+    checkReminders();
+    const interval = setInterval(checkReminders, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
 
   useEffect(() => {
     const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -521,7 +581,7 @@ function BedsideScreen() {
 
                 {/* Right — Shortcuts */}
                 <div className="flex flex-col shrink-0 min-h-0" style={{ width: "280px" }}>
-                  <ShortcutsColumn onOpenSurvey={() => setShowSurvey(true)} />
+                  <ShortcutsColumn onOpenSurvey={() => setShowSurvey(true)} onLaunchTool={(id) => setActiveTool(id as any)} />
                 </div>
               </div>
             ) : layoutVersion === 1 ? (
@@ -538,12 +598,12 @@ function BedsideScreen() {
                 <div className="flex-1 flex gap-[40px] min-w-0 min-h-0">
                   {/* Center — Engagement Grid */}
                   <div className="flex-1 min-w-0 flex flex-col gap-5 min-h-0">
-                    <ServicesGrid onOpenCategory={handleOpenCategory} />
+                    <ServicesGrid onOpenCategory={handleOpenCategory} onLaunchTool={(id) => setActiveTool(id as any)} />
                   </div>
 
                   {/* Right — Shortcuts */}
                   <div className="flex flex-col shrink-0 min-h-0" style={{ width: "280px" }}>
-                    <ShortcutsColumn onOpenSurvey={() => setShowSurvey(true)} />
+                    <ShortcutsColumn onOpenSurvey={() => setShowSurvey(true)} onLaunchTool={(id) => setActiveTool(id as any)} />
                   </div>
                 </div>
               </>
@@ -561,12 +621,12 @@ function BedsideScreen() {
                 <div className="flex-1 flex gap-[40px] min-w-0 min-h-0">
                   {/* Center — Hub grid with shortcuts at bottom */}
                   <div className="flex-1 min-w-0 flex flex-col gap-5 min-h-0">
-                    <ServicesGrid onOpenCategory={handleOpenCategory} swapped />
+                    <ServicesGrid onOpenCategory={handleOpenCategory} swapped onLaunchTool={(id) => setActiveTool(id as any)} />
                   </div>
 
                   {/* Right — Services stacked vertically */}
                   <div className="flex flex-col shrink-0 min-h-0" style={{ width: "280px" }}>
-                    <ShortcutsColumn contained onOpenSurvey={() => setShowSurvey(true)} swapped />
+                    <ShortcutsColumn contained onOpenSurvey={() => setShowSurvey(true)} swapped onLaunchTool={(id) => setActiveTool(id as any)} />
                   </div>
                 </div>
               </>
@@ -703,11 +763,14 @@ function BedsideScreen() {
         {/* Tools */}
         {activeTool === "calculator" && <CalculatorTool onClose={() => setActiveTool(null)} onBackToTools={() => { setActiveTool(null); setOpenCategory("Tools"); }} />}
         {activeTool === "notes" && <NotesTool onClose={() => setActiveTool(null)} onBackToTools={() => { setActiveTool(null); setOpenCategory("Tools"); }} />}
-        {activeTool === "reminders" && <RemindersTool onClose={() => setActiveTool(null)} onBackToTools={() => { setActiveTool(null); setOpenCategory("Tools"); }} />}
+        {activeTool === "reminders" && <RemindersTool onClose={() => setActiveTool(null)} onBackToTools={() => { setActiveTool(null); setOpenCategory("Tools"); }} reminders={reminders} setReminders={setReminders} />}
+
         {activeTool === "stopwatch" && <StopwatchTool onClose={() => setActiveTool(null)} onBackToTools={() => { setActiveTool(null); setOpenCategory("Tools"); }} />}
         {activeTool === "unitconverter" && <UnitConverterTool onClose={() => setActiveTool(null)} onBackToTools={() => { setActiveTool(null); setOpenCategory("Tools"); }} />}
         {activeTool === "breathing" && <BreathingTool onClose={() => setActiveTool(null)} onBackToTools={() => { setActiveTool(null); setOpenCategory("Tools"); }} />}
         {activeTool === "whiteboard" && <WhiteboardTool onClose={() => setActiveTool(null)} onBackToTools={() => { setActiveTool(null); setOpenCategory("Tools"); }} />}
+        {activeTool === "mirror" && <MirrorTool onClose={() => setActiveTool(null)} onBackToTools={() => { setActiveTool(null); setOpenCategory("Tools"); }} />}
+
 
         {/* Blank Page Overlay */}
         {showBlankPage && (

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import {
   X,
   Sun,
@@ -1531,7 +1531,7 @@ export function SettingsPanel({
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      const status = getPrayerStatus(now);
+      const status = getPrayerStatus(now, t.location);
       setPrayerData(status);
       setCountdown(getCountdown(now, status.targetTime));
     }, 1000);

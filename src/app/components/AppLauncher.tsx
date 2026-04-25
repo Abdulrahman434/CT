@@ -644,6 +644,26 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
       labelKey: "launcher.internet",
       icon: Globe,
       apps: [
+        ...(theme.id === "dsfh"
+          ? [
+              {
+                id: "dsfh-updates",
+                name: locale === "ar" ? "تحديثات فقيه" : "Fakeeh Updates",
+                bg: theme.primary,
+                mark: "",
+                textColor: "#fff",
+                url: locale === "ar" ? "https://dsfhriyadh.fakeeh.care/about-us/updates" : "https://en.dsfhriyadh.fakeeh.care/about-us/updates",
+                customRender: () => (
+                  <div className="flex flex-col items-center justify-center p-4" style={{ width: 150, height: 150 }}>
+                    <div className="flex items-center justify-center mb-2" style={{ width: 64, height: 64, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: theme.radiusLg }}>
+                      <Globe size={32} color="#fff" strokeWidth={1.5} />
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#fff", textAlign: "center" }}>{locale === "ar" ? "آخر التحديثات" : "Latest Updates"}</span>
+                  </div>
+                ),
+              },
+            ]
+          : []),
         {
           id: "chrome",
           name: locale === "ar" ? "كروم" : "Chrome",
@@ -911,6 +931,17 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           ),
           isInteractive: true,
         },
+        {
+          id: "mirror",
+          name: locale === "ar" ? "المرآة" : "Mirror",
+          bg: "#fff",
+          mark: "",
+          textColor: "#333",
+          customRender: () => (
+            <img src={mirrorIcon} alt="Mirror" style={{ width: 130, height: 130, objectFit: "contain" }} />
+          ),
+          isInteractive: true,
+        },
       ],
     },
     Education: {
@@ -939,6 +970,70 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
               <div className="flex flex-col items-center justify-center" style={{ width: 150, height: 150, background: "#fff", borderRadius: theme.radiusXl }}>
                 <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#E8453C", borderRadius: theme.radiusLg }}>
                   <BookOpenText size={32} color="#fff" strokeWidth={1.5} />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 800, color: "#E8453C", letterSpacing: 0.5 }}>PDF</span>
+              </div>
+            ),
+          }))
+        : theme.id === "dsfh"
+        ? /* ── DSFH Riyadh (Fakeeh Care) educational materials ── */
+          (locale === "ar"
+            ? [
+                { id: "fs-edu-cardiac",    name: "إعادة تأهيل مرضى القلب",  pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feea4805b1a0a2a3b6c23a_CARDIAC%20REHABILITATION%20Arabic.pdf" },
+                { id: "fs-edu-jaundice",   name: "اليرقان عند الأطفال",     pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feea58f3d8053cacec7a8c_neonatal%20jaundice%20Arabic.pdf" },
+                { id: "fs-edu-screening",  name: "فحص حديثي الولادة",     pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feea64486a924df0940dac_NEWBORN_SCREENING_AR.pdf" },
+                { id: "fs-edu-laser",      name: "إزالة الشعر بالليزر",     pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feea7f54e1b40aacb7f162_LASER%20HAIR%20REMOVAL%20-AR.pdf" },
+                { id: "fs-edu-antibiotic", name: "مقاومة المضادات الحيوية",  pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feea90813caed8680af284_Antibiotic_Resistance_AR.pdf" },
+                { id: "fs-edu-blood",      name: "التبرع بالدم",           pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feea9c48f17b990e3b7e1e_BLOOD%20DONATION%20(%D8%A7%D9%84%D8%AA%D8%A8%D8%B1%D8%B9%20%D8%A8%D8%A7%D9%84%D8%AF%D9%85)-AR.pdf" },
+                { id: "fs-edu-transfuse",  name: "نقل الدم",             pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64fee69db9dbe6f2831909e4_Blood%20Transfusion-SMS.pdf" },
+                { id: "fs-edu-corona",     name: "فيروس كورونا",          pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feeac98647e65f4bf93b3d_CORONA_VIRUS_AR.pdf" },
+                { id: "fs-edu-falls",      name: "الوقاية من السقوط",       pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/66017e823f951e5125efeea5_Fall_Prevention-AR-min.pdf" },
+                { id: "fs-edu-handwash",   name: "أهمية غسل اليدين",       pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feead6c9214efc40e2f215_Handwash_AR.pdf" },
+                { id: "fs-edu-mask",       name: "كيفية ارتداء الكمام",      pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feeaf416eefea8cc348793_How%20to%20wear%20%20take%20off%20your%20mask-AR.pdf" },
+                { id: "fs-edu-ulcers",     name: "قرحة الفراش",           pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/6601856a3c2bfd0f8b8ed0d6_Pressure_Ulcers_AR.pdf" },
+                { id: "fs-edu-premarital", name: "التوعية قبل الزواج",      pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feeb5dd0b3922ee8ed151f_Pre-marital.pdf" },
+                { id: "fs-edu-append",     name: "استئصال الزائدة",       pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feec2aa1ecfa79a84c9c60_APPENDECTOMY_AR.pdf" },
+                { id: "fs-edu-tracheo",    name: "العناية بفتحة القصبة",      pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feec41f3f8590be9960373_tracheostomy_care_AR1.pdf" },
+                { id: "fs-edu-diabetes",   name: "تعليمات مرضى السكري",    pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64fee69db9dbe6f2831909ea_General%20Dm%20instructions.pdf" },
+                { id: "fs-edu-sleep",      name: "اختبار فحص النوم",       pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feec9c7a882285512b1e97_SLEEP%20SCREENING%20TEST%20(%D8%A7%D8%AE%D8%AA%D8%A8%D8%A7%D8%B1%20%D9%81%D8%AD%D8%B5%20%D8%A7%D9%84%D9%86%D9%82%D9%88%D9%85)-AR.pdf" },
+                { id: "fs-edu-tb",         name: "مرض السل",             pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feecb1a1ecfa79a84d8ccb_Tuberculosis_AR.pdf" },
+                { id: "fs-edu-cyclo",      name: "تداخل الدواء (سيكلوسبورين)", pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feecc4a2582c5733b22bc0_Food%20%E2%80%93Drug%20Interaction%20for%20(%20Cyclosporine)-AR.pdf" },
+                { id: "fs-edu-warfarin",   name: "تداخل الدواء (وارفارين)",   pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feecd52d03c68f79ac4e38_Food%20%E2%80%93Drug%20Interaction%20for%20(Warfarin)-AR.pdf" },
+                { id: "fs-edu-cortico",    name: "تداخل الدواء (كورتيزون)",   pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feece7554be256e4bfb913_Food%20Drug%20Interaction%20for(%20Corticosteroid)-AR.pdf" },
+                { id: "fs-edu-miscarry",   name: "الإجهاض المبكر",          pdf: "https://cdn.prod.website-files.com/639994c60c9babacb07b9955/64feed018ac8b5f30f5c4ef1_Early%20miscarriage_AR.pdf" },
+              ]
+            : [
+                { id: "fs-edu-cardiac",    name: "Cardiac Rehabilitation",     pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee1f19f7531a68486bd78_CARDIAC%20REHABILITATION%20English.pdf" },
+                { id: "fs-edu-jaundice",   name: "Neonatal Jaundice",          pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee217e0085865926bf060_Neonatel%20jaundice%20English.pdf" },
+                { id: "fs-edu-screening",  name: "Newborn Screening",          pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee2258f3a1b8e83de0c7f_NEWBORN_SCREENING_EN.pdf" },
+                { id: "fs-edu-laser",      name: "Laser Hair Removal",         pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee23720d86029291e7a03_LASER%20HAIR%20REMOVAL%20-EN.pdf" },
+                { id: "fs-edu-antibiotic", name: "Antibiotic Resistance",       pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee24fc7d090079cf9e581_Antibiotic_Resistance_EN.pdf" },
+                { id: "fs-edu-blood",      name: "Blood Donation",             pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee25d8f3a1b8e83de54b3_BLOOD%20DONATION%20(%D8%A7%D9%84%D8%AA%D8%A8%D8%B1%D8%B9%20%D8%A8%D8%A7%D9%84%D8%AF%D9%85)-ENG.pdf" },
+                { id: "fs-edu-transfuse",  name: "Blood Transfusion",          pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee286ab1ff43a09f866c9_Blood%20Transfusion-SMS.pdf" },
+                { id: "fs-edu-corona",     name: "Corona Virus (COVID-19)",    pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee294ab1ff43a09f87dc2_CORONA_VIRUS_EN.pdf" },
+                { id: "fs-edu-falls",      name: "Fall Prevention",            pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/66017ce6e746248f78573252_Fall_Prevention-EN-min.pdf" },
+                { id: "fs-edu-handwash",   name: "Importance of Handwashing",  pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee2a29d2aa4b8e1f4780e_Handwash_EN.pdf" },
+                { id: "fs-edu-mask",       name: "Wearing & Removing Masks",   pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee34669892c590d64a396_How%20to%20wear%20%20take%20off%20your%20mask-ENG.pdf" },
+                { id: "fs-edu-ulcers",     name: "Pressure Ulcers",            pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/66017dc5655f481b5339ba88_Pressure_Ulcers_EN.pdf" },
+                { id: "fs-edu-tonsil",     name: "Adenotonsillectomy",          pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee3658899dddbe470931c_ADENOTONSILLECTOMY%20English.pdf" },
+                { id: "fs-edu-sleep",      name: "Sleep Screening Test",       pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee3a1b9dbe6f28314ff32_SLEEP%20SCREENING%20TEST%20(%D8%A7%D8%AE%D8%AA%D8%A8%D8%A7%D8%B1%20%D9%81%D8%AD%D8%B5%20%D8%A7%D9%84%D9%86%D9%82%D9%88%D9%85)-ENG.pdf" },
+                { id: "fs-edu-tb",         name: "Tuberculosis",               pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee3ade9529feff3c61128_Tuberculosis_EN.pdf" },
+                { id: "fs-edu-cyclo",      name: "Drug Interaction: Cyclosporine", pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee3cbf21b395c8b488713_Food%20%E2%80%93Drug%20Interaction%20for%20(%20Cyclosporine)-ENG.pdf" },
+                { id: "fs-edu-warfarin",   name: "Drug Interaction: Warfarin",     pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee433af7109c8ea902673_Food%20%E2%80%93Drug%20Interaction%20for%20(Warfarin)-ENG.pdf" },
+                { id: "fs-edu-cortico",    name: "Drug Interaction: Corticosteroid", pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fdc8e98c5ca2fdb291716c_ADENOTONSILLECTOMY%20-%20ENGLISH.pdf" },
+                { id: "fs-edu-miscarry",   name: "Early Miscarriage",          pdf: "https://cdn.prod.website-files.com/631e26f79f2c5af80112309a/64fee4681a3212f90670c086_Early%20miscarriage-ENG.pdf" },
+              ]
+          ).map((item) => ({
+            id: item.id,
+            name: item.name,
+            bg: "transparent",
+            mark: "",
+            textColor: "#333",
+            pdfSource: item.pdf,
+            customRender: () => (
+              <div className="flex flex-col items-center justify-center text-center" style={{ width: 150, height: 150, padding: 12, background: "#fff", borderRadius: theme.radiusXl }}>
+                <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#E8453C", borderRadius: theme.radiusLg }}>
+                  <FileText size={32} color="#fff" strokeWidth={1.5} />
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 800, color: "#E8453C", letterSpacing: 0.5 }}>PDF</span>
               </div>
@@ -974,6 +1069,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
                 { id: "d-edu-labor",    name: "الولادة الطبيعية",           pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content%20AR/Labor%20and%20delivery%20%28childbirth%20AR.pdf" },
                 { id: "d-edu-neonatal", name: "تغذية الرضيع",              pdf: "https://www.dallah-hospital.com/Assets/library/Gallery/AR_Neonatal%20Weight%20Gain%20and%20Nutrition.pdf" },
               ]
+
             : [
                 { id: "d-edu-reflux", name: "Acid Reflux", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/acid%20reflux.pdf" },
                 { id: "d-edu-asthma", name: "Asthma", pdf: "https://www.dallah-hospital.com/Assets/Library/Gallery/Educational%20Content/Asthma.pdf" },

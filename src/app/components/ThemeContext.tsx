@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from "react";
+﻿import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from "react";
 import type { Locale } from "./i18n";
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -225,6 +225,7 @@ export interface ThemeConfig {
   heroImageUrls: string[];   // multiple hero images for carousel
   heroCropPosition: string;  // object-position for hero image crop, e.g. "50% 15%"
   slideshowInterval: number; // custom interval for slides in seconds
+  location: string;
 
   /* ── Brand Colors ── */
   primary: string;
@@ -337,6 +338,7 @@ function buildTheme(core: {
     heroImageUrls: c.heroImageUrls && c.heroImageUrls.length > 0 ? c.heroImageUrls : [c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : "")],
     heroCropPosition: c.heroCropPosition || "50% 15%",
     slideshowInterval: c.slideshowInterval || 5,
+    location: (c as any).location || "Riyadh",
 
     primary: c.primary,
     primaryDark: c.primaryDark,
@@ -545,7 +547,7 @@ export const DSFH_CORE: HospitalCoreConfig = {
   fontFamily: "'Mulish', sans-serif",
   fontFamilyAr: "'Almarai', sans-serif",
   logoUrl: logoImage,
-  hospitalWebsiteUrl: "https://en.dsfhjeddah.fakeeh.care/",
+  hospitalWebsiteUrl: "https://en.dsfhriyadh.fakeeh.care/",
   heroImageUrl: hospitalImg,
   primary: "#008AAB",
   primaryDark: "#006B85",
@@ -553,6 +555,7 @@ export const DSFH_CORE: HospitalCoreConfig = {
   accent: "#D10044",
   accentDark: "#A80037",
   accentLight: "#FDE8EF",
+  location: "Jeddah",
 };
 
 /* ── Additional Built-in Hospital Presets ── */
@@ -571,6 +574,7 @@ export const BURJEEL_CORE: HospitalCoreConfig = {
   accent: "#C8A951",
   accentDark: "#9C843F",
   accentLight: "#F8F4E8",
+  location: "Abu Dhabi",
 };
 
 export const SLH_CORE: HospitalCoreConfig = {
@@ -589,6 +593,7 @@ export const SLH_CORE: HospitalCoreConfig = {
   accent: "#2678AD",
   accentDark: "#1E5E87",
   accentLight: "#E3EDF4",
+  location: "Beirut",
 };
 
 export const DALLAH_CORE: HospitalCoreConfig = {
@@ -607,6 +612,7 @@ export const DALLAH_CORE: HospitalCoreConfig = {
   accent: "#FDB913",
   accentDark: "#C5900F",
   accentLight: "#FFF6E0",
+  location: "Riyadh",
 };
 
 export const CAREMED_CORE: HospitalCoreConfig = {
@@ -624,6 +630,7 @@ export const CAREMED_CORE: HospitalCoreConfig = {
   accent: "#00A3C1",
   accentDark: "#007A91",
   accentLight: "#E0F7FA",
+  location: "Riyadh",
 };
 
 /** All built-in hospital presets (always available, never deleted) */
@@ -656,6 +663,7 @@ export interface HospitalCoreConfig {
   accent: string;
   accentDark: string;
   accentLight: string;
+  location?: string;
 }
 
 const STORAGE_KEY = "hospital-configs";

@@ -407,12 +407,16 @@ function SurveyCard({ square, contained }: { square?: boolean; contained?: boole
 }
 
 /* ─── Shortcut Tile — app icon + label ─── */
-function ShortcutTile({ item, contained }: { item: ShortcutItem; contained?: boolean }) {
+function ShortcutTile({ item, contained, onLaunchTool }: { item: ShortcutItem; contained?: boolean; onLaunchTool?: (id: string) => void }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
 
   const handleTap = () => {
+    if (item.labelKey === "shortcut.mirror" && onLaunchTool) {
+      onLaunchTool("mirror");
+      return;
+    }
     if (item.url) {
       window.open(item.url, "_blank", "noopener,noreferrer");
     }
@@ -492,12 +496,16 @@ function ShortcutTile({ item, contained }: { item: ShortcutItem; contained?: boo
 }
 
 /* ─── Shortcut Tile — compact version for right column ─── */
-function ShortcutTileCompact({ item }: { item: ShortcutItem }) {
+function ShortcutTileCompact({ item, onLaunchTool }: { item: ShortcutItem; onLaunchTool?: (id: string) => void }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
 
   const handleTap = () => {
+    if (item.labelKey === "shortcut.mirror" && onLaunchTool) {
+      onLaunchTool("mirror");
+      return;
+    }
     if (item.url) {
       window.open(item.url, "_blank", "noopener,noreferrer");
     }
@@ -575,12 +583,16 @@ function ShortcutTileCompact({ item }: { item: ShortcutItem }) {
 }
 
 /* ─── Shortcut Tile — bare version for bottom row ─── */
-function ShortcutTileBare({ item }: { item: ShortcutItem }) {
+function ShortcutTileBare({ item, onLaunchTool }: { item: ShortcutItem; onLaunchTool?: (id: string) => void }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
 
   const handleTap = () => {
+    if (item.labelKey === "shortcut.mirror" && onLaunchTool) {
+      onLaunchTool("mirror");
+      return;
+    }
     if (item.url) {
       window.open(item.url, "_blank", "noopener,noreferrer");
     }
@@ -688,7 +700,7 @@ function AboutUsButton({ onTap }: { onTap: () => void }) {
 }
 
 /* ─── Engagement Grid: 4×2 hub + bottom row ─── */
-export function ServicesGrid({ onOpenCategory, contained, swapped, compact }: { onOpenCategory?: (key: string) => void; contained?: boolean; swapped?: boolean; compact?: boolean }) {
+export function ServicesGrid({ onOpenCategory, onLaunchTool, contained, swapped, compact }: { onOpenCategory?: (key: string) => void; onLaunchTool?: (id: string) => void; contained?: boolean; swapped?: boolean; compact?: boolean }) {
   const { theme } = useTheme();
   const shortcutItems = getShortcutItems(theme.id);
   const gridGap = compact ? "gap-3" : "gap-6";
@@ -747,7 +759,7 @@ export function ServicesGrid({ onOpenCategory, contained, swapped, compact }: { 
               }}
             >
               {shortcutItems.map((item) => (
-                <ShortcutTileBare key={item.labelKey} item={item} />
+                <ShortcutTileBare key={item.labelKey} item={item} onLaunchTool={onLaunchTool} />
               ))}
             </div>
           )
@@ -767,7 +779,7 @@ export function ServicesGrid({ onOpenCategory, contained, swapped, compact }: { 
 }
 
 /* ─── Right Column — shortcuts (default) or services (swapped) ─── */
-export function ShortcutsColumn({ contained, onOpenSurvey, swapped }: { contained?: boolean; onOpenSurvey?: () => void; swapped?: boolean }) {
+export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped }: { contained?: boolean; onOpenSurvey?: () => void; onLaunchTool?: (id: string) => void; swapped?: boolean }) {
   const { theme } = useTheme();
   const shortcutItems = getShortcutItems(theme.id);
   if (swapped) {
@@ -806,7 +818,7 @@ export function ShortcutsColumn({ contained, onOpenSurvey, swapped }: { containe
         {/* Vertical tiles */}
         <div className="flex flex-col gap-2 flex-1">
           {shortcutItems.map((item) => (
-            <ShortcutTileCompact key={item.labelKey} item={item} />
+            <ShortcutTileCompact key={item.labelKey} item={item} onLaunchTool={onLaunchTool} />
           ))}
         </div>
       </div>

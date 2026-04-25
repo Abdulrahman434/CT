@@ -15,6 +15,17 @@ export function NewsTicker() {
         `🌍  ${t("news.dallah.2")}`,
         `🔬  ${t("news.dallah.3")}`,
       ]
+    : theme.id === "dsfh"
+    ? [
+        `🏆  ${t("news.dsfh.jeddah.2")}`,
+        `🌍  ${t("news.dsfh.jeddah.1")}`,
+        `🧠  ${t("news.dsfh.jeddah.5")}`,
+        `🚀  ${t("news.dsfh.jeddah.4")}`,
+        `🏗️  ${t("news.dsfh.jeddah.3")}`,
+        `🇩🇪  ${t("news.dsfh.1")}`,
+        `⭐  ${t("news.dsfh.2")}`,
+        `🏆  ${t("news.dsfh.3")}`,
+      ]
     : [
         `🏆  ${t("news.wifi")}`,
         `🌍  ${t("news.carePlans")}`,

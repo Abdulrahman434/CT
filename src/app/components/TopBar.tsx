@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Settings, Globe, Bell, Cast } from "lucide-react";
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, TEXT_STYLE, SPACE } from "./ThemeContext";
 import { useLocale } from "./i18n";
@@ -45,7 +45,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
     const interval = setInterval(() => {
       const now = new Date();
       setTime(now);
-      setPrayerData(getPrayerStatus(now));
+      setPrayerData(getPrayerStatus(now, theme.location));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
