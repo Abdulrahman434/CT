@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Home } from "lucide-react";
 import { useTheme, TYPE_SCALE, WEIGHT, TEXT_STYLE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 
@@ -13,7 +13,6 @@ interface InternalPageHeaderProps {
 export function InternalPageHeader({ title, subtitle, icon, onClose, rightAction }: InternalPageHeaderProps) {
   const { theme } = useTheme();
   const { isRTL, fontFamily } = useLocale();
-  const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   return (
     <div className="shrink-0 flex items-center gap-5 px-12 pt-10 pb-6 relative z-10">
       <button
@@ -28,7 +27,7 @@ export function InternalPageHeader({ title, subtitle, icon, onClose, rightAction
           outline: 'none',
         }}
       >
-        <BackArrow size={24} style={{ color: "#fff" }} />
+        <Home size={22} style={{ color: "#fff" }} />
       </button>
       {/* Divider */}
       <div style={{ width: "1.5px", height: "32px", backgroundColor: "rgba(255,255,255,0.18)", borderRadius: "1px" }} />

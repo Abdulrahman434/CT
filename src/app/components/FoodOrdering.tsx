@@ -30,7 +30,7 @@ import {
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 type MealId = MealIdData;
-type Step = "select-type" | "select-meal" | "kids-breakfast-type" | "build-meal" | "confirmed" | "history";
+type Step = "landing" | "select-type" | "select-meal" | "kids-breakfast-type" | "build-meal" | "confirmed" | "history";
 type OrderFor = "patient" | "guest";
 type GroupMode = GroupModeData;
 type KidsBreakfastType = "hot" | "cold" | null;
@@ -100,8 +100,14 @@ function isMealActive(hours: [number, number]): boolean {
   return h >= hours[0] && h < hours[1];
 }
 
+/** Global toggle: when false, all meals are always orderable (testing mode). */
+let _enforceOrderTime = typeof window !== "undefined" ? localStorage.getItem("fo_enforceTime") !== "false" : true;
+function setEnforceOrderTime(v: boolean) { _enforceOrderTime = v; if (typeof window !== "undefined") localStorage.setItem("fo_enforceTime", String(v)); }
+function getEnforceOrderTime() { return _enforceOrderTime; }
+
 /** Best-practice ordering rule: orders accepted up until `orderCutoff` (today). */
 function isMealOrderable(meal: MealPeriod): boolean {
+  if (!_enforceOrderTime) return true;
   const now = new Date();
   const nowHours = now.getHours() + now.getMinutes() / 60;
   return nowHours < meal.orderCutoff;
@@ -164,6 +170,7 @@ const TEAL_25 = "rgba(var(--fo-primary-rgb), 0.15)";
 const TEAL_20 = "rgba(var(--fo-primary-rgb), 0.12)";
 const TEAL_15 = "rgba(var(--fo-primary-rgb), 0.09)";
 const TEAL_DARK = "var(--fo-primary-dark)";
+const SECONDARY = "var(--fo-secondary)";
 const GREEN = "#3FC168";
 const TEAL_BG_TINT = "var(--fo-bg-tint)";
 
@@ -190,7 +197,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
 
   const nurseStore = useNurseStore();
 
-  const [step, setStep] = useState<Step>("select-type");
+  const [step, setStep] = useState<Step>("landing");
   const [orderFor, setOrderFor] = useState<OrderFor>("patient");
   const [selectedMealId, setSelectedMealId] = useState<MealId | null>(null);
   const [selections, setSelections] = useState<Selections>({});
@@ -198,6 +205,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
   const [kidsBreakfastType, setKidsBreakfastType] = useState<KidsBreakfastType>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [wasEditMode, setWasEditMode] = useState(false);
+  const [showHistoryOverlay, setShowHistoryOverlay] = useState(false);
   const isEditMode = editingOrderId !== null;
 
   // Read diet from Care Teams Settings (NurseDataStore)
@@ -338,7 +346,8 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
   }, [orders]);
 
   const handleBack = useCallback(() => {
-    if (step === "select-type") onClose();
+    if (step === "landing") onClose();
+    else if (step === "select-type") setStep("landing");
     else if (step === "select-meal") setStep("select-type");
     else if (step === "kids-breakfast-type") setStep("select-meal");
     else if (step === "build-meal") {
@@ -354,11 +363,11 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
       }
     }
     else if (step === "confirmed") onClose();
-    else if (step === "history") onClose();
+    else if (step === "history") setStep("landing");
   }, [step, onClose, effectiveDiet, selectedMealId, isEditMode]);
 
-  const showPatientBar = step !== "history" && step !== "select-type" && step !== "confirmed";
-  const showBottomBar = step !== "history";
+  const showPatientBar = step !== "history" && step !== "landing" && step !== "confirmed";
+  const showBottomBar = step !== "landing";
   const showBackButton = true;
   const isFlow = step === "select-type" || step === "select-meal" || step === "kids-breakfast-type" || step === "build-meal" || step === "confirmed";
 
@@ -367,6 +376,8 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
     "--fo-primary": theme.primary,
     "--fo-primary-rgb": hexToRgb(theme.primary),
     "--fo-primary-dark": theme.primaryDark,
+    "--fo-secondary": theme.accent,
+    "--fo-secondary-rgb": hexToRgb(theme.accent),
     "--fo-bg-tint": tintHex(theme.primary, 0.92),
   } as React.CSSProperties;
 
@@ -409,8 +420,9 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
 
       {/* ─── TOP BAR (translucent white strip) ─── */}
       <TopBar
-        onBack={handleBack}
-        onMyOrders={() => setStep("history")}
+        onBack={onClose}
+        onMyOrders={() => setShowHistoryOverlay(true)}
+        showMyOrders={isFlow && step !== "confirmed"}
         onDemoClear={clearOpenOrders}
         title={step === "history" ? (isRTL ? "طلباتي" : "My Orders") : (isRTL ? "طلب الوجبات" : "Meal Ordering")}
         subtitle={step === "history" ? (isRTL ? "سجل طلباتك" : "Your order history") : (isRTL ? "اختر وجبتك" : "Select your meal")}
@@ -420,7 +432,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
       />
 
       {/* ─── PATIENT BAR (white, fixed) ─── */}
-      {showPatientBar && (
+      {showPatientBar ? (
         <PatientBar
           isKid={isKid}
           orderFor={orderFor}
@@ -431,7 +443,10 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
           fontFamily={fontFamily}
           isRTL={isRTL}
         />
-      )}
+      ) : isFlow ? (
+        /* Spacer matching patient bar height so content card aligns consistently */
+        <div className="shrink-0" style={{ height: "96px" }} />
+      ) : null}
 
       {/* ─── MAIN CONTENT (white rounded card containing stepper + body) ─── */}
       <div className="flex-1 min-h-0 px-12 pt-5 pb-3 relative flex flex-col">
@@ -444,7 +459,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
                   <OrderTypeStep key="t" orderFor={orderFor} onSelect={setOrderFor} fontFamily={fontFamily} isRTL={isRTL} isNpo={isNpo} />
                 )}
                 {step === "select-meal" && (
-                  <ChooseMealStep key="m" meals={meals} selectedMealId={selectedMealId} onSelect={handleSelectMeal} fontFamily={fontFamily} isRTL={isRTL}
+                  <ChooseMealStep key="m" meals={meals} selectedMealId={selectedMealId} onSelect={handleSelectMeal} onDeselect={() => setSelectedMealId(null)} fontFamily={fontFamily} isRTL={isRTL}
                     submittedMealIds={(() => {
                       const todayStr = new Date().toDateString();
                       const set = new Set<MealId>();
@@ -516,6 +531,74 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
             onEdit={startEditOrder}
           />
         )}
+
+        {/* ─── LANDING PAGE ─── */}
+        {step === "landing" && (
+          <motion.div
+            key="landing"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="flex-1 min-h-0 flex items-center justify-center gap-10 px-8"
+          >
+            {/* Make a New Order */}
+            <button
+              onClick={() => { setStep("select-type"); setSelectedMealId(null); setOrderFor("patient"); }}
+              className="flex flex-col items-center justify-center gap-8 cursor-pointer transition-transform active:scale-[0.97] hover:scale-[1.02]"
+              style={{
+                width: "420px", height: "380px",
+                backgroundColor: "#fff", borderRadius: "30px",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                border: "1px solid rgba(0,0,0,0.06)",
+                outline: "none",
+              }}
+            >
+              <div style={{
+                width: 110, height: 110, borderRadius: "50%",
+                backgroundColor: TEAL_15, display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Utensils size={48} style={{ color: TEAL }} />
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontFamily, fontSize: "26px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>
+                  {isRTL ? "طلب جديد" : "Make a New Order"}
+                </p>
+                <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: theme.textMuted, marginTop: 8 }}>
+                  {isRTL ? "اطلب وجبتك الآن" : "Order your meal now"}
+                </p>
+              </div>
+            </button>
+
+            {/* View My Orders */}
+            <button
+              onClick={() => setStep("history")}
+              className="flex flex-col items-center justify-center gap-8 cursor-pointer transition-transform active:scale-[0.97] hover:scale-[1.02]"
+              style={{
+                width: "420px", height: "380px",
+                backgroundColor: "#fff", borderRadius: "30px",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                border: "1px solid rgba(0,0,0,0.06)",
+                outline: "none",
+              }}
+            >
+              <div style={{
+                width: 110, height: 110, borderRadius: "50%",
+                backgroundColor: `rgba(var(--fo-secondary-rgb), 0.12)`, display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <ClipboardList size={48} style={{ color: SECONDARY }} />
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontFamily, fontSize: "26px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>
+                  {isRTL ? "طلباتي" : "View My Orders"}
+                </p>
+                <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: theme.textMuted, marginTop: 8 }}>
+                  {isRTL ? "عرض وتعديل طلباتك" : "View and edit your orders"}
+                </p>
+              </div>
+            </button>
+          </motion.div>
+        )}
       </div>
 
       {/* ─── BOTTOM NAV BAR ─── */}
@@ -525,10 +608,19 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
           canContinue={canContinue}
           onBack={handleBack}
           showBack={step !== "confirmed"}
-          onContinue={step === "confirmed" ? onClose : handleContinue}
-          secondaryAction={
+          onContinue={
+            step === "confirmed" ? onClose :
+            step === "history" ? () => { setStep("select-type"); setSelectedMealId(null); setOrderFor("patient"); } :
+            handleContinue
+          }
+          leftAction={
             step === "confirmed"
               ? { label: isRTL ? "طلباتي" : "View My Orders", onClick: () => setStep("history") }
+              : undefined
+          }
+          secondaryAction={
+            step === "confirmed"
+              ? { label: isRTL ? "طلب جديد" : "New Order", onClick: () => { setStep("select-type"); setSelectedMealId(null); setOrderFor("patient"); } }
               : undefined
           }
           backLabel={
@@ -539,6 +631,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
             step === "build-meal" && isEditMode ? (isRTL ? "تحديث الطلب" : "Update Order") :
             step === "build-meal" ? (isRTL ? "تأكيد الطلب" : "Place your order") :
             step === "confirmed"  ? (isRTL ? "خروج" : "Exit") :
+            step === "history" ? (isRTL ? "طلب جديد" : "New Order") :
                                     (isRTL ? "متابعة" : "Continue")
           }
           fontFamily={fontFamily}
@@ -547,6 +640,64 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
           ForwardArrow={ForwardArrow}
         />
       )}
+
+      {/* ─── HISTORY OVERLAY ─── */}
+      <AnimatePresence>
+        {showHistoryOverlay && (
+          <motion.div
+            key="history-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 z-50 flex flex-col"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+          >
+            <div
+              className="flex-1 flex flex-col m-8 mt-4 rounded-[28px] overflow-hidden"
+              style={{ backgroundColor: "#fff", boxShadow: "0 12px 48px rgba(0,0,0,0.25)" }}
+            >
+              {/* Overlay header */}
+              <div className="shrink-0 flex items-center justify-between px-8 py-5" style={{ borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
+                <div className="flex items-center gap-3">
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    backgroundColor: TEAL_15,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <ClipboardList size={20} style={{ color: TEAL }} />
+                  </div>
+                  <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>
+                    {isRTL ? "طلباتي" : "My Orders"}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowHistoryOverlay(false)}
+                  className="flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+                  style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    backgroundColor: "rgba(0,0,0,0.05)", border: "none", outline: "none",
+                    color: theme.textMuted, fontSize: "20px",
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+              {/* Overlay content */}
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <HistoryView
+                  activeOrders={activeOrders}
+                  pastOrders={pastOrders}
+                  fontFamily={fontFamily}
+                  isRTL={isRTL}
+                  meals={meals}
+                  onEdit={(orderId) => { setShowHistoryOverlay(false); startEditOrder(orderId); }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -555,8 +706,8 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
  * TOP BAR
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function TopBar({ onBack, onMyOrders, onDemoClear, title, subtitle, fontFamily, isRTL, BackArrow }: {
-  onBack: () => void; onMyOrders: () => void; onDemoClear: () => void;
+function TopBar({ onBack, onMyOrders, showMyOrders, onDemoClear, title, subtitle, fontFamily, isRTL, BackArrow }: {
+  onBack: () => void; onMyOrders: () => void; showMyOrders?: boolean; onDemoClear: () => void;
   title: string; subtitle: string; fontFamily: string; isRTL: boolean; BackArrow: any;
 }) {
   return (
@@ -580,14 +731,16 @@ function TopBar({ onBack, onMyOrders, onDemoClear, title, subtitle, fontFamily, 
               <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
             </svg>
           </button>
-          <button onClick={onMyOrders} style={{ 
-            display: "flex", alignItems: "center", gap: "8px", 
-            backgroundColor: "rgba(255,255,255,0.15)", borderRadius: "12px", padding: "10px 16px",
-            color: "#fff", fontFamily, fontWeight: 600, border: "none", cursor: "pointer"
-          }}>
-            <ClipboardList size={20} />
-            {isRTL ? "طلباتي" : "My Orders"}
-          </button>
+          {showMyOrders && (
+            <button onClick={onMyOrders} style={{ 
+              display: "flex", alignItems: "center", gap: "8px", 
+              backgroundColor: "rgba(255,255,255,0.15)", borderRadius: "12px", padding: "10px 16px",
+              color: "#fff", fontFamily, fontWeight: 600, border: "none", cursor: "pointer"
+            }}>
+              <ClipboardList size={20} />
+              {isRTL ? "طلباتي" : "My Orders"}
+            </button>
+          )}
         </div>
       }
     />
@@ -614,7 +767,7 @@ function PatientBar({ isKid, orderFor, name, dietLabel, allergiesLabel, mealName
       style={{ backgroundColor: "#fff", borderRadius: "24px", padding: "18px 22px", border: "1px solid rgba(0,0,0,0.1)" }}
     >
       {/* Avatar */}
-      <div className="shrink-0" style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="shrink-0" style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: isGuest ? SECONDARY : TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
         {isGuest ? (
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -741,7 +894,7 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
   const showNpoBlock = isNpo && orderFor === "patient";
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
-      className="h-full flex flex-col px-[40px] pt-[48px] pb-[20px] gap-[20px]">
+      className="h-full flex flex-col px-[40px] pt-[32px] pb-[16px] gap-[16px]">
       {/* Centered heading — matches Choose Meal placement */}
       <div className="shrink-0 text-center">
         <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
@@ -759,8 +912,8 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
             return (
               <motion.button key={type} onClick={() => onSelect(type)} whileTap={{ scale: 0.97 }}
                 style={{
-                  width: "600px", height: "480px", borderRadius: "26px",
-                  backgroundColor: selected ? TEAL : "#fff",
+                  width: "560px", height: "400px", borderRadius: "26px",
+                  backgroundColor: selected ? (type === "patient" ? TEAL : SECONDARY) : "#fff",
                   border: selected ? "none" : "1.6px solid rgba(0,0,0,0.1)",
                   position: "relative", cursor: "pointer", outline: "none",
                   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "36px",
@@ -784,8 +937,8 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
                   {type === "patient"
-                    ? <User size={60} color={selected ? TEAL : "#605D5D"} strokeWidth={1.8} />
-                    : <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke={selected ? TEAL : "#605D5D"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    ? <User size={60} color={selected ? TEAL : TEAL} strokeWidth={1.8} />
+                    : <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke={SECONDARY} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
                         <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
@@ -833,8 +986,8 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
  * STEP 2: CHOOSE MEAL
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, submittedMealIds, orders, onEditOrder }: {
-  meals: MealPeriod[]; selectedMealId: MealId | null; onSelect: (id: MealId) => void; fontFamily: string; isRTL: boolean;
+function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamily, isRTL, submittedMealIds, orders, onEditOrder }: {
+  meals: MealPeriod[]; selectedMealId: MealId | null; onSelect: (id: MealId) => void; onDeselect?: () => void; fontFamily: string; isRTL: boolean;
   submittedMealIds: Set<MealId>;
   orders?: any[];
   onEditOrder?: (mealId: MealId) => void;
@@ -843,10 +996,11 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, su
   const today = new Date().toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
   const [blockedMeal, setBlockedMeal] = React.useState<MealPeriod | null>(null);
   const [submittedMeal, setSubmittedMeal] = React.useState<MealPeriod | null>(null);
+  const [enforceTime, setEnforceTime] = React.useState(() => getEnforceOrderTime());
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
-      className="h-full flex flex-col px-[40px] pt-[48px] pb-[20px] gap-[20px]">
+      className="h-full flex flex-col px-[40px] pt-[32px] pb-[20px] gap-[16px]">
       {/* Centered heading */}
       <div className="shrink-0 text-center">
         <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
@@ -855,6 +1009,42 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, su
         <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#565656", marginTop: "6px" }}>
           {isRTL ? "اختر وجبة واحدة" : "Please select one meal option"}
         </p>
+      </div>
+
+      {/* Time enforcement toggle (testing) */}
+      <div className="shrink-0 flex items-center justify-center gap-2">
+        <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.semibold, color: enforceTime ? "#16A34A" : "#9CA3AF" }}>
+          {enforceTime ? (isRTL ? "تقييد الوقت مُفعّل" : "Time restriction ON") : (isRTL ? "تقييد الوقت مُعطّل" : "Time restriction OFF")}
+        </span>
+        <button
+          onClick={() => {
+            const next = !enforceTime;
+            setEnforceOrderTime(next);
+            setEnforceTime(next);
+            // If turning ON, deselect any meal that's now non-orderable
+            if (next && selectedMealId) {
+              const selMeal = meals.find(m => m.id === selectedMealId);
+              if (selMeal) {
+                const now = new Date();
+                const nowH = now.getHours() + now.getMinutes() / 60;
+                if (nowH >= selMeal.orderCutoff && onDeselect) onDeselect();
+              }
+            }
+          }}
+          style={{
+            width: "40px", height: "22px", borderRadius: "11px", border: "none", cursor: "pointer",
+            backgroundColor: enforceTime ? "#16A34A" : "#D1D5DB",
+            position: "relative", transition: "background-color 0.2s", padding: 0,
+          }}
+        >
+          <div style={{
+            width: "18px", height: "18px", borderRadius: "50%", backgroundColor: "#fff",
+            position: "absolute", top: "2px",
+            left: enforceTime ? "20px" : "2px",
+            transition: "left 0.2s",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+          }} />
+        </button>
       </div>
 
       {/* Cards row — narrower, centered with whitespace, icon-led */}
@@ -1059,16 +1249,16 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, su
                   {canEdit && onEditOrder && (
                     <button onClick={() => { setSubmittedMeal(null); onEditOrder(submittedMeal.id); }}
                       className="active:scale-95 transition-transform"
-                      style={{ marginTop: "8px", height: "52px", padding: "0 36px", borderRadius: "100px", backgroundColor: TEAL, border: "none", outline: "none", cursor: "pointer" }}>
-                      <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: "#fff" }}>
+                      style={{ marginTop: "8px", height: "52px", padding: "0 36px", borderRadius: "100px", backgroundColor: "#fff", border: `2px solid ${TEAL}`, outline: "none", cursor: "pointer" }}>
+                      <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: TEAL }}>
                         {isRTL ? "تعديل الطلب" : "Edit Order"}
                       </span>
                     </button>
                   )}
                   <button onClick={() => setSubmittedMeal(null)}
                     className="active:scale-95 transition-transform"
-                    style={{ marginTop: "8px", height: "52px", padding: "0 36px", borderRadius: "100px", backgroundColor: canEdit ? "#F3F4F6" : TEAL, border: "none", outline: "none", cursor: "pointer" }}>
-                    <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: canEdit ? "#6B7280" : "#fff" }}>
+                    style={{ marginTop: "8px", height: "52px", padding: "0 36px", borderRadius: "100px", backgroundColor: TEAL, border: "none", outline: "none", cursor: "pointer" }}>
+                    <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: "#fff" }}>
                       {isRTL ? "حسناً" : "Got it"}
                     </span>
                   </button>
@@ -1093,78 +1283,87 @@ function KidsBreakfastTypeStep({ selected, onSelect, fontFamily, isRTL }: {
   fontFamily: string;
   isRTL: boolean;
 }) {
-  const options: { id: KidsBreakfastType; icon: React.ReactNode; label: { en: string; ar: string }; desc: { en: string; ar: string }; color: string; bgColor: string }[] = [
+  const options: { id: KidsBreakfastType; icon: React.ReactNode; selectedIcon: React.ReactNode; label: { en: string; ar: string }; desc: { en: string; ar: string }; color: string }[] = [
     {
       id: "hot",
-      icon: <Flame size={36} color="#EF4444" />,
+      icon: <Flame size={60} color="#EF4444" strokeWidth={1.8} />,
+      selectedIcon: <Flame size={60} color="#EF4444" strokeWidth={1.8} />,
       label: { en: "Hot Breakfast", ar: "إفطار ساخن" },
       desc: { en: "Eggs, bacon, sausage, toast & more", ar: "بيض، بيكون، سجق، توست والمزيد" },
       color: "#EF4444",
-      bgColor: "#FEF2F2",
     },
     {
       id: "cold",
-      icon: <Snowflake size={36} color="#3B82F6" />,
+      icon: <Snowflake size={60} color="#3B82F6" strokeWidth={1.8} />,
+      selectedIcon: <Snowflake size={60} color="#3B82F6" strokeWidth={1.8} />,
       label: { en: "Cold Breakfast", ar: "إفطار بارد" },
       desc: { en: "Cold meats, dairy, cheese & more", ar: "لحوم باردة، ألبان، جبنة والمزيد" },
       color: "#3B82F6",
-      bgColor: "#EFF6FF",
     },
   ];
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
   return (
-    <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.2 }}
-      className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center justify-center px-12 py-8" dir={isRTL ? "rtl" : "ltr"}
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
+      className="h-full flex flex-col px-[40px] pt-[32px] pb-[16px] gap-[16px]"
     >
-      <h2 style={{ fontFamily, fontWeight: WEIGHT.bold, fontSize: "28px", color: "#212121", marginBottom: "8px", textAlign: "center" }}>
-        {isRTL ? "نوع الإفطار" : "Breakfast Type"}
-      </h2>
-      <p style={{ fontFamily, fontSize: "17px", color: "#888", marginBottom: "32px", textAlign: "center" }}>
-        {isRTL ? "اختر نوع إفطار طفلك" : "Choose your child's breakfast type"}
-      </p>
-      <div className="flex gap-6" style={{ width: "100%", maxWidth: "600px" }}>
-        {options.map((opt) => {
-          const isActive = selected === opt.id;
-          return (
-            <motion.button
-              key={opt.id}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => onSelect(opt.id)}
-              className="flex-1 flex flex-col items-center justify-center gap-3 rounded-[24px] transition-all cursor-pointer"
-              style={{
-                padding: "32px 20px",
-                border: isActive ? `3px solid ${opt.color}` : "2px solid #eee",
-                backgroundColor: isActive ? opt.bgColor : "#FAFAFA",
-                boxShadow: isActive ? `0 6px 24px ${opt.color}22` : "none",
-                outline: "none",
-                fontFamily,
-              }}
-            >
-              <div style={{
-                width: 72, height: 72, borderRadius: "50%",
-                backgroundColor: isActive ? `${opt.color}18` : "#F0F0F0",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                {opt.icon}
-              </div>
-              <span style={{ fontWeight: WEIGHT.bold, fontSize: "20px", color: isActive ? opt.color : "#444" }}>
-                {loc(opt.label)}
-              </span>
-              <span style={{ fontWeight: WEIGHT.regular, fontSize: "14px", color: "#888", textAlign: "center" }}>
-                {loc(opt.desc)}
-              </span>
-              {isActive && (
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{
-                  width: 28, height: 28, borderRadius: "50%", backgroundColor: opt.color,
-                  display: "flex", alignItems: "center", justifyContent: "center", marginTop: 4,
+      {/* Centered heading — same as Step 1 */}
+      <div className="shrink-0 text-center">
+        <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
+          {isRTL ? "نوع الإفطار" : "Breakfast Type"}
+        </h2>
+        <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#565656", marginTop: "6px" }}>
+          {isRTL ? "اختر نوع إفطار طفلك" : "Choose your child's breakfast type"}
+        </p>
+      </div>
+
+      {/* Cards — same dimensions & style as Patient/Companion */}
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-[20px]">
+        <div className="flex items-center justify-center gap-[30px]">
+          {options.map((opt) => {
+            const isActive = selected === opt.id;
+            return (
+              <motion.button key={opt.id} onClick={() => onSelect(opt.id)} whileTap={{ scale: 0.97 }}
+                style={{
+                  width: "560px", height: "400px", borderRadius: "26px",
+                  backgroundColor: isActive ? TEAL : "#fff",
+                  border: isActive ? "none" : "1.6px solid rgba(0,0,0,0.1)",
+                  position: "relative", cursor: "pointer", outline: "none",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "36px",
+                  transition: "all 0.22s ease",
                 }}>
-                  <Check size={16} color="#fff" strokeWidth={3} />
-                </motion.div>
-              )}
-            </motion.button>
-          );
-        })}
+                {/* Checkmark badge */}
+                <div className="absolute" style={{ top: "32px", right: "32px",
+                  width: "68px", height: "68px", borderRadius: "50%",
+                  backgroundColor: isActive ? "#2DCC06" : "#fff",
+                  border: isActive ? "none" : "2px solid #DADADA",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: isActive ? "0 4px 6.5px rgba(0,138,171,0.38)" : "none",
+                }}>
+                  {isActive && <Check size={32} color="#fff" strokeWidth={2.5} />}
+                </div>
+
+                {/* Icon circle */}
+                <div style={{
+                  width: "120px", height: "120px", borderRadius: "60px",
+                  backgroundColor: isActive ? "#fff" : "#F4F4F4",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  {isActive ? opt.selectedIcon : opt.icon}
+                </div>
+
+                {/* Label */}
+                <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: isActive ? "#fff" : "#171717" }}>
+                  {loc(opt.label)}
+                </span>
+
+                {/* Description */}
+                <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: isActive ? "rgba(255,255,255,0.75)" : "#888", textAlign: "center", maxWidth: "320px" }}>
+                  {loc(opt.desc)}
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
     </motion.div>
   );
@@ -1470,16 +1669,16 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
   return (
     <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}
       className="h-full flex items-center justify-center px-[40px] py-[24px] overflow-y-auto fo-scroll">
-      {/* Single seamless card — stroke only, no shadow */}
+      {/* Single seamless card */}
       <div style={{
         width: "100%", maxWidth: "1080px",
         borderRadius: "24px", backgroundColor: "#fff",
         border: "1.5px solid rgba(0,0,0,0.08)",
-        display: "grid", gridTemplateColumns: "1fr 1px 1fr",
+        display: "grid", gridTemplateColumns: "1fr 1fr",
         overflow: "hidden",
       }}>
 
-        {/* ── LEFT — Success + subtitle + order ID pill ── */}
+        {/* ── LEFT — Success message + Edit Order ── */}
         <div style={{ padding: "36px 32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "18px" }}>
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 220, damping: 18, delay: 0.1 }}
             style={{ width: "72px", height: "72px", borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 8px 22px ${GREEN}50` }}>
@@ -1501,7 +1700,7 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
                     : `Your ${loc(meal.label).toLowerCase()} order has been sent to the kitchen and will be delivered during the scheduled time.`)}
             </p>
           </div>
-          {/* Edit Order button — only if window still open */}
+          {/* Edit Order button — only if ordering window still open */}
           {canStillEdit && onEdit && (
             <button onClick={onEdit}
               className="active:scale-95 transition-transform cursor-pointer"
@@ -1517,95 +1716,110 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
           )}
         </div>
 
-        {/* ── Vertical gray divider ── */}
-        <div style={{ backgroundColor: "rgba(0,0,0,0.08)" }} />
-
-        {/* ── RIGHT — Patient banner + bordered details box ── */}
-        <div style={{ padding: "28px", display: "flex", flexDirection: "column", gap: "14px", justifyContent: "center" }}>
-          {/* Patient / Guest banner */}
-          <div className="flex items-center gap-3" style={{
-            padding: "12px 16px", borderRadius: "12px",
-            backgroundColor: isGuest ? "#FEF3C7" : "#F2F9FB",
-            border: `1px solid ${isGuest ? "#FDE68A" : `${TEAL_25}`}`,
-          }}>
-            <div style={{ width: "38px", height: "38px", borderRadius: "50%", backgroundColor: isGuest ? "#D97706" : TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <User size={19} color="#fff" strokeWidth={2.5} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1.2 }}>
-                {isRTL ? "للـ" : "For "}{patientName}
-                {room && (
-                  <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.semibold, color: "#6B7280", marginLeft: "8px" }}>
-                    · {isRTL ? "غرفة" : "Room"} {room}
-                  </span>
-                )}
-              </p>
-              <p style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.4, marginTop: "4px" }}>
-                {isRTL ? `الحمية: ${dietLabel} · الحساسية: ${allergiesLabel}` : `Diet: ${dietLabel} · Allergies: ${allergiesLabel}`}
-              </p>
-            </div>
-            {/* Order ID — right side */}
-            <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: TEAL, whiteSpace: "nowrap", flexShrink: 0 }}>
-              {isRTL ? "رقم الطلب:" : "Order ID:"} {orderNumber}
-            </span>
-          </div>
-
-          {/* Bordered details container */}
+        {/* ── RIGHT — bordered details box with patient + details ── */}
+        <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          {/* Bordered container */}
           <div style={{
             border: "1.5px solid rgba(0,0,0,0.1)", borderRadius: "16px",
-            padding: "18px 20px", display: "flex", flexDirection: "column",
+            overflow: "hidden",
+            display: "flex", flexDirection: "column",
           }}>
-            <DetailLine icon={<Clock size={20} color={TEAL} />} label={isRTL ? "وقت التوصيل" : "Delivery Time"} fontFamily={fontFamily}>
-              <div className="text-right">
-                <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: TEAL }}>
+            {/* Patient / Guest row — flush to container edges */}
+            <div className="flex items-center gap-3" style={{
+              padding: "14px 20px",
+              backgroundColor: isGuest ? "rgba(var(--fo-secondary-rgb), 0.08)" : TEAL_15,
+            }}>
+              <div style={{ width: "38px", height: "38px", borderRadius: "50%", backgroundColor: isGuest ? SECONDARY : TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <User size={19} color="#fff" strokeWidth={2.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1.2 }}>
+                  {isRTL ? "للـ" : "For "}{patientName}
+                  {room && (
+                    <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.semibold, color: "#6B7280", marginLeft: "8px" }}>
+                      · {isRTL ? "غرفة" : "Room"} {room}
+                    </span>
+                  )}
+                </p>
+                <p style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.4, marginTop: "3px" }}>
+                  {isRTL ? `الحمية: ${dietLabel} · الحساسية: ${allergiesLabel}` : `Diet: ${dietLabel} · Allergies: ${allergiesLabel}`}
+                </p>
+              </div>
+              <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: isGuest ? SECONDARY : TEAL, whiteSpace: "nowrap", flexShrink: 0 }}>
+                {isRTL ? "رقم الطلب:" : "Order ID:"} #{orderNumber}
+              </span>
+            </div>
+
+            {/* Details area */}
+            <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column" }}>
+            {/* Delivery Time */}
+            <div className="flex items-start justify-between gap-4" style={{ padding: "10px 0" }}>
+              <div className="flex items-center gap-2.5 shrink-0">
+                <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: TEAL_15, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Clock size={16} color={TEAL} />
+                </div>
+                <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.5px", textTransform: "uppercase" as const }}>
+                  {isRTL ? "وقت التوصيل" : "Delivery Time"}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col items-end">
+                <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: TEAL }}>
                   {loc(meal.label)} ({locTimeRange(meal.timeRange, isRTL)})
                 </p>
-                <p style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#6B7280", marginTop: "3px" }}>
+                <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: "#6B7280", marginTop: "2px" }}>
                   {today}
                 </p>
               </div>
-            </DetailLine>
+            </div>
 
             <RowDivider />
 
-            <DetailLine icon={<Utensils size={20} color={TEAL} />} label={isRTL ? "وجباتك" : "Your Meal Items"} fontFamily={fontFamily}>
-              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "5px", textAlign: "right" }}>
-                {selectedItems.map((name, i) => (
-                  <li key={i} style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>{name}</li>
-                ))}
-              </ul>
-            </DetailLine>
+            {/* Your Meal Items */}
+            <div className="flex items-start justify-between gap-4" style={{ padding: "10px 0" }}>
+              <div className="flex items-center gap-2.5 shrink-0" style={{ marginTop: "2px" }}>
+                <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: TEAL_15, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Utensils size={16} color={TEAL} />
+                </div>
+                <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.5px", textTransform: "uppercase" as const }}>
+                  {isRTL ? "وجباتك" : "Your Meal Items"}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col items-end">
+                <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column" as const, gap: "4px", textAlign: "right" as const }}>
+                  {selectedItems.map((name, i) => (
+                    <li key={i} style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>{name}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
 
             {includedItems.length > 0 && (
               <>
                 <RowDivider />
-                <DetailLine icon={<Check size={20} color={GREEN} />} label={isRTL ? "يأتي مع وجبتك" : "Comes With Your Meal"} fontFamily={fontFamily}>
-                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "5px", textAlign: "right" }}>
-                    {includedItems.map((name, i) => (
-                      <li key={i} style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>{name}</li>
-                    ))}
-                  </ul>
-                </DetailLine>
+                <div className="flex items-start justify-between gap-4" style={{ padding: "10px 0" }}>
+                  <div className="flex items-center gap-2.5 shrink-0" style={{ marginTop: "2px" }}>
+                    <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: `${GREEN}18`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Check size={16} color={GREEN} />
+                    </div>
+                    <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.5px", textTransform: "uppercase" as const }}>
+                      {isRTL ? "يأتي مع وجبتك" : "Comes With Your Meal"}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col items-end">
+                    <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column" as const, gap: "4px", textAlign: "right" as const }}>
+                      {includedItems.map((name, i) => (
+                        <li key={i} style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>{name}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               </>
             )}
+            </div>
           </div>
         </div>
       </div>
     </motion.div>
-  );
-}
-
-function DetailLine({ icon, label, fontFamily, children }: { icon: React.ReactNode; label: string; fontFamily: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4" style={{ padding: "12px 0" }}>
-      <div className="flex items-center gap-2.5 shrink-0">
-        {icon}
-        <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.5px", textTransform: "uppercase" }}>
-          {label}
-        </span>
-      </div>
-      <div className="flex-1 min-w-0 flex flex-col items-end">{children}</div>
-    </div>
   );
 }
 
@@ -1631,8 +1845,9 @@ function ConfirmRow({ icon, label, children }: { icon: React.ReactNode; label: s
  * BOTTOM BAR
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function BottomBar({ step, canContinue, onBack, showBack, onContinue, secondaryAction, backLabel, continueLabel, fontFamily, isRTL }: {
+function BottomBar({ step, canContinue, onBack, showBack, onContinue, leftAction, secondaryAction, backLabel, continueLabel, fontFamily, isRTL }: {
   step: Step; canContinue: boolean; onBack: () => void; showBack?: boolean; onContinue: () => void;
+  leftAction?: { label: string; onClick: () => void };
   secondaryAction?: { label: string; onClick: () => void };
   backLabel: string; continueLabel: string;
   fontFamily: string; isRTL: boolean; BackArrow: any; ForwardArrow: any;
@@ -1652,9 +1867,29 @@ function BottomBar({ step, canContinue, onBack, showBack, onContinue, secondaryA
             outline: "none",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           }}>
-          <ChevBack size={22} color={TEAL} strokeWidth={2.5} />
+          {backLabel === "Exit" || backLabel === "خروج" || backLabel === "Cancel Edit" || backLabel === "إلغاء التعديل" ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          ) : (
+            <ChevBack size={22} color={TEAL} strokeWidth={2.5} />
+          )}
           <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.semibold, color: TEAL }}>
             {backLabel}
+          </span>
+        </button>
+      ) : leftAction ? (
+        <button onClick={leftAction.onClick} className="active:scale-95 transition-transform cursor-pointer"
+          style={{
+            height: "60px", padding: "0 28px", borderRadius: "16px",
+            backgroundColor: "#fff",
+            display: "flex", alignItems: "center", gap: "10px",
+            border: `1.5px solid ${TEAL}`,
+            outline: "none",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          }}>
+          <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+            {leftAction.label}
           </span>
         </button>
       ) : <div />}
@@ -1683,13 +1918,18 @@ function BottomBar({ step, canContinue, onBack, showBack, onContinue, secondaryA
             height: "60px", padding: "0 32px", borderRadius: "16px",
             backgroundColor: continueEnabled ? TEAL : "#fff",
             display: "flex", alignItems: "center", gap: "10px",
-            border: `1.5px solid ${continueEnabled ? TEAL : "rgba(255,255,255,0.3)"}`,
+            border: `1px solid ${continueEnabled ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.3)"}`,
             outline: "none",
             cursor: continueEnabled ? "pointer" : "not-allowed",
             boxShadow: continueEnabled ? `0 4px 16px ${TEAL_50}` : "0 2px 8px rgba(0,0,0,0.08)",
             transition: "all 0.25s",
             opacity: continueEnabled ? 1 : 0.5,
           }}>
+          {(continueLabel === "Exit" || continueLabel === "خروج") && (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          )}
           <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.bold, color: continueEnabled ? "#fff" : TEAL }}>
             {continueLabel}
           </span>
@@ -1815,8 +2055,8 @@ function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, meal
           textAlign: isRTL ? "right" : "left",
         }}
       >
-        <div style={{ width: "60px", height: "60px", borderRadius: "50%", backgroundColor: isGuest ? "rgba(217,119,6,0.1)" : TEAL_15, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Utensils size={28} color={isGuest ? "#D97706" : TEAL} />
+        <div style={{ width: "60px", height: "60px", borderRadius: "50%", backgroundColor: isGuest ? "rgba(var(--fo-secondary-rgb,217,119,6),0.1)" : TEAL_15, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Utensils size={28} color={isGuest ? SECONDARY : TEAL} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3">
@@ -1869,11 +2109,11 @@ function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, meal
         )}
         <div className="flex items-center justify-center gap-2 shrink-0" style={{
           width: "185px", padding: "8px 16px", borderRadius: "10px",
-          backgroundColor: isGuest ? "#FEF3C7" : TEAL_BG_TINT,
-          border: `1px solid ${isGuest ? "#FDE68A" : `${TEAL_25}`}`,
+          backgroundColor: isGuest ? `rgba(var(--fo-secondary-rgb),0.08)` : TEAL_BG_TINT,
+          border: `1px solid ${isGuest ? `rgba(var(--fo-secondary-rgb),0.25)` : `${TEAL_25}`}`,
         }}>
-          <User size={16} color={isGuest ? "#D97706" : TEAL} />
-          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: isGuest ? "#D97706" : TEAL, whiteSpace: "nowrap" }}>
+          <User size={16} color={isGuest ? SECONDARY : TEAL} />
+          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: isGuest ? SECONDARY : TEAL, whiteSpace: "nowrap" }}>
             {isGuest ? (isRTL ? "للمرافق" : "For Companion") : (isRTL ? "للمريض" : "For Patient")}
           </span>
         </div>

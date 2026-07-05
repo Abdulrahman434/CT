@@ -52,6 +52,7 @@ import {
   ArrowLeftRight,
 } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { InternalPageHeader } from "./InternalPageHeader";
 import svgPaths from "../../imports/svg-ca68x68c4i";
 
 /* ─── Assets ─── */
@@ -61,6 +62,7 @@ import imgBabyCam from "@/assets/68ba9ba13c5aa1cc7d2af5bee7bc955298b612dd.png";
 import imgDallahBabyCam from "@/assets/dallah-baby-cam.jpg";
 import imgCareMedBabyCam from "@/assets/CareMedicalHospital.jpeg";
 import imgCareInnBabyCam from "@/assets/careinn-baby-cam.jpg";
+import imgFakeehBabyCam from "@/assets/fakeeh-baby-cam.jpg";
 
 const careTeam = [
   { nameKey: "care.team.name.nura", roleKey: "care.team.primaryNurse", specialtyKey: "care.team.specialty.icu", img: imgNuraAlRashid },
@@ -1033,7 +1035,8 @@ function BabyCameraSlide({ isExpanded = false }: { isExpanded?: boolean }) {
   const isDallah = theme.id === "dallah";
   const isCareMed = theme.id === "caremed";
   const isCareInn = theme.id === "careinn";
-  const cameraImage = isCareInn ? imgCareInnBabyCam : isDallah ? imgDallahBabyCam : isCareMed ? imgCareMedBabyCam : imgBabyCam;
+  const isFakeeh = theme.id === "dsfh";
+  const cameraImage = isCareInn ? imgCareInnBabyCam : isDallah ? imgDallahBabyCam : isCareMed ? imgCareMedBabyCam : isFakeeh ? imgFakeehBabyCam : imgBabyCam;
 
   const titleSize = isExpanded ? "21px" : "16px";
   const subSize = isExpanded ? "16px" : "13px";
@@ -2083,56 +2086,12 @@ export function CareMeExpanded({ onClose }: { onClose: () => void }) {
       />
 
       {/* Header */}
-      <div className={`shrink-0 flex items-center justify-between pt-8 pb-4 relative z-10 ${isRTL ? "pr-[172px] pl-10" : "pl-[172px] pr-10"}`}>
-        <div className="flex items-center gap-4 relative">
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center hover:scale-105 active:scale-95 transition-transform cursor-pointer absolute"
-            style={{
-              width: "52px",
-              height: "52px",
-              borderRadius: theme.radiusLg,
-              backgroundColor: "rgba(255,255,255,0.1)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              [isRTL ? "right" : "left"]: "-112px"
-            }}
-          >
-            <X size={24} style={{ color: "#fff" }} />
-          </button>
-          <div className="flex items-center gap-3">
-            <div
-              className="flex items-center justify-center"
-              style={{
-                width: "52px",
-                height: "52px",
-                borderRadius: theme.radiusLg,
-                backgroundColor: "rgba(255,255,255,0.12)",
-              }}
-            >
-              <Heart size={26} fill="#fff" style={{ color: "#fff" }} />
-            </div>
-            <div>
-              <h2 style={{
-                fontFamily: theme.fontFamily,
-                ...TEXT_STYLE.display,
-                fontSize: "32px",
-                color: "#FFFFFF",
-                lineHeight: "36px",
-              }}>
-                CareMe
-              </h2>
-              <p style={{
-                fontFamily: theme.fontFamily,
-                ...TEXT_STYLE.caption,
-                color: "rgba(255,255,255,0.6)",
-                marginTop: "2px",
-              }}>
-                {t("care.subtitle")}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <InternalPageHeader
+        title="CareMe"
+        subtitle={t("care.subtitle")}
+        icon={<Heart size={26} fill="#fff" style={{ color: "#fff" }} />}
+        onClose={onClose}
+      />
 
       {/* Vertically centered content area */}
       <div className="flex-1 flex flex-col justify-center relative z-10 min-h-0 pt-4">

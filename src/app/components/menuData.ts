@@ -137,12 +137,14 @@ const GROUP_AR: Record<string, string> = {
 };
 
 function mkGroups(gs: CG[], prefix: string): MenuGroup[] {
-  const LETTERS = "ABCDEFGHIJKLMNOP";
-  return gs.map((g, idx) => {
-    // All groups → sequential "Group A / المجموعة الأولى" etc. per the PDF
+  return gs.map((g) => {
     const isIncluded = g.mode === "included";
-    const letter = LETTERS[idx] || String(idx + 1);
-    const label = { en: `Group ${letter}`, ar: GROUP_AR[letter] || `المجموعة ${letter}` };
+    // Single-letter IDs (A, B, C…) → "Group A / المجموعة الأولى" (as printed in the PDF)
+    // Descriptive IDs (CEREAL, EGGS, SIDE1…) → use the actual en/ar name from the data
+    const isSingleLetter = /^[A-Z]$/.test(g.id);
+    const label = isSingleLetter
+      ? { en: `Group ${g.id}`, ar: GROUP_AR[g.id] || `المجموعة ${g.id}` }
+      : { en: g.en, ar: g.ar };
     return {
       id: g.id,
       label,
@@ -271,11 +273,16 @@ const CHEMO_DINNER = mkGroups([
 
 /* Shared breakfast groups (both hot & cold get these) */
 const KIDS_BREAKFAST_SHARED = mkGroups([
-  { id: "CEREAL", en: "Cereals", ar: "حبوب الإفطار", mode: "choose-1", items: [
+  { id: "ACCOMP", en: "Accompaniments", ar: "الإضافات", mode: "choose-1", items: [
+    ["Butter", "زبدة"], ["Margarine", "مارجرين"],
+    ["Strawberry Jam", "مربى فراولة"], ["Orange Marmalade", "مربى برتقال"],
+    ["Peanut Butter", "زبدة فول سوداني"],
+  ]},
+  { id: "CEREAL", en: "Cereals", ar: "الحبوب", mode: "choose-1", items: [
     ["Cornflakes", "كورن فليكس"], ["Choco Cornflakes", "شوكو كورن فليكس"],
     ["Bran Flakes", "رقائق النخالة"], ["Muesli", "موسلي"], ["Rice Krispies", "رايس كرسبي"],
   ]},
-  { id: "FRUIT", en: "Fruit", ar: "فاكهة", mode: "choose-1", items: [
+  { id: "FRUIT", en: "Fruit", ar: "الفواكه", mode: "choose-1", items: [
     ["Orange", "برتقال"], ["Apple", "تفاح"], ["Banana", "موز"], ["Sliced Fruit", "فاكهة مقطعة"],
   ]},
   { id: "BAKED", en: "Baked Breads", ar: "المخبوزات", mode: "choose-1", items: [
@@ -327,31 +334,31 @@ const KIDS_BREAKFAST_COLD = mkGroups([
 ], "ki-b-cold");
 
 const KIDS_LUNCH = mkGroups([
-  { id: "A", en: "Starters", ar: "المقبلات", mode: "choose-1", items: [
+  { id: "STARTERS", en: "Starters", ar: "المقبلات", mode: "choose-1", items: [
     ["Corn Soup", "شوربة ذرة"], ["Tomato Soup", "شوربة طماطم"],
     ["Chicken Soup", "شوربة دجاج"], ["Broccoli Soup", "شوربة بروكلي"],
     ["Mushroom Soup", "شوربة فطر"],
   ]},
-  { id: "B", en: "Main Course", ar: "الطبق الرئيسي", mode: "choose-1", items: [
+  { id: "MAINS", en: "Mains", ar: "الأطباق الرئيسية", mode: "choose-1", items: [
     ["Cheese Burger", "تشيز برجر"], ["Chicken Nuggets (6 pcs)", "ناجتس دجاج (٦ قطع)"],
     ["Fish Fingers (6 pcs)", "أصابع سمك (٦ قطع)"], ["Spaghetti Bolognese", "سباغيتي بولونيز"],
     ["Grilled Chicken with Rice", "دجاج مشوي مع أرز"], ["Chicken Strips", "شرائح دجاج"],
     ["Meatball with Rice", "كرات لحم مع أرز"],
   ]},
-  { id: "C", en: "Side Order 1", ar: "طبق جانبي ١", mode: "choose-1", items: [
+  { id: "SIDE1", en: "Side Order 1", ar: "طبق جانبي ١", mode: "choose-1", items: [
     ["French Fries", "بطاطس مقلية"], ["Mashed Potato", "بطاطس مهروسة"],
     ["White Rice", "أرز أبيض"], ["Sautéed Vegetables", "خضار سوتيه"],
   ]},
-  { id: "D", en: "Side Order 2", ar: "طبق جانبي ٢", mode: "choose-1", items: [
+  { id: "SIDE2", en: "Side Order 2", ar: "طبق جانبي ٢", mode: "choose-1", items: [
     ["Garden Salad", "سلطة خضراء"], ["Coleslaw Salad", "سلطة كول سلو"],
     ["Corn on The Cob", "ذرة مشوية"], ["Cucumber Sticks with Dip", "أصابع خيار مع صلصة"],
   ]},
-  { id: "E", en: "Desserts", ar: "الحلويات", mode: "choose-1", items: [
+  { id: "DESSERTS", en: "Desserts", ar: "الحلويات", mode: "choose-1", items: [
     ["Ice Cream", "آيس كريم"], ["Chocolate Brownie", "براوني شوكولاته"],
     ["Fresh Fruit", "فاكهة طازجة"], ["Rice Pudding", "أرز بالحليب"],
     ["Fruit Jelly", "جلي فواكه"], ["Plain Yoghurt", "زبادي سادة"],
   ]},
-  { id: "F", en: "Drinks", ar: "المشروبات", mode: "choose-1", items: [
+  { id: "DRINKS", en: "Drinks", ar: "المشروبات", mode: "choose-1", items: [
     ["Water Bottle", "مياه معدنية"], ["Fresh Orange Juice", "عصير برتقال طازج"],
     ["Fresh Apple Juice", "عصير تفاح طازج"], ["Tetra Pack Juice", "عصير"],
   ]},
@@ -359,31 +366,31 @@ const KIDS_LUNCH = mkGroups([
 
 /* Kids Dinner = same as Kids Lunch */
 const KIDS_DINNER = mkGroups([
-  { id: "A", en: "Starters", ar: "المقبلات", mode: "choose-1", items: [
+  { id: "STARTERS", en: "Starters", ar: "المقبلات", mode: "choose-1", items: [
     ["Corn Soup", "شوربة ذرة"], ["Tomato Soup", "شوربة طماطم"],
     ["Chicken Soup", "شوربة دجاج"], ["Broccoli Soup", "شوربة بروكلي"],
     ["Mushroom Soup", "شوربة فطر"],
   ]},
-  { id: "B", en: "Main Course", ar: "الطبق الرئيسي", mode: "choose-1", items: [
+  { id: "MAINS", en: "Mains", ar: "الأطباق الرئيسية", mode: "choose-1", items: [
     ["Cheese Burger", "تشيز برجر"], ["Chicken Nuggets (6 pcs)", "ناجتس دجاج (٦ قطع)"],
     ["Fish Fingers (6 pcs)", "أصابع سمك (٦ قطع)"], ["Spaghetti Bolognese", "سباغيتي بولونيز"],
     ["Grilled Chicken with Rice", "دجاج مشوي مع أرز"], ["Chicken Strips", "شرائح دجاج"],
     ["Meatball with Rice", "كرات لحم مع أرز"],
   ]},
-  { id: "C", en: "Side Order 1", ar: "طبق جانبي ١", mode: "choose-1", items: [
+  { id: "SIDE1", en: "Side Order 1", ar: "طبق جانبي ١", mode: "choose-1", items: [
     ["French Fries", "بطاطس مقلية"], ["Mashed Potato", "بطاطس مهروسة"],
     ["White Rice", "أرز أبيض"], ["Sautéed Vegetables", "خضار سوتيه"],
   ]},
-  { id: "D", en: "Side Order 2", ar: "طبق جانبي ٢", mode: "choose-1", items: [
+  { id: "SIDE2", en: "Side Order 2", ar: "طبق جانبي ٢", mode: "choose-1", items: [
     ["Garden Salad", "سلطة خضراء"], ["Coleslaw Salad", "سلطة كول سلو"],
     ["Corn on The Cob", "ذرة مشوية"], ["Cucumber Sticks with Dip", "أصابع خيار مع صلصة"],
   ]},
-  { id: "E", en: "Desserts", ar: "الحلويات", mode: "choose-1", items: [
+  { id: "DESSERTS", en: "Desserts", ar: "الحلويات", mode: "choose-1", items: [
     ["Ice Cream", "آيس كريم"], ["Chocolate Brownie", "براوني شوكولاته"],
     ["Fresh Fruit", "فاكهة طازجة"], ["Rice Pudding", "أرز بالحليب"],
     ["Fruit Jelly", "جلي فواكه"], ["Plain Yoghurt", "زبادي سادة"],
   ]},
-  { id: "F", en: "Drinks", ar: "المشروبات", mode: "choose-1", items: [
+  { id: "DRINKS", en: "Drinks", ar: "المشروبات", mode: "choose-1", items: [
     ["Water Bottle", "مياه معدنية"], ["Fresh Orange Juice", "عصير برتقال طازج"],
     ["Fresh Apple Juice", "عصير تفاح طازج"], ["Tetra Pack Juice", "عصير"],
   ]},
