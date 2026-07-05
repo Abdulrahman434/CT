@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import {
   ArrowLeft, ArrowRight, Sun, Sunrise, Coffee, Moon,
   Check, Clock, Calendar, Utensils, Soup, ClipboardList, Bell, ChefHat,
-  Star, Heart, Droplets, Flame, Snowflake,
+  Star, Heart, Droplets, Flame, Snowflake, Globe,
   Baby, User, FlaskConical, ChevronDown, ChevronRight, ChevronLeft, Home,
 } from "lucide-react";
 import { InternalPageHeader } from "./InternalPageHeader";
@@ -157,7 +157,7 @@ function countCompleted(meal: MealPeriod, selections: Selections): number {
  * DEMO DIET TYPES (cycle list for the demo switcher)
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-const DEMO_PATIENT = { name: "Sara Saleh", room: "Room 412" };
+const DEMO_PATIENT = { name: { en: "Sara Saleh", ar: "سارة صالح" }, room: "Room 412" };
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * MAIN COMPONENT
@@ -197,7 +197,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
 
   const nurseStore = useNurseStore();
 
-  const [step, setStep] = useState<Step>("landing");
+  const [step, setStep] = useState<Step>("select-type");
   const [orderFor, setOrderFor] = useState<OrderFor>("patient");
   const [selectedMealId, setSelectedMealId] = useState<MealId | null>(null);
   const [selections, setSelections] = useState<Selections>({});
@@ -213,7 +213,10 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
   const isNpo = patientDiet === "npo";
   // Guest/companion always uses Regular diet menu; NPO patients can't order but guests can
   const effectiveDiet: DietType = orderFor === "guest" ? "regular" : (isNpo ? "regular" : patientDiet as DietType);
-  const dayOfWeek = new Date().getDay(); // 0=Sun … 6=Sat
+  // Orders are for TOMORROW's menu
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dayOfWeek = tomorrow.getDay(); // 0=Sun … 6=Sat
   const meals = useMemo(
     () => buildMeals(effectiveDiet, dayOfWeek, kidsBreakfastType),
     [effectiveDiet, dayOfWeek, kidsBreakfastType],
@@ -346,8 +349,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
   }, [orders]);
 
   const handleBack = useCallback(() => {
-    if (step === "landing") onClose();
-    else if (step === "select-type") setStep("landing");
+    if (step === "select-type") onClose();
     else if (step === "select-meal") setStep("select-type");
     else if (step === "kids-breakfast-type") setStep("select-meal");
     else if (step === "build-meal") {
@@ -363,11 +365,11 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
       }
     }
     else if (step === "confirmed") onClose();
-    else if (step === "history") setStep("landing");
+    else if (step === "history") setStep("select-type");
   }, [step, onClose, effectiveDiet, selectedMealId, isEditMode]);
 
-  const showPatientBar = step !== "history" && step !== "landing" && step !== "confirmed";
-  const showBottomBar = step !== "landing";
+  const showPatientBar = step !== "history" && step !== "confirmed";
+  const showBottomBar = true;
   const showBackButton = true;
   const isFlow = step === "select-type" || step === "select-meal" || step === "kids-breakfast-type" || step === "build-meal" || step === "confirmed";
 
@@ -438,7 +440,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
           orderFor={orderFor}
           dietLabel={dietDisplayLabel}
           allergiesLabel={allergiesLabel}
-          name={orderFor === "guest" ? (isRTL ? "مرافق" : "Companion") : DEMO_PATIENT.name}
+          name={orderFor === "guest" ? (isRTL ? "مرافق" : "Companion") : (isRTL ? DEMO_PATIENT.name.ar : DEMO_PATIENT.name.en)}
           mealName={currentMeal ? loc(currentMeal.label) : null}
           fontFamily={fontFamily}
           isRTL={isRTL}
@@ -499,7 +501,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
                   <ConfirmStep key="c"
                     orderNumber={lastOrderNumber} meal={currentMeal} selections={selections}
                     orderFor={orderFor}
-                    patientName={orderFor === "guest" ? (isRTL ? "مرافق" : "Companion") : DEMO_PATIENT.name}
+                    patientName={orderFor === "guest" ? (isRTL ? "مرافق" : "Companion") : (isRTL ? DEMO_PATIENT.name.ar : DEMO_PATIENT.name.en)}
                     room={DEMO_PATIENT.room.replace("Room ", "")}
                     dietLabel={dietDisplayLabel}
                     allergiesLabel={allergiesLabel}
@@ -710,6 +712,16 @@ function TopBar({ onBack, onMyOrders, showMyOrders, onDemoClear, title, subtitle
   onBack: () => void; onMyOrders: () => void; showMyOrders?: boolean; onDemoClear: () => void;
   title: string; subtitle: string; fontFamily: string; isRTL: boolean; BackArrow: any;
 }) {
+  const { locale, setLocale } = useTheme();
+  const [enforceTime, setEnforceTimeLocal] = React.useState(() => getEnforceOrderTime());
+
+  const iconBtnStyle: React.CSSProperties = {
+    display: "flex", alignItems: "center", justifyContent: "center",
+    width: "42px", height: "42px",
+    backgroundColor: "rgba(255,255,255,0.15)", borderRadius: "10px",
+    color: "#fff", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer",
+  };
+
   return (
     <InternalPageHeader 
       title={title}
@@ -718,29 +730,48 @@ function TopBar({ onBack, onMyOrders, showMyOrders, onDemoClear, title, subtitle
       onClose={onBack}
       rightAction={
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          {/* Demo reset button */}
-          <button onClick={onDemoClear} title={isRTL ? "إعادة تعيين الطلبات" : "Reset Orders (Demo)"}
-            style={{ 
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: "40px", height: "40px",
-              backgroundColor: "rgba(255,255,255,0.15)", borderRadius: "10px",
-              color: "#fff", border: "none", cursor: "pointer",
-            }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="1 4 1 10 7 10"/>
-              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
-            </svg>
-          </button>
+          {/* My Orders (leftmost) */}
           {showMyOrders && (
             <button onClick={onMyOrders} style={{ 
               display: "flex", alignItems: "center", gap: "8px", 
               backgroundColor: "rgba(255,255,255,0.15)", borderRadius: "12px", padding: "10px 16px",
-              color: "#fff", fontFamily, fontWeight: 600, border: "none", cursor: "pointer"
+              color: "#fff", fontFamily, fontWeight: 600, border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer"
             }}>
               <ClipboardList size={20} />
               {isRTL ? "طلباتي" : "My Orders"}
             </button>
           )}
+          {/* Language switcher — Globe icon */}
+          <button
+            onClick={() => setLocale(locale === "ar" ? "en" : "ar")}
+            title={locale === "ar" ? "Switch to English" : "التبديل للعربية"}
+            style={iconBtnStyle}
+          >
+            <Globe size={20} />
+          </button>
+          {/* Time restriction toggle */}
+          <button
+            onClick={() => {
+              const next = !enforceTime;
+              setEnforceOrderTime(next);
+              setEnforceTimeLocal(next);
+            }}
+            title={enforceTime ? (isRTL ? "تقييد الوقت مُفعّل" : "Time restriction ON") : (isRTL ? "تقييد الوقت مُعطّل" : "Time restriction OFF")}
+            style={{
+              ...iconBtnStyle,
+              backgroundColor: enforceTime ? "rgba(255,255,255,0.15)" : "rgba(255,200,50,0.35)",
+            }}
+          >
+            <Clock size={20} />
+          </button>
+          {/* Demo reset button (rightmost) */}
+          <button onClick={onDemoClear} title={isRTL ? "إعادة تعيين الطلبات" : "Reset Orders (Demo)"}
+            style={iconBtnStyle}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="1 4 1 10 7 10"/>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+          </button>
         </div>
       }
     />
@@ -993,58 +1024,31 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
   onEditOrder?: (mealId: MealId) => void;
 }) {
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
-  const today = new Date().toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  // Tomorrow's date for display
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   const [blockedMeal, setBlockedMeal] = React.useState<MealPeriod | null>(null);
   const [submittedMeal, setSubmittedMeal] = React.useState<MealPeriod | null>(null);
-  const [enforceTime, setEnforceTime] = React.useState(() => getEnforceOrderTime());
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
       className="h-full flex flex-col px-[40px] pt-[32px] pb-[20px] gap-[16px]">
       {/* Centered heading */}
-      <div className="shrink-0 text-center">
+      <div className="shrink-0 text-center flex flex-col items-center gap-[10px]">
         <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
-          {isRTL ? "اختر وجبتك" : "Choose a Meal"}
+          {isRTL ? "اختر وجبة الغد" : "Choose Tomorrow's Meal"}
         </h2>
-        <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#565656", marginTop: "6px" }}>
-          {isRTL ? "اختر وجبة واحدة" : "Please select one meal option"}
-        </p>
-      </div>
-
-      {/* Time enforcement toggle (testing) */}
-      <div className="shrink-0 flex items-center justify-center gap-2">
-        <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.semibold, color: enforceTime ? "#16A34A" : "#9CA3AF" }}>
-          {enforceTime ? (isRTL ? "تقييد الوقت مُفعّل" : "Time restriction ON") : (isRTL ? "تقييد الوقت مُعطّل" : "Time restriction OFF")}
-        </span>
-        <button
-          onClick={() => {
-            const next = !enforceTime;
-            setEnforceOrderTime(next);
-            setEnforceTime(next);
-            // If turning ON, deselect any meal that's now non-orderable
-            if (next && selectedMealId) {
-              const selMeal = meals.find(m => m.id === selectedMealId);
-              if (selMeal) {
-                const now = new Date();
-                const nowH = now.getHours() + now.getMinutes() / 60;
-                if (nowH >= selMeal.orderCutoff && onDeselect) onDeselect();
-              }
-            }
-          }}
-          style={{
-            width: "40px", height: "22px", borderRadius: "11px", border: "none", cursor: "pointer",
-            backgroundColor: enforceTime ? "#16A34A" : "#D1D5DB",
-            position: "relative", transition: "background-color 0.2s", padding: 0,
-          }}
-        >
-          <div style={{
-            width: "18px", height: "18px", borderRadius: "50%", backgroundColor: "#fff",
-            position: "absolute", top: "2px",
-            left: enforceTime ? "20px" : "2px",
-            transition: "left 0.2s",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-          }} />
-        </button>
+        {/* Date badge */}
+        <div className="inline-flex items-center gap-2" style={{
+          padding: "8px 18px", borderRadius: "100px",
+          backgroundColor: TEAL_15, border: `1px solid ${TEAL_20}`,
+        }}>
+          <Calendar size={16} color={TEAL} />
+          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+            {tomorrowStr}
+          </span>
+        </div>
       </div>
 
       {/* Cards row — narrower, centered with whitespace, icon-led */}
@@ -1067,7 +1071,7 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
           const statusText = submitted
             ? (isRTL ? "تم الطلب" : "Already ordered")
             : orderable
-              ? (isRTL ? "متاح الآن" : "Available now")
+              ? (isRTL ? "متاح للطلب" : "Open for ordering")
               : (isRTL ? "أُغلق الطلب" : "Ordering closed");
 
           const handleClick = () => {
@@ -1092,9 +1096,10 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                 opacity: orderable || submitted ? 1 : 0.9,
                 transition: "border 0.2s, box-shadow 0.2s, transform 0.2s",
                 display: "flex", flexDirection: "column", alignItems: "center",
-                padding: "36px 28px 30px",
+                padding: "40px 28px 28px",
                 gap: "20px",
                 position: "relative",
+                justifyContent: "space-between",
               }}>
               {/* Selected check */}
               {selected && (
@@ -1130,35 +1135,14 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                 </span>
               </div>
 
-              {/* Divider */}
-              <div style={{ width: "100%", height: "1px", backgroundColor: "rgba(0,0,0,0.06)", margin: "4px 0" }} />
-
-              {/* Info rows */}
-              <div className="w-full flex flex-col gap-[12px]">
-                {/* Date */}
-                <div className="flex items-center gap-2 justify-center">
-                  <Calendar size={17} color={TEAL} />
-                  <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#374151" }}>
-                    {today}
-                  </span>
-                </div>
-                {/* Delivery time */}
-                <div className="flex items-center gap-2 justify-center">
-                  <Clock size={17} color="#6B7280" />
-                  <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#6B7280" }}>
-                    {isRTL ? "التوصيل" : "Delivery"} {locTimeRange(meal.timeRange, isRTL)}
-                  </span>
-                </div>
-                {/* Last time to order */}
-                <div className="flex items-center justify-center gap-2" style={{
-                  padding: "10px 14px", borderRadius: "12px",
-                  backgroundColor: timeOpen ? "#FFFBEB" : "#F3F4F6",
-                  border: `1px solid ${timeOpen ? "#FDE68A" : "rgba(0,0,0,0.06)"}`,
-                }}>
+              {/* Divider + Submit before deadline */}
+              <div className="w-full flex flex-col items-center" style={{ marginTop: "auto" }}>
+                <div style={{ width: "100%", height: "1px", backgroundColor: "rgba(0,0,0,0.06)", marginBottom: "16px" }} />
+                <div className="flex items-center justify-center gap-2">
                   <Clock size={16} color={timeOpen ? "#D97706" : "#9CA3AF"} />
                   <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: timeOpen ? "#D97706" : "#9CA3AF" }}>
                     {timeOpen
-                      ? (isRTL ? `آخر وقت للطلب ${cutoffStr}` : `Order by ${cutoffStr}`)
+                      ? (isRTL ? `أرسل قبل ${cutoffStr}` : `Submit before ${cutoffStr}`)
                       : (isRTL ? "انتهى وقت الطلب" : "Ordering window closed")}
                   </span>
                 </div>
@@ -1399,18 +1383,25 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMo
         overflow: "hidden",
       }}>
         {/* Pre-order banner — top of the same container */}
-        <div className="shrink-0 flex items-center gap-2 px-5 py-3" style={{ backgroundColor: "#F2F9FB", borderBottom: `1px solid ${TEAL_20}` }}>
-          <Clock size={17} color={TEAL} style={{ flexShrink: 0 }} />
-          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL, lineHeight: 1.4 }}>
-            {isEditMode
-              ? (isRTL
-                  ? `تعديل طلب ${loc(meal.label)} — التوصيل ${locTimeRange(meal.timeRange, isRTL)}`
-                  : `Editing ${loc(meal.label)} order — Delivery ${locTimeRange(meal.timeRange, isRTL)}`)
-              : active
-                ? (isRTL ? `يُسلَّم خلال ${loc(meal.label)} (${locTimeRange(meal.timeRange, isRTL)})` : `Delivered during ${loc(meal.label)} (${locTimeRange(meal.timeRange, isRTL)})`)
-                : (isRTL ? `طلب مسبق — ${loc(meal.label)} (${locTimeRange(meal.timeRange, isRTL)})` : `Pre-order — delivered ${loc(meal.label)} (${locTimeRange(meal.timeRange, isRTL)})`)}
-          </span>
-        </div>
+        {(() => {
+          const tmrw = new Date();
+          tmrw.setDate(tmrw.getDate() + 1);
+          const tmrwDate = tmrw.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long" });
+          return (
+            <div className="shrink-0 flex items-center gap-2 px-5 py-3" style={{ backgroundColor: "#F2F9FB", borderBottom: `1px solid ${TEAL_20}` }}>
+              <Clock size={17} color={TEAL} style={{ flexShrink: 0 }} />
+              <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL, lineHeight: 1.4 }}>
+                {isEditMode
+                  ? (isRTL
+                      ? `تعديل طلب ${loc(meal.label)} — التوصيل ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`
+                      : `Editing ${loc(meal.label)} order — Delivery ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`)
+                  : (isRTL
+                      ? `طلب مسبق — ${loc(meal.label)} ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`
+                      : `Pre-order — ${loc(meal.label)} ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`)}
+              </span>
+            </div>
+          );
+        })()}
 
         {/* Groups list */}
         <div className="flex-1 min-h-0 fo-scroll-strong overflow-y-auto flex flex-col gap-[12px] p-[14px]">
@@ -1664,7 +1655,10 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
   });
   const includedItems = included.flatMap((g) => g.items).map((i) => loc(i.name));
 
-  const today = new Date().toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  // Delivery is for tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const deliveryDate = tomorrow.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   return (
     <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}
@@ -1734,7 +1728,7 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
               </div>
               <div className="flex-1 min-w-0">
                 <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1.2 }}>
-                  {isRTL ? "للـ" : "For "}{patientName}
+                  {isRTL ? "لـ" : "For "}{patientName}
                   {room && (
                     <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.semibold, color: "#6B7280", marginLeft: "8px" }}>
                       · {isRTL ? "غرفة" : "Room"} {room}
@@ -1767,7 +1761,7 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
                   {loc(meal.label)} ({locTimeRange(meal.timeRange, isRTL)})
                 </p>
                 <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: "#6B7280", marginTop: "2px" }}>
-                  {today}
+                  {deliveryDate}
                 </p>
               </div>
             </div>
@@ -2081,6 +2075,17 @@ function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, meal
                   <Utensils size={14} color="#9CA3AF" />
                   <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#6B7280" }}>
                     {isRTL ? "التوصيل" : "Delivery"} {locTimeRange(order.mealWindow, isRTL)}
+                  </span>
+                </div>
+                <span style={{ color: "#D1D5DB" }}>·</span>
+                <div className="flex items-center gap-1.5">
+                  <Calendar size={14} color="#9CA3AF" />
+                  <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#6B7280" }}>
+                    {(() => {
+                      const tmrw = new Date();
+                      tmrw.setDate(tmrw.getDate() + 1);
+                      return tmrw.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long" });
+                    })()}
                   </span>
                 </div>
               </>
