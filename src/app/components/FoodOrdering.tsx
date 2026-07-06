@@ -427,7 +427,6 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
         showMyOrders={isFlow && step !== "confirmed"}
         onDemoClear={clearOpenOrders}
         title={step === "history" ? (isRTL ? "طلباتي" : "My Orders") : (isRTL ? "طلب الوجبات" : "Meal Ordering")}
-        subtitle={step === "history" ? (isRTL ? "سجل طلباتك" : "Your order history") : (isRTL ? "اختر وجبتك" : "Select your meal")}
         fontFamily={fontFamily}
         isRTL={isRTL}
         BackArrow={BackArrow}
@@ -507,7 +506,6 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
                     allergiesLabel={allergiesLabel}
                     isEditMode={wasEditMode}
                     onEdit={() => {
-                      // Find the order that was just placed/updated for this meal
                       const todayStr = new Date().toDateString();
                       const thisOrder = orders.find((o) => {
                         const d = o.placedAt instanceof Date ? o.placedAt : new Date(o.placedAt);
@@ -515,6 +513,14 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
                           o.mealId === currentMeal.id && o.orderFor === orderFor;
                       });
                       if (thisOrder) startEditOrder(thisOrder.id);
+                    }}
+                    meals={meals}
+                    orders={orders}
+                    onOrderMeal={(mealId) => {
+                      setSelectedMealId(mealId);
+                      setSelections(getInitialSelections(meals.find((m) => m.id === mealId)!));
+                      setEditingOrderId(null);
+                      setStep("build-meal");
                     }}
                     fontFamily={fontFamily} isRTL={isRTL} />
                 )}
@@ -620,11 +626,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
               ? { label: isRTL ? "طلباتي" : "View My Orders", onClick: () => setStep("history") }
               : undefined
           }
-          secondaryAction={
-            step === "confirmed"
-              ? { label: isRTL ? "طلب جديد" : "New Order", onClick: () => { setStep("select-type"); setSelectedMealId(null); setOrderFor("patient"); } }
-              : undefined
-          }
+          secondaryAction={undefined}
           backLabel={
             step === "build-meal" && isEditMode ? (isRTL ? "إلغاء التعديل" : "Cancel Edit") :
             (isRTL ? "رجوع" : "Back")
@@ -708,9 +710,9 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
  * TOP BAR
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function TopBar({ onBack, onMyOrders, showMyOrders, onDemoClear, title, subtitle, fontFamily, isRTL, BackArrow }: {
+function TopBar({ onBack, onMyOrders, showMyOrders, onDemoClear, title, fontFamily, isRTL, BackArrow }: {
   onBack: () => void; onMyOrders: () => void; showMyOrders?: boolean; onDemoClear: () => void;
-  title: string; subtitle: string; fontFamily: string; isRTL: boolean; BackArrow: any;
+  title: string; fontFamily: string; isRTL: boolean; BackArrow: any;
 }) {
   const { locale, setLocale } = useTheme();
   const [enforceTime, setEnforceTimeLocal] = React.useState(() => getEnforceOrderTime());
@@ -725,7 +727,6 @@ function TopBar({ onBack, onMyOrders, showMyOrders, onDemoClear, title, subtitle
   return (
     <InternalPageHeader 
       title={title}
-      subtitle={subtitle}
       icon={<Utensils size={24} />}
       onClose={onBack}
       rightAction={
@@ -1637,11 +1638,12 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
  * STEP 4: CONFIRM
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, room, dietLabel, allergiesLabel, fontFamily, isRTL, isEditMode, onEdit }: {
+function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, room, dietLabel, allergiesLabel, fontFamily, isRTL, isEditMode, onEdit, meals, orders, onOrderMeal }: {
   orderNumber: string; meal: MealPeriod; selections: Selections;
   orderFor: OrderFor; patientName: string; room: string | null; dietLabel: string; allergiesLabel: string;
   fontFamily: string; isRTL: boolean;
   isEditMode?: boolean; onEdit?: () => void;
+  meals?: MealPeriod[]; orders?: any[]; onOrderMeal?: (mealId: MealId) => void;
 }) {
   const canStillEdit = isMealOrderable(meal);
   const isGuest = orderFor === "guest";
@@ -1694,6 +1696,7 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
                     : `Your ${loc(meal.label).toLowerCase()} order has been sent to the kitchen and will be delivered during the scheduled time.`)}
             </p>
           </div>
+
           {/* Edit Order button — only if ordering window still open */}
           {canStillEdit && onEdit && (
             <button onClick={onEdit}
@@ -1707,6 +1710,101 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
                 {isRTL ? "تعديل الطلب" : "Edit Order"}
               </span>
             </button>
+          )}
+
+          {/* ── Meal Shortcut Buttons ── */}
+          {meals && meals.length > 0 && (
+            <div style={{ marginTop: "8px", width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column", gap: "10px" }}>
+              <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "center", marginBottom: "2px" }}>
+                {isRTL ? "وجبات الغد" : "Tomorrow's Meals"}
+              </p>
+              {meals.map((m) => {
+                const isCurrent = m.id === meal.id;
+                const todayStr = new Date().toDateString();
+                const hasOrder = !isCurrent && orders?.some((o) => {
+                  const d = o.placedAt instanceof Date ? o.placedAt : new Date(o.placedAt);
+                  return d.toDateString() === todayStr && o.mealId === m.id;
+                });
+                const orderable = isMealOrderable(m);
+                const MealIcon = m.icon;
+
+                // Determine status
+                let statusLabel: string;
+                let statusColor: string;
+                let bgColor: string;
+                let borderColor: string;
+                let clickable = false;
+
+                if (isCurrent) {
+                  // Just confirmed
+                  statusLabel = isRTL ? "تم الإرسال ✓" : "Submitted ✓";
+                  statusColor = GREEN;
+                  bgColor = `${GREEN}12`;
+                  borderColor = `${GREEN}40`;
+                } else if (hasOrder) {
+                  // Already submitted earlier
+                  statusLabel = isRTL ? "تم الإرسال ✓" : "Submitted ✓";
+                  statusColor = GREEN;
+                  bgColor = `${GREEN}12`;
+                  borderColor = `${GREEN}40`;
+                  clickable = false;
+                } else if (orderable) {
+                  // Available to order
+                  statusLabel = isRTL ? "اطلب الآن" : "Order Now";
+                  statusColor = TEAL;
+                  bgColor = "#fff";
+                  borderColor = TEAL;
+                  clickable = true;
+                } else {
+                  // Window closed
+                  statusLabel = isRTL ? "انتهى الوقت" : "Closed";
+                  statusColor = "#9CA3AF";
+                  bgColor = "#F9FAFB";
+                  borderColor = "rgba(0,0,0,0.08)";
+                }
+
+                return (
+                  <motion.button
+                    key={m.id}
+                    whileTap={clickable ? { scale: 0.97 } : {}}
+                    onClick={clickable && onOrderMeal ? () => onOrderMeal(m.id) : undefined}
+                    style={{
+                      width: "100%", padding: "14px 18px", borderRadius: "14px",
+                      backgroundColor: bgColor, border: `1.5px solid ${borderColor}`,
+                      display: "flex", alignItems: "center", gap: "14px",
+                      cursor: clickable ? "pointer" : "default",
+                      opacity: (!clickable && !isCurrent && !hasOrder) ? 0.55 : 1,
+                      outline: "none",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <div style={{
+                      width: "40px", height: "40px", borderRadius: "12px",
+                      backgroundColor: isCurrent || hasOrder ? `${GREEN}15` : clickable ? TEAL_15 : "#F3F4F6",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}>
+                      <MealIcon size={20} color={isCurrent || hasOrder ? GREEN : clickable ? TEAL : "#9CA3AF"} />
+                    </div>
+                    <div style={{ flex: 1, textAlign: isRTL ? "right" : "left" }}>
+                      <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1.2 }}>
+                        {loc(m.label)}
+                      </p>
+                      <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: "#6B7280", marginTop: "2px" }}>
+                        {locTimeRange(m.timeRange, isRTL)}
+                      </p>
+                    </div>
+                    <div style={{
+                      padding: "5px 14px", borderRadius: "100px",
+                      backgroundColor: isCurrent || hasOrder ? `${GREEN}15` : clickable ? TEAL_15 : "#F3F4F6",
+                    }}>
+                      <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: statusColor, whiteSpace: "nowrap" }}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
           )}
         </div>
 
