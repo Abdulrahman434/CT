@@ -1434,7 +1434,7 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMo
 
         {/* Items list */}
         <div className="flex-1 min-h-0 fo-scroll overflow-y-auto px-5 py-4 flex flex-col gap-4">
-          {totalSelectedReq === 0 && includedGroups.length === 0 ? (
+          {totalSelectedReq === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-3" style={{ minHeight: "180px" }}>
               <Utensils size={40} color="#D1D5DB" />
               <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#9CA3AF" }}>
@@ -1443,14 +1443,6 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMo
             </div>
           ) : (
             <>
-              {totalSelectedReq === 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center gap-3" style={{ minHeight: "120px" }}>
-                  <Utensils size={40} color="#D1D5DB" />
-                  <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#9CA3AF" }}>
-                    {isRTL ? "لم يتم اختيار أي عنصر" : "No item is selected"}
-                  </p>
-                </div>
-              )}
               {requiredGroups.map((g) => {
                 const sel = selections[g.id] || [];
                 const items = g.items.filter((i) => sel.includes(i.id));
@@ -1473,35 +1465,35 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMo
                   </div>
                 );
               })}
-
-              {/* Auto Included — inside scrollable area */}
-              {includedGroups.length > 0 && (
-                <div style={{ backgroundColor: "#F9FAFB", borderRadius: "12px", padding: "14px 18px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Check size={18} color={GREEN} />
-                    <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.3px", textTransform: "uppercase" }}>
-                      {isRTL ? "مشمول مع وجبتك" : "Included with Your Meal"}
-                    </span>
-                  </div>
-                  {includedGroups.map((g) => (
-                    <div key={g.id} style={{ marginBottom: "4px" }}>
-                      <div className="flex flex-col gap-1.5">
-                        {g.items.map((it) => (
-                          <div key={it.id} className="flex items-center gap-2">
-                            <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: GREEN }} />
-                            <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: "#4B5563" }}>
-                              {loc(it.name)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </>
           )}
         </div>
+
+        {/* Included with your meal — pinned to bottom */}
+        {includedGroups.length > 0 && (
+          <div className="shrink-0" style={{ borderTop: "1px solid rgba(0,0,0,0.06)", backgroundColor: "#F9FAFB", borderRadius: "0 0 18px 18px", padding: "16px 20px" }}>
+            <div className="flex items-center gap-2 mb-2">
+              <Check size={18} color={GREEN} />
+              <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                {isRTL ? "مشمول مع وجبتك" : "Included with Your Meal"}
+              </span>
+            </div>
+            {includedGroups.map((g) => (
+              <div key={g.id} style={{ marginBottom: "4px" }}>
+                <div className="flex flex-col gap-1.5">
+                  {g.items.map((it) => (
+                    <div key={it.id} className="flex items-center gap-2">
+                      <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: GREEN }} />
+                      <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: "#4B5563" }}>
+                        {loc(it.name)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </motion.div>
   );
