@@ -316,7 +316,7 @@ const translations: Record<string, TranslationEntry> = {
   "care.overview.title": { en: "Care Overview", ar: "ملخص الرعاية", ur: "دیکھ بھال کا جائزہ" },
   "care.team.title": { en: "My Care Team", ar: "فريق الرعاية", ur: "میری نگہداشت کی ٹیم" },
   "care.plan.title": { en: "My Care Plan", ar: "خطة الرعاية", ur: "میرا کیئر پلان" },
-  "care.diet.title": { en: "Diet Codes", ar: "النظام الغذائي", ur: "خوراک کے قوانین" },
+  "care.diet.title": { en: "Patient Diet", ar: "حمية المريض", ur: "مریض کی خوراک" },
   "care.baby.title": { en: "Baby Camera", ar: "كاميرا الطفل", ur: "بیبی کیمرہ" },
   "care.labs.title": { en: "Lab Results", ar: "نتائج المختبر", ur: "لیب کے نتائج" },
   "care.imaging.title": { en: "Scans & Imaging", ar: "الأشعة والتصوير", ur: "کین اور امیجنگ" },

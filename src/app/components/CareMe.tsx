@@ -52,6 +52,7 @@ import {
   ArrowLeftRight,
 } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { InternalPageHeader } from "./InternalPageHeader";
 import svgPaths from "../../imports/svg-ca68x68c4i";
 
 /* ─── Assets ─── */
@@ -61,6 +62,7 @@ import imgBabyCam from "@/assets/68ba9ba13c5aa1cc7d2af5bee7bc955298b612dd.png";
 import imgDallahBabyCam from "@/assets/dallah-baby-cam.jpg";
 import imgCareMedBabyCam from "@/assets/CareMedicalHospital.jpeg";
 import imgCareInnBabyCam from "@/assets/careinn-baby-cam.jpg";
+import imgFakeehBabyCam from "@/assets/fakeeh-baby-cam.jpg";
 
 const careTeam = [
   { nameKey: "care.team.name.nura", roleKey: "care.team.primaryNurse", specialtyKey: "care.team.specialty.icu", img: imgNuraAlRashid },
@@ -78,10 +80,21 @@ const carePlan = [
   { labelKey: "care.plan.motherBabyCheck", minutes: 30, done: false, day: 4 },
 ];
 
-const dietCodes = [
-  { code: "NAS", labelKey: "care.diet.nas" },
-  { code: "DM", labelKey: "care.diet.dm" },
-];
+/** Maps patientDiet store values → human-readable display labels */
+const DIET_DISPLAY_LABELS: Record<string, string> = {
+  regular:        "Regular",
+  diabetic:       "Diabetic",
+  "low-sodium":   "Low Sodium",
+  "low-potassium":"Low Potassium",
+  "soft-diet":    "Soft Diet",
+  chemotherapy:   "Chemotherapy",
+  ob:             "OB Patients",
+  kids:           "Kids Menu",
+  npo:            "NPO / Fasting",
+  // Legacy aliases (backward-compat for any cached state)
+  soft:           "Soft Diet",
+  chemo:          "Chemotherapy",
+};
 
 const allergies = [
   { nameKey: "care.allergy.penicillin" },
@@ -322,7 +335,8 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
   const { t } = useLocale();
   const nurseStore = useNurseStore();
   const storeAllergies = nurseStore.allergies;
-  const storeDietCodes = nurseStore.dietCodes.map(d => d.code);
+  const patientDietLabel = DIET_DISPLAY_LABELS[nurseStore.patientDiet] || nurseStore.patientDiet;
+  const isNpo = nurseStore.patientDiet === "npo";
   const storePainScore = nurseStore.painScore;
   const labelSize = isExpanded ? "16px" : "13px";
 
@@ -361,7 +375,7 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
       {/* Module 3: Clinical Nutrition, Allergies & Pain */}
       <SectionContainer theme={theme} isExpanded={isExpanded}>
         <div className="flex flex-col gap-7">
-          {/* Diet Codes */}
+          {/* Diet */}
           <div className="flex items-start gap-4">
             <div
               className="flex items-center justify-center shrink-0"
@@ -369,23 +383,19 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
                 width: isExpanded ? "40px" : "36px",
                 height: isExpanded ? "40px" : "36px",
                 borderRadius: theme.radiusFull,
-                backgroundColor: theme.primarySubtle
+                backgroundColor: isNpo ? "#EF444415" : theme.primarySubtle
               }}
             >
-              <Utensils size={isExpanded ? 18 : 14} style={{ color: theme.primary }} strokeWidth={2.5} />
+              <Utensils size={isExpanded ? 18 : 14} style={{ color: isNpo ? "#EF4444" : theme.primary }} strokeWidth={2.5} />
             </div>
             <div className="flex flex-col gap-2">
               <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.textMuted }}>{t("care.diet.title")}</p>
-              <div className="flex flex-wrap gap-2.5">
-                {storeDietCodes.map(d => (
-                  <span key={d} className="px-3 py-1.5 rounded-md border font-bold" style={{
-                    fontSize: isExpanded ? "15px" : "13px",
-                    backgroundColor: theme.primarySubtle,
-                    borderColor: `${theme.primary}35`,
-                    color: theme.primary
-                  }}>{d}</span>
-                ))}
-              </div>
+              <span className="px-3 py-1.5 rounded-md border font-bold" style={{
+                fontSize: isExpanded ? "15px" : "13px",
+                backgroundColor: isNpo ? "#EF444415" : theme.primarySubtle,
+                borderColor: isNpo ? "#EF444435" : `${theme.primary}35`,
+                color: isNpo ? "#EF4444" : theme.primary
+              }}>{patientDietLabel}</span>
             </div>
           </div>
 
@@ -687,24 +697,23 @@ function TimelineSlide({
 }
 
 function DietSlide({ theme }: { theme: any }) {
-  const { t } = useLocale();
+  const nurseStore = useNurseStore();
+  const dietLabel = DIET_DISPLAY_LABELS[nurseStore.patientDiet] || nurseStore.patientDiet;
+  const isNpo = nurseStore.patientDiet === "npo";
   return (
     <div className="flex flex-col gap-2">
-      {dietCodes.map((d) => (
+      <div
+        className="flex items-center gap-3 px-4 py-3"
+        style={{ backgroundColor: isNpo ? "#EF444415" : theme.primarySubtle, border: `1px solid ${isNpo ? "#EF444420" : theme.primarySubtle}`, borderRadius: theme.radiusLg }}
+      >
         <div
-          key={d.code}
-          className="flex items-center gap-3 px-4 py-3"
-          style={{ backgroundColor: theme.primarySubtle, border: `1px solid ${theme.primarySubtle}`, borderRadius: theme.radiusLg }}
+          className="w-9 h-9 flex items-center justify-center shrink-0"
+          style={{ backgroundColor: isNpo ? "#EF444420" : theme.primarySubtle, borderRadius: theme.radiusMd }}
         >
-          <div
-            className="w-9 h-9 flex items-center justify-center shrink-0"
-            style={{ backgroundColor: theme.primarySubtle, borderRadius: theme.radiusMd }}
-          >
-            <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.micro, fontWeight: WEIGHT.bold, color: theme.primary, fontSize: "14px", letterSpacing: "0.5px" }}>{d.code}</span>
-          </div>
-          <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.subtitle, color: theme.textHeading, fontSize: "16px" }}>{t(d.labelKey)}</span>
+          <Utensils size={18} style={{ color: isNpo ? "#EF4444" : theme.primary }} />
         </div>
-      ))}
+        <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.subtitle, color: isNpo ? "#EF4444" : theme.textHeading, fontSize: "16px", fontWeight: WEIGHT.bold }}>{dietLabel}</span>
+      </div>
     </div>
   );
 }
@@ -1026,7 +1035,8 @@ function BabyCameraSlide({ isExpanded = false }: { isExpanded?: boolean }) {
   const isDallah = theme.id === "dallah";
   const isCareMed = theme.id === "caremed";
   const isCareInn = theme.id === "careinn";
-  const cameraImage = isCareInn ? imgCareInnBabyCam : isDallah ? imgDallahBabyCam : isCareMed ? imgCareMedBabyCam : imgBabyCam;
+  const isFakeeh = theme.id === "dsfh";
+  const cameraImage = isCareInn ? imgCareInnBabyCam : isDallah ? imgDallahBabyCam : isCareMed ? imgCareMedBabyCam : isFakeeh ? imgFakeehBabyCam : imgBabyCam;
 
   const titleSize = isExpanded ? "21px" : "16px";
   const subSize = isExpanded ? "16px" : "13px";
@@ -2076,56 +2086,12 @@ export function CareMeExpanded({ onClose }: { onClose: () => void }) {
       />
 
       {/* Header */}
-      <div className={`shrink-0 flex items-center justify-between pt-8 pb-4 relative z-10 ${isRTL ? "pr-[172px] pl-10" : "pl-[172px] pr-10"}`}>
-        <div className="flex items-center gap-4 relative">
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center hover:scale-105 active:scale-95 transition-transform cursor-pointer absolute"
-            style={{
-              width: "52px",
-              height: "52px",
-              borderRadius: theme.radiusLg,
-              backgroundColor: "rgba(255,255,255,0.1)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              [isRTL ? "right" : "left"]: "-112px"
-            }}
-          >
-            <X size={24} style={{ color: "#fff" }} />
-          </button>
-          <div className="flex items-center gap-3">
-            <div
-              className="flex items-center justify-center"
-              style={{
-                width: "52px",
-                height: "52px",
-                borderRadius: theme.radiusLg,
-                backgroundColor: "rgba(255,255,255,0.12)",
-              }}
-            >
-              <Heart size={26} fill="#fff" style={{ color: "#fff" }} />
-            </div>
-            <div>
-              <h2 style={{
-                fontFamily: theme.fontFamily,
-                ...TEXT_STYLE.display,
-                fontSize: "32px",
-                color: "#FFFFFF",
-                lineHeight: "36px",
-              }}>
-                CareMe
-              </h2>
-              <p style={{
-                fontFamily: theme.fontFamily,
-                ...TEXT_STYLE.caption,
-                color: "rgba(255,255,255,0.6)",
-                marginTop: "2px",
-              }}>
-                {t("care.subtitle")}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <InternalPageHeader
+        title="CareMe"
+        subtitle={t("care.subtitle")}
+        icon={<Heart size={26} fill="#fff" style={{ color: "#fff" }} />}
+        onClose={onClose}
+      />
 
       {/* Vertically centered content area */}
       <div className="flex-1 flex flex-col justify-center relative z-10 min-h-0 pt-4">

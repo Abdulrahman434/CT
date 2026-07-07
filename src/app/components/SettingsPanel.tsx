@@ -1314,6 +1314,7 @@ function CareTeamAccessDialog({
   const { t: tr } = useLocale();
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
+  const [pressedKey, setPressedKey] = useState<string | null>(null);
 
   const handleDigit = (d: string) => {
     if (pin.length < 4) {
@@ -1419,17 +1420,27 @@ function CareTeamAccessDialog({
           <div key={ri} className="flex items-center gap-3">
             {row.map((key, ki) => {
               if (key === "") return <div key={ki} style={{ width: "64px", height: "52px" }} />;
+              const isPressed = pressedKey === key;
               return (
                 <button
                   key={ki}
-                  onClick={() => (key === "del" ? handleDelete() : handleDigit(key))}
-                  className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+                  onClick={() => {
+                    if (key === "del") {
+                      handleDelete();
+                    } else {
+                      setPressedKey(key);
+                      setTimeout(() => setPressedKey(null), 150);
+                      handleDigit(key);
+                    }
+                  }}
+                  className="flex items-center justify-center cursor-pointer active:scale-90 transition-all"
                   style={{
                     width: "64px",
                     height: "52px",
                     borderRadius: t.radiusLg,
-                    backgroundColor: key === "del" ? t.accentSubtle : t.tileInactiveBg,
+                    backgroundColor: key === "del" ? t.accentSubtle : isPressed ? t.primary : t.tileInactiveBg,
                     border: "none",
+                    transition: "background-color 0.15s, transform 0.15s",
                   }}
                 >
                   <span
@@ -1437,7 +1448,8 @@ function CareTeamAccessDialog({
                       fontFamily: t.fontFamily,
                       fontSize: key === "del" ? "13px" : "20px",
                       fontWeight: 700,
-                      color: key === "del" ? t.accent : t.textHeading,
+                      color: key === "del" ? t.accent : isPressed ? "#fff" : t.textHeading,
+                      transition: "color 0.15s",
                     }}
                   >
                     {key === "del" ? tr("careteam.del") : key}

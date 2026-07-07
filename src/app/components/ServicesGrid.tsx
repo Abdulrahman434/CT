@@ -4,7 +4,7 @@ import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, TEXT_STYLE, SPACE } from "./Theme
 import { useLocale } from "./i18n";
 import { useRipple } from "./useRipple";
 import svgPaths from "../../imports/svg-ca68x68c4i";
-import { Stethoscope, BookOpenText, MessageSquareMore, Soup } from "lucide-react";
+import { Stethoscope, BookOpenText, MessageSquareMore, Utensils } from "lucide-react";
 import roomControlIcon from "@/assets/room-control-icon.png";
 import quranIcon from "@/assets/5303963df7d14bbca33ccffa43f982a464344809.png";
 import mirrorIcon from "@/assets/0ab7565691ddb8401a21da44af1864e8f4058536.png";
@@ -101,7 +101,7 @@ const hubItems = [
 const serviceItems = [
   { label: "Consultation", labelKey: "service.consultation", svgPaths: [] as string[], lucideIcon: Stethoscope },
   { label: "Housekeeping", labelKey: "service.housekeeping", svgPaths: [svgPaths.p24941500, "M16.6667 2.5V5.83333", "M18.3333 4.16667H15", "M3.33333 14.1667V15.8333", "M4.16667 15H2.5"], clipId: "clip_house" },
-  { label: "Order Food", labelKey: "service.orderFood", svgPaths: [] as string[], lucideIcon: Soup },
+  { label: "Order Food", labelKey: "service.orderFood", svgPaths: [] as string[], lucideIcon: Utensils },
   { label: "Call", labelKey: "service.call", svgPaths: [svgPaths.p1a7ce800], clipId: "clip_call" },
 ];
 
@@ -519,6 +519,7 @@ function ShortcutTile({ item, contained, onTap, onLongPress, isLocked }: { item:
             height: SPACE[12],
             borderRadius: theme.radiusXl,
             objectFit: "cover",
+            filter: item.labelKey === "shortcut.roomControl" ? "saturate(0) brightness(0.85) contrast(0.9)" : "none",
           }}
         />
       )}
@@ -600,6 +601,7 @@ function ShortcutTileCompact({ item, onTap, onLongPress, isLocked }: { item: Sho
             height: "88px",
             borderRadius: theme.radiusLg,
             objectFit: "cover",
+            filter: item.labelKey === "shortcut.roomControl" ? "saturate(0) brightness(0.85) contrast(0.9)" : "none",
           }}
         />
       )}
@@ -648,16 +650,44 @@ function ShortcutTileBare({ item, onTap, onLongPress, isLocked }: { item: Shortc
       aria-label={t(item.labelKey)}
     >
       {isLocked && <LockBadge />}
-      <ApiImage
-        src={item.icon}
-        alt={t(item.labelKey)}
-        style={{
-          width: "120px",
-          height: "120px",
-          borderRadius: theme.radiusXl,
-          objectFit: "cover",
-        }}
-      />
+      {item.labelKey === "shortcut.patientPortal" || item.labelKey === "shortcut.dallahPodcast" || item.labelKey === "shortcut.burjeelPodcast" || item.labelKey === "shortcut.adminPortal" ? (
+        <div
+          style={{
+            width: "120px",
+            height: "120px",
+            backgroundColor: (item.labelKey === "shortcut.dallahPodcast" || item.labelKey === "shortcut.burjeelPodcast") ? "#00A3C1" : item.labelKey === "shortcut.adminPortal" ? "#4EBEE3" : "#fff",
+            borderRadius: theme.radiusXl,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 8,
+            border: "1px solid #eeeeee",
+          }}
+        >
+          <ApiImage
+            src={item.icon}
+            alt={t(item.labelKey)}
+            style={{
+              maxWidth: "100%",
+              maxHeight: "100%",
+              objectFit: "contain",
+              filter: (item.labelKey === "shortcut.dallahPodcast" || item.labelKey === "shortcut.burjeelPodcast" || item.labelKey === "shortcut.adminPortal") ? "brightness(0) invert(1)" : "none",
+            }}
+          />
+        </div>
+      ) : (
+        <ApiImage
+          src={item.icon}
+          alt={t(item.labelKey)}
+          style={{
+            width: "120px",
+            height: "120px",
+            borderRadius: theme.radiusXl,
+            objectFit: "cover",
+            filter: item.labelKey === "shortcut.roomControl" ? "saturate(0) brightness(0.85) contrast(0.9)" : "none",
+          }}
+        />
+      )}
       <span
         style={{
           fontFamily: fontFamily,
