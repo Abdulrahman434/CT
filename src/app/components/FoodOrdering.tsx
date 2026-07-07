@@ -1,10 +1,10 @@
 import * as React from "react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   ArrowLeft, ArrowRight, Sun, Sunrise, Coffee, Moon,
   Check, Clock, Calendar, Utensils, Soup, ClipboardList, Bell, ChefHat,
-  Star, Heart, Droplets,
+  Star, Heart, Droplets, Flame, Snowflake, Globe,
   Baby, User, FlaskConical, ChevronDown, ChevronRight, ChevronLeft, Home,
 } from "lucide-react";
 import { InternalPageHeader } from "./InternalPageHeader";
@@ -18,31 +18,22 @@ import mealSvg from "../../imports/meal.svg";
 import roomSvg from "../../imports/room.svg";
 import dietSvg from "../../imports/diet.svg";
 import allergiesSvg from "../../imports/allergies.svg";
+import {
+  type DietType, type MealId as MealIdData, type GroupMode as GroupModeData,
+  type MenuGroup, type GroupItem,
+  DIET_CONFIG, FOOD_PHOTOS,
+  getMenuGroups, getKidsBreakfastGroups, MEAL_WINDOWS,
+} from "./menuData";
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * TYPES
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-type DietType = "low-sodium" | "low-potassium" | "chemo" | "kids";
-type MealId = "breakfast" | "lunch" | "dinner";
-type Step = "select-type" | "select-meal" | "build-meal" | "confirmed" | "history";
+type MealId = MealIdData;
+type Step = "landing" | "select-type" | "select-meal" | "kids-breakfast-type" | "build-meal" | "confirmed" | "history";
 type OrderFor = "patient" | "guest";
-type GroupMode = "choose-1" | "choose-2" | "included";
-
-interface GroupItem {
-  id: string;
-  name: { en: string; ar: string };
-  image?: string;
-  isForAll?: boolean;
-}
-
-interface MenuGroup {
-  id: string;
-  label: { en: string; ar: string };
-  icon?: React.ComponentType<{ size?: number; color?: string }>;
-  mode: GroupMode;
-  items: GroupItem[];
-}
+type GroupMode = GroupModeData;
+type KidsBreakfastType = "hot" | "cold" | null;
 
 interface MealPeriod {
   id: MealId;
@@ -50,7 +41,6 @@ interface MealPeriod {
   icon: React.ComponentType<{ size?: number; color?: string }>;
   timeRange: string;
   hours: [number, number];
-  /** Hour-of-day (24h, decimal allowed) after which ordering this meal closes for today */
   orderCutoff: number;
   bgImage: string;
   color: string;
@@ -60,592 +50,46 @@ interface MealPeriod {
 type Selections = Record<string, string[]>;
 
 /* ═══════════════════════════════════════════════════════════════════════════
- * FOOD PHOTO URLS
+ * BUILD MEAL PERIODS from menuData
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-const P = {
-  // Meal card backgrounds
-  breakfastBg: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?q=80&w=1200&auto=format&fit=crop",
-  lunchBg:     "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1200&auto=format&fit=crop",
-  dinnerBg:    "https://images.unsplash.com/photo-1559847844-5315695dadae?q=80&w=1200&auto=format&fit=crop",
-  // Food items
-  cheese:        "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?q=80&w=300&auto=format&fit=crop",
-  milk:          "https://images.unsplash.com/photo-1563636619-e9143da7973b?q=80&w=300&auto=format&fit=crop",
-  bread:         "https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=300&auto=format&fit=crop",
-  arabicBread:   "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=300&auto=format&fit=crop",
-  omelette:      "https://images.unsplash.com/photo-1510693206972-df098062cb71?q=80&w=300&auto=format&fit=crop",
-  vegOmelette:   "https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=300&auto=format&fit=crop",
-  scrambledEgg:  "https://images.unsplash.com/photo-1612240498936-65f5101365d2?q=80&w=300&auto=format&fit=crop",
-  shakshouka:    "https://images.unsplash.com/photo-1590330297626-d7aff25a0431?q=80&w=300&auto=format&fit=crop",
-  foul:          "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=300&auto=format&fit=crop",
-  oats:          "https://images.unsplash.com/photo-1517673132405-a56a933b168d?q=80&w=300&auto=format&fit=crop",
-  cornFlakes:    "https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?q=80&w=300&auto=format&fit=crop",
-  branFlakes:    "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?q=80&w=300&auto=format&fit=crop",
-  fruit:         "https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?q=80&w=300&auto=format&fit=crop",
-  water:         "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?q=80&w=300&auto=format&fit=crop",
-  cornSoup:      "https://images.unsplash.com/photo-1547592180-85f173990554?q=80&w=300&auto=format&fit=crop",
-  vegSoup:       "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?q=80&w=300&auto=format&fit=crop",
-  lentilSoup:    "https://images.unsplash.com/photo-1603858117659-edcd0a1abf89?q=80&w=300&auto=format&fit=crop",
-  greenSalad:    "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=300&auto=format&fit=crop",
-  tahiniSalad:   "https://images.unsplash.com/photo-1547592166-23ac45744acd?q=80&w=300&auto=format&fit=crop",
-  orientalSalad: "https://images.unsplash.com/photo-1565958011703-44f9829ba187?q=80&w=300&auto=format&fit=crop",
-  grilledFish:   "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?q=80&w=300&auto=format&fit=crop",
-  fishFlorentine:"https://images.unsplash.com/photo-1534482421-64566f976cfa?q=80&w=300&auto=format&fit=crop",
-  fishFillet:    "https://images.unsplash.com/photo-1467003909585-2f8a72700288?q=80&w=300&auto=format&fit=crop",
-  fishSaffron:   "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?q=80&w=300&auto=format&fit=crop",
-  beefStroganoff:"https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?q=80&w=300&auto=format&fit=crop",
-  beefSteak:     "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=300&auto=format&fit=crop",
-  kabsa:         "https://images.unsplash.com/photo-1596560548464-f010b394a4a5?q=80&w=300&auto=format&fit=crop",
-  mandi:         "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?q=80&w=300&auto=format&fit=crop",
-  chickenMandi:  "https://images.unsplash.com/photo-1604382440115-5f730e6ede1f?q=80&w=300&auto=format&fit=crop",
-  rice:          "https://images.unsplash.com/photo-1474483897765-dfa4f7e45c74?q=80&w=300&auto=format&fit=crop",
-  saffronRice:   "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?q=80&w=300&auto=format&fit=crop",
-  pasta:         "https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?q=80&w=300&auto=format&fit=crop",
-  vegMix:        "https://images.unsplash.com/photo-1518977676405-d5f5e8a756a9?q=80&w=300&auto=format&fit=crop",
-  roastedVeg:    "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=300&auto=format&fit=crop",
-  fruitJelly:    "https://images.unsplash.com/photo-1558024920-b41e1887dc32?q=80&w=300&auto=format&fit=crop",
-  custard:       "https://images.unsplash.com/photo-1488900128323-21503983a07e?q=80&w=300&auto=format&fit=crop",
-  hummus:        "https://images.unsplash.com/photo-1580822184713-fc5400e7fe10?q=80&w=300&auto=format&fit=crop",
-  croissant:     "https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=300&auto=format&fit=crop",
-  zaatarCroissant:"https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=300&auto=format&fit=crop",
-  sandwich:      "https://images.unsplash.com/photo-1592415486689-125cbbfcbee2?q=80&w=300&auto=format&fit=crop",
-  chickenKofta:  "https://images.unsplash.com/photo-1529059356018-b25dd2e6c6a1?q=80&w=300&auto=format&fit=crop",
-  beefKofta:     "https://images.unsplash.com/photo-1529059356018-b25dd2e6c6a1?q=80&w=300&auto=format&fit=crop",
-  grilledChicken:"https://images.unsplash.com/photo-1604382440115-5f730e6ede1f?q=80&w=300&auto=format&fit=crop",
-  fruitSalad:    "https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?q=80&w=300&auto=format&fit=crop",
-  // Kids items
-  burger:        "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300&auto=format&fit=crop",
-  hotdog:        "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?q=80&w=300&auto=format&fit=crop",
-  pizza:         "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=300&auto=format&fit=crop",
-  nuggets:       "https://images.unsplash.com/photo-1562802378-063ec186a863?q=80&w=300&auto=format&fit=crop",
-  fishFingers:   "https://images.unsplash.com/photo-1516100882582-96c3a05fe590?q=80&w=300&auto=format&fit=crop",
-  spaghetti:     "https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?q=80&w=300&auto=format&fit=crop",
-  pancakes:      "https://images.unsplash.com/photo-1528207776546-365bb710ee93?q=80&w=300&auto=format&fit=crop",
-  waffles:       "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?q=80&w=300&auto=format&fit=crop",
-  fries:         "https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?q=80&w=300&auto=format&fit=crop",
-  mashedPotato:  "https://images.unsplash.com/photo-1568708167226-7df2f71cd0e9?q=80&w=300&auto=format&fit=crop",
-  bakedBeans:    "https://images.unsplash.com/photo-1511909525232-61113c912358?q=80&w=300&auto=format&fit=crop",
-  iceCream:      "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?q=80&w=300&auto=format&fit=crop",
-  brownies:      "https://images.unsplash.com/photo-1564355808539-22fda35bed7e?q=80&w=300&auto=format&fit=crop",
-  juice:         "https://images.unsplash.com/photo-1534353473418-4cfa0ea1e78f?q=80&w=300&auto=format&fit=crop",
-  hashbrown:     "https://images.unsplash.com/photo-1558030006-450675393462?q=80&w=300&auto=format&fit=crop",
-  vegDipping:    "https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=300&auto=format&fit=crop",
-  boiledEgg:     "https://images.unsplash.com/photo-1498654077810-12c21d4d6dc3?q=80&w=300&auto=format&fit=crop",
+const P = FOOD_PHOTOS;
+
+const MEAL_ICONS: Record<MealId, React.ComponentType<{ size?: number; color?: string }>> = {
+  breakfast: Sun,
+  lunch:     Coffee,
+  dinner:    Moon,
 };
 
-/* ═══════════════════════════════════════════════════════════════════════════
- * DIET TYPE CONFIG
- * ═══════════════════════════════════════════════════════════════════════════ */
-
-const DIET_CONFIG: Record<DietType, {
-  label: { en: string; ar: string };
-  color: string;
-  bg: string;
-  icon: React.ComponentType<{ size?: number; color?: string }>;
-}> = {
-  "low-sodium":     { label: { en: "Low Sodium",     ar: "قليل الصوديوم" },   color: "#059669", bg: "#ECFDF5", icon: Droplets    },
-  "low-potassium":  { label: { en: "Low Potassium",  ar: "قليل البوتاسيوم" }, color: "#DB2777", bg: "#FDF2F8", icon: Heart       },
-  "chemo":          { label: { en: "Oncology Diet",  ar: "نظام علاج الأورام" },color: "#7C3AED", bg: "#F5F3FF", icon: FlaskConical },
-  "kids":           { label: { en: "Kids Menu",      ar: "قائمة الأطفال" },   color: "#D97706", bg: "#FFFBEB", icon: Baby        },
+const MEAL_BG_IMAGES: Record<MealId, string> = {
+  breakfast: P.breakfastBg,
+  lunch:     P.lunchBg,
+  dinner:    P.dinnerBg,
 };
 
-/* ═══════════════════════════════════════════════════════════════════════════
- * MENU DATA — based on actual Fakeeh Hospital menus
- * ═══════════════════════════════════════════════════════════════════════════ */
-
-const LOW_SODIUM_MEALS: MealPeriod[] = [
-  {
-    id: "breakfast", label: { en: "Breakfast", ar: "فطور" }, icon: Sun,
-    timeRange: "8:00 AM – 10:00 AM", hours: [8, 10], orderCutoff: 6,
-    bgImage: P.breakfastBg, color: "#F59E0B",
-    groups: [
-      { id: "A", label: { en: "Dairy & Beverage", ar: "ألبان ومشروب" }, mode: "choose-1", items: [
-        { id: "ls-b-a1", name: { en: "Cheese Platter", ar: "طبق جبن" }, image: P.cheese },
-        { id: "ls-b-a2", name: { en: "Low Fat Milk", ar: "حليب قليل الدهون" }, image: P.milk },
-        { id: "ls-b-a3", name: { en: "Plain Yogurt", ar: "لبن سادة" }, image: P.milk },
-        { id: "ls-b-a4", name: { en: "Labneh", ar: "لبنة" }, image: P.cheese },
-      ]},
-      { id: "B", label: { en: "Bread", ar: "خبز" }, mode: "choose-1", items: [
-        { id: "ls-b-b1", name: { en: "Bread Roll", ar: "خبز لافاش" }, image: P.bread },
-        { id: "ls-b-b2", name: { en: "Arabic Bread", ar: "خبز عربي" }, image: P.arabicBread },
-        { id: "ls-b-b3", name: { en: "Brown Bread", ar: "خبز أسمر" }, image: P.bread },
-        { id: "ls-b-b4", name: { en: "Toast Slice", ar: "شريحة توست" }, image: P.bread },
-      ]},
-      { id: "C", label: { en: "Egg Dishes", ar: "أطباق البيض" }, mode: "choose-2", items: [
-        { id: "ls-b-c1", name: { en: "Plain Omelette", ar: "عجة سادة" }, image: P.omelette },
-        { id: "ls-b-c2", name: { en: "Vegetable Omelette", ar: "عجة بالخضار" }, image: P.vegOmelette },
-        { id: "ls-b-c3", name: { en: "Scrambled Egg", ar: "بيض مخفوق" }, image: P.scrambledEgg },
-        { id: "ls-b-c4", name: { en: "Shakshouka", ar: "شكشوكة" }, image: P.shakshouka },
-        { id: "ls-b-c5", name: { en: "Foul Mudammas", ar: "فول مدمس" }, image: P.foul },
-        { id: "ls-b-c6", name: { en: "Boiled Egg", ar: "بيض مسلوق" }, image: P.boiledEgg },
-        { id: "ls-b-c7", name: { en: "Cheese Omelette", ar: "عجة بالجبن" }, image: P.omelette },
-        { id: "ls-b-c8", name: { en: "Spinach Omelette", ar: "عجة بالسبانخ" }, image: P.vegOmelette },
-        { id: "ls-b-c9", name: { en: "Mushroom Omelette", ar: "عجة بالفطر" }, image: P.vegOmelette },
-        { id: "ls-b-c10", name: { en: "Fried Egg", ar: "بيض مقلي" }, image: P.scrambledEgg },
-        { id: "ls-b-c11", name: { en: "Poached Egg", ar: "بيض مسلوق بالماء" }, image: P.boiledEgg },
-        { id: "ls-b-c12", name: { en: "Egg White Omelette", ar: "عجة بياض البيض" }, image: P.omelette },
-      ]},
-      { id: "D", label: { en: "Cereals", ar: "حبوب الإفطار" }, mode: "choose-1", items: [
-        { id: "ls-b-d1", name: { en: "Oats", ar: "شوفان" }, image: P.oats },
-        { id: "ls-b-d2", name: { en: "Bran Flakes", ar: "رقائق النخالة" }, image: P.branFlakes },
-        { id: "ls-b-d3", name: { en: "Corn Flakes", ar: "كورن فليكس" }, image: P.cornFlakes },
-        { id: "ls-b-d4", name: { en: "Muesli", ar: "موسلي" }, image: P.oats },
-      ]},
-      { id: "F", label: { en: "Hot Beverage", ar: "مشروب ساخن" }, mode: "choose-1", items: [
-        { id: "ls-b-f1", name: { en: "Black Tea", ar: "شاي أسود" }, image: P.milk },
-        { id: "ls-b-f2", name: { en: "Green Tea", ar: "شاي أخضر" }, image: P.milk },
-        { id: "ls-b-f3", name: { en: "Mint Tea", ar: "شاي بالنعناع" }, image: P.milk },
-        { id: "ls-b-f4", name: { en: "Decaf Coffee", ar: "قهوة منزوعة الكافيين" }, image: P.milk },
-        { id: "ls-b-f5", name: { en: "Hot Cocoa", ar: "كاكاو ساخن" }, image: P.milk },
-      ]},
-      { id: "G", label: { en: "Cold Beverage", ar: "مشروب بارد" }, mode: "choose-2", items: [
-        { id: "ls-b-g1", name: { en: "Fresh Orange Juice", ar: "عصير برتقال" }, image: P.juice },
-        { id: "ls-b-g2", name: { en: "Apple Juice", ar: "عصير تفاح" }, image: P.juice },
-        { id: "ls-b-g3", name: { en: "Pineapple Juice", ar: "عصير أناناس" }, image: P.juice },
-        { id: "ls-b-g4", name: { en: "Lemon Mint", ar: "ليمون بالنعناع" }, image: P.juice },
-        { id: "ls-b-g5", name: { en: "Yogurt Smoothie", ar: "سموثي بالزبادي" }, image: P.milk },
-      ]},
-      { id: "E", label: { en: "Complimentary", ar: "يأتي مع وجبتك" }, mode: "included", items: [
-        { id: "ls-b-e1", name: { en: "Fresh Fruit (Whole)", ar: "فاكهة طازجة" }, image: P.fruit, isForAll: true },
-        { id: "ls-b-e2", name: { en: "Water Bottle", ar: "زجاجة ماء" }, image: P.water, isForAll: true },
-      ]},
-    ],
-  },
-  {
-    id: "lunch", label: { en: "Lunch", ar: "غداء" }, icon: Coffee,
-    timeRange: "1:00 PM – 2:00 PM", hours: [13, 14], orderCutoff: 11,
-    bgImage: P.lunchBg, color: "#22C55E",
-    groups: [
-      { id: "A", label: { en: "Soup", ar: "شوربة" }, mode: "choose-1", items: [
-        { id: "ls-l-a1", name: { en: "Corn Soup", ar: "شوربة ذرة" }, image: P.cornSoup },
-        { id: "ls-l-a2", name: { en: "Mixed Vegetable Soup", ar: "شوربة خضار مشكلة" }, image: P.vegSoup },
-        { id: "ls-l-a3", name: { en: "Lentil Soup", ar: "شوربة عدس" }, image: P.lentilSoup },
-        { id: "ls-l-a4", name: { en: "Marrow Cream Soup", ar: "كريم كوسا" }, image: P.vegSoup },
-      ]},
-      { id: "B", label: { en: "Salad", ar: "سلطة" }, mode: "choose-2", items: [
-        { id: "ls-l-b1", name: { en: "Tahini Salad", ar: "سلطة طحينة" }, image: P.tahiniSalad },
-        { id: "ls-l-b2", name: { en: "Oriental Salad", ar: "سلطة شرقية" }, image: P.orientalSalad },
-        { id: "ls-l-b3", name: { en: "Garden Salad", ar: "سلطة خضراء" }, image: P.greenSalad },
-        { id: "ls-l-b4", name: { en: "Caesar Salad", ar: "سلطة سيزر" }, image: P.greenSalad },
-      ]},
-      { id: "C", label: { en: "Main Dish", ar: "الطبق الرئيسي" }, mode: "choose-1", items: [
-        { id: "ls-l-c1", name: { en: "Grilled Fish", ar: "سمك مشوي" }, image: P.grilledFish },
-        { id: "ls-l-c2", name: { en: "Grilled Chicken", ar: "دجاج مشوي" }, image: P.grilledChicken },
-        { id: "ls-l-c3", name: { en: "Beef Steak", ar: "ستيك لحم" }, image: P.beefSteak },
-        { id: "ls-l-c4", name: { en: "Chicken Mandi", ar: "مندي دجاج" }, image: P.chickenMandi },
-      ]},
-      { id: "D", label: { en: "Starch", ar: "النشويات" }, mode: "choose-1", items: [
-        { id: "ls-l-d1", name: { en: "White Rice", ar: "أرز أبيض" }, image: P.rice },
-        { id: "ls-l-d2", name: { en: "Pasta Aglio e Olio", ar: "باستا أجليو أوليو" }, image: P.pasta },
-        { id: "ls-l-d3", name: { en: "Mashed Potato", ar: "بطاطس مهروسة" }, image: P.mashedPotato },
-        { id: "ls-l-d4", name: { en: "Saffron Rice", ar: "أرز بالزعفران" }, image: P.saffronRice },
-      ]},
-      { id: "F", label: { en: "Dessert", ar: "الحلوى" }, mode: "choose-1", items: [
-        { id: "ls-l-f1", name: { en: "Fruit Jelly", ar: "جيلي الفاكهة" }, image: P.fruitJelly },
-        { id: "ls-l-f2", name: { en: "Fresh Fruit (Whole)", ar: "فاكهة طازجة" }, image: P.fruit },
-        { id: "ls-l-f3", name: { en: "Fruit Salad", ar: "سلطة فواكه" }, image: P.fruitSalad },
-        { id: "ls-l-f4", name: { en: "Plain Custard", ar: "كاسترد" }, image: P.custard },
-      ]},
-      { id: "H", label: { en: "Cold Beverage", ar: "مشروب بارد" }, mode: "choose-2", items: [
-        { id: "ls-l-h1", name: { en: "Fresh Orange Juice", ar: "عصير برتقال" }, image: P.juice },
-        { id: "ls-l-h2", name: { en: "Apple Juice", ar: "عصير تفاح" }, image: P.juice },
-        { id: "ls-l-h3", name: { en: "Lemon Mint", ar: "ليمون بالنعناع" }, image: P.juice },
-        { id: "ls-l-h4", name: { en: "Iced Tea", ar: "شاي مثلج" }, image: P.juice },
-        { id: "ls-l-h5", name: { en: "Yogurt Drink", ar: "لبن رايب" }, image: P.milk },
-      ]},
-      { id: "E", label: { en: "Complimentary", ar: "يأتي مع وجبتك" }, mode: "included", items: [
-        { id: "ls-l-e1", name: { en: "Sautéed Vegetables", ar: "خضار مقلية" }, image: P.vegMix, isForAll: true },
-        { id: "ls-l-g1", name: { en: "Water Bottle", ar: "زجاجة ماء" }, image: P.water, isForAll: true },
-      ]},
-    ],
-  },
-  {
-    id: "dinner", label: { en: "Dinner", ar: "عشاء" }, icon: Moon,
-    timeRange: "7:00 PM – 8:00 PM", hours: [19, 20], orderCutoff: 17,
-    bgImage: P.dinnerBg, color: "#8B5CF6",
-    groups: [
-      { id: "A", label: { en: "Soup", ar: "شوربة" }, mode: "choose-1", items: [
-        { id: "ls-d-a1", name: { en: "Marrow Cream Soup", ar: "كريم شوربة الكوسا" }, image: P.vegSoup },
-        { id: "ls-d-a2", name: { en: "Oat Soup", ar: "شوربة الشوفان" }, image: P.cornSoup },
-        { id: "ls-d-a3", name: { en: "Lentil Soup", ar: "شوربة عدس" }, image: P.lentilSoup },
-        { id: "ls-d-a4", name: { en: "Chicken Broth", ar: "مرق دجاج" }, image: P.cornSoup },
-      ]},
-      { id: "B", label: { en: "Salad / Starter", ar: "سلطة / مقبلات" }, mode: "choose-2", items: [
-        { id: "ls-d-b1", name: { en: "Oriental Salad", ar: "سلطة شرقية" }, image: P.orientalSalad },
-        { id: "ls-d-b2", name: { en: "Hummus", ar: "حمص" }, image: P.hummus },
-        { id: "ls-d-b3", name: { en: "Garden Salad", ar: "سلطة خضراء" }, image: P.greenSalad },
-        { id: "ls-d-b4", name: { en: "Tahini Salad", ar: "سلطة طحينة" }, image: P.tahiniSalad },
-      ]},
-      { id: "C", label: { en: "Main Dish", ar: "الطبق الرئيسي" }, mode: "choose-1", items: [
-        { id: "ls-d-c1", name: { en: "Fish Florentine", ar: "سمك فلورنتين" }, image: P.fishFlorentine },
-        { id: "ls-d-c2", name: { en: "Beef Stroganoff", ar: "بيف ستروجانوف" }, image: P.beefStroganoff },
-        { id: "ls-d-c3", name: { en: "Chicken Kabsa", ar: "كبسة الدجاج" }, image: P.kabsa },
-        { id: "ls-d-c4", name: { en: "Grilled Chicken", ar: "دجاج مشوي" }, image: P.grilledChicken },
-      ]},
-      { id: "D", label: { en: "Starch", ar: "النشويات" }, mode: "choose-1", items: [
-        { id: "ls-d-d1", name: { en: "White Rice", ar: "أرز أبيض" }, image: P.rice },
-        { id: "ls-d-d2", name: { en: "Pasta Aglio e Olio", ar: "باستا أجليو أوليو" }, image: P.pasta },
-        { id: "ls-d-d3", name: { en: "Mashed Potato", ar: "بطاطس مهروسة" }, image: P.mashedPotato },
-        { id: "ls-d-d4", name: { en: "Saffron Rice", ar: "أرز بالزعفران" }, image: P.saffronRice },
-      ]},
-      { id: "F", label: { en: "Dessert", ar: "الحلوى" }, mode: "choose-1", items: [
-        { id: "ls-d-f1", name: { en: "Plain Custard", ar: "كاسترد سادة" }, image: P.custard },
-        { id: "ls-d-f2", name: { en: "Fresh Fruit (Whole)", ar: "فاكهة طازجة" }, image: P.fruit },
-        { id: "ls-d-f3", name: { en: "Fruit Jelly", ar: "جيلي" }, image: P.fruitJelly },
-        { id: "ls-d-f4", name: { en: "Fruit Salad", ar: "سلطة فواكه" }, image: P.fruitSalad },
-      ]},
-      { id: "H", label: { en: "Cold Beverage", ar: "مشروب بارد" }, mode: "choose-2", items: [
-        { id: "ls-d-h1", name: { en: "Orange Juice", ar: "عصير برتقال" }, image: P.juice },
-        { id: "ls-d-h2", name: { en: "Apple Juice", ar: "عصير تفاح" }, image: P.juice },
-        { id: "ls-d-h3", name: { en: "Lemon Mint", ar: "ليمون بالنعناع" }, image: P.juice },
-        { id: "ls-d-h4", name: { en: "Yogurt Drink", ar: "لبن رايب" }, image: P.milk },
-        { id: "ls-d-h5", name: { en: "Mint Tea", ar: "شاي بالنعناع" }, image: P.milk },
-      ]},
-      { id: "E", label: { en: "Complimentary", ar: "يأتي مع وجبتك" }, mode: "included", items: [
-        { id: "ls-d-e1", name: { en: "Roasted Vegetables", ar: "خضار مشوية" }, image: P.roastedVeg, isForAll: true },
-        { id: "ls-d-g1", name: { en: "Water Bottle", ar: "زجاجة ماء" }, image: P.water, isForAll: true },
-      ]},
-    ],
-  },
-];
-
-const LOW_POTASSIUM_MEALS: MealPeriod[] = [
-  {
-    id: "breakfast", label: { en: "Breakfast", ar: "فطور" }, icon: Sun,
-    timeRange: "8:00 AM – 9:00 AM", hours: [8, 9], orderCutoff: 6,
-    bgImage: P.breakfastBg, color: "#F59E0B",
-    groups: [
-      { id: "A", label: { en: "Dairy", ar: "ألبان" }, mode: "choose-1", items: [
-        { id: "lp-b-a1", name: { en: "Cheese Platter", ar: "طبق جبن" }, image: P.cheese },
-        { id: "lp-b-a2", name: { en: "Low Fat Milk", ar: "حليب قليل الدهون" }, image: P.milk },
-        { id: "lp-b-a3", name: { en: "Cream Cheese", ar: "جبن كريمي" }, image: P.cheese },
-        { id: "lp-b-a4", name: { en: "Labneh", ar: "لبنة" }, image: P.cheese },
-      ]},
-      { id: "B", label: { en: "Bread", ar: "خبز" }, mode: "choose-1", items: [
-        { id: "lp-b-b1", name: { en: "Bread Roll", ar: "خبز لافاش" }, image: P.bread },
-        { id: "lp-b-b2", name: { en: "Arabic Bread", ar: "خبز عربي" }, image: P.arabicBread },
-        { id: "lp-b-b3", name: { en: "White Toast", ar: "توست أبيض" }, image: P.bread },
-        { id: "lp-b-b4", name: { en: "Bagel", ar: "بيجل" }, image: P.bread },
-      ]},
-      { id: "F", label: { en: "Hot Beverage", ar: "مشروب ساخن" }, mode: "choose-1", items: [
-        { id: "lp-b-f1", name: { en: "Black Tea", ar: "شاي أسود" }, image: P.milk },
-        { id: "lp-b-f2", name: { en: "Mint Tea", ar: "شاي بالنعناع" }, image: P.milk },
-        { id: "lp-b-f3", name: { en: "Anise Tea", ar: "شاي يانسون" }, image: P.milk },
-        { id: "lp-b-f4", name: { en: "Decaf Coffee", ar: "قهوة منزوعة الكافيين" }, image: P.milk },
-      ]},
-      { id: "G", label: { en: "Cold Beverage", ar: "مشروب بارد" }, mode: "choose-2", items: [
-        { id: "lp-b-g1", name: { en: "Apple Juice", ar: "عصير تفاح" }, image: P.juice },
-        { id: "lp-b-g2", name: { en: "Cranberry Juice", ar: "عصير توت بري" }, image: P.juice },
-        { id: "lp-b-g3", name: { en: "Lemon Mint", ar: "ليمون بالنعناع" }, image: P.juice },
-        { id: "lp-b-g4", name: { en: "Ice Tea", ar: "شاي مثلج" }, image: P.juice },
-        { id: "lp-b-g5", name: { en: "Sparkling Water", ar: "ماء فوار" }, image: P.water },
-      ]},
-      { id: "C", label: { en: "Egg Dishes", ar: "أطباق البيض" }, mode: "choose-2", items: [
-        { id: "lp-b-c1", name: { en: "Plain Omelette", ar: "عجة سادة" }, image: P.omelette },
-        { id: "lp-b-c2", name: { en: "Vegetable Omelette", ar: "عجة بالخضار" }, image: P.vegOmelette },
-        { id: "lp-b-c3", name: { en: "Scrambled Egg", ar: "بيض مخفوق" }, image: P.scrambledEgg },
-        { id: "lp-b-c4", name: { en: "Boiled Egg (Solid)", ar: "بيض مسلوق" }, image: P.boiledEgg },
-      ]},
-      { id: "D", label: { en: "Cereals", ar: "حبوب الإفطار" }, mode: "choose-2", items: [
-        { id: "lp-b-d1", name: { en: "Corn Flakes", ar: "كورن فليكس" }, image: P.cornFlakes },
-      ]},
-      { id: "E", label: { en: "Complimentary", ar: "يأتي مع وجبتك" }, mode: "included", items: [
-        { id: "lp-b-e1", name: { en: "Fresh Fruit (Whole)", ar: "فاكهة طازجة" }, image: P.fruit, isForAll: true },
-        { id: "lp-b-e2", name: { en: "Water Bottle", ar: "زجاجة ماء" }, image: P.water, isForAll: true },
-      ]},
-    ],
-  },
-  {
-    id: "lunch", label: { en: "Lunch", ar: "غداء" }, icon: Coffee,
-    timeRange: "1:00 PM – 2:00 PM", hours: [13, 14], orderCutoff: 11,
-    bgImage: P.lunchBg, color: "#22C55E",
-    groups: [
-      { id: "A", label: { en: "Soup", ar: "شوربة" }, mode: "choose-2", items: [
-        { id: "lp-l-a1", name: { en: "Vegetable Soup", ar: "شوربة خضار" }, image: P.vegSoup },
-        { id: "lp-l-a2", name: { en: "Corn Soup", ar: "شوربة ذرة" }, image: P.cornSoup },
-      ]},
-      { id: "C", label: { en: "Main Dish", ar: "الطبق الرئيسي" }, mode: "choose-2", items: [
-        { id: "lp-l-c1", name: { en: "Fish Fillet with Vegetables", ar: "فيليه سمك مع خضار" }, image: P.fishFillet },
-        { id: "lp-l-c2", name: { en: "Chicken Mandi", ar: "مندي الدجاج" }, image: P.chickenMandi },
-        { id: "lp-l-c3", name: { en: "Beef Steak with Mushroom Sauce", ar: "ستيك لحم بصلصة الفطر" }, image: P.beefSteak },
-      ]},
-      { id: "D", label: { en: "Starch", ar: "النشويات" }, mode: "choose-2", items: [
-        { id: "lp-l-d1", name: { en: "White Rice", ar: "أرز أبيض" }, image: P.rice },
-        { id: "lp-l-d2", name: { en: "Saffron Rice", ar: "أرز بالزعفران" }, image: P.saffronRice },
-      ]},
-      { id: "E", label: { en: "Complimentary", ar: "يأتي مع وجبتك" }, mode: "included", items: [
-        { id: "lp-l-e1", name: { en: "Green Salad", ar: "سلطة خضراء" }, image: P.greenSalad, isForAll: true },
-        { id: "lp-l-e2", name: { en: "Fresh Fruit (Whole)", ar: "فاكهة طازجة" }, image: P.fruit, isForAll: true },
-        { id: "lp-l-e3", name: { en: "Water Bottle", ar: "زجاجة ماء" }, image: P.water, isForAll: true },
-      ]},
-    ],
-  },
-  {
-    id: "dinner", label: { en: "Dinner", ar: "عشاء" }, icon: Moon,
-    timeRange: "7:00 PM – 8:00 PM", hours: [19, 20], orderCutoff: 17,
-    bgImage: P.dinnerBg, color: "#8B5CF6",
-    groups: [
-      { id: "A", label: { en: "Soup", ar: "شوربة" }, mode: "choose-2", items: [
-        { id: "lp-d-a1", name: { en: "Vegetables Soup", ar: "شوربة خضار" }, image: P.vegSoup },
-        { id: "lp-d-a2", name: { en: "Marrow Cream Soup", ar: "كريم شوربة الكوسا" }, image: P.cornSoup },
-      ]},
-      { id: "C", label: { en: "Main Dish", ar: "الطبق الرئيسي" }, mode: "choose-2", items: [
-        { id: "lp-d-c1", name: { en: "Fish with Saffron Sauce", ar: "سمك بصلصة الزعفران" }, image: P.fishSaffron },
-        { id: "lp-d-c2", name: { en: "Chicken Mandi", ar: "مندي الدجاج" }, image: P.chickenMandi },
-        { id: "lp-d-c3", name: { en: "Beef Steak", ar: "ستيك لحم" }, image: P.beefSteak },
-      ]},
-      { id: "D", label: { en: "Starch", ar: "النشويات" }, mode: "choose-2", items: [
-        { id: "lp-d-d1", name: { en: "White Rice", ar: "أرز أبيض" }, image: P.rice },
-        { id: "lp-d-d2", name: { en: "Pasta Aglio e Olio", ar: "باستا أجليو أوليو" }, image: P.pasta },
-      ]},
-      { id: "E", label: { en: "Complimentary", ar: "يأتي مع وجبتك" }, mode: "included", items: [
-        { id: "lp-d-e1", name: { en: "Green Salad", ar: "سلطة خضراء" }, image: P.greenSalad, isForAll: true },
-        { id: "lp-d-e2", name: { en: "Plain Jelly", ar: "جيلي سادة" }, image: P.fruitJelly, isForAll: true },
-        { id: "lp-d-e3", name: { en: "Water Bottle", ar: "زجاجة ماء" }, image: P.water, isForAll: true },
-      ]},
-    ],
-  },
-];
-
-const CHEMO_MEALS: MealPeriod[] = [
-  {
-    id: "breakfast", label: { en: "Breakfast", ar: "فطور" }, icon: Sun,
-    timeRange: "8:00 AM – 10:00 AM", hours: [8, 10], orderCutoff: 6,
-    bgImage: P.breakfastBg, color: "#F59E0B",
-    groups: [
-      { id: "A", label: { en: "Sandwich (Choose 2)", ar: "ساندوتش (اختر 2)" }, mode: "choose-2", items: [
-        { id: "ch-b-a1", name: { en: "Chicken Sandwich", ar: "ساندوتش دجاج" }, image: P.sandwich },
-        { id: "ch-b-a2", name: { en: "Tuna Sandwich", ar: "ساندوتش تونة" }, image: P.sandwich },
-        { id: "ch-b-a3", name: { en: "White Cheese Sandwich", ar: "ساندوتش جبن أبيض" }, image: P.sandwich },
-        { id: "ch-b-a4", name: { en: "Yellow Cheese Sandwich", ar: "ساندوتش جبن أصفر" }, image: P.sandwich },
-        { id: "ch-b-a5", name: { en: "Boiled Egg Sandwich", ar: "ساندوتش بيض مسلوق" }, image: P.sandwich },
-        { id: "ch-b-a6", name: { en: "Plain Omelette Sandwich", ar: "ساندوتش عجة سادة" }, image: P.sandwich },
-        { id: "ch-b-a7", name: { en: "Labne Sandwich", ar: "ساندوتش لبنة" }, image: P.sandwich },
-        { id: "ch-b-a8", name: { en: "Cheese Omelette Sandwich", ar: "ساندوتش عجة بالجبن" }, image: P.sandwich },
-        { id: "ch-b-a9", name: { en: "Plain Croissant", ar: "كرواسون سادة" }, image: P.croissant },
-        { id: "ch-b-a10", name: { en: "Zaatar Croissant", ar: "كرواسون زعتر" }, image: P.zaatarCroissant },
-      ]},
-      { id: "BREAD", label: { en: "Bread Type", ar: "نوع الخبز" }, mode: "choose-2", items: [
-        { id: "ch-b-br1", name: { en: "Toast", ar: "توست" }, image: P.bread },
-        { id: "ch-b-br2", name: { en: "Arabic Bread", ar: "خبز عربي" }, image: P.arabicBread },
-        { id: "ch-b-br3", name: { en: "Samoli", ar: "صمولي" }, image: P.bread },
-      ]},
-      { id: "B", label: { en: "Hot Main", ar: "الطبق الرئيسي الساخن" }, mode: "choose-2", items: [
-        { id: "ch-b-b1", name: { en: "Chicken Kofta w/ White Rice", ar: "كفتة دجاج مع أرز أبيض" }, image: P.chickenKofta },
-        { id: "ch-b-b2", name: { en: "Beef Kofta w/ White Rice", ar: "كفتة لحم مع أرز أبيض" }, image: P.beefKofta },
-        { id: "ch-b-b3", name: { en: "Grilled Chicken w/ White Rice", ar: "دجاج مشوي مع أرز أبيض" }, image: P.grilledChicken },
-        { id: "ch-b-b4", name: { en: "Beef Steak w/ White Rice", ar: "ستيك لحم مع أرز أبيض" }, image: P.beefSteak },
-        { id: "ch-b-b5", name: { en: "Grilled Fish w/ White Rice", ar: "سمك مشوي مع أرز أبيض" }, image: P.grilledFish },
-      ]},
-      { id: "D", label: { en: "Dessert", ar: "الحلوى" }, mode: "choose-2", items: [
-        { id: "ch-b-d1", name: { en: "English Cake", ar: "كيك إنجليزي" }, image: P.brownies },
-        { id: "ch-b-d2", name: { en: "Jelly", ar: "جيلي" }, image: P.fruitJelly },
-        { id: "ch-b-d3", name: { en: "Fruit Salad", ar: "سلطة فواكه" }, image: P.fruitSalad },
-      ]},
-      { id: "E", label: { en: "Complimentary", ar: "يأتي مع وجبتك" }, mode: "included", items: [
-        { id: "ch-b-e1", name: { en: "Green Salad", ar: "سلطة خضراء" }, image: P.greenSalad, isForAll: true },
-        { id: "ch-b-e2", name: { en: "Water Bottle", ar: "زجاجة ماء" }, image: P.water, isForAll: true },
-        { id: "ch-b-e3", name: { en: "Tetra Pak Juice", ar: "عصير معلب" }, image: P.juice, isForAll: true },
-      ]},
-    ],
-  },
-  {
-    id: "lunch", label: { en: "Lunch", ar: "غداء" }, icon: Coffee,
-    timeRange: "1:00 PM – 2:00 PM", hours: [13, 14], orderCutoff: 11,
-    bgImage: P.lunchBg, color: "#22C55E",
-    groups: [
-      { id: "A", label: { en: "Sandwich (Choose 2)", ar: "ساندوتش (اختر 2)" }, mode: "choose-2", items: [
-        { id: "ch-l-a1", name: { en: "Chicken Sandwich", ar: "ساندوتش دجاج" }, image: P.sandwich },
-        { id: "ch-l-a2", name: { en: "Tuna Sandwich", ar: "ساندوتش تونة" }, image: P.sandwich },
-        { id: "ch-l-a3", name: { en: "White Cheese Sandwich", ar: "ساندوتش جبن أبيض" }, image: P.sandwich },
-        { id: "ch-l-a4", name: { en: "Boiled Egg Sandwich", ar: "ساندوتش بيض مسلوق" }, image: P.sandwich },
-        { id: "ch-l-a5", name: { en: "Labne Sandwich", ar: "ساندوتش لبنة" }, image: P.sandwich },
-        { id: "ch-l-a6", name: { en: "Plain Croissant", ar: "كرواسون سادة" }, image: P.croissant },
-        { id: "ch-l-a7", name: { en: "Zaatar Croissant", ar: "كرواسون زعتر" }, image: P.zaatarCroissant },
-      ]},
-      { id: "B", label: { en: "Hot Main", ar: "الطبق الرئيسي الساخن" }, mode: "choose-2", items: [
-        { id: "ch-l-b1", name: { en: "Chicken Kofta w/ White Rice", ar: "كفتة دجاج مع أرز أبيض" }, image: P.chickenKofta },
-        { id: "ch-l-b2", name: { en: "Grilled Chicken w/ White Rice", ar: "دجاج مشوي مع أرز أبيض" }, image: P.grilledChicken },
-        { id: "ch-l-b3", name: { en: "Beef Steak w/ White Rice", ar: "ستيك لحم مع أرز أبيض" }, image: P.beefSteak },
-        { id: "ch-l-b4", name: { en: "Grilled Fish w/ White Rice", ar: "سمك مشوي مع أرز أبيض" }, image: P.grilledFish },
-      ]},
-      { id: "D", label: { en: "Dessert", ar: "الحلوى" }, mode: "choose-2", items: [
-        { id: "ch-l-d1", name: { en: "English Cake", ar: "كيك إنجليزي" }, image: P.brownies },
-        { id: "ch-l-d2", name: { en: "Jelly", ar: "جيلي" }, image: P.fruitJelly },
-        { id: "ch-l-d3", name: { en: "Fruit Salad", ar: "سلطة فواكه" }, image: P.fruitSalad },
-      ]},
-      { id: "E", label: { en: "Complimentary", ar: "يأتي مع وجبتك" }, mode: "included", items: [
-        { id: "ch-l-e1", name: { en: "Green Salad", ar: "سلطة خضراء" }, image: P.greenSalad, isForAll: true },
-        { id: "ch-l-e2", name: { en: "Water Bottle", ar: "زجاجة ماء" }, image: P.water, isForAll: true },
-        { id: "ch-l-e3", name: { en: "Tetra Pak Juice", ar: "عصير معلب" }, image: P.juice, isForAll: true },
-      ]},
-    ],
-  },
-  {
-    id: "dinner", label: { en: "Dinner", ar: "عشاء" }, icon: Moon,
-    timeRange: "7:00 PM – 8:00 PM", hours: [19, 20], orderCutoff: 17,
-    bgImage: P.dinnerBg, color: "#8B5CF6",
-    groups: [
-      { id: "A", label: { en: "Sandwich (Choose 2)", ar: "ساندوتش (اختر 2)" }, mode: "choose-2", items: [
-        { id: "ch-d-a1", name: { en: "Chicken Sandwich", ar: "ساندوتش دجاج" }, image: P.sandwich },
-        { id: "ch-d-a2", name: { en: "Tuna Sandwich", ar: "ساندوتش تونة" }, image: P.sandwich },
-        { id: "ch-d-a3", name: { en: "Labne Sandwich", ar: "ساندوتش لبنة" }, image: P.sandwich },
-        { id: "ch-d-a4", name: { en: "Plain Croissant", ar: "كرواسون سادة" }, image: P.croissant },
-        { id: "ch-d-a5", name: { en: "White Cheese Sandwich", ar: "ساندوتش جبن أبيض" }, image: P.sandwich },
-      ]},
-      { id: "B", label: { en: "Hot Main", ar: "الطبق الرئيسي الساخن" }, mode: "choose-2", items: [
-        { id: "ch-d-b1", name: { en: "Chicken Kofta w/ White Rice", ar: "كفتة دجاج مع أرز أبيض" }, image: P.chickenKofta },
-        { id: "ch-d-b2", name: { en: "Grilled Chicken w/ White Rice", ar: "دجاج مشوي مع أرز أبيض" }, image: P.grilledChicken },
-        { id: "ch-d-b3", name: { en: "Grilled Fish w/ White Rice", ar: "سمك مشوي مع أرز أبيض" }, image: P.grilledFish },
-      ]},
-      { id: "D", label: { en: "Dessert", ar: "الحلوى" }, mode: "choose-2", items: [
-        { id: "ch-d-d1", name: { en: "English Cake", ar: "كيك إنجليزي" }, image: P.brownies },
-        { id: "ch-d-d2", name: { en: "Fruit Salad", ar: "سلطة فواكه" }, image: P.fruitSalad },
-      ]},
-      { id: "E", label: { en: "Complimentary", ar: "يأتي مع وجبتك" }, mode: "included", items: [
-        { id: "ch-d-e1", name: { en: "Green Salad", ar: "سلطة خضراء" }, image: P.greenSalad, isForAll: true },
-        { id: "ch-d-e2", name: { en: "Water Bottle", ar: "زجاجة ماء" }, image: P.water, isForAll: true },
-      ]},
-    ],
-  },
-];
-
-const KIDS_MEALS: MealPeriod[] = [
-  {
-    id: "breakfast", label: { en: "Breakfast", ar: "فطور" }, icon: Sun,
-    timeRange: "8:00 AM – 10:00 AM", hours: [8, 10], orderCutoff: 6,
-    bgImage: P.breakfastBg, color: "#F59E0B",
-    groups: [
-      { id: "CEREAL", label: { en: "Cereals", ar: "حبوب الإفطار" }, mode: "choose-2", items: [
-        { id: "k-b-c1", name: { en: "Corn Flakes", ar: "كورن فليكس" }, image: P.cornFlakes },
-        { id: "k-b-c2", name: { en: "Chocolate Corn Flakes", ar: "كورن فليكس بالشوكولاتة" }, image: P.cornFlakes },
-        { id: "k-b-c3", name: { en: "Bran Flakes", ar: "رقائق النخالة" }, image: P.branFlakes },
-        { id: "k-b-c4", name: { en: "Museli", ar: "موسلي" }, image: P.oats },
-        { id: "k-b-c5", name: { en: "Rice Crispies", ar: "ريس كريسبيز" }, image: P.cornFlakes },
-      ]},
-      { id: "BREAD", label: { en: "Bread", ar: "خبز" }, mode: "choose-2", items: [
-        { id: "k-b-br1", name: { en: "White Sliced Bread", ar: "خبز أبيض مقطع" }, image: P.bread },
-        { id: "k-b-br2", name: { en: "Arabic Bread", ar: "خبز عربي" }, image: P.arabicBread },
-        { id: "k-b-br3", name: { en: "Croissant", ar: "كرواسون" }, image: P.croissant },
-        { id: "k-b-br4", name: { en: "Zaatar Croissant", ar: "كرواسون زعتر" }, image: P.zaatarCroissant },
-      ]},
-      { id: "EGG", label: { en: "Hot Eggs", ar: "البيض الساخن" }, mode: "choose-2", items: [
-        { id: "k-b-e1", name: { en: "Scrambled Eggs", ar: "بيض مخفوق" }, image: P.scrambledEgg },
-        { id: "k-b-e2", name: { en: "Fried Egg", ar: "بيض مقلي" }, image: P.omelette },
-        { id: "k-b-e3", name: { en: "Poached Egg", ar: "بيض مسلوق بالماء" }, image: P.boiledEgg },
-        { id: "k-b-e4", name: { en: "Hard Boiled Egg", ar: "بيض مسلوق صلب" }, image: P.boiledEgg },
-        { id: "k-b-e5", name: { en: "Plain Omelette", ar: "عجة سادة" }, image: P.omelette },
-      ]},
-      { id: "EXTRA", label: { en: "Special Extras", ar: "إضافات مميزة" }, mode: "choose-2", items: [
-        { id: "k-b-x1", name: { en: "Pancakes", ar: "بانكيك" }, image: P.pancakes },
-        { id: "k-b-x2", name: { en: "Waffles", ar: "وافل" }, image: P.waffles },
-        { id: "k-b-x3", name: { en: "Hashbrown", ar: "هاشبراون" }, image: P.hashbrown },
-        { id: "k-b-x4", name: { en: "Cinnamon Roll", ar: "سينابون قرفة" }, image: P.croissant },
-      ]},
-      { id: "FRUIT", label: { en: "Fruit", ar: "فاكهة" }, mode: "choose-2", items: [
-        { id: "k-b-f1", name: { en: "Orange", ar: "برتقال" }, image: P.fruit },
-        { id: "k-b-f2", name: { en: "Apple", ar: "تفاحة" }, image: P.fruit },
-        { id: "k-b-f3", name: { en: "Banana", ar: "موزة" }, image: P.fruit },
-        { id: "k-b-f4", name: { en: "Pineapple", ar: "أناناس" }, image: P.fruit },
-        { id: "k-b-f5", name: { en: "Mango", ar: "مانجو" }, image: P.fruit },
-      ]},
-      { id: "INCL", label: { en: "Complimentary", ar: "يأتي مع وجبتك" }, mode: "included", items: [
-        { id: "k-b-i1", name: { en: "Milk", ar: "حليب" }, image: P.milk, isForAll: true },
-        { id: "k-b-i2", name: { en: "Water Bottle", ar: "زجاجة ماء" }, image: P.water, isForAll: true },
-      ]},
-    ],
-  },
-  {
-    id: "lunch", label: { en: "Lunch", ar: "غداء" }, icon: Coffee,
-    timeRange: "11:00 AM – 1:00 PM", hours: [11, 13], orderCutoff: 9,
-    bgImage: P.lunchBg, color: "#22C55E",
-    groups: [
-      { id: "START", label: { en: "Starter", ar: "المقبلات" }, mode: "choose-2", items: [
-        { id: "k-l-s1", name: { en: "Vegetable Dipping Sticks", ar: "أصابع الخضار" }, image: P.vegDipping },
-        { id: "k-l-s2", name: { en: "Lentil Soup", ar: "شوربة عدس" }, image: P.lentilSoup },
-        { id: "k-l-s3", name: { en: "Hummus & Pita", ar: "حمص وخبز" }, image: P.hummus },
-      ]},
-      { id: "MAIN", label: { en: "Main Dish", ar: "الطبق الرئيسي" }, mode: "choose-2", items: [
-        { id: "k-l-m1", name: { en: "Beef Burger", ar: "برجر لحم" }, image: P.burger },
-        { id: "k-l-m2", name: { en: "Hotdog", ar: "هوت دوج" }, image: P.hotdog },
-        { id: "k-l-m3", name: { en: "Mini Pizza", ar: "بيتزا صغيرة" }, image: P.pizza },
-        { id: "k-l-m4", name: { en: "Grilled Chicken Breast", ar: "صدر دجاج مشوي" }, image: P.grilledChicken },
-        { id: "k-l-m5", name: { en: "Chicken Nuggets", ar: "ناجتس دجاج" }, image: P.nuggets },
-        { id: "k-l-m6", name: { en: "Fish Fingers", ar: "أصابع السمك" }, image: P.fishFingers },
-        { id: "k-l-m7", name: { en: "Spaghetti Bolognese", ar: "سباغيتي بولونيز" }, image: P.spaghetti },
-      ]},
-      { id: "SIDE1", label: { en: "Side Dish", ar: "الطبق الجانبي" }, mode: "choose-2", items: [
-        { id: "k-l-d1", name: { en: "French Fries", ar: "بطاطس مقلية" }, image: P.fries },
-        { id: "k-l-d2", name: { en: "Baked Beans", ar: "فاصوليا مطبوخة" }, image: P.bakedBeans },
-        { id: "k-l-d3", name: { en: "Mashed Potatoes", ar: "بطاطس مهروسة" }, image: P.mashedPotato },
-        { id: "k-l-d4", name: { en: "Potato Wedges", ar: "أوتاد البطاطس" }, image: P.fries },
-        { id: "k-l-d5", name: { en: "Arabic Rice", ar: "أرز عربي" }, image: P.rice },
-      ]},
-      { id: "VEG", label: { en: "Vegetables", ar: "الخضار" }, mode: "choose-2", items: [
-        { id: "k-l-v1", name: { en: "Mixed Vegetables", ar: "خضار مشكلة" }, image: P.vegMix },
-        { id: "k-l-v2", name: { en: "Carrots", ar: "جزر" }, image: P.vegMix },
-        { id: "k-l-v3", name: { en: "Broccoli", ar: "بروكلي" }, image: P.vegMix },
-        { id: "k-l-v4", name: { en: "Sweet Corn", ar: "ذرة حلوة" }, image: P.vegMix },
-      ]},
-      { id: "DES", label: { en: "Dessert", ar: "الحلوى" }, mode: "choose-2", items: [
-        { id: "k-l-sw1", name: { en: "Ice Cream", ar: "آيس كريم" }, image: P.iceCream },
-        { id: "k-l-sw2", name: { en: "Fruit Salad", ar: "سلطة فواكه" }, image: P.fruitSalad },
-        { id: "k-l-sw3", name: { en: "Chocolate Brownie", ar: "براوني شوكولاتة" }, image: P.brownies },
-        { id: "k-l-sw4", name: { en: "Banana & Custard", ar: "موز بالكاسترد" }, image: P.custard },
-      ]},
-      { id: "DRINK", label: { en: "Drink", ar: "المشروب" }, mode: "choose-2", items: [
-        { id: "k-l-dr1", name: { en: "Orange Juice", ar: "عصير برتقال" }, image: P.juice },
-        { id: "k-l-dr2", name: { en: "Mango Juice", ar: "عصير مانجو" }, image: P.juice },
-        { id: "k-l-dr3", name: { en: "Strawberry Milk", ar: "حليب فراولة" }, image: P.milk },
-        { id: "k-l-dr4", name: { en: "Chocolate Milk", ar: "حليب شوكولاتة" }, image: P.milk },
-      ]},
-    ],
-  },
-  {
-    id: "dinner", label: { en: "Dinner", ar: "عشاء" }, icon: Moon,
-    timeRange: "4:30 PM – 6:30 PM", hours: [16, 18], orderCutoff: 14,
-    bgImage: P.dinnerBg, color: "#8B5CF6",
-    groups: [
-      { id: "START", label: { en: "Starter", ar: "المقبلات" }, mode: "choose-2", items: [
-        { id: "k-d-s1", name: { en: "Vegetable Dipping Sticks", ar: "أصابع الخضار" }, image: P.vegDipping },
-        { id: "k-d-s2", name: { en: "Lentil Soup", ar: "شوربة عدس" }, image: P.lentilSoup },
-        { id: "k-d-s3", name: { en: "Hummus & Pita", ar: "حمص وخبز" }, image: P.hummus },
-        { id: "k-d-s4", name: { en: "Soup of the Day", ar: "شوربة اليوم" }, image: P.vegSoup },
-      ]},
-      { id: "MAIN", label: { en: "Main Dish", ar: "الطبق الرئيسي" }, mode: "choose-2", items: [
-        { id: "k-d-m1", name: { en: "Beef Burger", ar: "برجر لحم" }, image: P.burger },
-        { id: "k-d-m2", name: { en: "Hotdog", ar: "هوت دوج" }, image: P.hotdog },
-        { id: "k-d-m3", name: { en: "Chicken Nuggets", ar: "ناجتس دجاج" }, image: P.nuggets },
-        { id: "k-d-m4", name: { en: "Fish Fingers", ar: "أصابع السمك" }, image: P.fishFingers },
-        { id: "k-d-m5", name: { en: "Pasta Bolognese", ar: "باستا بولونيز" }, image: P.spaghetti },
-      ]},
-      { id: "SIDE1", label: { en: "Side Dish", ar: "الطبق الجانبي" }, mode: "choose-2", items: [
-        { id: "k-d-d1", name: { en: "French Fries", ar: "بطاطس مقلية" }, image: P.fries },
-        { id: "k-d-d2", name: { en: "Baked Beans", ar: "فاصوليا مطبوخة" }, image: P.bakedBeans },
-        { id: "k-d-d3", name: { en: "Mashed Potatoes", ar: "بطاطس مهروسة" }, image: P.mashedPotato },
-        { id: "k-d-d4", name: { en: "Steamed Rice", ar: "أرز مطبوخ بالبخار" }, image: P.rice },
-      ]},
-      { id: "DES", label: { en: "Dessert", ar: "الحلوى" }, mode: "choose-2", items: [
-        { id: "k-d-sw1", name: { en: "Ice Cream", ar: "آيس كريم" }, image: P.iceCream },
-        { id: "k-d-sw2", name: { en: "Fruit Salad", ar: "سلطة فواكه" }, image: P.fruitSalad },
-        { id: "k-d-sw3", name: { en: "Chocolate Brownie", ar: "براوني شوكولاتة" }, image: P.brownies },
-      ]},
-      { id: "DRINK", label: { en: "Drink", ar: "المشروب" }, mode: "choose-2", items: [
-        { id: "k-d-dr1", name: { en: "Orange Juice", ar: "عصير برتقال" }, image: P.juice },
-        { id: "k-d-dr2", name: { en: "Strawberry Milk", ar: "حليب فراولة" }, image: P.milk },
-        { id: "k-d-dr3", name: { en: "Chocolate Milk", ar: "حليب شوكولاتة" }, image: P.milk },
-        { id: "k-d-dr4", name: { en: "Vanilla Milk", ar: "حليب فانيليا" }, image: P.milk },
-      ]},
-    ],
-  },
-];
-
-const DIET_MEALS: Record<DietType, MealPeriod[]> = {
-  "low-sodium":    LOW_SODIUM_MEALS,
-  "low-potassium": LOW_POTASSIUM_MEALS,
-  "chemo":         CHEMO_MEALS,
-  "kids":          KIDS_MEALS,
-};
+function buildMeals(diet: DietType, dayOfWeek: number, kidsBreakfastType?: KidsBreakfastType): MealPeriod[] {
+  const mealIds: MealId[] = ["breakfast", "lunch", "dinner"];
+  return mealIds.map((mealId) => {
+    const w = MEAL_WINDOWS[mealId];
+    let groups: MenuGroup[];
+    if (diet === "kids" && mealId === "breakfast" && kidsBreakfastType) {
+      groups = getKidsBreakfastGroups(kidsBreakfastType);
+    } else {
+      groups = getMenuGroups(diet, mealId, dayOfWeek);
+    }
+    return {
+      id: mealId,
+      label: w.label,
+      icon: MEAL_ICONS[mealId],
+      timeRange: w.timeRange,
+      hours: w.hours,
+      orderCutoff: w.orderCutoff,
+      bgImage: MEAL_BG_IMAGES[mealId],
+      color: w.color,
+      groups,
+    };
+  });
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * HELPERS
@@ -656,8 +100,14 @@ function isMealActive(hours: [number, number]): boolean {
   return h >= hours[0] && h < hours[1];
 }
 
+/** Global toggle: when false, all meals are always orderable (testing mode). */
+let _enforceOrderTime = typeof window !== "undefined" ? localStorage.getItem("fo_enforceTime") !== "false" : true;
+function setEnforceOrderTime(v: boolean) { _enforceOrderTime = v; if (typeof window !== "undefined") localStorage.setItem("fo_enforceTime", String(v)); }
+function getEnforceOrderTime() { return _enforceOrderTime; }
+
 /** Best-practice ordering rule: orders accepted up until `orderCutoff` (today). */
 function isMealOrderable(meal: MealPeriod): boolean {
+  if (!_enforceOrderTime) return true;
   const now = new Date();
   const nowHours = now.getHours() + now.getMinutes() / 60;
   return nowHours < meal.orderCutoff;
@@ -707,7 +157,7 @@ function countCompleted(meal: MealPeriod, selections: Selections): number {
  * DEMO DIET TYPES (cycle list for the demo switcher)
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-const DEMO_DIETS: DietType[] = ["low-sodium", "low-potassium", "chemo", "kids"];
+const DEMO_PATIENT = { name: { en: "Sara Saleh", ar: "سارة صالح" }, room: "Room 412" };
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * MAIN COMPONENT
@@ -720,6 +170,7 @@ const TEAL_25 = "rgba(var(--fo-primary-rgb), 0.15)";
 const TEAL_20 = "rgba(var(--fo-primary-rgb), 0.12)";
 const TEAL_15 = "rgba(var(--fo-primary-rgb), 0.09)";
 const TEAL_DARK = "var(--fo-primary-dark)";
+const SECONDARY = "var(--fo-secondary)";
 const GREEN = "#3FC168";
 const TEAL_BG_TINT = "var(--fo-bg-tint)";
 
@@ -740,55 +191,56 @@ function tintHex(hex: string, amount = 0.92): string {
 
 export function FoodOrdering({ onClose }: { onClose: () => void }) {
   const { theme } = useTheme();
-  const nurse = useNurseStore();
 
   const { isRTL, fontFamily } = useLocale();
-  const { placeOrder, activeOrders, pastOrders, orders, clearAllOrders } = useOrders();
+  const { placeOrder, updateOrder, activeOrders, pastOrders, orders, clearOpenOrders } = useOrders();
 
-  const [dietType, setDietType] = useState<DietType>("low-sodium");
+  const nurseStore = useNurseStore();
+
   const [step, setStep] = useState<Step>("select-type");
   const [orderFor, setOrderFor] = useState<OrderFor>("patient");
   const [selectedMealId, setSelectedMealId] = useState<MealId | null>(null);
   const [selections, setSelections] = useState<Selections>({});
   const [lastOrderNumber, setLastOrderNumber] = useState("");
+  const [kidsBreakfastType, setKidsBreakfastType] = useState<KidsBreakfastType>(null);
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [wasEditMode, setWasEditMode] = useState(false);
+  const [showHistoryOverlay, setShowHistoryOverlay] = useState(false);
+  const isEditMode = editingOrderId !== null;
 
-  const patientName = isRTL
-    ? (nurse.patient.nameAr || nurse.patient.name || "سارة صالح")
-    : (nurse.patient.name || "Sara Saleh");
-  const roomNumber = nurse.patient.room || "Room 412";
-  const patientAllergiesLabel = nurse.allergies.length > 0
-    ? nurse.allergies.join(isRTL ? "، " : ", ")
-    : (isRTL ? "لا يوجد" : "None");
-
-  // Sync dietType with clinical diet codes once loaded
-  React.useEffect(() => {
-    if (nurse.dietCodes.some(d => d.code === "LS" || d.code === "NAS")) {
-      setDietType("low-sodium");
-    } else if (nurse.dietCodes.some(d => d.code === "RD")) {
-      setDietType("low-potassium");
-    } else if (theme.id === "kids" || theme.name?.toLowerCase().includes("kids")) {
-      setDietType("kids");
-    }
-  }, [nurse.dietCodes, theme.id]);
-
-  const meals = DIET_MEALS[dietType];
-  const isKid = dietType === "kids";
+  // Read diet from Care Teams Settings (NurseDataStore)
+  const patientDiet = nurseStore.patientDiet as DietType | "npo";
+  const isNpo = patientDiet === "npo";
+  // Guest/companion always uses Regular diet menu; NPO patients can't order but guests can
+  const effectiveDiet: DietType = orderFor === "guest" ? "regular" : (isNpo ? "regular" : patientDiet as DietType);
+  // Orders are for TOMORROW's menu
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dayOfWeek = tomorrow.getDay(); // 0=Sun … 6=Sat
+  const meals = useMemo(
+    () => buildMeals(effectiveDiet, dayOfWeek, kidsBreakfastType),
+    [effectiveDiet, dayOfWeek, kidsBreakfastType],
+  );
+  const isKid = (orderFor === "patient" && patientDiet === "kids") || false;
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   const ForwardArrow = isRTL ? ArrowLeft : ArrowRight;
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
 
   const currentMeal = selectedMealId ? meals.find((m) => m.id === selectedMealId) ?? null : null;
-  const dietCfg = DIET_CONFIG[dietType];
+  const dietCfg = DIET_CONFIG[effectiveDiet];
 
-  const cycleDiet = useCallback(() => {
-    setDietType((prev) => {
-      const idx = DEMO_DIETS.indexOf(prev);
-      return DEMO_DIETS[(idx + 1) % DEMO_DIETS.length];
-    });
-    setStep("select-type");
-    setSelectedMealId(null);
-    setSelections({});
-  }, []);
+  // Allergies from Care Teams Settings
+  const patientAllergies = nurseStore.allergies;
+  const allergiesLabel = orderFor === "guest"
+    ? (isRTL ? "لا يوجد" : "None")
+    : patientAllergies.length > 0 ? patientAllergies.join(", ") : (isRTL ? "لا يوجد" : "None");
+
+  // Diet label for display
+  const dietDisplayLabel = orderFor === "guest"
+    ? (isRTL ? "عادي" : "Regular")
+    : isNpo
+      ? (isRTL ? "NPO / صائم" : "NPO / Fasting")
+      : loc(dietCfg.label);
 
   const handleSelectMeal = useCallback((mealId: MealId) => {
     setSelectedMealId(mealId);
@@ -817,7 +269,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
         return { id: it.id, name: it.name, qty: 1, image: it.image || "" };
       });
     });
-    const placed = placeOrder({
+    const orderData = {
       items: selectedItems.map((it) => ({ id: it.id, name: it.name, quantity: it.qty, calories: 0, image: it.image })),
       totalCalories: 0,
       estimatedDelivery: isMealActive(currentMeal.hours) ? "25–35 min" : loc(currentMeal.label) + " delivery",
@@ -825,53 +277,109 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
       mealWindow: currentMeal.timeRange,
       comesWith: currentMeal.groups.filter((g) => g.mode === "included").flatMap((g) => g.items.map((it) => it.name)),
       orderFor,
-    });
-    setLastOrderNumber(placed.orderNumber);
+      mealId: currentMeal.id,
+      selections: { ...selections },
+    };
+    if (editingOrderId) {
+      // Edit mode: update existing order in place
+      updateOrder(editingOrderId, orderData);
+      const existing = orders.find((o) => o.id === editingOrderId);
+      setLastOrderNumber(existing?.orderNumber || "");
+      setWasEditMode(true);
+      setEditingOrderId(null);
+    } else {
+      setWasEditMode(false);
+      // New order
+      const placed = placeOrder(orderData);
+      setLastOrderNumber(placed.orderNumber);
+    }
     setStep("confirmed");
-  }, [currentMeal, selections, isRTL, placeOrder]);
+  }, [currentMeal, selections, isRTL, placeOrder, updateOrder, editingOrderId, orders, orderFor]);
 
   const stepIndex: 1 | 2 | 3 | 4 =
     step === "select-type" ? 1 :
     step === "select-meal" ? 2 :
+    step === "kids-breakfast-type" ? 2 :
     step === "build-meal"  ? 3 :
     step === "confirmed"   ? 4 : 1;
 
   const canContinue =
-    step === "select-type" ? true :
+    step === "select-type" ? (isNpo && orderFor === "patient" ? false : true) :
     step === "select-meal" ? selectedMealId !== null :
+    step === "kids-breakfast-type" ? kidsBreakfastType !== null :
     step === "build-meal"  ? (currentMeal ? isOrderComplete(currentMeal, selections) : false) :
     false;
 
   const handleContinue = useCallback(() => {
     if (step === "select-type") {
+      // NPO blocking: if patient is NPO and ordering for patient, don't proceed
+      if (isNpo && orderFor === "patient") return;
       setStep("select-meal");
     } else if (step === "select-meal" && selectedMealId) {
-      const m = DIET_MEALS[dietType].find((x) => x.id === selectedMealId)!;
+      // Kids breakfast needs type selection first
+      if (effectiveDiet === "kids" && selectedMealId === "breakfast") {
+        setKidsBreakfastType(null);
+        setStep("kids-breakfast-type");
+      } else {
+        const m = meals.find((x) => x.id === selectedMealId)!;
+        setSelections(getInitialSelections(m));
+        setStep("build-meal");
+      }
+    } else if (step === "kids-breakfast-type" && kidsBreakfastType) {
+      // After selecting hot/cold, build meals with the selected type
+      const updatedMeals = buildMeals(effectiveDiet, dayOfWeek, kidsBreakfastType);
+      const m = updatedMeals.find((x) => x.id === "breakfast")!;
       setSelections(getInitialSelections(m));
       setStep("build-meal");
     } else if (step === "build-meal") {
       handlePlaceOrder();
     }
-  }, [step, selectedMealId, dietType, handlePlaceOrder]);
+  }, [step, selectedMealId, effectiveDiet, dayOfWeek, kidsBreakfastType, meals, handlePlaceOrder, isNpo, orderFor]);
+
+  /** Enter edit mode: pre-fill the user's previous selections and jump to build-meal */
+  const startEditOrder = useCallback((orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return;
+    const mealId = (order.mealId || order.mealType?.toLowerCase()) as MealId;
+    setEditingOrderId(orderId);
+    setOrderFor(order.orderFor || "patient");
+    setSelectedMealId(mealId);
+    setSelections(order.selections || {});
+    setStep("build-meal");
+  }, [orders]);
 
   const handleBack = useCallback(() => {
     if (step === "select-type") onClose();
     else if (step === "select-meal") setStep("select-type");
-    else if (step === "build-meal") setStep("select-meal");
-    else if (step === "confirmed") onClose(); // exit straight to home
-    else if (step === "history") onClose();   // top-bar back from history exits to home
-  }, [step, onClose]);
+    else if (step === "kids-breakfast-type") setStep("select-meal");
+    else if (step === "build-meal") {
+      if (isEditMode) {
+        // Cancel edit — go back to history
+        setEditingOrderId(null);
+        setSelections({});
+        setStep("history");
+      } else if (effectiveDiet === "kids" && selectedMealId === "breakfast") {
+        setStep("kids-breakfast-type");
+      } else {
+        setStep("select-meal");
+      }
+    }
+    else if (step === "confirmed") onClose();
+    else if (step === "history") setStep("select-type");
+  }, [step, onClose, effectiveDiet, selectedMealId, isEditMode]);
 
-  const showPatientBar = step !== "history" && step !== "select-type" && step !== "confirmed";
-  const showBottomBar = step !== "history";
+  const showPatientBar = step !== "history" && step !== "confirmed";
+  const showBottomBar = true;
   const showBackButton = true;
-  const isFlow = step === "select-type" || step === "select-meal" || step === "build-meal" || step === "confirmed";
+  const isFlow = step === "select-type" || step === "select-meal" || step === "kids-breakfast-type" || step === "build-meal" || step === "confirmed";
 
   /* ── Derive CSS custom property values from current theme ── */
   const foVars = {
     "--fo-primary": theme.primary,
     "--fo-primary-rgb": hexToRgb(theme.primary),
     "--fo-primary-dark": theme.primaryDark,
+    "--fo-secondary": theme.accent,
+    "--fo-secondary-rgb": hexToRgb(theme.accent),
     "--fo-bg-tint": tintHex(theme.primary, 0.92),
   } as React.CSSProperties;
 
@@ -914,31 +422,32 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
 
       {/* ─── TOP BAR (translucent white strip) ─── */}
       <TopBar
-        onBack={handleBack}
-        onMyOrders={() => setStep("history")}
-        onDemoClear={clearAllOrders}
+        onBack={onClose}
+        onMyOrders={() => setShowHistoryOverlay(true)}
+        showMyOrders={isFlow && step !== "confirmed"}
+        onDemoClear={clearOpenOrders}
         title={step === "history" ? (isRTL ? "طلباتي" : "My Orders") : (isRTL ? "طلب الوجبات" : "Meal Ordering")}
-        subtitle={step === "history" ? (isRTL ? "سجل طلباتك" : "Your order history") : (isRTL ? "اختر وجبتك" : "Select your meal")}
         fontFamily={fontFamily}
         isRTL={isRTL}
         BackArrow={BackArrow}
       />
 
       {/* ─── PATIENT BAR (white, fixed) ─── */}
-      {showPatientBar && (
+      {showPatientBar ? (
         <PatientBar
           isKid={isKid}
           orderFor={orderFor}
-          dietLabel={orderFor === "guest" ? (isRTL ? "عادي" : "Regular") : loc(dietCfg.label)}
-          allergiesLabel={orderFor === "guest" ? (isRTL ? "لا يوجد" : "None") : patientAllergiesLabel}
-          name={orderFor === "guest" ? (isRTL ? "مرافق" : "Companion") : patientName}
-          room={roomNumber}
+          dietLabel={dietDisplayLabel}
+          allergiesLabel={allergiesLabel}
+          name={orderFor === "guest" ? (isRTL ? "مرافق" : "Companion") : (isRTL ? DEMO_PATIENT.name.ar : DEMO_PATIENT.name.en)}
           mealName={currentMeal ? loc(currentMeal.label) : null}
           fontFamily={fontFamily}
           isRTL={isRTL}
-          onDietClick={cycleDiet}
         />
-      )}
+      ) : isFlow ? (
+        /* Spacer matching patient bar height so content card aligns consistently */
+        <div className="shrink-0" style={{ height: "96px" }} />
+      ) : null}
 
       {/* ─── MAIN CONTENT (white rounded card containing stepper + body) ─── */}
       <div className="flex-1 min-h-0 px-12 pt-5 pb-3 relative flex flex-col">
@@ -948,34 +457,71 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
             <div className="flex-1 min-h-0 overflow-hidden">
               <AnimatePresence mode="wait">
                 {step === "select-type" && (
-                  <OrderTypeStep key="t" orderFor={orderFor} onSelect={setOrderFor} fontFamily={fontFamily} isRTL={isRTL} />
+                  <OrderTypeStep key="t" orderFor={orderFor} onSelect={setOrderFor} fontFamily={fontFamily} isRTL={isRTL} isNpo={isNpo} />
                 )}
                 {step === "select-meal" && (
-                  <ChooseMealStep key="m" meals={meals} selectedMealId={selectedMealId} onSelect={handleSelectMeal} fontFamily={fontFamily} isRTL={isRTL}
+                  <ChooseMealStep key="m" meals={meals} selectedMealId={selectedMealId} onSelect={handleSelectMeal} onDeselect={() => setSelectedMealId(null)} fontFamily={fontFamily} isRTL={isRTL}
                     submittedMealIds={(() => {
                       const todayStr = new Date().toDateString();
                       const set = new Set<MealId>();
                       orders.forEach((o) => {
-                        if (o.placedAt instanceof Date && o.placedAt.toDateString() === todayStr && o.status !== "delivered") {
-                          const m = meals.find((mm) => loc(mm.label) === o.mealType);
-                          if (m) set.add(m.id);
+                        const d = o.placedAt instanceof Date ? o.placedAt : new Date(o.placedAt);
+                        if (d.toDateString() === todayStr && o.orderFor === orderFor) {
+                          // Prefer mealId match, fall back to label match
+                          if (o.mealId && meals.some((mm) => mm.id === o.mealId)) {
+                            set.add(o.mealId as MealId);
+                          } else {
+                            const m = meals.find((mm) => loc(mm.label) === o.mealType);
+                            if (m) set.add(m.id);
+                          }
                         }
                       });
                       return set;
                     })()}
+                    orders={orders}
+                    onEditOrder={(mealId: MealId) => {
+                      const todayStr = new Date().toDateString();
+                      const order = orders.find((o) => {
+                        const d = o.placedAt instanceof Date ? o.placedAt : new Date(o.placedAt);
+                        return d.toDateString() === todayStr &&
+                          (o.mealId === mealId || loc(meals.find(m => m.id === mealId)?.label || { en: '', ar: '' }) === o.mealType);
+                      });
+                      if (order) startEditOrder(order.id);
+                    }}
                   />
                 )}
+                {step === "kids-breakfast-type" && (
+                  <KidsBreakfastTypeStep key="kbt" selected={kidsBreakfastType} onSelect={setKidsBreakfastType} fontFamily={fontFamily} isRTL={isRTL} />
+                )}
                 {step === "build-meal" && currentMeal && (
-                  <BuildMealStep key="b" meal={currentMeal} selections={selections} onToggle={handleToggleItem} fontFamily={fontFamily} isRTL={isRTL} />
+                  <BuildMealStep key="b" meal={currentMeal} selections={selections} onToggle={handleToggleItem} fontFamily={fontFamily} isRTL={isRTL} isEditMode={isEditMode} />
                 )}
                 {step === "confirmed" && currentMeal && (
                   <ConfirmStep key="c"
                     orderNumber={lastOrderNumber} meal={currentMeal} selections={selections}
                     orderFor={orderFor}
-                    patientName={orderFor === "guest" ? (isRTL ? "مرافق" : "Companion") : patientName}
-                    room={orderFor === "guest" ? null : roomNumber.replace("Room ", "")}
-                    dietLabel={orderFor === "guest" ? (isRTL ? "عادي" : "Regular") : loc(dietCfg.label)}
-                    allergiesLabel={orderFor === "guest" ? (isRTL ? "لا يوجد" : "None") : patientAllergiesLabel}
+                    patientName={orderFor === "guest" ? (isRTL ? "مرافق" : "Companion") : (isRTL ? DEMO_PATIENT.name.ar : DEMO_PATIENT.name.en)}
+                    room={DEMO_PATIENT.room.replace("Room ", "")}
+                    dietLabel={dietDisplayLabel}
+                    allergiesLabel={allergiesLabel}
+                    isEditMode={wasEditMode}
+                    onEdit={() => {
+                      const todayStr = new Date().toDateString();
+                      const thisOrder = orders.find((o) => {
+                        const d = o.placedAt instanceof Date ? o.placedAt : new Date(o.placedAt);
+                        return d.toDateString() === todayStr &&
+                          o.mealId === currentMeal.id && o.orderFor === orderFor;
+                      });
+                      if (thisOrder) startEditOrder(thisOrder.id);
+                    }}
+                    meals={meals}
+                    orders={orders}
+                    onOrderMeal={(mealId) => {
+                      setSelectedMealId(mealId);
+                      setSelections(getInitialSelections(meals.find((m) => m.id === mealId)!));
+                      setEditingOrderId(null);
+                      setStep("build-meal");
+                    }}
                     fontFamily={fontFamily} isRTL={isRTL} />
                 )}
               </AnimatePresence>
@@ -989,7 +535,77 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
             pastOrders={pastOrders}
             fontFamily={fontFamily}
             isRTL={isRTL}
+            meals={meals}
+            onEdit={startEditOrder}
           />
+        )}
+
+        {/* ─── LANDING PAGE ─── */}
+        {step === "landing" && (
+          <motion.div
+            key="landing"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="flex-1 min-h-0 flex items-center justify-center gap-10 px-8"
+          >
+            {/* Make a New Order */}
+            <button
+              onClick={() => { setStep("select-type"); setSelectedMealId(null); setOrderFor("patient"); }}
+              className="flex flex-col items-center justify-center gap-8 cursor-pointer transition-transform active:scale-[0.97] hover:scale-[1.02]"
+              style={{
+                width: "420px", height: "380px",
+                backgroundColor: "#fff", borderRadius: "30px",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                border: "1px solid rgba(0,0,0,0.06)",
+                outline: "none",
+              }}
+            >
+              <div style={{
+                width: 110, height: 110, borderRadius: "50%",
+                backgroundColor: TEAL_15, display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Utensils size={48} style={{ color: TEAL }} />
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontFamily, fontSize: "26px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>
+                  {isRTL ? "طلب جديد" : "Make a New Order"}
+                </p>
+                <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: theme.textMuted, marginTop: 8 }}>
+                  {isRTL ? "اطلب وجبتك الآن" : "Order your meal now"}
+                </p>
+              </div>
+            </button>
+
+            {/* View My Orders */}
+            <button
+              onClick={() => setStep("history")}
+              className="flex flex-col items-center justify-center gap-8 cursor-pointer transition-transform active:scale-[0.97] hover:scale-[1.02]"
+              style={{
+                width: "420px", height: "380px",
+                backgroundColor: "#fff", borderRadius: "30px",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                border: "1px solid rgba(0,0,0,0.06)",
+                outline: "none",
+              }}
+            >
+              <div style={{
+                width: 110, height: 110, borderRadius: "50%",
+                backgroundColor: `rgba(var(--fo-secondary-rgb), 0.12)`, display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <ClipboardList size={48} style={{ color: SECONDARY }} />
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontFamily, fontSize: "26px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>
+                  {isRTL ? "طلباتي" : "View My Orders"}
+                </p>
+                <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: theme.textMuted, marginTop: 8 }}>
+                  {isRTL ? "عرض وتعديل طلباتك" : "View and edit your orders"}
+                </p>
+              </div>
+            </button>
+          </motion.div>
         )}
       </div>
 
@@ -1000,16 +616,26 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
           canContinue={canContinue}
           onBack={handleBack}
           showBack={step !== "confirmed"}
-          onContinue={step === "confirmed" ? onClose : handleContinue}
-          secondaryAction={
+          onContinue={
+            step === "confirmed" ? onClose :
+            step === "history" ? () => { setStep("select-type"); setSelectedMealId(null); setOrderFor("patient"); } :
+            handleContinue
+          }
+          leftAction={
             step === "confirmed"
-              ? { label: isRTL ? "طلب جديد" : "Make a New Order", onClick: () => setStep("select-type") }
+              ? { label: isRTL ? "طلباتي" : "View My Orders", onClick: () => setStep("history") }
               : undefined
           }
-          backLabel={isRTL ? "رجوع" : "Back"}
+          secondaryAction={undefined}
+          backLabel={
+            step === "build-meal" && isEditMode ? (isRTL ? "إلغاء التعديل" : "Cancel Edit") :
+            (isRTL ? "رجوع" : "Back")
+          }
           continueLabel={
+            step === "build-meal" && isEditMode ? (isRTL ? "تحديث الطلب" : "Update Order") :
             step === "build-meal" ? (isRTL ? "تأكيد الطلب" : "Place your order") :
-            step === "confirmed"  ? (isRTL ? "تم" : "Done") :
+            step === "confirmed"  ? (isRTL ? "خروج" : "Exit") :
+            step === "history" ? (isRTL ? "طلب جديد" : "New Order") :
                                     (isRTL ? "متابعة" : "Continue")
           }
           fontFamily={fontFamily}
@@ -1018,6 +644,64 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
           ForwardArrow={ForwardArrow}
         />
       )}
+
+      {/* ─── HISTORY OVERLAY ─── */}
+      <AnimatePresence>
+        {showHistoryOverlay && (
+          <motion.div
+            key="history-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 z-50 flex flex-col"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+          >
+            <div
+              className="flex-1 flex flex-col m-8 mt-4 rounded-[28px] overflow-hidden"
+              style={{ backgroundColor: "#fff", boxShadow: "0 12px 48px rgba(0,0,0,0.25)" }}
+            >
+              {/* Overlay header */}
+              <div className="shrink-0 flex items-center justify-between px-8 py-5" style={{ borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
+                <div className="flex items-center gap-3">
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    backgroundColor: TEAL_15,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <ClipboardList size={20} style={{ color: TEAL }} />
+                  </div>
+                  <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>
+                    {isRTL ? "طلباتي" : "My Orders"}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowHistoryOverlay(false)}
+                  className="flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+                  style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    backgroundColor: "rgba(0,0,0,0.05)", border: "none", outline: "none",
+                    color: theme.textMuted, fontSize: "20px",
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+              {/* Overlay content */}
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <HistoryView
+                  activeOrders={activeOrders}
+                  pastOrders={pastOrders}
+                  fontFamily={fontFamily}
+                  isRTL={isRTL}
+                  meals={meals}
+                  onEdit={(orderId) => { setShowHistoryOverlay(false); startEditOrder(orderId); }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -1026,41 +710,84 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
  * TOP BAR
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function TopBar({ onBack, onMyOrders, onDemoClear, title, subtitle, fontFamily, isRTL, BackArrow }: {
-  onBack: () => void; onMyOrders: () => void; onDemoClear: () => void;
-  title: string; subtitle: string; fontFamily: string; isRTL: boolean; BackArrow: any;
+function TopBar({ onBack, onMyOrders, showMyOrders, onDemoClear, title, fontFamily, isRTL, BackArrow }: {
+  onBack: () => void; onMyOrders: () => void; showMyOrders?: boolean; onDemoClear: () => void;
+  title: string; fontFamily: string; isRTL: boolean; BackArrow: any;
 }) {
+  const { locale, setLocale } = useTheme();
+  const [enforceTime, setEnforceTimeLocal] = React.useState(() => getEnforceOrderTime());
+
+  const iconBtnStyle: React.CSSProperties = {
+    display: "flex", alignItems: "center", justifyContent: "center",
+    width: "42px", height: "42px",
+    backgroundColor: "rgba(255,255,255,0.15)", borderRadius: "10px",
+    color: "#fff", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer",
+  };
+
   return (
     <InternalPageHeader 
       title={title}
-      subtitle={subtitle}
       icon={<Utensils size={24} />}
       onClose={onBack}
       rightAction={
-        <button onClick={onMyOrders} style={{ 
-          display: "flex", alignItems: "center", gap: "8px", 
-          backgroundColor: "rgba(255,255,255,0.15)", borderRadius: "12px", padding: "10px 16px",
-          color: "#fff", fontFamily, fontWeight: 600, border: "none", cursor: "pointer"
-        }}>
-          <ClipboardList size={20} />
-          {isRTL ? "طلباتي" : "My Orders"}
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {/* My Orders (leftmost) */}
+          {showMyOrders && (
+            <button onClick={onMyOrders} style={{ 
+              display: "flex", alignItems: "center", gap: "8px", 
+              backgroundColor: "rgba(255,255,255,0.15)", borderRadius: "12px", padding: "10px 16px",
+              color: "#fff", fontFamily, fontWeight: 600, border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer"
+            }}>
+              <ClipboardList size={20} />
+              {isRTL ? "طلباتي" : "My Orders"}
+            </button>
+          )}
+          {/* Language switcher — Globe icon */}
+          <button
+            onClick={() => setLocale(locale === "ar" ? "en" : "ar")}
+            title={locale === "ar" ? "Switch to English" : "التبديل للعربية"}
+            style={iconBtnStyle}
+          >
+            <Globe size={20} />
+          </button>
+          {/* Time restriction toggle */}
+          <button
+            onClick={() => {
+              const next = !enforceTime;
+              setEnforceOrderTime(next);
+              setEnforceTimeLocal(next);
+            }}
+            title={enforceTime ? (isRTL ? "تقييد الوقت مُفعّل" : "Time restriction ON") : (isRTL ? "تقييد الوقت مُعطّل" : "Time restriction OFF")}
+            style={{
+              ...iconBtnStyle,
+              backgroundColor: enforceTime ? "rgba(255,255,255,0.15)" : "rgba(255,200,50,0.35)",
+            }}
+          >
+            <Clock size={20} />
+          </button>
+          {/* Demo reset button (rightmost) */}
+          <button onClick={onDemoClear} title={isRTL ? "إعادة تعيين الطلبات" : "Reset Orders (Demo)"}
+            style={iconBtnStyle}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="1 4 1 10 7 10"/>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+          </button>
+        </div>
       }
     />
   );
 }
 
-function PatientBar({ isKid, orderFor, name, room, dietLabel, allergiesLabel, mealName, fontFamily, isRTL, onDietClick }: {
+function PatientBar({ isKid, orderFor, name, dietLabel, allergiesLabel, mealName, fontFamily, isRTL }: {
   isKid: boolean;
   orderFor: OrderFor;
   name: string;
-  room: string;
   dietLabel: string;
   allergiesLabel: string;
   mealName: string | null;
   fontFamily: string;
   isRTL: boolean;
-  onDietClick: () => void;
 }) {
   const isGuest = orderFor === "guest";
   return (
@@ -1072,7 +799,7 @@ function PatientBar({ isKid, orderFor, name, room, dietLabel, allergiesLabel, me
       style={{ backgroundColor: "#fff", borderRadius: "24px", padding: "18px 22px", border: "1px solid rgba(0,0,0,0.1)" }}
     >
       {/* Avatar */}
-      <div className="shrink-0" style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="shrink-0" style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: isGuest ? SECONDARY : TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
         {isGuest ? (
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -1090,10 +817,8 @@ function PatientBar({ isKid, orderFor, name, room, dietLabel, allergiesLabel, me
         </span>
         <div className="flex items-center gap-[14px]">
           {mealName && <Pill icon={<MealSvg />} label={isRTL ? "الوجبة:" : "Meal:"} value={mealName} fontFamily={fontFamily} />}
-          <Pill icon={<RoomSvg />} label={isRTL ? "الغرفة:" : "Room:"} value={room.replace("Room ", "")} fontFamily={fontFamily} />
-          <button onClick={isGuest ? undefined : onDietClick} className={isGuest ? "" : "active:scale-95 transition-transform cursor-pointer"} style={{ outline: "none", border: "none", background: "transparent", padding: 0, cursor: isGuest ? "default" : "pointer" }}>
-            <Pill icon={<DietSvg />} label={isRTL ? "الحمية:" : "Diet:"} value={dietLabel} fontFamily={fontFamily} />
-          </button>
+          <Pill icon={<RoomSvg />} label={isRTL ? "الغرفة:" : "Room:"} value={DEMO_PATIENT.room.replace("Room ", "")} fontFamily={fontFamily} />
+          <Pill icon={<DietSvg />} label={isRTL ? "الحمية:" : "Diet:"} value={dietLabel} fontFamily={fontFamily} />
           <Pill icon={<AlertSvg />} label={isRTL ? "الحساسية:" : "Allergies:"} value={allergiesLabel} fontFamily={fontFamily} />
         </div>
       </div>
@@ -1195,12 +920,13 @@ function Stepper({ current, fontFamily, isRTL }: { current: 1 | 2 | 3 | 4; fontF
  * STEP 1: ORDER FOR
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL }: {
-  orderFor: OrderFor; onSelect: (v: OrderFor) => void; fontFamily: string; isRTL: boolean;
+function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
+  orderFor: OrderFor; onSelect: (v: OrderFor) => void; fontFamily: string; isRTL: boolean; isNpo?: boolean;
 }) {
+  const showNpoBlock = isNpo && orderFor === "patient";
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
-      className="h-full flex flex-col px-[40px] pt-[48px] pb-[20px] gap-[20px]">
+      className="h-full flex flex-col px-[40px] pt-[32px] pb-[16px] gap-[16px]">
       {/* Centered heading — matches Choose Meal placement */}
       <div className="shrink-0 text-center">
         <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
@@ -1211,53 +937,78 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL }: {
         </p>
       </div>
 
-      <div className="flex-1 min-h-0 flex items-center justify-center gap-[30px]">
-        {(["patient", "guest"] as OrderFor[]).map((type) => {
-          const selected = orderFor === type;
-          return (
-            <motion.button key={type} onClick={() => onSelect(type)} whileTap={{ scale: 0.97 }}
-              style={{
-                width: "600px", height: "480px", borderRadius: "26px",
-                backgroundColor: selected ? TEAL : "#fff",
-                border: selected ? "none" : "1.6px solid rgba(0,0,0,0.1)",
-                position: "relative", cursor: "pointer", outline: "none",
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "36px",
-                transition: "all 0.22s ease",
-              }}>
-              {/* Checkmark badge */}
-              <div className="absolute" style={{ top: "32px", right: "32px",
-                width: "68px", height: "68px", borderRadius: "50%",
-                backgroundColor: selected ? "#2DCC06" : "#fff",
-                border: selected ? "none" : "2px solid #DADADA",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: selected ? "0 4px 6.5px rgba(0,138,171,0.38)" : "none",
-              }}>
-                {selected && <Check size={32} color="#fff" strokeWidth={2.5} />}
-              </div>
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-[20px]">
+        <div className="flex items-center justify-center gap-[30px]">
+          {(["patient", "guest"] as OrderFor[]).map((type) => {
+            const selected = orderFor === type;
+            return (
+              <motion.button key={type} onClick={() => onSelect(type)} whileTap={{ scale: 0.97 }}
+                style={{
+                  width: "560px", height: "400px", borderRadius: "26px",
+                  backgroundColor: selected ? (type === "patient" ? TEAL : SECONDARY) : "#fff",
+                  border: selected ? "none" : "1.6px solid rgba(0,0,0,0.1)",
+                  position: "relative", cursor: "pointer", outline: "none",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "36px",
+                  transition: "all 0.22s ease",
+                }}>
+                {/* Checkmark badge */}
+                <div className="absolute" style={{ top: "32px", right: "32px",
+                  width: "68px", height: "68px", borderRadius: "50%",
+                  backgroundColor: selected ? "#2DCC06" : "#fff",
+                  border: selected ? "none" : "2px solid #DADADA",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: selected ? "0 4px 6.5px rgba(0,138,171,0.38)" : "none",
+                }}>
+                  {selected && <Check size={32} color="#fff" strokeWidth={2.5} />}
+                </div>
 
-              {/* Icon circle */}
-              <div style={{
-                width: "120px", height: "120px", borderRadius: "60px",
-                backgroundColor: selected ? "#fff" : "#F4F4F4",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                {type === "patient"
-                  ? <User size={60} color={selected ? TEAL : "#605D5D"} strokeWidth={1.8} />
-                  : <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke={selected ? TEAL : "#605D5D"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                      <circle cx="9" cy="7" r="4"/>
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                    </svg>}
-              </div>
+                {/* Icon circle */}
+                <div style={{
+                  width: "120px", height: "120px", borderRadius: "60px",
+                  backgroundColor: selected ? "#fff" : "#F4F4F4",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  {type === "patient"
+                    ? <User size={60} color={selected ? TEAL : TEAL} strokeWidth={1.8} />
+                    : <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke={SECONDARY} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                      </svg>}
+                </div>
 
-              {/* Label */}
-              <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: selected ? "#fff" : "#171717" }}>
-                {type === "patient" ? (isRTL ? "المريض" : "Patient") : (isRTL ? "المرافق" : "Companion")}
-              </span>
-            </motion.button>
-          );
-        })}
+                {/* Label */}
+                <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: selected ? "#fff" : "#171717" }}>
+                  {type === "patient" ? (isRTL ? "المريض" : "Patient") : (isRTL ? "المرافق" : "Companion")}
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
+
+        {/* NPO / Fasting blocking message */}
+        {showNpoBlock && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center gap-4 px-8 py-5 rounded-2xl"
+            style={{ backgroundColor: "#FEF2F2", border: "1.5px solid #FECACA", maxWidth: "700px" }}
+          >
+            <div className="shrink-0 w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: "#FEE2E2" }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+              </svg>
+            </div>
+            <p style={{ fontFamily, fontSize: "17px", fontWeight: 600, color: "#991B1B", lineHeight: 1.5 }}>
+              {isRTL
+                ? "طلب الوجبات للمريض غير متاح حالياً لأنك صائم حسب تعليمات فريق الرعاية الخاص بك."
+                : "Patient meal ordering is currently unavailable because you are fasting as instructed by your care team."}
+            </p>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );
@@ -1267,33 +1018,46 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL }: {
  * STEP 2: CHOOSE MEAL
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, submittedMealIds }: {
-  meals: MealPeriod[]; selectedMealId: MealId | null; onSelect: (id: MealId) => void; fontFamily: string; isRTL: boolean;
+function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamily, isRTL, submittedMealIds, orders, onEditOrder }: {
+  meals: MealPeriod[]; selectedMealId: MealId | null; onSelect: (id: MealId) => void; onDeselect?: () => void; fontFamily: string; isRTL: boolean;
   submittedMealIds: Set<MealId>;
+  orders?: any[];
+  onEditOrder?: (mealId: MealId) => void;
 }) {
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
-  const today = new Date().toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  // Tomorrow's date for display
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   const [blockedMeal, setBlockedMeal] = React.useState<MealPeriod | null>(null);
   const [submittedMeal, setSubmittedMeal] = React.useState<MealPeriod | null>(null);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
-      className="h-full flex flex-col px-[40px] pt-[48px] pb-[20px] gap-[20px]">
+      className="h-full flex flex-col px-[40px] pt-[32px] pb-[20px] gap-[16px]">
       {/* Centered heading */}
-      <div className="shrink-0 text-center">
+      <div className="shrink-0 text-center flex flex-col items-center gap-[10px]">
         <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
-          {isRTL ? "اختر وجبتك" : "Choose a Meal"}
+          {isRTL ? "اختر وجبة الغد" : "Choose Tomorrow's Meal"}
         </h2>
-        <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#565656", marginTop: "6px" }}>
-          {isRTL ? "اختر وجبة واحدة" : "Please select one meal option"}
-        </p>
+        {/* Date badge */}
+        <div className="inline-flex items-center gap-2" style={{
+          padding: "8px 18px", borderRadius: "100px",
+          backgroundColor: TEAL_15, border: `1px solid ${TEAL_20}`,
+        }}>
+          <Calendar size={16} color={TEAL} />
+          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+            {tomorrowStr}
+          </span>
+        </div>
       </div>
 
       {/* Cards row — narrower, centered with whitespace, icon-led */}
       <div className="flex-1 min-h-0 flex items-center justify-center gap-[28px]" dir={isRTL ? "rtl" : "ltr"}>
         {meals.map((meal) => {
           const submitted = submittedMealIds.has(meal.id);
-          const orderable = !submitted && isMealOrderable(meal);
+          const timeOpen = isMealOrderable(meal);
+          const orderable = !submitted && timeOpen;
           const selected = selectedMealId === meal.id;
           const cutoffStr = formatHour(meal.orderCutoff, isRTL);
 
@@ -1308,7 +1072,7 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, su
           const statusText = submitted
             ? (isRTL ? "تم الطلب" : "Already ordered")
             : orderable
-              ? (isRTL ? "متاح الآن" : "Available now")
+              ? (isRTL ? "متاح للطلب" : "Open for ordering")
               : (isRTL ? "أُغلق الطلب" : "Ordering closed");
 
           const handleClick = () => {
@@ -1333,9 +1097,10 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, su
                 opacity: orderable || submitted ? 1 : 0.9,
                 transition: "border 0.2s, box-shadow 0.2s, transform 0.2s",
                 display: "flex", flexDirection: "column", alignItems: "center",
-                padding: "36px 28px 30px",
+                padding: "40px 28px 28px",
                 gap: "20px",
                 position: "relative",
+                justifyContent: "space-between",
               }}>
               {/* Selected check */}
               {selected && (
@@ -1371,35 +1136,14 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, su
                 </span>
               </div>
 
-              {/* Divider */}
-              <div style={{ width: "100%", height: "1px", backgroundColor: "rgba(0,0,0,0.06)", margin: "4px 0" }} />
-
-              {/* Info rows */}
-              <div className="w-full flex flex-col gap-[12px]">
-                {/* Date */}
-                <div className="flex items-center gap-2 justify-center">
-                  <Calendar size={17} color={TEAL} />
-                  <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#374151" }}>
-                    {today}
-                  </span>
-                </div>
-                {/* Delivery time */}
-                <div className="flex items-center gap-2 justify-center">
-                  <Clock size={17} color="#6B7280" />
-                  <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#6B7280" }}>
-                    {isRTL ? "التوصيل" : "Delivery"} {locTimeRange(meal.timeRange, isRTL)}
-                  </span>
-                </div>
-                {/* Last time to order */}
-                <div className="flex items-center justify-center gap-2" style={{
-                  padding: "10px 14px", borderRadius: "12px",
-                  backgroundColor: orderable ? "#FFFBEB" : "#F3F4F6",
-                  border: `1px solid ${orderable ? "#FDE68A" : "rgba(0,0,0,0.06)"}`,
-                }}>
-                  <Clock size={16} color={orderable ? "#D97706" : "#9CA3AF"} />
-                  <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: orderable ? "#D97706" : "#9CA3AF" }}>
-                    {orderable
-                      ? (isRTL ? `آخر وقت للطلب ${cutoffStr}` : `Order by ${cutoffStr}`)
+              {/* Divider + Submit before deadline */}
+              <div className="w-full flex flex-col items-center" style={{ marginTop: "auto" }}>
+                <div style={{ width: "100%", height: "1px", backgroundColor: "rgba(0,0,0,0.06)", marginBottom: "16px" }} />
+                <div className="flex items-center justify-center gap-2">
+                  <Clock size={16} color={timeOpen ? "#D97706" : "#9CA3AF"} />
+                  <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: timeOpen ? "#D97706" : "#9CA3AF" }}>
+                    {timeOpen
+                      ? (isRTL ? `أرسل قبل ${cutoffStr}` : `Submit before ${cutoffStr}`)
                       : (isRTL ? "انتهى وقت الطلب" : "Ordering window closed")}
                   </span>
                 </div>
@@ -1436,8 +1180,8 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, su
                 </h3>
                 <p style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.5 }}>
                   {isRTL
-                    ? `يجب طلب ${loc(blockedMeal.label)} قبل الساعة ${formatHour(blockedMeal.orderCutoff, isRTL)} ليتم توصيله خلال ${locTimeRange(blockedMeal.timeRange, isRTL)}. يرجى اختيار وجبة متاحة أو الانتظار لوجبة لاحقة.`
-                    : `${loc(blockedMeal.label)} had to be ordered by ${formatHour(blockedMeal.orderCutoff, isRTL)} to be delivered during ${locTimeRange(blockedMeal.timeRange, isRTL)}. Please pick another meal or wait for the next ordering window.`}
+                    ? "انتهى وقت الطلب لهذه الوجبة. سيتم تحضير وجبتك الافتراضية وتوصيلها وفقاً لخطة الحمية المخصصة لك."
+                    : "Ordering for this meal is now closed. Your default meal will still be prepared and delivered according to your assigned diet plan."}
                 </p>
                 <button onClick={() => setBlockedMeal(null)}
                   className="active:scale-95 transition-transform"
@@ -1452,7 +1196,9 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, su
         )}
 
         {/* Already submitted modal */}
-        {submittedMeal && (
+        {submittedMeal && (() => {
+          const canEdit = isMealOrderable(submittedMeal);
+          return (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1477,21 +1223,133 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, su
                 </h3>
                 <p style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.5 }}>
                   {isRTL
-                    ? `لقد قمت بطلب ${loc(submittedMeal.label)} مسبقاً اليوم. يمكنك مراجعة تفاصيل الطلب من "طلباتي".`
-                    : `You've already placed a ${loc(submittedMeal.label).toLowerCase()} order for today. You can find your order details in "My Orders".`}
+                    ? canEdit
+                      ? `لقد قمت بطلب ${loc(submittedMeal.label)} مسبقاً اليوم. يمكنك تعديل طلبك أو مراجعة التفاصيل من "طلباتي".`
+                      : `لقد قمت بطلب ${loc(submittedMeal.label)} مسبقاً اليوم. يمكنك مراجعة تفاصيل الطلب من "طلباتي".`
+                    : canEdit
+                      ? `You've already placed a ${loc(submittedMeal.label).toLowerCase()} order for today. You can edit your order or find details in "My Orders".`
+                      : `You've already placed a ${loc(submittedMeal.label).toLowerCase()} order for today. You can find your order details in "My Orders".`}
                 </p>
-                <button onClick={() => setSubmittedMeal(null)}
-                  className="active:scale-95 transition-transform"
-                  style={{ marginTop: "8px", height: "52px", padding: "0 36px", borderRadius: "100px", backgroundColor: TEAL, border: "none", outline: "none", cursor: "pointer" }}>
-                  <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: "#fff" }}>
-                    {isRTL ? "حسناً" : "Got it"}
-                  </span>
-                </button>
+                <div className="flex items-center gap-3">
+                  {canEdit && onEditOrder && (
+                    <button onClick={() => { setSubmittedMeal(null); onEditOrder(submittedMeal.id); }}
+                      className="active:scale-95 transition-transform"
+                      style={{ marginTop: "8px", height: "52px", padding: "0 36px", borderRadius: "100px", backgroundColor: "#fff", border: `2px solid ${TEAL}`, outline: "none", cursor: "pointer" }}>
+                      <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+                        {isRTL ? "تعديل الطلب" : "Edit Order"}
+                      </span>
+                    </button>
+                  )}
+                  <button onClick={() => setSubmittedMeal(null)}
+                    className="active:scale-95 transition-transform"
+                    style={{ marginTop: "8px", height: "52px", padding: "0 36px", borderRadius: "100px", backgroundColor: TEAL, border: "none", outline: "none", cursor: "pointer" }}>
+                    <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: "#fff" }}>
+                      {isRTL ? "حسناً" : "Got it"}
+                    </span>
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
+    </motion.div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * STEP 2b: KIDS BREAKFAST TYPE (Hot / Cold)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+function KidsBreakfastTypeStep({ selected, onSelect, fontFamily, isRTL }: {
+  selected: KidsBreakfastType;
+  onSelect: (t: KidsBreakfastType) => void;
+  fontFamily: string;
+  isRTL: boolean;
+}) {
+  const options: { id: KidsBreakfastType; icon: React.ReactNode; selectedIcon: React.ReactNode; label: { en: string; ar: string }; desc: { en: string; ar: string }; color: string }[] = [
+    {
+      id: "hot",
+      icon: <Flame size={60} color="#EF4444" strokeWidth={1.8} />,
+      selectedIcon: <Flame size={60} color="#EF4444" strokeWidth={1.8} />,
+      label: { en: "Hot Breakfast", ar: "إفطار ساخن" },
+      desc: { en: "Eggs, bacon, sausage, toast & more", ar: "بيض، بيكون، سجق، توست والمزيد" },
+      color: "#EF4444",
+    },
+    {
+      id: "cold",
+      icon: <Snowflake size={60} color="#3B82F6" strokeWidth={1.8} />,
+      selectedIcon: <Snowflake size={60} color="#3B82F6" strokeWidth={1.8} />,
+      label: { en: "Cold Breakfast", ar: "إفطار بارد" },
+      desc: { en: "Cold meats, dairy, cheese & more", ar: "لحوم باردة، ألبان، جبنة والمزيد" },
+      color: "#3B82F6",
+    },
+  ];
+  const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
+      className="h-full flex flex-col px-[40px] pt-[32px] pb-[16px] gap-[16px]"
+    >
+      {/* Centered heading — same as Step 1 */}
+      <div className="shrink-0 text-center">
+        <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
+          {isRTL ? "نوع الإفطار" : "Breakfast Type"}
+        </h2>
+        <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#565656", marginTop: "6px" }}>
+          {isRTL ? "اختر نوع إفطار طفلك" : "Choose your child's breakfast type"}
+        </p>
+      </div>
+
+      {/* Cards — same dimensions & style as Patient/Companion */}
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-[20px]">
+        <div className="flex items-center justify-center gap-[30px]">
+          {options.map((opt) => {
+            const isActive = selected === opt.id;
+            return (
+              <motion.button key={opt.id} onClick={() => onSelect(opt.id)} whileTap={{ scale: 0.97 }}
+                style={{
+                  width: "560px", height: "400px", borderRadius: "26px",
+                  backgroundColor: isActive ? TEAL : "#fff",
+                  border: isActive ? "none" : "1.6px solid rgba(0,0,0,0.1)",
+                  position: "relative", cursor: "pointer", outline: "none",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "36px",
+                  transition: "all 0.22s ease",
+                }}>
+                {/* Checkmark badge */}
+                <div className="absolute" style={{ top: "32px", right: "32px",
+                  width: "68px", height: "68px", borderRadius: "50%",
+                  backgroundColor: isActive ? "#2DCC06" : "#fff",
+                  border: isActive ? "none" : "2px solid #DADADA",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: isActive ? "0 4px 6.5px rgba(0,138,171,0.38)" : "none",
+                }}>
+                  {isActive && <Check size={32} color="#fff" strokeWidth={2.5} />}
+                </div>
+
+                {/* Icon circle */}
+                <div style={{
+                  width: "120px", height: "120px", borderRadius: "60px",
+                  backgroundColor: isActive ? "#fff" : "#F4F4F4",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  {isActive ? opt.selectedIcon : opt.icon}
+                </div>
+
+                {/* Label */}
+                <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: isActive ? "#fff" : "#171717" }}>
+                  {loc(opt.label)}
+                </span>
+
+                {/* Description */}
+                <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: isActive ? "rgba(255,255,255,0.75)" : "#888", textAlign: "center", maxWidth: "320px" }}>
+                  {loc(opt.desc)}
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
     </motion.div>
   );
 }
@@ -1500,12 +1358,14 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, su
  * STEP 3: BUILD MEAL
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL }: {
+
+function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMode }: {
   meal: MealPeriod;
   selections: Selections;
   onToggle: (gid: string, itemId: string, group: MenuGroup) => void;
   fontFamily: string;
   isRTL: boolean;
+  isEditMode?: boolean;
 }) {
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
   const active = isMealActive(meal.hours);
@@ -1524,14 +1384,25 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL }: {
         overflow: "hidden",
       }}>
         {/* Pre-order banner — top of the same container */}
-        <div className="shrink-0 flex items-center gap-2 px-5 py-3" style={{ backgroundColor: "#F2F9FB", borderBottom: `1px solid ${TEAL_20}` }}>
-          <Clock size={17} color={TEAL} style={{ flexShrink: 0 }} />
-          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL, lineHeight: 1.4 }}>
-            {active
-              ? (isRTL ? `يُسلَّم خلال ${loc(meal.label)} (${locTimeRange(meal.timeRange, isRTL)})` : `Delivered during ${loc(meal.label)} (${locTimeRange(meal.timeRange, isRTL)})`)
-              : (isRTL ? `طلب مسبق — ${loc(meal.label)} (${locTimeRange(meal.timeRange, isRTL)})` : `Pre-order — delivered ${loc(meal.label)} (${locTimeRange(meal.timeRange, isRTL)})`)}
-          </span>
-        </div>
+        {(() => {
+          const tmrw = new Date();
+          tmrw.setDate(tmrw.getDate() + 1);
+          const tmrwDate = tmrw.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long" });
+          return (
+            <div className="shrink-0 flex items-center gap-2 px-5 py-3" style={{ backgroundColor: "#F2F9FB", borderBottom: `1px solid ${TEAL_20}` }}>
+              <Clock size={17} color={TEAL} style={{ flexShrink: 0 }} />
+              <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL, lineHeight: 1.4 }}>
+                {isEditMode
+                  ? (isRTL
+                      ? `تعديل طلب ${loc(meal.label)} — التوصيل ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`
+                      : `Editing ${loc(meal.label)} order — Delivery ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`)
+                  : (isRTL
+                      ? `طلب مسبق — ${loc(meal.label)} ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`
+                      : `Pre-order — ${loc(meal.label)} ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`)}
+              </span>
+            </div>
+          );
+        })()}
 
         {/* Groups list */}
         <div className="flex-1 min-h-0 fo-scroll-strong overflow-y-auto flex flex-col gap-[12px] p-[14px]">
@@ -1571,47 +1442,56 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL }: {
               </p>
             </div>
           ) : (
-            requiredGroups.map((g, idx) => {
-              const sel = selections[g.id] || [];
-              const items = g.items.filter((i) => sel.includes(i.id));
-              if (items.length === 0) return null;
-              return (
-                <div key={g.id} className="flex items-start gap-3">
-                  <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "2px" }}>
-                    <Check size={15} color="#fff" strokeWidth={2.5} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", marginBottom: "3px", letterSpacing: "0.3px", textTransform: "uppercase" }}>
-                      {loc(g.label)}
+            <>
+              {requiredGroups.map((g) => {
+                const sel = selections[g.id] || [];
+                const items = g.items.filter((i) => sel.includes(i.id));
+                if (items.length === 0) return null;
+                return (
+                  <div key={g.id} className="flex items-start gap-3">
+                    <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "2px" }}>
+                      <Check size={15} color="#fff" strokeWidth={2.5} />
                     </div>
-                    {items.map((it) => (
-                      <p key={it.id} style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>
-                        {loc(it.name)}
-                      </p>
-                    ))}
+                    <div className="flex-1 min-w-0">
+                      <div style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", marginBottom: "3px", letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                        {loc(g.label)}
+                      </div>
+                      {items.map((it) => (
+                        <p key={it.id} style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>
+                          {loc(it.name)}
+                        </p>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </>
           )}
         </div>
 
-        {/* Auto Included */}
+        {/* Included with your meal — pinned to bottom */}
         {includedGroups.length > 0 && (
-          <div className="shrink-0 px-5 py-4" style={{ backgroundColor: "#F9FAFB", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-            <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#374151", marginBottom: "8px", letterSpacing: "0.3px", textTransform: "uppercase" }}>
-              {isRTL ? "يأتي مع وجبتك" : "Comes With Your Meal"}
-            </p>
-            <div className="flex flex-col gap-1.5">
-              {includedGroups.flatMap((g) => g.items).map((it) => (
-                <div key={it.id} className="flex items-center gap-2">
-                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: TEAL }} />
-                  <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: "#4B5563" }}>
-                    {loc(it.name)}
-                  </span>
-                </div>
-              ))}
+          <div className="shrink-0" style={{ borderTop: "1px solid rgba(0,0,0,0.06)", backgroundColor: "#F9FAFB", borderRadius: "0 0 18px 18px", padding: "16px 20px" }}>
+            <div className="flex items-center gap-2 mb-2">
+              <Check size={18} color={GREEN} />
+              <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                {isRTL ? "مشمول مع وجبتك" : "Included with Your Meal"}
+              </span>
             </div>
+            {includedGroups.map((g) => (
+              <div key={g.id} style={{ marginBottom: "4px" }}>
+                <div className="flex flex-col gap-1.5">
+                  {g.items.map((it) => (
+                    <div key={it.id} className="flex items-center gap-2">
+                      <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: GREEN }} />
+                      <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: "#4B5563" }}>
+                        {loc(it.name)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -1750,11 +1630,14 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
  * STEP 4: CONFIRM
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, room, dietLabel, allergiesLabel, fontFamily, isRTL }: {
+function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, room, dietLabel, allergiesLabel, fontFamily, isRTL, isEditMode, onEdit, meals, orders, onOrderMeal }: {
   orderNumber: string; meal: MealPeriod; selections: Selections;
   orderFor: OrderFor; patientName: string; room: string | null; dietLabel: string; allergiesLabel: string;
   fontFamily: string; isRTL: boolean;
+  isEditMode?: boolean; onEdit?: () => void;
+  meals?: MealPeriod[]; orders?: any[]; onOrderMeal?: (mealId: MealId) => void;
 }) {
+  const canStillEdit = isMealOrderable(meal);
   const isGuest = orderFor === "guest";
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
   const required = getRequiredGroups(meal);
@@ -1766,21 +1649,24 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
   });
   const includedItems = included.flatMap((g) => g.items).map((i) => loc(i.name));
 
-  const today = new Date().toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  // Delivery is for tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const deliveryDate = tomorrow.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   return (
     <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}
       className="h-full flex items-center justify-center px-[40px] py-[24px] overflow-y-auto fo-scroll">
-      {/* Single seamless card — stroke only, no shadow */}
+      {/* Single seamless card */}
       <div style={{
         width: "100%", maxWidth: "1080px",
         borderRadius: "24px", backgroundColor: "#fff",
         border: "1.5px solid rgba(0,0,0,0.08)",
-        display: "grid", gridTemplateColumns: "1fr 1px 1fr",
+        display: "grid", gridTemplateColumns: "1fr 1fr",
         overflow: "hidden",
       }}>
 
-        {/* ── LEFT — Success + subtitle + order ID pill ── */}
+        {/* ── LEFT — Success message + Edit Order ── */}
         <div style={{ padding: "36px 32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "18px" }}>
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 220, damping: 18, delay: 0.1 }}
             style={{ width: "72px", height: "72px", borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 8px 22px ${GREEN}50` }}>
@@ -1788,111 +1674,236 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
           </motion.div>
           <div className="text-center">
             <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1.2 }}>
-              {isRTL ? "تم تأكيد طلب الوجبة" : "Meal Order Confirmed"}
+              {isEditMode
+                ? (isRTL ? "تم تحديث طلب الوجبة" : "Meal Order Updated")
+                : (isRTL ? "تم تأكيد طلب الوجبة" : "Meal Order Confirmed")}
             </h2>
             <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.5, marginTop: "12px", maxWidth: "360px" }}>
-              {isRTL
-                ? `تم إرسال طلب ${loc(meal.label).toLowerCase()} إلى المطبخ وسيتم توصيله في الوقت المحدد.`
-                : `Your ${loc(meal.label).toLowerCase()} order has been sent to the kitchen and will be delivered during the scheduled time.`}
+              {isEditMode
+                ? (isRTL
+                    ? `تم تحديث طلب ${loc(meal.label).toLowerCase()} بنجاح وسيتم توصيله في الوقت المحدد.`
+                    : `Your ${loc(meal.label).toLowerCase()} order has been updated and will be delivered during the scheduled time.`)
+                : (isRTL
+                    ? `تم إرسال طلب ${loc(meal.label).toLowerCase()} إلى المطبخ وسيتم توصيله في الوقت المحدد.`
+                    : `Your ${loc(meal.label).toLowerCase()} order has been sent to the kitchen and will be delivered during the scheduled time.`)}
             </p>
           </div>
-          {/* Order ID pill — bigger, more readable */}
-          <div style={{
-            marginTop: "4px",
-            padding: "10px 20px", borderRadius: "100px",
-            backgroundColor: "#F2F9FB", border: `1px solid ${TEAL_25}`,
-          }}>
-            <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.bold, color: TEAL, letterSpacing: "0.4px" }}>
-              {isRTL ? "رقم الطلب:" : "Order ID:"} {orderNumber}
-            </span>
-          </div>
+
+          {/* Edit Order button — only if ordering window still open */}
+          {canStillEdit && onEdit && (
+            <button onClick={onEdit}
+              className="active:scale-95 transition-transform cursor-pointer"
+              style={{ marginTop: "4px", height: "44px", padding: "0 28px", borderRadius: "10px", backgroundColor: "#fff", border: `1.5px solid ${TEAL}`, outline: "none", display: "flex", alignItems: "center", gap: "8px" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+                {isRTL ? "تعديل الطلب" : "Edit Order"}
+              </span>
+            </button>
+          )}
+
+          {/* ── Meal Shortcut Buttons ── */}
+          {meals && meals.length > 0 && (
+            <div style={{ marginTop: "8px", width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column", gap: "10px" }}>
+              <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "center", marginBottom: "2px" }}>
+                {isRTL ? "وجبات الغد" : "Tomorrow's Meals"}
+              </p>
+              {meals.map((m) => {
+                const isCurrent = m.id === meal.id;
+                const todayStr = new Date().toDateString();
+                const hasOrder = !isCurrent && orders?.some((o) => {
+                  const d = o.placedAt instanceof Date ? o.placedAt : new Date(o.placedAt);
+                  return d.toDateString() === todayStr && o.mealId === m.id;
+                });
+                const orderable = isMealOrderable(m);
+                const MealIcon = m.icon;
+
+                // Determine status
+                let statusLabel: string;
+                let statusColor: string;
+                let bgColor: string;
+                let borderColor: string;
+                let clickable = false;
+
+                if (isCurrent) {
+                  // Just confirmed
+                  statusLabel = isRTL ? "تم الإرسال ✓" : "Submitted ✓";
+                  statusColor = GREEN;
+                  bgColor = `${GREEN}12`;
+                  borderColor = `${GREEN}40`;
+                } else if (hasOrder) {
+                  // Already submitted earlier
+                  statusLabel = isRTL ? "تم الإرسال ✓" : "Submitted ✓";
+                  statusColor = GREEN;
+                  bgColor = `${GREEN}12`;
+                  borderColor = `${GREEN}40`;
+                  clickable = false;
+                } else if (orderable) {
+                  // Available to order
+                  statusLabel = isRTL ? "اطلب الآن" : "Order Now";
+                  statusColor = TEAL;
+                  bgColor = "#fff";
+                  borderColor = TEAL;
+                  clickable = true;
+                } else {
+                  // Window closed
+                  statusLabel = isRTL ? "انتهى الوقت" : "Closed";
+                  statusColor = "#9CA3AF";
+                  bgColor = "#F9FAFB";
+                  borderColor = "rgba(0,0,0,0.08)";
+                }
+
+                return (
+                  <motion.button
+                    key={m.id}
+                    whileTap={clickable ? { scale: 0.97 } : {}}
+                    onClick={clickable && onOrderMeal ? () => onOrderMeal(m.id) : undefined}
+                    style={{
+                      width: "100%", padding: "14px 18px", borderRadius: "14px",
+                      backgroundColor: bgColor, border: `1.5px solid ${borderColor}`,
+                      display: "flex", alignItems: "center", gap: "14px",
+                      cursor: clickable ? "pointer" : "default",
+                      opacity: (!clickable && !isCurrent && !hasOrder) ? 0.55 : 1,
+                      outline: "none",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <div style={{
+                      width: "40px", height: "40px", borderRadius: "12px",
+                      backgroundColor: isCurrent || hasOrder ? `${GREEN}15` : clickable ? TEAL_15 : "#F3F4F6",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}>
+                      <MealIcon size={20} color={isCurrent || hasOrder ? GREEN : clickable ? TEAL : "#9CA3AF"} />
+                    </div>
+                    <div style={{ flex: 1, textAlign: isRTL ? "right" : "left" }}>
+                      <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1.2 }}>
+                        {loc(m.label)}
+                      </p>
+                      <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: "#6B7280", marginTop: "2px" }}>
+                        {locTimeRange(m.timeRange, isRTL)}
+                      </p>
+                    </div>
+                    <div style={{
+                      padding: "5px 14px", borderRadius: "100px",
+                      backgroundColor: isCurrent || hasOrder ? `${GREEN}15` : clickable ? TEAL_15 : "#F3F4F6",
+                    }}>
+                      <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: statusColor, whiteSpace: "nowrap" }}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* ── Vertical gray divider ── */}
-        <div style={{ backgroundColor: "rgba(0,0,0,0.08)" }} />
-
-        {/* ── RIGHT — Patient banner + bordered details box ── */}
-        <div style={{ padding: "28px", display: "flex", flexDirection: "column", gap: "14px", justifyContent: "center" }}>
-          {/* Patient / Guest banner */}
-          <div className="flex items-center gap-3" style={{
-            padding: "12px 16px", borderRadius: "12px",
-            backgroundColor: isGuest ? "#FEF3C7" : "#F2F9FB",
-            border: `1px solid ${isGuest ? "#FDE68A" : `${TEAL_25}`}`,
-          }}>
-            <div style={{ width: "38px", height: "38px", borderRadius: "50%", backgroundColor: isGuest ? "#D97706" : TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <User size={19} color="#fff" strokeWidth={2.5} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1.2 }}>
-                {isRTL ? "للـ" : "For "}{patientName}
-                {room && (
-                  <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.semibold, color: "#6B7280", marginLeft: "8px" }}>
-                    · {isRTL ? "غرفة" : "Room"} {room}
-                  </span>
-                )}
-              </p>
-              <p style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.4, marginTop: "4px" }}>
-                {isRTL ? `الحمية: ${dietLabel} · الحساسية: ${allergiesLabel}` : `Diet: ${dietLabel} · Allergies: ${allergiesLabel}`}
-              </p>
-            </div>
-          </div>
-
-          {/* Bordered details container */}
+        {/* ── RIGHT — bordered details box with patient + details ── */}
+        <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          {/* Bordered container */}
           <div style={{
             border: "1.5px solid rgba(0,0,0,0.1)", borderRadius: "16px",
-            padding: "18px 20px", display: "flex", flexDirection: "column",
+            overflow: "hidden",
+            display: "flex", flexDirection: "column",
           }}>
-            <DetailLine icon={<Clock size={20} color={TEAL} />} label={isRTL ? "وقت التوصيل" : "Delivery Time"} fontFamily={fontFamily}>
-              <div className="text-right">
-                <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: TEAL }}>
-                  {loc(meal.label)} ({locTimeRange(meal.timeRange, isRTL)})
+            {/* Patient / Guest row — flush to container edges */}
+            <div className="flex items-center gap-3" style={{
+              padding: "14px 20px",
+              backgroundColor: isGuest ? "rgba(var(--fo-secondary-rgb), 0.08)" : TEAL_15,
+            }}>
+              <div style={{ width: "38px", height: "38px", borderRadius: "50%", backgroundColor: isGuest ? SECONDARY : TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <User size={19} color="#fff" strokeWidth={2.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1.2 }}>
+                  {isRTL ? "لـ" : "For "}{patientName}
+                  {room && (
+                    <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.semibold, color: "#6B7280", marginLeft: "8px" }}>
+                      · {isRTL ? "غرفة" : "Room"} {room}
+                    </span>
+                  )}
                 </p>
-                <p style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#6B7280", marginTop: "3px" }}>
-                  {today}
+                <p style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.4, marginTop: "3px" }}>
+                  {isRTL ? `الحمية: ${dietLabel} · الحساسية: ${allergiesLabel}` : `Diet: ${dietLabel} · Allergies: ${allergiesLabel}`}
                 </p>
               </div>
-            </DetailLine>
+              <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: isGuest ? SECONDARY : TEAL, whiteSpace: "nowrap", flexShrink: 0 }}>
+                {isRTL ? "رقم الطلب:" : "Order ID:"} #{orderNumber}
+              </span>
+            </div>
+
+            {/* Details area */}
+            <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column" }}>
+            {/* Delivery Time */}
+            <div className="flex items-start justify-between gap-4" style={{ padding: "10px 0" }}>
+              <div className="flex items-center gap-2.5 shrink-0">
+                <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: TEAL_15, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Clock size={16} color={TEAL} />
+                </div>
+                <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.5px", textTransform: "uppercase" as const }}>
+                  {isRTL ? "وقت التوصيل" : "Delivery Time"}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col items-end">
+                <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: TEAL }}>
+                  {loc(meal.label)} ({locTimeRange(meal.timeRange, isRTL)})
+                </p>
+                <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: "#6B7280", marginTop: "2px" }}>
+                  {deliveryDate}
+                </p>
+              </div>
+            </div>
 
             <RowDivider />
 
-            <DetailLine icon={<Utensils size={20} color={TEAL} />} label={isRTL ? "وجباتك" : "Your Meal Items"} fontFamily={fontFamily}>
-              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "5px", textAlign: "right" }}>
-                {selectedItems.map((name, i) => (
-                  <li key={i} style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>{name}</li>
-                ))}
-              </ul>
-            </DetailLine>
+            {/* Your Meal Items */}
+            <div className="flex items-start justify-between gap-4" style={{ padding: "10px 0" }}>
+              <div className="flex items-center gap-2.5 shrink-0" style={{ marginTop: "2px" }}>
+                <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: TEAL_15, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Utensils size={16} color={TEAL} />
+                </div>
+                <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.5px", textTransform: "uppercase" as const }}>
+                  {isRTL ? "وجباتك" : "Your Meal Items"}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col items-end">
+                <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column" as const, gap: "4px", textAlign: "right" as const }}>
+                  {selectedItems.map((name, i) => (
+                    <li key={i} style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>{name}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
 
             {includedItems.length > 0 && (
               <>
                 <RowDivider />
-                <DetailLine icon={<Check size={20} color={GREEN} />} label={isRTL ? "يأتي مع وجبتك" : "Comes With Your Meal"} fontFamily={fontFamily}>
-                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "5px", textAlign: "right" }}>
-                    {includedItems.map((name, i) => (
-                      <li key={i} style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>{name}</li>
-                    ))}
-                  </ul>
-                </DetailLine>
+                <div className="flex items-start justify-between gap-4" style={{ padding: "10px 0" }}>
+                  <div className="flex items-center gap-2.5 shrink-0" style={{ marginTop: "2px" }}>
+                    <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: `${GREEN}18`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Check size={16} color={GREEN} />
+                    </div>
+                    <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.5px", textTransform: "uppercase" as const }}>
+                      {isRTL ? "يأتي مع وجبتك" : "Comes With Your Meal"}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col items-end">
+                    <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column" as const, gap: "4px", textAlign: "right" as const }}>
+                      {includedItems.map((name, i) => (
+                        <li key={i} style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>{name}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               </>
             )}
+            </div>
           </div>
         </div>
       </div>
     </motion.div>
-  );
-}
-
-function DetailLine({ icon, label, fontFamily, children }: { icon: React.ReactNode; label: string; fontFamily: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4" style={{ padding: "12px 0" }}>
-      <div className="flex items-center gap-2.5 shrink-0">
-        {icon}
-        <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.5px", textTransform: "uppercase" }}>
-          {label}
-        </span>
-      </div>
-      <div className="flex-1 min-w-0 flex flex-col items-end">{children}</div>
-    </div>
   );
 }
 
@@ -1918,8 +1929,9 @@ function ConfirmRow({ icon, label, children }: { icon: React.ReactNode; label: s
  * BOTTOM BAR
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function BottomBar({ step, canContinue, onBack, showBack, onContinue, secondaryAction, backLabel, continueLabel, fontFamily, isRTL }: {
+function BottomBar({ step, canContinue, onBack, showBack, onContinue, leftAction, secondaryAction, backLabel, continueLabel, fontFamily, isRTL }: {
   step: Step; canContinue: boolean; onBack: () => void; showBack?: boolean; onContinue: () => void;
+  leftAction?: { label: string; onClick: () => void };
   secondaryAction?: { label: string; onClick: () => void };
   backLabel: string; continueLabel: string;
   fontFamily: string; isRTL: boolean; BackArrow: any; ForwardArrow: any;
@@ -1939,9 +1951,29 @@ function BottomBar({ step, canContinue, onBack, showBack, onContinue, secondaryA
             outline: "none",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           }}>
-          <ChevBack size={22} color={TEAL} strokeWidth={2.5} />
+          {backLabel === "Exit" || backLabel === "خروج" || backLabel === "Cancel Edit" || backLabel === "إلغاء التعديل" ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          ) : (
+            <ChevBack size={22} color={TEAL} strokeWidth={2.5} />
+          )}
           <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.semibold, color: TEAL }}>
             {backLabel}
+          </span>
+        </button>
+      ) : leftAction ? (
+        <button onClick={leftAction.onClick} className="active:scale-95 transition-transform cursor-pointer"
+          style={{
+            height: "60px", padding: "0 28px", borderRadius: "16px",
+            backgroundColor: "#fff",
+            display: "flex", alignItems: "center", gap: "10px",
+            border: `1.5px solid ${TEAL}`,
+            outline: "none",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          }}>
+          <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+            {leftAction.label}
           </span>
         </button>
       ) : <div />}
@@ -1970,13 +2002,18 @@ function BottomBar({ step, canContinue, onBack, showBack, onContinue, secondaryA
             height: "60px", padding: "0 32px", borderRadius: "16px",
             backgroundColor: continueEnabled ? TEAL : "#fff",
             display: "flex", alignItems: "center", gap: "10px",
-            border: `1.5px solid ${continueEnabled ? TEAL : "rgba(255,255,255,0.3)"}`,
+            border: `1px solid ${continueEnabled ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.3)"}`,
             outline: "none",
             cursor: continueEnabled ? "pointer" : "not-allowed",
             boxShadow: continueEnabled ? `0 4px 16px ${TEAL_50}` : "0 2px 8px rgba(0,0,0,0.08)",
             transition: "all 0.25s",
             opacity: continueEnabled ? 1 : 0.5,
           }}>
+          {(continueLabel === "Exit" || continueLabel === "خروج") && (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          )}
           <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.bold, color: continueEnabled ? "#fff" : TEAL }}>
             {continueLabel}
           </span>
@@ -2005,8 +2042,9 @@ function scheduledFor(order: any, isRTL: boolean): string {
   return dayLabel;
 }
 
-function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL }: {
+function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL, meals, onEdit }: {
   activeOrders: any[]; pastOrders: any[]; fontFamily: string; isRTL: boolean;
+  meals?: MealPeriod[]; onEdit?: (orderId: string) => void;
 }) {
   const [tab, setTab] = useState<"all" | "patient" | "companion">("all");
   const all = [...activeOrders, ...pastOrders];
@@ -2052,25 +2090,47 @@ function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL }: {
             </p>
           </div>
         ) : (
-          display.map((order) => (
-            <OrderCard key={order.id} order={order} fontFamily={fontFamily} isRTL={isRTL} formatDate={formatDate} />
-          ))
+          display.map((order) => {
+            // Check if this order can be edited (today + window still open)
+            const orderDate = order.placedAt instanceof Date ? order.placedAt : new Date(order.placedAt);
+            const isToday = orderDate.toDateString() === new Date().toDateString();
+            const mealId = order.mealId || order.mealType?.toLowerCase();
+            const mealDef = meals?.find((m) => m.id === mealId);
+            const canEdit = isToday && mealDef && isMealOrderable(mealDef);
+            return (
+              <OrderCard key={order.id} order={order} fontFamily={fontFamily} isRTL={isRTL} formatDate={formatDate}
+                canEdit={!!canEdit} onEdit={onEdit ? () => onEdit(order.id) : undefined} mealDef={mealDef} />
+            );
+          })
         )}
       </div>
     </div>
   );
 }
 
-function OrderCard({ order, fontFamily, isRTL, formatDate }: {
+function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, mealDef }: {
   order: any; fontFamily: string; isRTL: boolean; formatDate: (d: Date) => string;
+  canEdit?: boolean; onEdit?: () => void; mealDef?: MealPeriod;
 }) {
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
   const [open, setOpen] = useState(false);
   const isGuest = order.orderFor === "guest";
   const ChevronIcon = open ? ChevronDown : (isRTL ? ChevronLeft : ChevronRight);
-  const mt2 = order.mealType.toLowerCase();
-  const nameAr = mt2 === "breakfast" ? "الفطور" : mt2 === "lunch" ? "الغداء" : mt2 === "dinner" ? "العشاء" : order.mealType;
-  const translatedMealType = isRTL ? nameAr : (order.mealType.charAt(0).toUpperCase() + order.mealType.slice(1));
+  // Resolve meal label from mealId (language-independent) rather than stored mealType string
+  const MEAL_LABELS: Record<string, { en: string; ar: string }> = {
+    breakfast: { en: "Breakfast", ar: "الفطور" },
+    lunch: { en: "Lunch", ar: "الغداء" },
+    dinner: { en: "Dinner", ar: "العشاء" },
+  };
+  const resolvedMealId = order.mealId || order.mealType?.toLowerCase();
+  const translatedMealType = mealDef
+    ? loc(mealDef.label)
+    : (MEAL_LABELS[resolvedMealId] ? loc(MEAL_LABELS[resolvedMealId]) : order.mealType);
+
+  // Resolve comesWith: use order data, or fall back to meal definition's included groups
+  const comesWith = (order.comesWith && order.comesWith.length > 0)
+    ? order.comesWith
+    : (mealDef ? mealDef.groups.filter((g: any) => g.mode === "included").flatMap((g: any) => g.items.map((it: any) => it.name)) : []);
 
   return (
     <div style={{
@@ -2086,8 +2146,8 @@ function OrderCard({ order, fontFamily, isRTL, formatDate }: {
           textAlign: isRTL ? "right" : "left",
         }}
       >
-        <div style={{ width: "60px", height: "60px", borderRadius: "50%", backgroundColor: isGuest ? "rgba(217,119,6,0.1)" : "rgba(64,149,170,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Utensils size={28} color={isGuest ? "#D97706" : "#4095AA"} />
+        <div style={{ width: "60px", height: "60px", borderRadius: "50%", backgroundColor: isGuest ? "rgba(var(--fo-secondary-rgb,217,119,6),0.1)" : TEAL_15, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Utensils size={28} color={isGuest ? SECONDARY : TEAL} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3">
@@ -2114,17 +2174,48 @@ function OrderCard({ order, fontFamily, isRTL, formatDate }: {
                     {isRTL ? "التوصيل" : "Delivery"} {locTimeRange(order.mealWindow, isRTL)}
                   </span>
                 </div>
+                <span style={{ color: "#D1D5DB" }}>·</span>
+                <div className="flex items-center gap-1.5">
+                  <Calendar size={14} color="#9CA3AF" />
+                  <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#6B7280" }}>
+                    {(() => {
+                      const tmrw = new Date();
+                      tmrw.setDate(tmrw.getDate() + 1);
+                      return tmrw.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long" });
+                    })()}
+                  </span>
+                </div>
               </>
             )}
           </div>
         </div>
+        {/* Edit button — only when ordering window is still open */}
+        {canEdit && onEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="shrink-0 flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
+            style={{
+              padding: "8px 16px", borderRadius: "10px",
+              backgroundColor: "#fff", border: `1.5px solid ${TEAL}`,
+              outline: "none",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+              {isRTL ? "تعديل الطلب" : "Edit Order"}
+            </span>
+          </button>
+        )}
         <div className="flex items-center justify-center gap-2 shrink-0" style={{
           width: "185px", padding: "8px 16px", borderRadius: "10px",
-          backgroundColor: isGuest ? "#FEF3C7" : TEAL_BG_TINT,
-          border: `1px solid ${isGuest ? "#FDE68A" : `${TEAL_25}`}`,
+          backgroundColor: isGuest ? `rgba(var(--fo-secondary-rgb),0.08)` : TEAL_BG_TINT,
+          border: `1px solid ${isGuest ? `rgba(var(--fo-secondary-rgb),0.25)` : `${TEAL_25}`}`,
         }}>
-          <User size={16} color={isGuest ? "#D97706" : TEAL} />
-          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: isGuest ? "#D97706" : TEAL, whiteSpace: "nowrap" }}>
+          <User size={16} color={isGuest ? SECONDARY : TEAL} />
+          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: isGuest ? SECONDARY : TEAL, whiteSpace: "nowrap" }}>
             {isGuest ? (isRTL ? "للمرافق" : "For Companion") : (isRTL ? "للمريض" : "For Patient")}
           </span>
         </div>
@@ -2140,14 +2231,14 @@ function OrderCard({ order, fontFamily, isRTL, formatDate }: {
               <div className="grid grid-cols-2 gap-4" style={{ paddingTop: "18px" }}>
                 {/* Your meal items — dedupe against comesWith so auto-included items never appear twice */}
                 {(() => {
-                  const includedSet = new Set((order.comesWith || []).map((it: any) => `${it.en}|${it.ar}`));
+                  const includedSet = new Set((comesWith || []).map((it: any) => `${it.en}|${it.ar}`));
                   const mealItems = (order.items || []).filter((item: any) => !includedSet.has(`${item.name.en}|${item.name.ar}`));
                   return (
-                    <DetailBlock icon={<Utensils size={18} color={TEAL} />} label={isRTL ? "وجباتك" : "Your Meal Items"} count={mealItems.length} isRTL={isRTL} fontFamily={fontFamily}>
+                    <DetailBlock icon={<Utensils size={18} color={TEAL} />} label={isRTL ? "وجباتك" : "Your Meal Items"} count={mealItems.length} isRTL={isRTL} fontFamily={fontFamily} accentColor={TEAL} badgeBg={TEAL_15}>
                       <ul style={{ margin: 0, padding: 0, paddingLeft: "6px", listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
                         {mealItems.map((item: any, i: number) => (
                           <li key={i} className="flex items-center gap-2.5">
-                            <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: GREEN, flexShrink: 0 }} />
+                            <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: TEAL, flexShrink: 0 }} />
                             <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: "#171717" }}>
                               {item.quantity > 1 ? `${item.quantity}× ` : ""}{loc(item.name)}
                             </span>
@@ -2158,11 +2249,11 @@ function OrderCard({ order, fontFamily, isRTL, formatDate }: {
                   );
                 })()}
 
-                {/* Comes with your meal */}
-                {order.comesWith && order.comesWith.length > 0 && (
-                  <DetailBlock icon={<Check size={18} color={GREEN} />} label={isRTL ? "يأتي مع وجبتك" : "Comes With Your Meal"} count={order.comesWith.length} isRTL={isRTL} fontFamily={fontFamily}>
+                {/* Included with your meal */}
+                {comesWith && comesWith.length > 0 && (
+                  <DetailBlock icon={<Check size={18} color={GREEN} />} label={isRTL ? "مشمول مع وجبتك" : "Included with Your Meal"} count={comesWith.length} isRTL={isRTL} fontFamily={fontFamily} accentColor={GREEN} badgeBg={`${GREEN}20`}>
                     <ul style={{ margin: 0, padding: 0, paddingLeft: "6px", listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
-                      {order.comesWith.map((it: any, i: number) => (
+                      {comesWith.map((it: any, i: number) => (
                         <li key={i} className="flex items-center gap-2.5">
                           <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: GREEN, flexShrink: 0 }} />
                           <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: "#171717" }}>
@@ -2174,6 +2265,8 @@ function OrderCard({ order, fontFamily, isRTL, formatDate }: {
                   </DetailBlock>
                 )}
               </div>
+
+
             </div>
         </div>
       )}
@@ -2181,7 +2274,8 @@ function OrderCard({ order, fontFamily, isRTL, formatDate }: {
   );
 }
 
-function DetailBlock({ icon, label, count, isRTL, fontFamily, children }: { icon: React.ReactNode; label: string; count?: number; isRTL?: boolean; fontFamily: string; children: React.ReactNode }) {
+function DetailBlock({ icon, label, count, isRTL, fontFamily, children, accentColor, badgeBg }: { icon: React.ReactNode; label: string; count?: number; isRTL?: boolean; fontFamily: string; children: React.ReactNode; accentColor?: string; badgeBg?: string }) {
+  const badgeColor = accentColor || TEAL;
   return (
     <div style={{ padding: "14px 18px", borderRadius: "12px", backgroundColor: "#F9FAFB" }}>
       <div className="flex items-center gap-2 mb-3">
@@ -2194,10 +2288,10 @@ function DetailBlock({ icon, label, count, isRTL, fontFamily, children }: { icon
             marginLeft: "auto",
             padding: "3px 10px",
             borderRadius: "100px",
-            backgroundColor: TEAL_15,
+            backgroundColor: badgeBg || TEAL_15,
             display: "flex", alignItems: "center", justifyContent: "center", gap: "4px",
           }}>
-            <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: TEAL }}>
+            <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: badgeColor }}>
               {count} {isRTL ? "عنصر" : (count === 1 ? "Item" : "Items")}
             </span>
           </div>

@@ -5,6 +5,18 @@ import { useTheme } from "../../ThemeContext";
 import { useLocale } from "../../i18n";
 import { useNurseStore, nurseActions } from "../../NurseDataStore";
 
+const DIET_OPTIONS = [
+  { value: "regular",        label: "Regular" },
+  { value: "diabetic",       label: "Diabetic" },
+  { value: "low-sodium",     label: "Low Sodium" },
+  { value: "low-potassium",  label: "Low Potassium" },
+  { value: "soft-diet",      label: "Soft Diet" },
+  { value: "chemotherapy",   label: "Chemotherapy" },
+  { value: "ob",             label: "OB" },
+  { value: "kids",           label: "Kids Menu" },
+  { value: "npo",            label: "NPO" },
+];
+
 function painColor(n: number) {
   if (n <= 0) return "#94A3B8";
   if (n < 4) return "#10B981";
@@ -25,8 +37,6 @@ export function CareOverviewTab({ role }: { role: "nurse" | "doctor" }) {
   const isNurse = role === "nurse";
 
   const [newAllergy, setNewAllergy] = useState("");
-  const [newDietCode, setNewDietCode] = useState("");
-  const [newDietLabel, setNewDietLabel] = useState("");
 
   const pc = painColor(store.painScore);
 
@@ -132,49 +142,35 @@ export function CareOverviewTab({ role }: { role: "nurse" | "doctor" }) {
         )}
       </div>
 
-      {/* Diet Codes */}
+      {/* Patient Diet (single-select) */}
       <div className="nurse-card">
-        <h3 style={{ color: t.textHeading }}><Apple size={18} style={{ color: t.primary }} /> Diet Codes</h3>
-        <div className="flex flex-wrap gap-2 mb-3">
-          {store.dietCodes.map((d) => (
-            <span key={d.code} className="flex items-center gap-1.5 px-3 py-2 rounded-xl"
-              style={{ fontSize: "13px", fontWeight: 700, color: t.primary, backgroundColor: t.primarySubtle }}>
-              <span style={{ fontWeight: 800 }}>{d.code}</span> — {d.label}
-              {isNurse && (
-                <button onClick={() => nurseActions.removeDietCode(d.code)} className="ml-1 cursor-pointer" style={{ background: "none", border: "none", color: t.primary }}>
-                  <X size={12} />
-                </button>
-              )}
-            </span>
-          ))}
+        <h3 style={{ color: t.textHeading }}><Apple size={18} style={{ color: t.primary }} /> Patient Diet</h3>
+        {/* Current selection */}
+        <div className="mb-3">
+          <span className="px-4 py-2 rounded-xl inline-flex items-center gap-2"
+            style={{ fontSize: "14px", fontWeight: 700, color: store.patientDiet === "npo" ? t.error : t.primary, backgroundColor: store.patientDiet === "npo" ? t.errorSubtle : t.primarySubtle }}>
+            {(DIET_OPTIONS.find(d => d.value === store.patientDiet) || DIET_OPTIONS[0]).label}
+          </span>
         </div>
         {isNurse && (
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <p style={{ fontSize: "12px", fontWeight: 700, color: t.textMuted, marginBottom: 8 }}>Predefined Diet Codes:</p>
+            <p style={{ fontSize: "12px", fontWeight: 700, color: t.textMuted, marginBottom: 8 }}>Select Patient Diet:</p>
             <div className="flex flex-wrap gap-2">
-              {[
-                { code: "NAS", label: "No Added Salt" },
-                { code: "DM", label: "Diabetic Diet" },
-                { code: "LS", label: "Low Sodium" },
-                { code: "NPO", label: "Nothing by mouth" },
-                { code: "SOFT", label: "Soft Diet" },
-                { code: "LIQ", label: "Clear Liquid" },
-                { code: "RENAL", label: "Renal Diet" }
-              ].map(diet => {
-                const isActive = store.dietCodes.some(d => d.code === diet.code);
+              {DIET_OPTIONS.map(diet => {
+                const isActive = store.patientDiet === diet.value;
+                const isNpo = diet.value === "npo";
                 return (
                   <button
-                    key={diet.code}
-                    onClick={() => isActive ? nurseActions.removeDietCode(diet.code) : nurseActions.addDietCode(diet.code, diet.label)}
-                    className="px-3 py-1.5 rounded-lg text-[13px] font-semibold transition-all text-left"
+                    key={diet.value}
+                    onClick={() => nurseActions.setPatientDiet(diet.value)}
+                    className="px-3 py-1.5 rounded-lg text-[13px] font-semibold transition-all text-left cursor-pointer"
                     style={{
-                      backgroundColor: isActive ? t.primarySubtle : "#F3F4F6",
-                      color: isActive ? t.primary : t.textMuted,
-                      border: `1px solid ${isActive ? t.primary : "transparent"}`,
-                      cursor: "pointer"
+                      backgroundColor: isActive ? (isNpo ? t.errorSubtle : t.primarySubtle) : "#F3F4F6",
+                      color: isActive ? (isNpo ? t.error : t.primary) : t.textMuted,
+                      border: `1px solid ${isActive ? (isNpo ? t.error : t.primary) : "transparent"}`,
                     }}
                   >
-                    <span style={{ fontWeight: 800 }}>{diet.code}</span> — {diet.label}
+                    {diet.label}
                   </button>
                 );
               })}

@@ -36,6 +36,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { useTheme, TEXT_STYLE, WEIGHT, TYPE_SCALE, SHADOW } from "./ThemeContext";
+import { InternalPageHeader } from "./InternalPageHeader";
 import { useLocale } from "./i18n";
 import { playTone } from "./useRipple";
 import type { LucideIcon } from "lucide-react";
@@ -827,68 +828,34 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
       <div className="absolute inset-0 pointer-events-none" style={{ background: "rgba(0,0,0,0.15)", backdropFilter: "blur(6px)" }} />
 
       {/* ── Header ── */}
-      <div className={`shrink-0 flex items-center justify-between pt-8 pb-2 relative z-10 ${isRTL ? "pr-[172px] pl-[172px]" : "pl-[172px] pr-[172px]"}`}>
-        <div className="flex items-center gap-4 relative">
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center hover:scale-105 active:scale-95 transition-transform cursor-pointer absolute"
+      <InternalPageHeader
+        title={t("call.title")}
+        subtitle={isSipAvailable ? t("call.tapToCall") : "Using simulation mode (Bridge unavailable)"}
+        icon={
+          <Phone size={26} fill={regState === 'Ok' ? "#22C55E" : regState === 'Progress' ? "#EAB308" : "#EF4444"} style={{ color: regState === 'Ok' ? "#22C55E" : regState === 'Progress' ? "#EAB308" : "#EF4444" }} />
+        }
+        onClose={onClose}
+        rightAction={
+          <button 
+            onClick={handleSimulateIncoming}
+            className="flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform hover:brightness-110" 
             style={{
-              width: "52px", height: "52px", borderRadius: "12px",
-              backgroundColor: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.15)",
-              [isRTL ? "right" : "left"]: "-112px"
+              borderRadius: theme.radiusLg, backgroundColor: "rgba(255,255,255,0.1)",
+              border: "1px solid rgba(255,255,255,0.15)", padding: "10px 24px 10px 16px", boxShadow: SHADOW.sm,
+              outline: "none",
             }}
           >
-            <BackArrow size={24} style={{ color: "#fff" }} />
+            <div className="w-10 h-10 flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "rgba(255,255,255,0.12)", color: "#fff", borderRadius: theme.radiusMd }}>
+              <Phone size={20} />
+            </div>
+            <div className="text-left">
+              <p style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "14px", color: "rgba(255,255,255,0.7)" }}>{t("call.yourExtension")}</p>
+              <p style={{ fontFamily: theme.fontFamilyMono, fontSize: "20px", fontWeight: WEIGHT.bold, color: "#fff", letterSpacing: "1px", lineHeight: 1 }}>{localExtension || '—'}</p>
+            </div>
           </button>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center" style={{
-              width: "52px", height: "52px", borderRadius: "12px",
-              backgroundColor: "rgba(255,255,255,0.12)",
-            }}>
-              <Phone size={26} style={{ color: "#fff" }} />
-            </div>
-            <div>
-              <h2 className="flex items-center gap-3" style={{ fontFamily, ...TEXT_STYLE.display, fontSize: "32px", color: "#FFFFFF", lineHeight: "36px" }}>
-                {t("call.title")}
-                <span style={{
-                  fontSize: "12px",
-                  padding: "4px 10px",
-                  borderRadius: "12px",
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                  border: "1px solid rgba(255,255,255,0.25)",
-                  color: "#FFFFFF",
-                  fontWeight: WEIGHT.semibold,
-                  fontFamily: theme.fontFamilyMono
-                }}>
-                  {regState === 'Ok' ? "Connected" : regState === 'Progress' ? "Connecting..." : "Unavailable"}
-                </span>
-              </h2>
-              <p style={{ fontFamily, ...TEXT_STYLE.caption, color: "rgba(255,255,255,0.8)", marginTop: "2px" }}>
-                {isSipAvailable ? t("call.tapToCall") : "Using simulation mode (Bridge unavailable)"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <button 
-          onClick={handleSimulateIncoming}
-          className="flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform hover:brightness-110" 
-          style={{
-            borderRadius: theme.radiusLg, backgroundColor: "rgba(255,255,255,0.1)",
-            border: "1px solid rgba(255,255,255,0.15)", padding: "10px 24px 10px 16px", boxShadow: SHADOW.sm,
-            outline: "none",
-          }}
-        >
-          <div className="w-10 h-10 flex items-center justify-center shrink-0"
-            style={{ backgroundColor: "rgba(255,255,255,0.12)", color: "#fff", borderRadius: theme.radiusMd }}>
-            <Phone size={20} />
-          </div>
-          <div className="text-left">
-            <p style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "14px", color: "rgba(255,255,255,0.7)" }}>{t("call.yourExtension")}</p>
-            <p style={{ fontFamily: theme.fontFamilyMono, fontSize: "20px", fontWeight: WEIGHT.bold, color: "#fff", letterSpacing: "1px", lineHeight: 1 }}>{localExtension || '—'}</p>
-          </div>
-        </button>
-      </div>
+        }
+      />
 
       {/* ── 3-Column Content ── */}
       <div className={`min-h-0 flex pt-8 pb-20 relative z-10 ${isRTL ? "pr-[172px] pl-[172px]" : "pl-[172px] pr-[172px]"}`} style={{ flex: "1 1 0", maxHeight: "calc(100% - 130px)", gap: "20px" }}>

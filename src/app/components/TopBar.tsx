@@ -163,6 +163,9 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
                     {prayerTime}
                   </span>
                 </div>
+                {pKey !== PRAYER_KEYS[PRAYER_KEYS.length - 1] && (
+                  <div style={{ width: "1px", height: "26px", backgroundColor: "rgba(0,0,0,0.12)", borderRadius: "1px", flexShrink: 0 }} />
+                )}
               </div>
             );
           })}
