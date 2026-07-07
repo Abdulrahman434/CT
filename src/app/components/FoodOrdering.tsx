@@ -2116,9 +2116,16 @@ function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, meal
   const [open, setOpen] = useState(false);
   const isGuest = order.orderFor === "guest";
   const ChevronIcon = open ? ChevronDown : (isRTL ? ChevronLeft : ChevronRight);
-  const mt2 = order.mealType.toLowerCase();
-  const nameAr = mt2 === "breakfast" ? "الفطور" : mt2 === "lunch" ? "الغداء" : mt2 === "dinner" ? "العشاء" : order.mealType;
-  const translatedMealType = isRTL ? nameAr : (order.mealType.charAt(0).toUpperCase() + order.mealType.slice(1));
+  // Resolve meal label from mealId (language-independent) rather than stored mealType string
+  const MEAL_LABELS: Record<string, { en: string; ar: string }> = {
+    breakfast: { en: "Breakfast", ar: "الفطور" },
+    lunch: { en: "Lunch", ar: "الغداء" },
+    dinner: { en: "Dinner", ar: "العشاء" },
+  };
+  const resolvedMealId = order.mealId || order.mealType?.toLowerCase();
+  const translatedMealType = mealDef
+    ? loc(mealDef.label)
+    : (MEAL_LABELS[resolvedMealId] ? loc(MEAL_LABELS[resolvedMealId]) : order.mealType);
 
   // Resolve comesWith: use order data, or fall back to meal definition's included groups
   const comesWith = (order.comesWith && order.comesWith.length > 0)
