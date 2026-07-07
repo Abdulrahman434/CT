@@ -307,6 +307,7 @@ function SwipeableRow({
 
 /* ─── Order Status Helpers ─── */
 const ORDER_STATUS_NOTIF: Record<OrderStatus, { textKey: { en: string; ar: string }; icon: typeof ChefHat; color: string }> = {
+  "received":      { textKey: { en: "Your meal order has been received", ar: "تم استلام طلب وجبتك" }, icon: Check, color: "#22C55E" },
   "preparing":     { textKey: { en: "Your meal is being prepared by the kitchen", ar: "يتم تحضير وجبتك في المطبخ" }, icon: ChefHat, color: "#F59E0B" },
   "quality-check": { textKey: { en: "Your meal is undergoing a quality check", ar: "وجبتك تخضع لفحص الجودة" }, icon: Heart, color: "#3B82F6" },
   "delivering":    { textKey: { en: "Your meal is on the way to your room", ar: "وجبتك في الطريق إلى غرفتك" }, icon: Utensils, color: "#8B5CF6" },

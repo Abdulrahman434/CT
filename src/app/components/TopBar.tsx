@@ -6,6 +6,7 @@ import { useLocale } from "./i18n";
 import svgPaths from "../../imports/svg-ca68x68c4i";
 import { getPrayerTimes, PRAYER_KEYS, PRAYER_NAMES, formatPrayerTime, getPrayerStatus } from "../utils/prayerUtils";
 import { Prayer } from "adhan";
+import { ConnectionStatus } from "./ConnectionStatus";
 
 // Removed hardcoded prayerTimes
 
@@ -100,18 +101,21 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
       }}
     >
       {/* Left: Logo — always left-aligned within its column */}
-      <a 
-        href={theme.id === "imc" ? `https://www.imc.med.sa/${locale}` : theme.hospitalWebsiteUrl} 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        className="flex items-center justify-start h-full transition-opacity hover:opacity-80 active:opacity-60"
-      >
-        <ApiImage
-          alt={theme.hospitalName}
-          src={logoUrl || theme.logoUrl}
-          style={{ height: SPACE[10], width: "auto", maxWidth: "300px", objectFit: "contain" }}
-        />
-      </a>
+      <div className="flex items-center gap-4 h-full">
+        <a 
+          href={theme.id === "imc" ? `https://www.imc.med.sa/${locale}` : theme.hospitalWebsiteUrl} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="flex items-center justify-start h-full transition-opacity hover:opacity-80 active:opacity-60"
+        >
+          <ApiImage
+            alt={theme.hospitalName}
+            src={logoUrl || theme.logoUrl}
+            style={{ height: SPACE[10], width: "auto", maxWidth: "300px", objectFit: "contain" }}
+          />
+        </a>
+        <ConnectionStatus />
+      </div>
 
       {/* Center: Prayer Times — always dead-center on screen */}
       {showPrayer ? (

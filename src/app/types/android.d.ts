@@ -53,6 +53,7 @@ interface AndroidSystemInterface {
   isAppInstalled(packageName: string): boolean;
   installApk?(apkUrl: string, packageName: string): void;
   showToast?(message: string, longDuration: boolean): void;
+  setLaunchableApps?(packagesJson: string): void;
 
   // IPTV
   fetchIptvChannels(): void;

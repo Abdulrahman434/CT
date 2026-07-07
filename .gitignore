@@ -31,3 +31,5 @@ Snajjar/
 *.cjs
 fix_layout.js
 translate.py
+*.zip
+

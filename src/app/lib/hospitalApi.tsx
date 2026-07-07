@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { FileText, Smartphone } from "lucide-react";
-import { apiUrl, rewriteImageUrl } from "./apiConfig";
+import { apiUrl, rewriteImageUrl, withApiKey } from "./apiConfig";
 import { ApiImage } from "../components/ApiImage";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -363,6 +363,10 @@ export interface AppPackage {
 // ── Module-level cache — persists across component mounts ────────────────
 
 let _packagesCache: AppPackage[] | null = null;
+
+export function getPackagesCache(): AppPackage[] {
+  return _packagesCache ?? [];
+}
 let _packagesFetching: Promise<AppPackage[]> | null = null;
 
 /**
@@ -393,9 +397,15 @@ export async function fetchAppPackages(
         category: item.category_title ?? "",
         type: item.type as "APK" | "URL" | "PDF",
         url: item.url ?? null,
-        apkUrl: item.package ?? null,
+        apkUrl: item.package ? withApiKey(item.package) : null,
         pdfUrl: item.pdf ?? null,
       }));
+
+      const packages = _packagesCache
+        .filter(a => a.type === "APK" && a.packageName)
+        .map(a => a.packageName);
+      window.AndroidSystem?.setLaunchableApps?.(JSON.stringify(packages));
+
       return _packagesCache;
     } catch (e) {
       console.warn("[hospitalApi] fetchAppPackages:", e);
@@ -459,7 +469,16 @@ function mapPackagesToAppItems(packages: AppPackage[], categoryKey: string): Api
     p => p.category === apiCategory && (p.pdfUrl || p.apkUrl || p.url)
   );
 
-  return items.map(p => {
+  // de-dupe API packages by packageName → url → id
+  const seen = new Set<string>();
+  const unique = items.filter(p => {
+    const key = (p.packageName || p.url || String(p.id)).toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return unique.map(p => {
     // ── PDF type ──
     if (p.type === "PDF" && p.pdfUrl) {
       return {

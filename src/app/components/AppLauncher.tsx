@@ -36,7 +36,7 @@ import { useRipple } from "./useRipple";
 import { InternalPageHeader } from "./InternalPageHeader";
 import { PdfReaderModal } from "./PdfReaderModal";
 import { apps, isAndroidApp, KNOWN_APPS } from "../utils/androidBridge";
-import { useApiPdfApps, API_CATEGORY_MAP } from "../lib/hospitalApi";
+import { useApiPdfApps, API_CATEGORY_MAP, getPackagesCache } from "../lib/hospitalApi";
 import edgeLogo from "../../assets/edge_logo.png";
 import chromeIcon from "../../assets/272d9a4c809b16af18cfbe153fa4edc5816536b3.png";
 import saudiGazetteLogo from "../../assets/5a0099c6364ba06a603226f636904e61c8e17c07.png";
@@ -111,6 +111,72 @@ interface CategoryConfig {
 }
 
 type CategoryKey = string;
+
+function dedupeApps(list: any[]): any[] {
+  const norm = (s?: string) =>
+    (s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+
+  const getIdentityKey = (app: any): string => {
+    if (app.packageName) return `pkg:${app.packageName.toLowerCase()}`;
+    if (app.url) return `url:${app.url.trim().toLowerCase()}`;
+    return `name:${norm(app.nameKey || app.name)}`;
+  };
+
+  const getPriority = (app: any): number => {
+    if (app.packageName && app.apkUrl) return 3;
+    if (app.packageName) return 2;
+    if (app.url) return 1;
+    return 0;
+  };
+
+  const out: any[] = [];
+  const identityMap = new Map<string, number>();
+
+  for (const app of list) {
+    const key = getIdentityKey(app);
+    if (identityMap.has(key)) {
+      const dupIndex = identityMap.get(key)!;
+      const existingApp = out[dupIndex];
+      const newPriority = getPriority(app);
+      const oldPriority = getPriority(existingApp);
+
+      if (newPriority > oldPriority) {
+        const merged = {
+          ...app,
+          url: app.url || existingApp.url,
+          pdfSource: app.pdfSource || existingApp.pdfSource,
+          isInteractive: app.isInteractive || existingApp.isInteractive,
+          // Preserve visual styling from existing (hardcoded) app
+          name: existingApp.name,
+          nameKey: existingApp.nameKey,
+          nameAr: existingApp.nameAr,
+          bg: existingApp.bg,
+          mark: existingApp.mark,
+          textColor: existingApp.textColor,
+          markSize: existingApp.markSize,
+          markWeight: existingApp.markWeight,
+          markFont: existingApp.markFont,
+          customRender: existingApp.customRender,
+        };
+        out[dupIndex] = merged;
+      } else {
+        const merged = {
+          ...existingApp,
+          packageName: existingApp.packageName || app.packageName,
+          apkUrl: existingApp.apkUrl || app.apkUrl,
+          url: existingApp.url || app.url,
+          imageUrl: existingApp.imageUrl || app.imageUrl,
+          appType: existingApp.appType || app.appType,
+        };
+        out[dupIndex] = merged;
+      }
+    } else {
+      identityMap.set(key, out.length);
+      out.push(app);
+    }
+  }
+  return out;
+}
 
 /* ── App data with accurate branding ────────────────────────── */
 
@@ -329,6 +395,7 @@ function getCategories(theme: any, locale: string = "en", t: any): Record<string
           bg: "#fff",
           mark: "القرآن",
           textColor: "#333",
+          packageName: "com.arabiait.quran.v2",
           url: "https://app.quranflash.com/book/Medina1?ar#/reader/chapter/3",
           customRender: () => (
             <ApiImage src={quranBookIcon} alt="Quran" style={{ width: 150, height: 150, objectFit: "cover" }} />
@@ -347,6 +414,7 @@ function getCategories(theme: any, locale: string = "en", t: any): Record<string
           bg: "#25D366",
           mark: "",
           textColor: "#fff",
+          packageName: "com.whatsapp",
           url: "https://web.whatsapp.com/",
           customRender: () => (
             <ApiImage src={whatsappIcon} alt="WhatsApp" style={{ width: 150, height: 150, objectFit: "cover" }} />
@@ -380,6 +448,7 @@ function getCategories(theme: any, locale: string = "en", t: any): Record<string
           bg: "#000000",
           mark: "𝕏",
           textColor: "#ffffff",
+          packageName: "com.twitter.android",
           url: "https://x.com/",
           markSize: 56,
           markWeight: 400,
@@ -390,6 +459,7 @@ function getCategories(theme: any, locale: string = "en", t: any): Record<string
           bg: "#fff",
           mark: "",
           textColor: "#333",
+          packageName: "com.snapchat.android",
           url: "https://www.snapchat.com/",
           customRender: () => (
             <ApiImage src={snapchatIcon} alt="Snapchat" style={{ width: 150, height: 150, objectFit: "cover" }} />
@@ -723,6 +793,7 @@ function getCategories(theme: any, locale: string = "en", t: any): Record<string
           bg: "#fff",
           mark: "",
           textColor: "#333",
+          packageName: "com.microsoft.teams",
           customRender: () => (
             <ApiImage src={teamsIcon} alt="Teams" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
@@ -743,6 +814,7 @@ function getCategories(theme: any, locale: string = "en", t: any): Record<string
           bg: "#fff",
           mark: "",
           textColor: "#333",
+          packageName: "com.skype.raider",
           customRender: () => (
             <ApiImage src={skypeIcon} alt="Skype" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
@@ -1512,7 +1584,7 @@ export function AppLauncher({
   const baseCategory = allCategories[activeKey];
   const category = baseCategory ? {
     ...baseCategory,
-    apps: [...baseCategory.apps, ...apiPdfApps],
+    apps: dedupeApps([...baseCategory.apps, ...apiPdfApps]),
   } : baseCategory;
   const [launchedApp, setLaunchedApp] = useState<string | null>(null);
   const [showPdf, setShowPdf] = useState(false);
@@ -1536,14 +1608,23 @@ export function AppLauncher({
   useEffect(() => {
     const onProgress = (e: Event) => {
       const { packageName, percent } = (e as CustomEvent).detail;
-      setInstallingApp(prev =>
-        prev?.packageName === packageName
-          ? { ...prev, progress: percent }
-          : prev
-      );
+      setInstallingApp(prev => {
+        if (prev && prev.packageName === packageName) {
+          return { ...prev, progress: percent };
+        }
+        return prev;
+      });
     };
     const onSuccess = (e: Event) => {
       const { packageName } = (e as CustomEvent).detail;
+      try {
+        // rebuild the allowlist from cached packages so the new app is allowed
+        const allApk = getPackagesCache()
+          .filter((p: any) => p.type === "APK" && p.packageName)
+          .map((p: any) => p.packageName);
+        if (!allApk.includes(packageName)) allApk.push(packageName);
+        window.AndroidSystem?.setLaunchableApps?.(JSON.stringify(allApk));
+      } catch {}
       window.AndroidSystem?.launchApp?.(packageName);
       setInstallingApp(null);
     };
@@ -1662,29 +1743,40 @@ export function AppLauncher({
   };
 
   const handleAppTap = (app: any) => {
+    console.log("[TAP]", JSON.stringify({
+      id: app.id, packageName: app.packageName, apkUrl: app.apkUrl,
+      url: app.url, isInteractive: app.isInteractive,
+      appType: app.appType, isAndroid: isAndroidApp()
+    }));
+
     // Special case for the standalone URL Browser app
     if (app.id === "url-browser") {
       setShowUrlNavigator(true);
       return;
     }
 
-    // 1a. Native APK app
+    // 1a. Native APK app — launch if installed, else install
     if (app.packageName && isAndroidApp()) {
-      const installed = window.AndroidSystem?.isAppInstalled?.(app.packageName) ?? false;
-      if (installed) {
+      if (apps.isInstalled(app.packageName)) {
         window.AndroidSystem?.launchApp?.(app.packageName);
         return;
       }
       if (app.apkUrl) {
         setInstallingApp({
           packageName: app.packageName,
-          name: app.name,
-          apkUrl: app.apkUrl,
+          name: app.nameKey ? t(app.nameKey) : app.name,
+          apkUrl: app.apkUrl,           // already cloud-keyed via Change 2
+          progress: 0,
         });
         window.AndroidSystem?.installApk?.(app.apkUrl, app.packageName);
         return;
       }
-      // Has package name but no APK URL — fall through to URL
+      if (app.url) {
+        if (onOpenUrl) onOpenUrl(app.url);
+        else window.open(app.url, "_blank", "noopener,noreferrer");
+        return;
+      }
+      return;
     }
 
     // 1b. URL fallback

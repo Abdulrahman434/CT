@@ -7,6 +7,7 @@ import { verifyPin } from "../lib/accountAuth";
 
 interface OfflineBannerProps {
   visible: boolean;
+  onBypass?: () => void;
 }
 
 // Grace period to avoid flashing the banner during initial app load
@@ -14,7 +15,7 @@ interface OfflineBannerProps {
 // for this many ms.
 const SHOW_DELAY_MS = 1500;
 
-export function OfflineBanner({ visible }: OfflineBannerProps) {
+export function OfflineBanner({ visible, onBypass }: OfflineBannerProps) {
   const { theme: t } = useTheme();
   const { fontFamily, t: tr } = useLocale();
   const [showPinEntry, setShowPinEntry] = useState(false);
@@ -43,13 +44,21 @@ export function OfflineBanner({ visible }: OfflineBannerProps) {
     }
   };
 
+  const handleContinueOffline = () => {
+    onBypass?.();
+  };
+
   const submitPin = async () => {
     const ok = await verifyPin(pin);
     if (ok) {
       setPin("");
       setShowPinEntry(false);
       setPinError(false);
-      openWifi();
+      if (onBypass) {
+        onBypass();
+      } else {
+        openWifi();
+      }
     } else {
       setPinError(true);
     }
@@ -162,7 +171,7 @@ export function OfflineBanner({ visible }: OfflineBannerProps) {
               </button>
 
               <button
-                onClick={() => setShowPinEntry(true)}
+                onClick={handleContinueOffline}
                 style={{
                   display: "flex",
                   alignItems: "center",

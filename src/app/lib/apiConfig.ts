@@ -2,6 +2,22 @@ import { useState, useEffect } from "react";
 
 const STORAGE_KEY = "careinn-api-config";
 
+const CLOUD_HOST = "control.careinn.com";
+const CLOUD_KEY  = "efc9bcbf-6951-436a-8694-c13cc6f30913";
+const LOCAL_KEY  = "20b91694-7ea1-4a44-91a6-2878664428b3";
+
+export function apiKeyForUrl(u: string): string {
+  return u.includes(CLOUD_HOST) ? CLOUD_KEY : LOCAL_KEY;
+}
+
+/** Append the host-correct apikey. No-op if one is already present. */
+export function withApiKey(u: string): string {
+  if (!u) return u;
+  if (u.includes("apikey=")) return u;
+  const sep = u.includes("?") ? "&" : "?";
+  return `${u}${sep}apikey=${apiKeyForUrl(u)}`;
+}
+
 export interface ApiConfigData {
   serverIp: string;   // can be IP, domain, or full URL with protocol
   apiKey: string;

@@ -19,11 +19,13 @@ export interface PlacedOrder {
   orderNumber: string;
   items: OrderItem[];
   totalCalories: number;
-  specialNotes: string;
   status: OrderStatus;
   placedAt: Date;
   estimatedDelivery: string;
   mealType: string;
+  mealWindow?: string;
+  comesWith?: { en: string; ar: string }[];
+  orderFor?: "patient" | "guest";
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -36,6 +38,7 @@ interface OrderStoreCtx {
   pastOrders: PlacedOrder[];
   placeOrder: (order: Omit<PlacedOrder, "id" | "orderNumber" | "placedAt" | "status">) => PlacedOrder;
   getOrder: (id: string) => PlacedOrder | undefined;
+  clearAllOrders: () => void;
 }
 
 const OrderContext = createContext<OrderStoreCtx | null>(null);
@@ -60,11 +63,16 @@ const MOCK_PAST_ORDERS: PlacedOrder[] = [
       { id: "m2", name: { en: "Garden Salad", ar: "سلطة خضراء" }, quantity: 1, calories: 120, image: "" },
     ],
     totalCalories: 500,
-    specialNotes: "",
     status: "delivered",
     placedAt: new Date(Date.now() - 4 * 3600000),
     estimatedDelivery: "25–35 min",
     mealType: "Lunch",
+    mealWindow: "1:00 PM – 2:00 PM",
+    comesWith: [
+      { en: "Sautéed Vegetables", ar: "خضار سوتيه" },
+      { en: "Water Bottle", ar: "زجاجة ماء" },
+    ],
+    orderFor: "patient",
   },
   {
     id: "past-2",
@@ -74,11 +82,53 @@ const MOCK_PAST_ORDERS: PlacedOrder[] = [
       { id: "m4", name: { en: "Fresh Orange Juice", ar: "عصير برتقال طازج" }, quantity: 2, calories: 220, image: "" },
     ],
     totalCalories: 500,
-    specialNotes: "No sugar",
     status: "delivered",
     placedAt: new Date(Date.now() - 24 * 3600000),
     estimatedDelivery: "25–35 min",
     mealType: "Breakfast",
+    mealWindow: "8:00 AM – 10:00 AM",
+    comesWith: [
+      { en: "Fresh Fruit (Whole)", ar: "فاكهة طازجة" },
+      { en: "Water Bottle", ar: "زجاجة ماء" },
+    ],
+    orderFor: "patient",
+  },
+  {
+    id: "past-3",
+    orderNumber: "#3795",
+    items: [
+      { id: "g1", name: { en: "Beef Burger", ar: "برجر لحم" }, quantity: 1, calories: 620, image: "" },
+      { id: "g2", name: { en: "French Fries", ar: "بطاطس مقلية" }, quantity: 1, calories: 350, image: "" },
+      { id: "g3", name: { en: "Coke", ar: "كولا" }, quantity: 1, calories: 140, image: "" },
+    ],
+    totalCalories: 1110,
+    status: "delivering",
+    placedAt: new Date(Date.now() - 35 * 60 * 1000),
+    estimatedDelivery: "10 min",
+    mealType: "Lunch",
+    mealWindow: "1:00 PM – 2:00 PM",
+    comesWith: [
+      { en: "Water Bottle", ar: "زجاجة ماء" },
+    ],
+    orderFor: "guest",
+  },
+  {
+    id: "past-4",
+    orderNumber: "#3756",
+    items: [
+      { id: "g4", name: { en: "Caesar Salad", ar: "سلطة سيزر" }, quantity: 1, calories: 320, image: "" },
+      { id: "g5", name: { en: "Cappuccino", ar: "كابوتشينو" }, quantity: 1, calories: 120, image: "" },
+    ],
+    totalCalories: 440,
+    status: "delivered",
+    placedAt: new Date(Date.now() - 26 * 3600000),
+    estimatedDelivery: "25 min",
+    mealType: "Lunch",
+    mealWindow: "1:00 PM – 2:00 PM",
+    comesWith: [
+      { en: "Water Bottle", ar: "زجاجة ماء" },
+    ],
+    orderFor: "guest",
   },
 ];
 
@@ -110,12 +160,13 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getOrder = useCallback((id: string) => orders.find((o) => o.id === id), [orders]);
+  const clearAllOrders = useCallback(() => setOrders([]), []);
 
   const activeOrders = orders.filter((o) => o.status !== "delivered");
   const pastOrders = orders.filter((o) => o.status === "delivered");
 
   return (
-    <OrderContext.Provider value={{ orders, activeOrders, pastOrders, placeOrder, getOrder }}>
+    <OrderContext.Provider value={{ orders, activeOrders, pastOrders, placeOrder, getOrder, clearAllOrders }}>
       {children}
     </OrderContext.Provider>
   );

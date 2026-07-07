@@ -4,7 +4,7 @@ import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, TEXT_STYLE, SPACE } from "./Theme
 import { useLocale } from "./i18n";
 import { useRipple } from "./useRipple";
 import svgPaths from "../../imports/svg-ca68x68c4i";
-import { Stethoscope, BookOpenText, MessageSquareMore } from "lucide-react";
+import { Stethoscope, BookOpenText, MessageSquareMore, Soup } from "lucide-react";
 import roomControlIcon from "@/assets/room-control-icon.png";
 import quranIcon from "@/assets/5303963df7d14bbca33ccffa43f982a464344809.png";
 import mirrorIcon from "@/assets/0ab7565691ddb8401a21da44af1864e8f4058536.png";
@@ -101,7 +101,7 @@ const hubItems = [
 const serviceItems = [
   { label: "Consultation", labelKey: "service.consultation", svgPaths: [] as string[], lucideIcon: Stethoscope },
   { label: "Housekeeping", labelKey: "service.housekeeping", svgPaths: [svgPaths.p24941500, "M16.6667 2.5V5.83333", "M18.3333 4.16667H15", "M3.33333 14.1667V15.8333", "M4.16667 15H2.5"], clipId: "clip_house" },
-  { label: "Order Food", labelKey: "service.orderFood", svgPaths: [svgPaths.p3a2bba00, svgPaths.p7df6000, svgPaths.p30991400, "M15.8333 4.16667L10 10"], clipId: "clip_food" },
+  { label: "Order Food", labelKey: "service.orderFood", svgPaths: [] as string[], lucideIcon: Soup },
   { label: "Call", labelKey: "service.call", svgPaths: [svgPaths.p1a7ce800], clipId: "clip_call" },
 ];
 

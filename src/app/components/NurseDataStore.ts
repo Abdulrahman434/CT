@@ -240,7 +240,7 @@ function createDefaultState(): NurseStoreState {
       profile: true,
       careOverview: true,
       carePlan: true,
-      financial: true,
+      financial: false,
       labs: true,
       imaging: true,
       baby: true,

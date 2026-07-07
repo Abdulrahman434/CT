@@ -2,18 +2,16 @@ import * as React from "react";
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  ArrowLeft, ArrowRight, Sun, Sunrise, Coffee, Moon,
+  ArrowLeft, ArrowRight, Sun, Coffee, Moon,
   Check, Clock, Calendar, Utensils, Soup, ClipboardList, Bell, ChefHat,
   Star, Heart, Droplets,
   Baby, User, FlaskConical, ChevronDown, ChevronRight, ChevronLeft, Home,
 } from "lucide-react";
-import { InternalPageHeader } from "./InternalPageHeader";
 import { useTheme, TYPE_SCALE, WEIGHT, TEXT_STYLE, SHADOW } from "./ThemeContext";
+import { InternalPageHeader } from "./InternalPageHeader";
 import { useLocale } from "./i18n";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import { ApiImage } from "./ApiImage";
 import { useOrders } from "./OrderStore";
-import { useNurseStore } from "./NurseDataStore";
 import mealSvg from "../../imports/meal.svg";
 import roomSvg from "../../imports/room.svg";
 import dietSvg from "../../imports/diet.svg";
@@ -155,7 +153,7 @@ const DIET_CONFIG: Record<DietType, {
 
 const LOW_SODIUM_MEALS: MealPeriod[] = [
   {
-    id: "breakfast", label: { en: "Breakfast", ar: "فطور" }, icon: Sun,
+    id: "breakfast", label: { en: "Breakfast", ar: "الفطور" }, icon: Sun,
     timeRange: "8:00 AM – 10:00 AM", hours: [8, 10], orderCutoff: 6,
     bgImage: P.breakfastBg, color: "#F59E0B",
     groups: [
@@ -212,7 +210,7 @@ const LOW_SODIUM_MEALS: MealPeriod[] = [
     ],
   },
   {
-    id: "lunch", label: { en: "Lunch", ar: "غداء" }, icon: Coffee,
+    id: "lunch", label: { en: "Lunch", ar: "الغداء" }, icon: Coffee,
     timeRange: "1:00 PM – 2:00 PM", hours: [13, 14], orderCutoff: 11,
     bgImage: P.lunchBg, color: "#22C55E",
     groups: [
@@ -260,7 +258,7 @@ const LOW_SODIUM_MEALS: MealPeriod[] = [
     ],
   },
   {
-    id: "dinner", label: { en: "Dinner", ar: "عشاء" }, icon: Moon,
+    id: "dinner", label: { en: "Dinner", ar: "العشاء" }, icon: Moon,
     timeRange: "7:00 PM – 8:00 PM", hours: [19, 20], orderCutoff: 17,
     bgImage: P.dinnerBg, color: "#8B5CF6",
     groups: [
@@ -311,7 +309,7 @@ const LOW_SODIUM_MEALS: MealPeriod[] = [
 
 const LOW_POTASSIUM_MEALS: MealPeriod[] = [
   {
-    id: "breakfast", label: { en: "Breakfast", ar: "فطور" }, icon: Sun,
+    id: "breakfast", label: { en: "Breakfast", ar: "الفطور" }, icon: Sun,
     timeRange: "8:00 AM – 9:00 AM", hours: [8, 9], orderCutoff: 6,
     bgImage: P.breakfastBg, color: "#F59E0B",
     groups: [
@@ -356,7 +354,7 @@ const LOW_POTASSIUM_MEALS: MealPeriod[] = [
     ],
   },
   {
-    id: "lunch", label: { en: "Lunch", ar: "غداء" }, icon: Coffee,
+    id: "lunch", label: { en: "Lunch", ar: "الغداء" }, icon: Coffee,
     timeRange: "1:00 PM – 2:00 PM", hours: [13, 14], orderCutoff: 11,
     bgImage: P.lunchBg, color: "#22C55E",
     groups: [
@@ -381,7 +379,7 @@ const LOW_POTASSIUM_MEALS: MealPeriod[] = [
     ],
   },
   {
-    id: "dinner", label: { en: "Dinner", ar: "عشاء" }, icon: Moon,
+    id: "dinner", label: { en: "Dinner", ar: "العشاء" }, icon: Moon,
     timeRange: "7:00 PM – 8:00 PM", hours: [19, 20], orderCutoff: 17,
     bgImage: P.dinnerBg, color: "#8B5CF6",
     groups: [
@@ -409,7 +407,7 @@ const LOW_POTASSIUM_MEALS: MealPeriod[] = [
 
 const CHEMO_MEALS: MealPeriod[] = [
   {
-    id: "breakfast", label: { en: "Breakfast", ar: "فطور" }, icon: Sun,
+    id: "breakfast", label: { en: "Breakfast", ar: "الفطور" }, icon: Sun,
     timeRange: "8:00 AM – 10:00 AM", hours: [8, 10], orderCutoff: 6,
     bgImage: P.breakfastBg, color: "#F59E0B",
     groups: [
@@ -450,7 +448,7 @@ const CHEMO_MEALS: MealPeriod[] = [
     ],
   },
   {
-    id: "lunch", label: { en: "Lunch", ar: "غداء" }, icon: Coffee,
+    id: "lunch", label: { en: "Lunch", ar: "الغداء" }, icon: Coffee,
     timeRange: "1:00 PM – 2:00 PM", hours: [13, 14], orderCutoff: 11,
     bgImage: P.lunchBg, color: "#22C55E",
     groups: [
@@ -482,7 +480,7 @@ const CHEMO_MEALS: MealPeriod[] = [
     ],
   },
   {
-    id: "dinner", label: { en: "Dinner", ar: "عشاء" }, icon: Moon,
+    id: "dinner", label: { en: "Dinner", ar: "العشاء" }, icon: Moon,
     timeRange: "7:00 PM – 8:00 PM", hours: [19, 20], orderCutoff: 17,
     bgImage: P.dinnerBg, color: "#8B5CF6",
     groups: [
@@ -512,7 +510,7 @@ const CHEMO_MEALS: MealPeriod[] = [
 
 const KIDS_MEALS: MealPeriod[] = [
   {
-    id: "breakfast", label: { en: "Breakfast", ar: "فطور" }, icon: Sun,
+    id: "breakfast", label: { en: "Breakfast", ar: "الفطور" }, icon: Sun,
     timeRange: "8:00 AM – 10:00 AM", hours: [8, 10], orderCutoff: 6,
     bgImage: P.breakfastBg, color: "#F59E0B",
     groups: [
@@ -556,7 +554,7 @@ const KIDS_MEALS: MealPeriod[] = [
     ],
   },
   {
-    id: "lunch", label: { en: "Lunch", ar: "غداء" }, icon: Coffee,
+    id: "lunch", label: { en: "Lunch", ar: "الغداء" }, icon: Coffee,
     timeRange: "11:00 AM – 1:00 PM", hours: [11, 13], orderCutoff: 9,
     bgImage: P.lunchBg, color: "#22C55E",
     groups: [
@@ -602,7 +600,7 @@ const KIDS_MEALS: MealPeriod[] = [
     ],
   },
   {
-    id: "dinner", label: { en: "Dinner", ar: "عشاء" }, icon: Moon,
+    id: "dinner", label: { en: "Dinner", ar: "العشاء" }, icon: Moon,
     timeRange: "4:30 PM – 6:30 PM", hours: [16, 18], orderCutoff: 14,
     bgImage: P.dinnerBg, color: "#8B5CF6",
     groups: [
@@ -672,11 +670,6 @@ function formatHour(h: number, isRTL: boolean): string {
   return d.toLocaleTimeString(isRTL ? "ar-SA" : "en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 }
 
-function locTimeRange(tr: string, isRTL: boolean): string {
-  if (!isRTL) return tr;
-  return tr.replace(/AM/g, "صباحًا").replace(/PM/g, "مساءً");
-}
-
 function getInitialSelections(meal: MealPeriod): Selections {
   const sel: Selections = {};
   meal.groups.forEach((g) => {
@@ -708,40 +701,19 @@ function countCompleted(meal: MealPeriod, selections: Selections): number {
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 const DEMO_DIETS: DietType[] = ["low-sodium", "low-potassium", "chemo", "kids"];
+const DEMO_PATIENT = { name: "Sara Saleh", room: "Room 412" };
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * MAIN COMPONENT
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Resolve CSS custom properties for theme-driven colors ── */
-const TEAL = "var(--fo-primary)";
-const TEAL_50 = "rgba(var(--fo-primary-rgb), 0.31)";
-const TEAL_25 = "rgba(var(--fo-primary-rgb), 0.15)";
-const TEAL_20 = "rgba(var(--fo-primary-rgb), 0.12)";
-const TEAL_15 = "rgba(var(--fo-primary-rgb), 0.09)";
-const TEAL_DARK = "var(--fo-primary-dark)";
+const TEAL = "#008AAB";
+const TEAL_DARK = "#006B85";
 const GREEN = "#3FC168";
-const TEAL_BG_TINT = "var(--fo-bg-tint)";
-
-function hexToRgb(hex: string): string {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : "0, 138, 171";
-}
-
-/** Lighten a hex colour towards white for tinted backgrounds */
-function tintHex(hex: string, amount = 0.92): string {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return "#F2F9FB";
-  const r = Math.round(parseInt(result[1], 16) + (255 - parseInt(result[1], 16)) * amount);
-  const g = Math.round(parseInt(result[2], 16) + (255 - parseInt(result[2], 16)) * amount);
-  const b = Math.round(parseInt(result[3], 16) + (255 - parseInt(result[3], 16)) * amount);
-  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-}
+const TEAL_BG_TINT = "#F2F9FB";
 
 export function FoodOrdering({ onClose }: { onClose: () => void }) {
   const { theme } = useTheme();
-  const nurse = useNurseStore();
-
   const { isRTL, fontFamily } = useLocale();
   const { placeOrder, activeOrders, pastOrders, orders, clearAllOrders } = useOrders();
 
@@ -751,25 +723,6 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
   const [selectedMealId, setSelectedMealId] = useState<MealId | null>(null);
   const [selections, setSelections] = useState<Selections>({});
   const [lastOrderNumber, setLastOrderNumber] = useState("");
-
-  const patientName = isRTL
-    ? (nurse.patient.nameAr || nurse.patient.name || "سارة صالح")
-    : (nurse.patient.name || "Sara Saleh");
-  const roomNumber = nurse.patient.room || "Room 412";
-  const patientAllergiesLabel = nurse.allergies.length > 0
-    ? nurse.allergies.join(isRTL ? "، " : ", ")
-    : (isRTL ? "لا يوجد" : "None");
-
-  // Sync dietType with clinical diet codes once loaded
-  React.useEffect(() => {
-    if (nurse.dietCodes.some(d => d.code === "LS" || d.code === "NAS")) {
-      setDietType("low-sodium");
-    } else if (nurse.dietCodes.some(d => d.code === "RD")) {
-      setDietType("low-potassium");
-    } else if (theme.id === "kids" || theme.name?.toLowerCase().includes("kids")) {
-      setDietType("kids");
-    }
-  }, [nurse.dietCodes, theme.id]);
 
   const meals = DIET_MEALS[dietType];
   const isKid = dietType === "kids";
@@ -867,14 +820,6 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
   const showBackButton = true;
   const isFlow = step === "select-type" || step === "select-meal" || step === "build-meal" || step === "confirmed";
 
-  /* ── Derive CSS custom property values from current theme ── */
-  const foVars = {
-    "--fo-primary": theme.primary,
-    "--fo-primary-rgb": hexToRgb(theme.primary),
-    "--fo-primary-dark": theme.primaryDark,
-    "--fo-bg-tint": tintHex(theme.primary, 0.92),
-  } as React.CSSProperties;
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -883,18 +828,9 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
       transition={{ duration: 0.25 }}
       className="absolute inset-0 z-50 flex flex-col overflow-hidden"
       style={{
-        background: `linear-gradient(160deg, ${theme.primary} 0%, ${theme.primaryDark} 40%, #0a1628 100%)`,
-        ...foVars,
+        background: `linear-gradient(168.43deg, ${theme.primary} 8.49%, ${theme.primaryDark} 41.70%, #071D2E 91.51%)`,
       }}
     >
-      {/* Hospital background image — subtle, consistent with other internal pages */}
-      <ApiImage
-        src={theme.heroImageUrl}
-        alt=""
-        aria-hidden
-        className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
-        style={{ opacity: 0.08, mixBlendMode: "luminosity", userSelect: "none" }}
-      />
       <style>{`
         .fo-scroll::-webkit-scrollbar { width: 6px; }
         .fo-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -902,9 +838,9 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
         .fo-scroll { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.15) transparent; }
         .fo-scroll-strong::-webkit-scrollbar { width: 10px; }
         .fo-scroll-strong::-webkit-scrollbar-track { background: #F3F4F6; border-radius: 100px; margin: 4px 0; }
-        .fo-scroll-strong::-webkit-scrollbar-thumb { background: var(--fo-primary); border-radius: 100px; border: 2px solid #F3F4F6; }
-        .fo-scroll-strong::-webkit-scrollbar-thumb:hover { background: var(--fo-primary-dark); }
-        .fo-scroll-strong { scrollbar-width: thin; scrollbar-color: var(--fo-primary) #F3F4F6; }
+        .fo-scroll-strong::-webkit-scrollbar-thumb { background: ${TEAL}; border-radius: 100px; border: 2px solid #F3F4F6; }
+        .fo-scroll-strong::-webkit-scrollbar-thumb:hover { background: ${TEAL_DARK}; }
+        .fo-scroll-strong { scrollbar-width: thin; scrollbar-color: ${TEAL} #F3F4F6; }
         .fo-carousel::-webkit-scrollbar { height: 0px; display: none; }
         .fo-carousel { scrollbar-width: none; -ms-overflow-style: none; cursor: grab; }
         .fo-carousel:active { cursor: grabbing; }
@@ -912,16 +848,30 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
         .pop-in { animation: popIn 0.3s ease forwards; }
       `}</style>
 
-      {/* ─── TOP BAR (translucent white strip) ─── */}
-      <TopBar
-        onBack={handleBack}
-        onMyOrders={() => setStep("history")}
-        onDemoClear={clearAllOrders}
+      {/* ─── TOP BAR (InternalPageHeader — consistent across app) ─── */}
+      <InternalPageHeader
         title={step === "history" ? (isRTL ? "طلباتي" : "My Orders") : (isRTL ? "طلب الوجبات" : "Meal Ordering")}
-        subtitle={step === "history" ? (isRTL ? "سجل طلباتك" : "Your order history") : (isRTL ? "اختر وجبتك" : "Select your meal")}
-        fontFamily={fontFamily}
-        isRTL={isRTL}
-        BackArrow={BackArrow}
+        subtitle={step === "history" ? (isRTL ? "سجل طلباتك" : "Your order history") : undefined}
+        icon={<DemoClearIcon onDemoClear={clearAllOrders} />}
+        onClose={handleBack}
+        rightAction={
+          <button
+            onClick={() => setStep("history")}
+            className="shrink-0 flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"
+            style={{
+              height: "44px", padding: "0 20px",
+              borderRadius: "22px",
+              backgroundColor: "#fff",
+              border: "none", outline: "none",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            }}
+          >
+            <ClipboardList size={18} color="#303030" />
+            <span style={{ fontFamily, fontSize: "15px", fontWeight: 600, color: "#303030" }}>
+              {isRTL ? "طلباتي" : "My Orders"}
+            </span>
+          </button>
+        }
       />
 
       {/* ─── PATIENT BAR (white, fixed) ─── */}
@@ -930,9 +880,8 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
           isKid={isKid}
           orderFor={orderFor}
           dietLabel={orderFor === "guest" ? (isRTL ? "عادي" : "Regular") : loc(dietCfg.label)}
-          allergiesLabel={orderFor === "guest" ? (isRTL ? "لا يوجد" : "None") : patientAllergiesLabel}
-          name={orderFor === "guest" ? (isRTL ? "مرافق" : "Companion") : patientName}
-          room={roomNumber}
+          allergiesLabel={orderFor === "guest" ? (isRTL ? "لا يوجد" : "None") : (isRTL ? "بنسلين، لاتكس" : "Penicillin, Latex")}
+          name={orderFor === "guest" ? (isRTL ? "مرافق" : "Companion") : DEMO_PATIENT.name}
           mealName={currentMeal ? loc(currentMeal.label) : null}
           fontFamily={fontFamily}
           isRTL={isRTL}
@@ -972,10 +921,10 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
                   <ConfirmStep key="c"
                     orderNumber={lastOrderNumber} meal={currentMeal} selections={selections}
                     orderFor={orderFor}
-                    patientName={orderFor === "guest" ? (isRTL ? "مرافق" : "Companion") : patientName}
-                    room={orderFor === "guest" ? null : roomNumber.replace("Room ", "")}
+                    patientName={orderFor === "guest" ? (isRTL ? "مرافق" : "Companion") : DEMO_PATIENT.name}
+                    room={orderFor === "guest" ? null : DEMO_PATIENT.room.replace("Room ", "")}
                     dietLabel={orderFor === "guest" ? (isRTL ? "عادي" : "Regular") : loc(dietCfg.label)}
-                    allergiesLabel={orderFor === "guest" ? (isRTL ? "لا يوجد" : "None") : patientAllergiesLabel}
+                    allergiesLabel={orderFor === "guest" ? (isRTL ? "لا يوجد" : "None") : (isRTL ? "بنسلين، لاتكس" : "Penicillin, Latex")}
                     fontFamily={fontFamily} isRTL={isRTL} />
                 )}
               </AnimatePresence>
@@ -1026,35 +975,36 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
  * TOP BAR
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function TopBar({ onBack, onMyOrders, onDemoClear, title, subtitle, fontFamily, isRTL, BackArrow }: {
-  onBack: () => void; onMyOrders: () => void; onDemoClear: () => void;
-  title: string; subtitle: string; fontFamily: string; isRTL: boolean; BackArrow: any;
-}) {
+function DemoClearIcon({ onDemoClear }: { onDemoClear: () => void }) {
+  // Hidden demo trigger: triple-tap the icon to clear all orders
+  const tapState = React.useRef<{ count: number; t: any }>({ count: 0, t: null });
+  const handleTap = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    tapState.current.count += 1;
+    if (tapState.current.t) clearTimeout(tapState.current.t);
+    if (tapState.current.count >= 3) {
+      tapState.current.count = 0;
+      onDemoClear();
+      return;
+    }
+    tapState.current.t = setTimeout(() => { tapState.current.count = 0; }, 600);
+  };
+
   return (
-    <InternalPageHeader 
-      title={title}
-      subtitle={subtitle}
-      icon={<Utensils size={24} />}
-      onClose={onBack}
-      rightAction={
-        <button onClick={onMyOrders} style={{ 
-          display: "flex", alignItems: "center", gap: "8px", 
-          backgroundColor: "rgba(255,255,255,0.15)", borderRadius: "12px", padding: "10px 16px",
-          color: "#fff", fontFamily, fontWeight: 600, border: "none", cursor: "pointer"
-        }}>
-          <ClipboardList size={20} />
-          {isRTL ? "طلباتي" : "My Orders"}
-        </button>
-      }
-    />
+    <div onClick={handleTap} style={{ cursor: "pointer" }} title="Triple-tap to reset orders (demo)">
+      <Utensils size={26} strokeWidth={2} />
+    </div>
   );
 }
 
-function PatientBar({ isKid, orderFor, name, room, dietLabel, allergiesLabel, mealName, fontFamily, isRTL, onDietClick }: {
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PATIENT BAR (fixed white)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+function PatientBar({ isKid, orderFor, name, dietLabel, allergiesLabel, mealName, fontFamily, isRTL, onDietClick }: {
   isKid: boolean;
   orderFor: OrderFor;
   name: string;
-  room: string;
   dietLabel: string;
   allergiesLabel: string;
   mealName: string | null;
@@ -1068,8 +1018,8 @@ function PatientBar({ isKid, orderFor, name, room, dietLabel, allergiesLabel, me
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className="shrink-0 mx-12 mt-[12px] flex items-center justify-center gap-[16px]"
-      style={{ backgroundColor: "#fff", borderRadius: "24px", padding: "18px 22px", border: "1px solid rgba(0,0,0,0.1)" }}
+      className="shrink-0 mx-[40px] mt-[12px] flex items-center justify-center gap-[16px]"
+      style={{ backgroundColor: "#fff", borderRadius: "22px", padding: "12px 18px", border: "1px solid rgba(0,0,0,0.1)" }}
     >
       {/* Avatar */}
       <div className="shrink-0" style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1090,7 +1040,7 @@ function PatientBar({ isKid, orderFor, name, room, dietLabel, allergiesLabel, me
         </span>
         <div className="flex items-center gap-[14px]">
           {mealName && <Pill icon={<MealSvg />} label={isRTL ? "الوجبة:" : "Meal:"} value={mealName} fontFamily={fontFamily} />}
-          <Pill icon={<RoomSvg />} label={isRTL ? "الغرفة:" : "Room:"} value={room.replace("Room ", "")} fontFamily={fontFamily} />
+          <Pill icon={<RoomSvg />} label={isRTL ? "الغرفة:" : "Room:"} value={DEMO_PATIENT.room.replace("Room ", "")} fontFamily={fontFamily} />
           <button onClick={isGuest ? undefined : onDietClick} className={isGuest ? "" : "active:scale-95 transition-transform cursor-pointer"} style={{ outline: "none", border: "none", background: "transparent", padding: 0, cursor: isGuest ? "default" : "pointer" }}>
             <Pill icon={<DietSvg />} label={isRTL ? "الحمية:" : "Diet:"} value={dietLabel} fontFamily={fontFamily} />
           </button>
@@ -1103,7 +1053,7 @@ function PatientBar({ isKid, orderFor, name, room, dietLabel, allergiesLabel, me
 
 function Pill({ icon, label, value, fontFamily }: { icon: React.ReactNode; label: string; value: string; fontFamily: string }) {
   return (
-    <div className="flex items-center gap-[8px]" style={{ backgroundColor: "#F2F9FB", borderRadius: "10px", padding: "11px 16px" }}>
+    <div className="flex items-center gap-[8px]" style={{ backgroundColor: "#F2F9FB", borderRadius: "8px", padding: "5px 14px" }}>
       {icon}
       <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#303030", whiteSpace: "nowrap", lineHeight: 1.2 }}>{label}</span>
       <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#303030", whiteSpace: "nowrap", lineHeight: 1.2 }}>{value}</span>
@@ -1200,50 +1150,49 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL }: {
 }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
-      className="h-full flex flex-col px-[40px] pt-[48px] pb-[20px] gap-[20px]">
-      {/* Centered heading — matches Choose Meal placement */}
-      <div className="shrink-0 text-center">
-        <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
+      className="h-full flex flex-col items-center justify-center py-[30px] gap-[35px]">
+      <div className="text-center">
+        <h2 style={{ fontFamily, fontSize: "35px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.5px", textTransform: "uppercase" }}>
           {isRTL ? "الطلب لـ" : "Order For"}
         </h2>
-        <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#565656", marginTop: "6px" }}>
+        <p style={{ fontFamily, fontSize: "21px", fontWeight: WEIGHT.medium, color: "#565656", marginTop: "10px" }}>
           {isRTL ? "حدد من سيتم الطلب له" : "Please select who you will order for"}
         </p>
       </div>
 
-      <div className="flex-1 min-h-0 flex items-center justify-center gap-[30px]">
+      <div className="flex gap-[30px]">
         {(["patient", "guest"] as OrderFor[]).map((type) => {
           const selected = orderFor === type;
           return (
             <motion.button key={type} onClick={() => onSelect(type)} whileTap={{ scale: 0.97 }}
               style={{
-                width: "600px", height: "480px", borderRadius: "26px",
+                width: "560px", height: "238px", borderRadius: "22.59px",
                 backgroundColor: selected ? TEAL : "#fff",
                 border: selected ? "none" : "1.6px solid rgba(0,0,0,0.1)",
                 position: "relative", cursor: "pointer", outline: "none",
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "36px",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "30px",
                 transition: "all 0.22s ease",
               }}>
               {/* Checkmark badge */}
-              <div className="absolute" style={{ top: "32px", right: "32px",
-                width: "68px", height: "68px", borderRadius: "50%",
+              <div className="absolute" style={{ top: "30px", right: "30px",
+                width: "60px", height: "60px", borderRadius: "50%",
                 backgroundColor: selected ? "#2DCC06" : "#fff",
                 border: selected ? "none" : "2px solid #DADADA",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 boxShadow: selected ? "0 4px 6.5px rgba(0,138,171,0.38)" : "none",
               }}>
-                {selected && <Check size={32} color="#fff" strokeWidth={2.5} />}
+                {selected && <Check size={28} color="#fff" strokeWidth={2.5} />}
               </div>
 
               {/* Icon circle */}
               <div style={{
-                width: "120px", height: "120px", borderRadius: "60px",
+                width: "90px", height: "90px", borderRadius: "45px",
                 backgroundColor: selected ? "#fff" : "#F4F4F4",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
                 {type === "patient"
-                  ? <User size={60} color={selected ? TEAL : "#605D5D"} strokeWidth={1.8} />
-                  : <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke={selected ? TEAL : "#605D5D"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  ? <User size={46} color={selected ? TEAL : "#605D5D"} strokeWidth={1.8} />
+                  : <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke={selected ? TEAL : "#605D5D"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                       <circle cx="9" cy="7" r="4"/>
                       <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
@@ -1252,8 +1201,8 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL }: {
               </div>
 
               {/* Label */}
-              <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: selected ? "#fff" : "#171717" }}>
-                {type === "patient" ? (isRTL ? "المريض" : "Patient") : (isRTL ? "المرافق" : "Companion")}
+              <span style={{ fontFamily, fontSize: "24px", fontWeight: WEIGHT.bold, color: selected ? "#fff" : "#171717" }}>
+                {type === "patient" ? (isRTL ? "مريض" : "Patient") : (isRTL ? "مرافق" : "Companion")}
               </span>
             </motion.button>
           );
@@ -1278,7 +1227,7 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, su
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
-      className="h-full flex flex-col px-[40px] pt-[48px] pb-[20px] gap-[20px]">
+      className="h-full flex flex-col px-[40px] pt-[24px] pb-[20px] gap-[20px]">
       {/* Centered heading */}
       <div className="shrink-0 text-center">
         <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
@@ -1289,119 +1238,109 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, su
         </p>
       </div>
 
-      {/* Cards row — narrower, centered with whitespace, icon-led */}
-      <div className="flex-1 min-h-0 flex items-center justify-center gap-[28px]" dir={isRTL ? "rtl" : "ltr"}>
+      {/* Cards row */}
+      <div className="flex-1 min-h-0 flex gap-[18px]" dir={isRTL ? "rtl" : "ltr"}>
         {meals.map((meal) => {
           const submitted = submittedMealIds.has(meal.id);
           const orderable = !submitted && isMealOrderable(meal);
           const selected = selectedMealId === meal.id;
+          const MIcon = meal.icon;
           const cutoffStr = formatHour(meal.orderCutoff, isRTL);
-
-          // Icon mapping
-          const Icon = meal.id === "breakfast" ? Sun : meal.id === "lunch" ? Sunrise : Moon;
-          const iconBg = meal.id === "breakfast" ? "#FEF3C7" : meal.id === "lunch" ? "#E0F2FE" : "#EDE9FE";
-          const iconColor = meal.id === "breakfast" ? "#F59E0B" : meal.id === "lunch" ? TEAL : "#7C3AED";
-
-          // Status pill config
-          const statusBg = submitted ? "#E0F2FE" : orderable ? "#DCFCE7" : "#FFFBEB";
-          const statusColor = submitted ? "#0369A1" : orderable ? "#16A34A" : "#D97706";
-          const statusText = submitted
-            ? (isRTL ? "تم الطلب" : "Already ordered")
+          // Badge config
+          const badgeColor = submitted ? "#0EA5E9" : orderable ? "#16A34A" : "#9CA3AF";
+          const badgeText = submitted
+            ? (isRTL ? "تم الطلب بالفعل" : "Already submitted")
             : orderable
-              ? (isRTL ? "متاح الآن" : "Available now")
+              ? (isRTL ? "متاح للطلب" : "Open for orders")
               : (isRTL ? "أُغلق الطلب" : "Ordering closed");
-
           const handleClick = () => {
             if (submitted) setSubmittedMeal(meal);
             else if (orderable) onSelect(meal.id);
             else setBlockedMeal(meal);
           };
-
           return (
             <motion.button key={meal.id}
               onClick={handleClick}
-              whileTap={{ scale: 0.97 }}
-              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="relative overflow-hidden"
               dir={isRTL ? "rtl" : "ltr"}
               style={{
-                width: "390px",
-                borderRadius: "24px",
+                flex: 1, minWidth: 0,
+                borderRadius: "18px",
                 backgroundColor: "#fff",
                 border: selected ? `3px solid ${TEAL}` : "1.5px solid rgba(0,0,0,0.08)",
-                boxShadow: "none",
+                boxShadow: selected ? `0 8px 24px ${TEAL}30` : "0 2px 12px rgba(0,0,0,0.06)",
                 cursor: "pointer", outline: "none",
-                opacity: orderable || submitted ? 1 : 0.9,
-                transition: "border 0.2s, box-shadow 0.2s, transform 0.2s",
-                display: "flex", flexDirection: "column", alignItems: "center",
-                padding: "36px 28px 30px",
-                gap: "20px",
-                position: "relative",
+                opacity: orderable || submitted ? 1 : 0.85,
+                transition: "border 0.2s, box-shadow 0.2s",
+                display: "flex", flexDirection: "column",
+                textAlign: isRTL ? "right" : "left",
               }}>
-              {/* Selected check */}
-              {selected && (
-                <div className="absolute pop-in" style={{ top: "16px", [isRTL ? "left" : "right"]: "16px", width: "36px", height: "36px", borderRadius: "50%", backgroundColor: TEAL, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 12px ${TEAL_50}` }}>
-                  <Check size={20} color="#fff" strokeWidth={3} />
-                </div>
-              )}
-
-              {/* Icon circle */}
-              <div style={{
-                width: "104px", height: "104px", borderRadius: "50%",
-                backgroundColor: iconBg,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <Icon size={52} color={iconColor} strokeWidth={2} />
+              {/* Food photo */}
+              <div className="relative w-full flex-1" style={{ minHeight: 0, overflow: "hidden" }}>
+                <ImageWithFallback src={meal.bgImage} alt={loc(meal.label)} className="w-full h-full object-cover" style={{ filter: orderable || submitted ? "none" : "grayscale(0.5)" }} />
+                {selected && (
+                  <div className="absolute pop-in" style={{ top: "12px", [isRTL ? "left" : "right"]: "12px", width: "36px", height: "36px", borderRadius: "50%", backgroundColor: TEAL, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.25)" }}>
+                    <Check size={20} color="#fff" strokeWidth={2.5} />
+                  </div>
+                )}
+                {/* Availability badge — anchors to the leading edge in RTL */}
+                {!selected && (
+                  <div className="absolute flex items-center gap-2" style={{
+                    top: "12px",
+                    [isRTL ? "right" : "left"]: "12px",
+                    padding: "8px 14px",
+                    borderRadius: "100px",
+                    backgroundColor: badgeColor,
+                  }}>
+                    {submitted
+                      ? <Check size={12} color="#fff" strokeWidth={3} />
+                      : <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#fff" }} />}
+                    <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.bold, color: "#fff", letterSpacing: "0.4px" }}>
+                      {badgeText}
+                    </span>
+                  </div>
+                )}
               </div>
-
-              {/* Meal name */}
-              <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1 }}>
-                {loc(meal.label)}
-              </span>
-
-              {/* Status pill (Available / Ordering closed / Already ordered) */}
-              <div className="flex items-center gap-2" style={{
-                padding: "9px 18px", borderRadius: "100px",
-                backgroundColor: statusBg,
-              }}>
-                {submitted
-                  ? <Check size={15} color={statusColor} strokeWidth={3} />
-                  : <div style={{ width: "9px", height: "9px", borderRadius: "50%", backgroundColor: statusColor }} />}
-                <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: statusColor }}>
-                  {statusText}
-                </span>
-              </div>
-
-              {/* Divider */}
-              <div style={{ width: "100%", height: "1px", backgroundColor: "rgba(0,0,0,0.06)", margin: "4px 0" }} />
-
-              {/* Info rows */}
-              <div className="w-full flex flex-col gap-[12px]">
-                {/* Date */}
-                <div className="flex items-center gap-2 justify-center">
-                  <Calendar size={17} color={TEAL} />
-                  <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#374151" }}>
-                    {today}
-                  </span>
+              {/* Bottom info */}
+              <div className="flex flex-col gap-[10px] px-[18px] py-[18px] shrink-0">
+                <div className="flex items-center gap-3" dir={isRTL ? "rtl" : "ltr"}>
+                  <div style={{ width: "44px", height: "44px", borderRadius: "12px", backgroundColor: `${meal.color}18`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <MIcon size={24} color={meal.color} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1 }}>
+                      {loc(meal.label)}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <Clock size={14} color="#6B7280" />
+                      <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: "#374151", lineHeight: 1 }}>
+                        {isRTL ? "التوصيل" : "Delivery"} {meal.timeRange}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                {/* Delivery time */}
-                <div className="flex items-center gap-2 justify-center">
-                  <Clock size={17} color="#6B7280" />
-                  <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#6B7280" }}>
-                    {isRTL ? "التوصيل" : "Delivery"} {locTimeRange(meal.timeRange, isRTL)}
-                  </span>
-                </div>
-                {/* Last time to order */}
-                <div className="flex items-center justify-center gap-2" style={{
-                  padding: "10px 14px", borderRadius: "12px",
-                  backgroundColor: orderable ? "#FFFBEB" : "#F3F4F6",
-                  border: `1px solid ${orderable ? "#FDE68A" : "rgba(0,0,0,0.06)"}`,
-                }}>
-                  <Clock size={16} color={orderable ? "#D97706" : "#9CA3AF"} />
-                  <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: orderable ? "#D97706" : "#9CA3AF" }}>
-                    {orderable
-                      ? (isRTL ? `آخر وقت للطلب ${cutoffStr}` : `Order by ${cutoffStr}`)
-                      : (isRTL ? "انتهى وقت الطلب" : "Ordering window closed")}
-                  </span>
+                {/* Date + Order-by/Status pills */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2" style={{ padding: "6px 12px", borderRadius: "8px", backgroundColor: "#F2F9FB" }}>
+                    <Calendar size={13} color={TEAL} />
+                    <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+                      {today}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2" style={{
+                    padding: "6px 12px", borderRadius: "8px",
+                    backgroundColor: submitted ? "#E0F2FE" : orderable ? "#FFFBEB" : "#F3F4F6",
+                  }}>
+                    <Clock size={13} color={submitted ? "#0369A1" : orderable ? "#D97706" : "#9CA3AF"} />
+                    <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.semibold, color: submitted ? "#0369A1" : orderable ? "#D97706" : "#9CA3AF" }}>
+                      {submitted
+                        ? (isRTL ? "تم استلام طلبك" : "Your order is in")
+                        : orderable
+                          ? (isRTL ? `اطلب قبل ${cutoffStr}` : `Order by ${cutoffStr}`)
+                          : (isRTL ? "انتهى وقت الطلب" : "It's too late to order this meal")}
+                    </span>
+                  </div>
                 </div>
               </div>
             </motion.button>
@@ -1436,8 +1375,8 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, fontFamily, isRTL, su
                 </h3>
                 <p style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.5 }}>
                   {isRTL
-                    ? `يجب طلب ${loc(blockedMeal.label)} قبل الساعة ${formatHour(blockedMeal.orderCutoff, isRTL)} ليتم توصيله خلال ${locTimeRange(blockedMeal.timeRange, isRTL)}. يرجى اختيار وجبة متاحة أو الانتظار لوجبة لاحقة.`
-                    : `${loc(blockedMeal.label)} had to be ordered by ${formatHour(blockedMeal.orderCutoff, isRTL)} to be delivered during ${locTimeRange(blockedMeal.timeRange, isRTL)}. Please pick another meal or wait for the next ordering window.`}
+                    ? `يجب طلب ${loc(blockedMeal.label)} قبل الساعة ${formatHour(blockedMeal.orderCutoff, isRTL)} ليتم توصيله خلال ${blockedMeal.timeRange}. يرجى اختيار وجبة متاحة أو الانتظار لوجبة لاحقة.`
+                    : `${loc(blockedMeal.label)} had to be ordered by ${formatHour(blockedMeal.orderCutoff, isRTL)} to be delivered during ${blockedMeal.timeRange}. Please pick another meal or wait for the next ordering window.`}
                 </p>
                 <button onClick={() => setBlockedMeal(null)}
                   className="active:scale-95 transition-transform"
@@ -1524,12 +1463,12 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL }: {
         overflow: "hidden",
       }}>
         {/* Pre-order banner — top of the same container */}
-        <div className="shrink-0 flex items-center gap-2 px-5 py-3" style={{ backgroundColor: "#F2F9FB", borderBottom: `1px solid ${TEAL_20}` }}>
+        <div className="shrink-0 flex items-center gap-2 px-5 py-3" style={{ backgroundColor: "#F2F9FB", borderBottom: `1px solid ${TEAL}20` }}>
           <Clock size={17} color={TEAL} style={{ flexShrink: 0 }} />
           <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL, lineHeight: 1.4 }}>
             {active
-              ? (isRTL ? `يُسلَّم خلال ${loc(meal.label)} (${locTimeRange(meal.timeRange, isRTL)})` : `Delivered during ${loc(meal.label)} (${locTimeRange(meal.timeRange, isRTL)})`)
-              : (isRTL ? `طلب مسبق — ${loc(meal.label)} (${locTimeRange(meal.timeRange, isRTL)})` : `Pre-order — delivered ${loc(meal.label)} (${locTimeRange(meal.timeRange, isRTL)})`)}
+              ? (isRTL ? `يُسلَّم خلال ${loc(meal.label)} (${meal.timeRange})` : `Delivered during ${loc(meal.label)} (${meal.timeRange})`)
+              : (isRTL ? `طلب مسبق — ${loc(meal.label)} (${meal.timeRange})` : `Pre-order — delivered ${loc(meal.label)} (${meal.timeRange})`)}
           </span>
         </div>
 
@@ -1548,7 +1487,7 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL }: {
       <div className="shrink-0 flex flex-col" style={{ width: "440px", borderRadius: "20px", backgroundColor: "#fff", border: "1.5px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
         {/* Header */}
         <div className="shrink-0 flex items-center gap-3 px-5 py-4" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: `${TEAL_15}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: `${TEAL}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <ChefHat size={22} color={TEAL} />
           </div>
           <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.3px" }}>
@@ -1700,7 +1639,7 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
                 borderRadius: "12px",
                 backgroundColor: "#fff",
                 border: sel ? `2px solid ${TEAL}` : "1.5px solid rgba(0,0,0,0.12)",
-                boxShadow: sel ? `0 2px 8px ${TEAL_20}` : "none",
+                boxShadow: sel ? `0 2px 8px ${TEAL}20` : "none",
                 cursor: "pointer", outline: "none",
                 transition: "border 0.15s, box-shadow 0.15s",
               }}>
@@ -1800,7 +1739,7 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
           <div style={{
             marginTop: "4px",
             padding: "10px 20px", borderRadius: "100px",
-            backgroundColor: "#F2F9FB", border: `1px solid ${TEAL_25}`,
+            backgroundColor: "#F2F9FB", border: `1px solid ${TEAL}25`,
           }}>
             <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.bold, color: TEAL, letterSpacing: "0.4px" }}>
               {isRTL ? "رقم الطلب:" : "Order ID:"} {orderNumber}
@@ -1817,7 +1756,7 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
           <div className="flex items-center gap-3" style={{
             padding: "12px 16px", borderRadius: "12px",
             backgroundColor: isGuest ? "#FEF3C7" : "#F2F9FB",
-            border: `1px solid ${isGuest ? "#FDE68A" : `${TEAL_25}`}`,
+            border: `1px solid ${isGuest ? "#FDE68A" : `${TEAL}25`}`,
           }}>
             <div style={{ width: "38px", height: "38px", borderRadius: "50%", backgroundColor: isGuest ? "#D97706" : TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <User size={19} color="#fff" strokeWidth={2.5} />
@@ -1845,7 +1784,7 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
             <DetailLine icon={<Clock size={20} color={TEAL} />} label={isRTL ? "وقت التوصيل" : "Delivery Time"} fontFamily={fontFamily}>
               <div className="text-right">
                 <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: TEAL }}>
-                  {loc(meal.label)} ({locTimeRange(meal.timeRange, isRTL)})
+                  {loc(meal.label)} ({meal.timeRange})
                 </p>
                 <p style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#6B7280", marginTop: "3px" }}>
                   {today}
@@ -1932,7 +1871,7 @@ function BottomBar({ step, canContinue, onBack, showBack, onContinue, secondaryA
       {showBack !== false ? (
         <button onClick={onBack} className="active:scale-95 transition-transform cursor-pointer"
           style={{
-            height: "60px", padding: "0 32px", borderRadius: "16px",
+            height: "60px", padding: "0 32px", borderRadius: "1000px",
             backgroundColor: "#fff",
             display: "flex", alignItems: "center", gap: "10px",
             border: `1.5px solid ${TEAL}`,
@@ -1951,7 +1890,7 @@ function BottomBar({ step, canContinue, onBack, showBack, onContinue, secondaryA
         {secondaryAction && (
           <button onClick={secondaryAction.onClick} className="active:scale-95 transition-transform cursor-pointer"
             style={{
-              height: "60px", padding: "0 28px", borderRadius: "16px",
+              height: "60px", padding: "0 28px", borderRadius: "1000px",
               backgroundColor: "#fff",
               display: "flex", alignItems: "center", gap: "10px",
               border: `1.5px solid ${TEAL}`,
@@ -1967,13 +1906,13 @@ function BottomBar({ step, canContinue, onBack, showBack, onContinue, secondaryA
           onClick={continueEnabled ? onContinue : undefined}
           whileTap={continueEnabled ? { scale: 0.97 } : {}}
           style={{
-            height: "60px", padding: "0 32px", borderRadius: "16px",
+            height: "60px", padding: "0 32px", borderRadius: "1000px",
             backgroundColor: continueEnabled ? TEAL : "#fff",
             display: "flex", alignItems: "center", gap: "10px",
             border: `1.5px solid ${continueEnabled ? TEAL : "rgba(255,255,255,0.3)"}`,
             outline: "none",
             cursor: continueEnabled ? "pointer" : "not-allowed",
-            boxShadow: continueEnabled ? `0 4px 16px ${TEAL_50}` : "0 2px 8px rgba(0,0,0,0.08)",
+            boxShadow: continueEnabled ? `0 4px 16px ${TEAL}50` : "0 2px 8px rgba(0,0,0,0.08)",
             transition: "all 0.25s",
             opacity: continueEnabled ? 1 : 0.5,
           }}>
@@ -2002,7 +1941,7 @@ function scheduledFor(order: any, isRTL: boolean): string {
   if (d.toDateString() === today.toDateString()) dayLabel = isRTL ? "اليوم" : "Today";
   else if (d.toDateString() === yesterday.toDateString()) dayLabel = isRTL ? "أمس" : "Yesterday";
   else dayLabel = d.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "short", month: "short", day: "numeric" });
-  return dayLabel;
+  return `${order.mealType} · ${dayLabel}`;
 }
 
 function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL }: {
@@ -2019,13 +1958,10 @@ function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL }: {
     const isToday = d.toDateString() === today.toDateString();
     const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
     const isYesterday = d.toDateString() === yesterday.toDateString();
-    let time = d.toLocaleTimeString(isRTL ? "ar-SA" : "en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
-    if (isRTL) {
-      time = time.replace("ص", "صباحًا").replace("م", "مساءً").replace(/am/ig, "صباحًا").replace(/pm/ig, "مساءً");
-    }
-    if (isToday) return `${isRTL ? "اليوم" : "Today"}، ${time}`;
-    if (isYesterday) return `${isRTL ? "أمس" : "Yesterday"}، ${time}`;
-    return d.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { month: "short", day: "numeric" }) + `، ${time}`;
+    const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (isToday) return `${isRTL ? "اليوم" : "Today"}, ${time}`;
+    if (isYesterday) return `${isRTL ? "أمس" : "Yesterday"}, ${time}`;
+    return d.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { month: "short", day: "numeric" }) + `, ${time}`;
   };
 
   return (
@@ -2033,12 +1969,12 @@ function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL }: {
       {/* Tabs row */}
       <div className="shrink-0 flex items-center justify-between px-[30px] pt-[28px] pb-[20px]">
         <div className="flex items-center gap-3 flex-wrap">
-          <HistoryTab active={tab === "all"} onClick={() => setTab("all")} label={isRTL ? "جميع الطلبات" : "All Orders"} count={all.length} fontFamily={fontFamily} />
+          <HistoryTab active={tab === "all"} onClick={() => setTab("all")} label={isRTL ? "كل الطلبات" : "All Orders"} count={all.length} fontFamily={fontFamily} />
           <HistoryTab active={tab === "patient"} onClick={() => setTab("patient")} label={isRTL ? "للمريض" : "Patient"} count={patientOrders.length} fontFamily={fontFamily} />
           <HistoryTab active={tab === "companion"} onClick={() => setTab("companion")} label={isRTL ? "للمرافق" : "Companion"} count={companionOrders.length} fontFamily={fontFamily} />
         </div>
         <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.semibold, color: "#565656" }}>
-          {display.length} {isRTL ? (display.length > 1 ? "طلبات" : "طلب") : "Orders"}
+          {display.length} {isRTL ? "طلب" : "Orders"}
         </span>
       </div>
 
@@ -2067,11 +2003,7 @@ function OrderCard({ order, fontFamily, isRTL, formatDate }: {
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
   const [open, setOpen] = useState(false);
   const isGuest = order.orderFor === "guest";
-  const ChevronIcon = open ? ChevronDown : (isRTL ? ChevronLeft : ChevronRight);
-  const mt2 = order.mealType.toLowerCase();
-  const nameAr = mt2 === "breakfast" ? "الفطور" : mt2 === "lunch" ? "الغداء" : mt2 === "dinner" ? "العشاء" : order.mealType;
-  const translatedMealType = isRTL ? nameAr : (order.mealType.charAt(0).toUpperCase() + order.mealType.slice(1));
-
+  const ChevronIcon = open ? ChevronDown : ChevronRight;
   return (
     <div style={{
       borderRadius: "20px", backgroundColor: "#fff", border: "1px solid rgba(0,0,0,0.1)",
@@ -2092,7 +2024,7 @@ function OrderCard({ order, fontFamily, isRTL, formatDate }: {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3">
             <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.bold, color: "#000" }}>
-              {translatedMealType}
+              {order.mealType}
             </span>
             <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.normal, color: "#565656" }}>
               {order.orderNumber}
@@ -2105,26 +2037,33 @@ function OrderCard({ order, fontFamily, isRTL, formatDate }: {
                 {isRTL ? "أُرسل" : "Placed"} {formatDate(order.placedAt)}
               </span>
             </div>
+            <span style={{ color: "#D1D5DB" }}>·</span>
+            <div className="flex items-center gap-1.5">
+              <Calendar size={14} color={TEAL} />
+              <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+                {isRTL ? "للوجبة" : "For"} {scheduledFor(order, isRTL)}
+              </span>
+            </div>
             {order.mealWindow && (
               <>
                 <span style={{ color: "#D1D5DB" }}>·</span>
                 <div className="flex items-center gap-1.5">
                   <Utensils size={14} color="#9CA3AF" />
                   <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#6B7280" }}>
-                    {isRTL ? "التوصيل" : "Delivery"} {locTimeRange(order.mealWindow, isRTL)}
+                    {isRTL ? "التوصيل" : "Delivery"} {order.mealWindow}
                   </span>
                 </div>
               </>
             )}
           </div>
         </div>
-        <div className="flex items-center justify-center gap-2 shrink-0" style={{
-          width: "185px", padding: "8px 16px", borderRadius: "10px",
+        <div className="flex items-center gap-2 shrink-0" style={{
+          padding: "8px 16px", borderRadius: "100px",
           backgroundColor: isGuest ? "#FEF3C7" : TEAL_BG_TINT,
-          border: `1px solid ${isGuest ? "#FDE68A" : `${TEAL_25}`}`,
+          border: `1px solid ${isGuest ? "#FDE68A" : `${TEAL}25`}`,
         }}>
           <User size={16} color={isGuest ? "#D97706" : TEAL} />
-          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: isGuest ? "#D97706" : TEAL, whiteSpace: "nowrap" }}>
+          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: isGuest ? "#D97706" : TEAL }}>
             {isGuest ? (isRTL ? "للمرافق" : "For Companion") : (isRTL ? "للمريض" : "For Patient")}
           </span>
         </div>
@@ -2139,33 +2078,32 @@ function OrderCard({ order, fontFamily, isRTL, formatDate }: {
           <div style={{ padding: "0 26px 22px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
               <div className="grid grid-cols-2 gap-4" style={{ paddingTop: "18px" }}>
                 {/* Your meal items — dedupe against comesWith so auto-included items never appear twice */}
-                {(() => {
-                  const includedSet = new Set((order.comesWith || []).map((it: any) => `${it.en}|${it.ar}`));
-                  const mealItems = (order.items || []).filter((item: any) => !includedSet.has(`${item.name.en}|${item.name.ar}`));
-                  return (
-                    <DetailBlock icon={<Utensils size={18} color={TEAL} />} label={isRTL ? "وجباتك" : "Your Meal Items"} count={mealItems.length} isRTL={isRTL} fontFamily={fontFamily}>
-                      <ul style={{ margin: 0, padding: 0, paddingLeft: "6px", listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
-                        {mealItems.map((item: any, i: number) => (
-                          <li key={i} className="flex items-center gap-2.5">
-                            <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: GREEN, flexShrink: 0 }} />
-                            <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: "#171717" }}>
+                <DetailBlock icon={<Utensils size={18} color={TEAL} />} label={isRTL ? "وجباتك" : "Your Meal Items"} fontFamily={fontFamily}>
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "4px" }}>
+                    {(() => {
+                      const includedSet = new Set((order.comesWith || []).map((it: any) => `${it.en}|${it.ar}`));
+                      return (order.items || [])
+                        .filter((item: any) => !includedSet.has(`${item.name.en}|${item.name.ar}`))
+                        .map((item: any, i: number) => (
+                          <li key={i} className="flex items-center gap-2">
+                            <div style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: GREEN, flexShrink: 0 }} />
+                            <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.semibold, color: "#171717" }}>
                               {item.quantity > 1 ? `${item.quantity}× ` : ""}{loc(item.name)}
                             </span>
                           </li>
-                        ))}
-                      </ul>
-                    </DetailBlock>
-                  );
-                })()}
+                        ));
+                    })()}
+                  </ul>
+                </DetailBlock>
 
                 {/* Comes with your meal */}
                 {order.comesWith && order.comesWith.length > 0 && (
-                  <DetailBlock icon={<Check size={18} color={GREEN} />} label={isRTL ? "يأتي مع وجبتك" : "Comes With Your Meal"} count={order.comesWith.length} isRTL={isRTL} fontFamily={fontFamily}>
-                    <ul style={{ margin: 0, padding: 0, paddingLeft: "6px", listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <DetailBlock icon={<Check size={18} color={GREEN} />} label={isRTL ? "يأتي مع وجبتك" : "Comes With Your Meal"} fontFamily={fontFamily}>
+                    <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "4px" }}>
                       {order.comesWith.map((it: any, i: number) => (
-                        <li key={i} className="flex items-center gap-2.5">
-                          <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: GREEN, flexShrink: 0 }} />
-                          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: "#171717" }}>
+                        <li key={i} className="flex items-center gap-2">
+                          <div style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: GREEN, flexShrink: 0 }} />
+                          <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.semibold, color: "#171717" }}>
                             {loc(it)}
                           </span>
                         </li>
@@ -2181,27 +2119,14 @@ function OrderCard({ order, fontFamily, isRTL, formatDate }: {
   );
 }
 
-function DetailBlock({ icon, label, count, isRTL, fontFamily, children }: { icon: React.ReactNode; label: string; count?: number; isRTL?: boolean; fontFamily: string; children: React.ReactNode }) {
+function DetailBlock({ icon, label, fontFamily, children }: { icon: React.ReactNode; label: string; fontFamily: string; children: React.ReactNode }) {
   return (
-    <div style={{ padding: "14px 18px", borderRadius: "12px", backgroundColor: "#F9FAFB" }}>
-      <div className="flex items-center gap-2 mb-3">
+    <div style={{ padding: "12px 14px", borderRadius: "12px", backgroundColor: "#F9FAFB" }}>
+      <div className="flex items-center gap-2 mb-2">
         {icon}
-        <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.4px", textTransform: "uppercase" }}>
+        <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.4px", textTransform: "uppercase" }}>
           {label}
         </span>
-        {count !== undefined && (
-          <div style={{
-            marginLeft: "auto",
-            padding: "3px 10px",
-            borderRadius: "100px",
-            backgroundColor: TEAL_15,
-            display: "flex", alignItems: "center", justifyContent: "center", gap: "4px",
-          }}>
-            <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: TEAL }}>
-              {count} {isRTL ? "عنصر" : (count === 1 ? "Item" : "Items")}
-            </span>
-          </div>
-        )}
       </div>
       {children}
     </div>

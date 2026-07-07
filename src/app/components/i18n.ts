@@ -139,6 +139,12 @@ const translations: Record<string, TranslationEntry> = {
   /* ─── Top Bar ─── */
   "topbar.am": { en: "AM", ar: "ص", ur: "AM" },
   "topbar.pm": { en: "PM", ar: "م", ur: "PM" },
+  "conn.connected": { en: "Connected", ar: "متصل", ur: "منسلک" },
+  "conn.offline": { en: "Offline", ar: "غير متصل", ur: "آف لائن" },
+  "conn.lastUpdate": { en: "last update", ar: "آخر تحديث", ur: "آخری اپ ڈیٹ" },
+  "conn.ago": { en: "ago", ar: "مضت", ur: "پہلے" },
+  "conn.refresh": { en: "Refresh", ar: "تحديث", ur: "ریفریش" },
+  "conn.activeOffline": { en: "active offline", ar: "نشط دون اتصال", ur: "ایکٹو آف لائن" },
 
   /* ─── Prayer Names ─── */
   "prayer.fajr": { en: "FAJR", ar: "الفجر", ur: "فجر" },
@@ -954,7 +960,7 @@ const translations: Record<string, TranslationEntry> = {
   "offline.title":     { en: "No Internet Connection", ar: "لا يوجد اتصال بالإنترنت", ur: "انٹرنیٹ کنکشن نہیں" },
   "offline.subtitle":  { en: "Showing last saved content. Connect to WiFi to refresh.", ar: "يتم عرض المحتوى المحفوظ. اتصل بالواي فاي للتحديث.", ur: "آخری محفوظ مواد دکھایا جا رہا ہے۔" },
   "offline.openWifi":  { en: "Open WiFi Settings", ar: "فتح إعدادات الواي فاي", ur: "وائی فائی سیٹنگز کھولیں" },
-  "offline.adminPin":  { en: "Admin Access", ar: "وصول المسؤول", ur: "ایڈمن رسائی" },
+  "offline.adminPin":  { en: "Continue Offline", ar: "الاستمرار بدون اتصال", ur: "آف لائن جاری رکھیں" },
   "offline.enterPin":  { en: "Enter admin PIN", ar: "أدخل رمز PIN للمسؤول", ur: "ایڈمن PIN درج کریں" },
   "offline.cancel":    { en: "Cancel", ar: "إلغاء", ur: "منسوخ" }
 };
@@ -969,6 +975,13 @@ export function localizeNumber(n: number | string, locale: Locale): string {
 }
 
 
+
+/* ── Target-specific translator ── */
+export function translateWithLocale(key: string, locale: Locale): string {
+  const entry = translations[key];
+  if (!entry) return key;
+  return entry[locale] ?? entry.en ?? key;
+}
 
 /* ── Translator function factory ── */
 function createT(locale: Locale) {
