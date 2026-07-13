@@ -124,6 +124,9 @@ const translations: Record<string, TranslationEntry> = {
   /* ─── "I Need Something" flow (child-friendly service requests) ─── */
   "need.header.title": { en: "Patient Services", ar: "خدمات المريض", ur: "مریض کی خدمات" },
   "need.header.subtitle": { en: "Request help or report an issue", ar: "اطلب المساعدة أو أبلغ عن مشكلة", ur: "مدد طلب کریں یا مسئلہ رپورٹ کریں" },
+  /* Header language switcher — shows the language the button switches TO (endonym,
+     rendered in its own script), so it reads correctly regardless of the active UI locale. */
+  "need.header.language": { en: "العربية", ar: "English", ur: "English" },
   "need.tab.request": { en: "I Need Something", ar: "أحتاج شيئاً", ur: "مجھے کچھ چاہیے" },
   "need.tab.report": { en: "Report an Issue", ar: "أبلغ عن مشكلة", ur: "مسئلہ رپورٹ کریں" },
   "need.tab.mine": { en: "My Requests", ar: "طلباتي", ur: "میری درخواستیں" },

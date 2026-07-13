@@ -2,7 +2,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   HandHelping, Wrench, ClipboardList,
-  CheckCircle2, Clock, X, Send, Inbox,
+  CheckCircle2, Clock, X, Send, Inbox, Globe,
   // Unified Patient Services icon set — clean, outlined, single-stroke lucide
   // glyphs replacing the old emoji illustrations (matches Entertainment / Home).
   BedDouble, GlassWater, BedSingle, Shirt, SprayCan, Layers, Footprints,
@@ -103,8 +103,13 @@ interface NeedSomethingProps {
 type Tab = "request" | "report" | "mine";
 
 export function NeedSomething({ onClose }: NeedSomethingProps) {
-  const { theme } = useTheme();
+  const { theme, setLocale } = useTheme();
   const { t, isRTL, fontFamily, locale } = useLocale();
+
+  /* Header language switcher — same en/ar toggle behaviour as the global TopBar
+     and the Meal Ordering module, so patients can flip language without leaving
+     the page. Any non-English locale (ar/ur) returns to English. */
+  const toggleLanguage = () => setLocale(locale === "en" ? "ar" : "en");
 
   /* ── Semantic status styles — all from theme tokens, so they re-theme ── */
   /* Friendly status display. Colours are intentionally config-independent
@@ -286,6 +291,34 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
         subtitle={t("need.header.subtitle")}
         icon={<HandHelping size={24} />}
         onClose={onClose}
+        rightAction={
+          <button
+            onClick={toggleLanguage}
+            aria-label={t("settings.language")}
+            className="flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.15)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              borderRadius: "12px",
+              padding: "10px 16px",
+              color: "#fff",
+              outline: "none",
+            }}
+          >
+            <Globe size={20} />
+            <span
+              style={{
+                ...TEXT_STYLE.buttonSm,
+                /* Label is the target-language endonym: render it in that
+                   language's brand font (Arabic when currently in English). */
+                fontFamily: locale === "en" ? theme.fontFamilyAr : fontFamily,
+                color: "#fff",
+              }}
+            >
+              {t("need.header.language")}
+            </span>
+          </button>
+        }
       />
 
       {/* ─── Main content — large white rounded card ─── */}
@@ -360,7 +393,7 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
         >
           {/* Tabs strip */}
           <div
-            className={`shrink-0 flex items-center gap-3 flex-wrap px-8 pt-7 pb-5 ${isRTL ? "flex-row-reverse" : ""}`}
+            className="shrink-0 flex items-center gap-3 flex-wrap px-8 pt-7 pb-5"
             style={{ borderBottom: `1px solid ${theme.borderSubtle}` }}
           >
             {tabs.map((tb) => {
@@ -418,8 +451,8 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
           {/* Body */}
           <div className="ns-scroll flex-1 min-h-0 overflow-y-auto px-8 py-7">
             {/* Section heading */}
-            <div className={`mb-6 ${isRTL ? "text-right" : ""}`}>
-              <div className={`flex items-center gap-3 flex-wrap ${isRTL ? "flex-row-reverse" : ""}`}>
+            <div className="mb-6">
+              <div className="flex items-center gap-3 flex-wrap">
                 <h3 style={{ ...TEXT_STYLE.pageTitle, fontFamily, color: theme.textHeading }}>
                   {t(titleKey)}
                 </h3>
@@ -484,7 +517,7 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                     return (
                       <div
                         key={r.id}
-                        className={`flex items-center gap-5 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+                        className="flex items-center gap-5"
                         style={{
                           backgroundColor: theme.surface,
                           borderRadius: theme.radiusLg,
@@ -538,7 +571,7 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                               “{r.note}”
                             </p>
                           ) : null}
-                          <div className={`flex items-center gap-1.5 mt-1.5 ${isRTL ? "flex-row-reverse" : ""}`}>
+                          <div className="flex items-center gap-1.5 mt-1.5">
                             <Clock size={14} color={theme.textDisabled} />
                             <span style={{ ...TEXT_STYLE.caption, fontFamily, color: theme.textMuted }}>
                               {formatDateTime(r.createdAt)}
@@ -660,7 +693,7 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
               }}
             >
               {/* Header: item + prompt */}
-              <div className={`flex items-center gap-4 mb-5 ${isRTL ? "flex-row-reverse text-right" : ""}`}>
+              <div className="flex items-center gap-4 mb-5">
                 <div
                   className="shrink-0 flex items-center justify-center"
                   style={{
@@ -709,7 +742,7 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
               </p>
 
               {/* Actions */}
-              <div className={`flex items-center gap-3 mt-6 ${isRTL ? "flex-row-reverse" : ""}`}>
+              <div className="flex items-center gap-3 mt-6">
                 <button
                   onClick={closeSheet}
                   className="flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] transition-transform"
@@ -740,7 +773,12 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                     outline: "none",
                   }}
                 >
-                  <Send size={20} color={theme.textInverse} strokeWidth={2.4} />
+                  <Send
+                    size={20}
+                    color={theme.textInverse}
+                    strokeWidth={2.4}
+                    style={isRTL ? { transform: "scaleX(-1)" } : undefined}
+                  />
                   <span style={{ ...TEXT_STYLE.button, fontFamily, color: theme.textInverse }}>
                     {selected.kind === "report" ? t("need.report.submit") : t("need.send")}
                   </span>
