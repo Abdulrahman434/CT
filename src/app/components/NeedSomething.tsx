@@ -1,8 +1,13 @@
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  HandHelping, Wrench, ClipboardList, ChevronRight, ChevronLeft,
+  HandHelping, Wrench, ClipboardList,
   CheckCircle2, Clock, X, Send, Inbox,
+  // Unified Patient Services icon set — clean, outlined, single-stroke lucide
+  // glyphs replacing the old emoji illustrations (matches Entertainment / Home).
+  BedDouble, GlassWater, BedSingle, Shirt, SprayCan, Layers, Footprints,
+  AirVent, Lightbulb, Tv, ShowerHead, Plug,
+  createLucideIcon, type LucideIcon,
 } from "lucide-react";
 import { useTheme, TYPE_SCALE, WEIGHT, TEXT_STYLE, SHADOW, SPACE, LEADING } from "./ThemeContext";
 import { useLocale } from "./i18n";
@@ -39,30 +44,46 @@ interface NeedRequest {
   createdAt: number; // epoch ms
 }
 
+/* Tissue box with a tissue sheet protruding from the top. lucide-react has no
+   tissue/napkin glyph, so this is authored via createLucideIcon — it renders as
+   a genuine LucideIcon, inheriting the same viewBox, round caps/joins, and the
+   stroke/size/color/strokeWidth props as every other icon in the set. */
+const TissueBox: LucideIcon = createLucideIcon("TissueBox", [
+  ["path", { d: "M8.5 11 L9.5 6.5 L12 8 L14.5 6.5 L15.5 11", key: "sheet" }],
+  ["rect", { x: "3", y: "11", width: "18", height: "9", rx: "2", key: "box" }],
+]);
+
 interface CardDef {
   key: string; // i18n label key
-  emoji: string;
+  emoji: string; // retained for back-compat with requests persisted before the redesign
+  Icon: LucideIcon; // unified vector icon shown in the light-blue container
 }
 
 const REQUEST_ITEMS: CardDef[] = [
-  { key: "need.item.blanket", emoji: "🛏️" },
-  { key: "need.item.water", emoji: "💧" },
-  { key: "need.item.pillow", emoji: "🧸" },
-  { key: "need.item.towel", emoji: "🧺" },
-  { key: "need.item.toiletries", emoji: "🧼" },
-  { key: "need.item.tissues", emoji: "🧻" },
-  { key: "need.item.sheets", emoji: "🛌" },
-  { key: "need.item.slippers", emoji: "🩴" },
+  { key: "need.item.blanket", emoji: "🛏️", Icon: BedDouble },
+  { key: "need.item.water", emoji: "💧", Icon: GlassWater },
+  { key: "need.item.pillow", emoji: "🧸", Icon: BedSingle },
+  { key: "need.item.towel", emoji: "🧺", Icon: Shirt },
+  { key: "need.item.toiletries", emoji: "🧼", Icon: SprayCan },
+  { key: "need.item.tissues", emoji: "🧻", Icon: TissueBox },
+  { key: "need.item.sheets", emoji: "🛌", Icon: Layers },
+  { key: "need.item.slippers", emoji: "🩴", Icon: Footprints },
 ];
 
 const REPORT_ITEMS: CardDef[] = [
-  { key: "need.issue.ac", emoji: "❄️" },
-  { key: "need.issue.lights", emoji: "💡" },
-  { key: "need.issue.tv", emoji: "📺" },
-  { key: "need.issue.bed", emoji: "🛏️" },
-  { key: "need.issue.bathroom", emoji: "🚿" },
-  { key: "need.issue.power", emoji: "🔌" },
+  { key: "need.issue.ac", emoji: "❄️", Icon: AirVent },
+  { key: "need.issue.lights", emoji: "💡", Icon: Lightbulb },
+  { key: "need.issue.tv", emoji: "📺", Icon: Tv },
+  { key: "need.issue.bed", emoji: "🛏️", Icon: BedDouble },
+  { key: "need.issue.bathroom", emoji: "🚿", Icon: ShowerHead },
+  { key: "need.issue.power", emoji: "🔌", Icon: Plug },
 ];
+
+/* Look up the unified icon for a persisted request by its i18n item key, so the
+   "My Requests" list and dialogs render the same vector set as the grid cards. */
+const ICON_BY_KEY: Record<string, LucideIcon> = Object.fromEntries(
+  [...REQUEST_ITEMS, ...REPORT_ITEMS].map((c) => [c.key, c.Icon]),
+);
 
 /* ── Status: derived from elapsed time (no backend). ── */
 type StatusKey = "sent" | "preparing" | "onway" | "delivered";
@@ -84,7 +105,6 @@ type Tab = "request" | "report" | "mine";
 export function NeedSomething({ onClose }: NeedSomethingProps) {
   const { theme } = useTheme();
   const { t, isRTL, fontFamily, locale } = useLocale();
-  const Chevron = isRTL ? ChevronLeft : ChevronRight;
 
   /* ── Semantic status styles — all from theme tokens, so they re-theme ── */
   /* Friendly status display. Colours are intentionally config-independent
@@ -248,8 +268,10 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
 
       <style>{`
         .ns-card { transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
-        .ns-card:hover { border-color: var(--ns-primary); box-shadow: ${SHADOW.md}; transform: translateY(-3px); }
+        .ns-card:hover { border-color: var(--ns-primary); box-shadow: ${SHADOW.md}; transform: translateY(-4px); }
         .ns-card:active { transform: scale(0.985); }
+        .ns-iconbox { transition: background-color .2s ease; }
+        .ns-card:hover .ns-iconbox { background-color: color-mix(in srgb, var(--ns-primary) 18%, #fff); }
         .ns-textarea::placeholder { color: ${theme.textDisabled}; }
         .ns-textarea:focus { border-color: var(--ns-primary) !important; }
         .ns-scroll::-webkit-scrollbar { width: 10px; }
@@ -397,9 +419,32 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
           <div className="ns-scroll flex-1 min-h-0 overflow-y-auto px-8 py-7">
             {/* Section heading */}
             <div className={`mb-6 ${isRTL ? "text-right" : ""}`}>
-              <h3 style={{ ...TEXT_STYLE.pageTitle, fontFamily, color: theme.textHeading }}>
-                {t(titleKey)}
-              </h3>
+              <div className={`flex items-center gap-3 flex-wrap ${isRTL ? "flex-row-reverse" : ""}`}>
+                <h3 style={{ ...TEXT_STYLE.pageTitle, fontFamily, color: theme.textHeading }}>
+                  {t(titleKey)}
+                </h3>
+                {/* Quick shortcut to the Report an Issue tab — inline pill next to the
+                    title. Hidden when already on that tab so it never points at itself. */}
+                {tab !== "report" && (
+                  <button
+                    onClick={() => setTab("report")}
+                    className="inline-flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
+                    style={{
+                      padding: "5px 12px",
+                      borderRadius: theme.radiusFull,
+                      backgroundColor: theme.primarySubtle,
+                      border: `1px solid color-mix(in srgb, ${theme.primary} 35%, transparent)`,
+                      color: theme.primary,
+                      outline: "none",
+                    }}
+                  >
+                    <Wrench size={15} color={theme.primary} strokeWidth={2.4} />
+                    <span style={{ ...TEXT_STYLE.buttonSm, fontFamily, color: theme.primary }}>
+                      {t("need.tab.report")}
+                    </span>
+                  </button>
+                )}
+              </div>
               {tab !== "mine" && (
                 <p style={{ ...TEXT_STYLE.body, fontFamily, color: theme.textMuted, marginTop: 4 }}>
                   {t(subKey)}
@@ -435,6 +480,7 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                     const st = STATUS_STYLE[status];
                     const isComplaint = r.kind === "report";
                     const typeColor = isComplaint ? theme.accent : theme.primary;
+                    const RowIcon = ICON_BY_KEY[r.itemKey];
                     return (
                       <div
                         key={r.id}
@@ -452,12 +498,16 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                             width: 60,
                             height: 60,
                             borderRadius: theme.radiusMd,
-                            backgroundColor: theme.primarySubtle,
+                            backgroundColor: theme.primaryLight,
                             fontSize: 30,
                             lineHeight: 1,
                           }}
                         >
-                          {r.emoji}
+                          {RowIcon ? (
+                            <RowIcon size={30} color={theme.primary} strokeWidth={1.8} />
+                          ) : (
+                            r.emoji
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <span
@@ -537,43 +587,43 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                 </div>
               )
             ) : (
-              <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
-                {gridItems.map((card) => (
-                  <button
-                    key={card.key}
-                    onClick={() => openSheet(card, gridKind)}
-                    className={`ns-card flex items-center gap-5 cursor-pointer ${isRTL ? "flex-row-reverse text-right" : ""}`}
-                    style={{
-                      backgroundColor: theme.surface,
-                      borderRadius: theme.radiusLg,
-                      border: `1.5px solid ${theme.borderDefault}`,
-                      boxShadow: SHADOW.sm,
-                      padding: "22px 24px",
-                      outline: "none",
-                    }}
-                  >
-                    <div
-                      className="shrink-0 flex items-center justify-center"
+              <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+                {gridItems.map((card) => {
+                  const CardIcon = card.Icon;
+                  return (
+                    <button
+                      key={card.key}
+                      onClick={() => openSheet(card, gridKind)}
+                      className="ns-card flex flex-col items-center justify-center gap-4 cursor-pointer"
                       style={{
-                        width: 88,
-                        height: 88,
-                        borderRadius: theme.radiusLg,
-                        backgroundColor: theme.primarySubtle,
-                        fontSize: 48,
-                        lineHeight: 1,
+                        backgroundColor: theme.surface,
+                        borderRadius: theme.radiusCard,
+                        border: `1.5px solid ${theme.borderDefault}`,
+                        boxShadow: SHADOW.sm,
+                        padding: "28px 18px",
+                        outline: "none",
                       }}
                     >
-                      {card.emoji}
-                    </div>
-                    <span
-                      className="flex-1 min-w-0"
-                      style={{ ...TEXT_STYLE.cardTitle, fontFamily, color: theme.textHeading }}
-                    >
-                      {t(card.key)}
-                    </span>
-                    <Chevron size={24} color={theme.textDisabled} strokeWidth={2.4} />
-                  </button>
-                ))}
+                      <div
+                        className="ns-iconbox shrink-0 flex items-center justify-center"
+                        style={{
+                          width: 92,
+                          height: 92,
+                          borderRadius: theme.radiusLg,
+                          backgroundColor: theme.primaryLight,
+                        }}
+                      >
+                        <CardIcon size={42} color={theme.primary} strokeWidth={1.8} />
+                      </div>
+                      <span
+                        className="text-center"
+                        style={{ ...TEXT_STYLE.cardTitle, fontFamily, color: theme.textHeading }}
+                      >
+                        {t(card.key)}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -617,12 +667,12 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                     width: 64,
                     height: 64,
                     borderRadius: theme.radiusMd,
-                    backgroundColor: theme.primarySubtle,
+                    backgroundColor: theme.primaryLight,
                     fontSize: 34,
                     lineHeight: 1,
                   }}
                 >
-                  {selected.card.emoji}
+                  <selected.card.Icon size={34} color={theme.primary} strokeWidth={1.8} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p style={{ ...TEXT_STYLE.sectionTitle, fontFamily, color: theme.textHeading }}>

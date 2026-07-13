@@ -146,7 +146,7 @@ const translations: Record<string, TranslationEntry> = {
   "need.issue.bed": { en: "Bed", ar: "السرير", ur: "بستر" },
   "need.issue.bathroom": { en: "Bathroom", ar: "الحمّام", ur: "باتھ روم" },
   "need.issue.power": { en: "Power Outlet", ar: "مقبس الكهرباء", ur: "بجلی کا ساکٹ" },
-  "need.notes.title": { en: "Anything you'd like us to know? 😊", ar: "هل هناك ما تودّ إخبارنا به؟ 😊", ur: "کیا آپ ہمیں کچھ بتانا چاہیں گے؟ 😊" },
+  "need.notes.title": { en: "Any special notes for our team?", ar: "هل لديك أي ملاحظات خاصة لفريقنا؟", ur: "کیا ہماری ٹیم کے لیے کوئی خاص نوٹ ہے؟" },
   "need.notes.placeholder": { en: "Example: Please bring two pillows.", ar: "مثال: من فضلك أحضر وسادتين.", ur: "مثال: براہ کرم دو تکیے لے آئیں۔" },
   "need.notes.optional": { en: "You can leave this empty.", ar: "يمكنك تركها فارغة.", ur: "آپ اسے خالی چھوڑ سکتے ہیں۔" },
   "need.cancel": { en: "Cancel", ar: "إلغاء", ur: "منسوخ کریں" },
