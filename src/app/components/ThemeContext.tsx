@@ -286,6 +286,8 @@ export interface ThemeConfig {
   warningSubtle: string;     // warning @ 8% — tinted backgrounds
   error: string;             // #EF4444 — destructive feedback (not actions)
   errorSubtle: string;       // error @ 8% — tinted backgrounds
+  info: string;              // #3B82F6 — informational / in-progress (blue)
+  infoSubtle: string;        // info @ 8% — tinted backgrounds
 
   /* ── Gradients ── */
   gradientCanvas: string;    // main background gradient
@@ -414,6 +416,8 @@ function buildTheme(core: {
       warningSubtle: hexToRgba("#F59E0B", 0.08),
       error: "#EF4444",
       errorSubtle: hexToRgba("#EF4444", 0.08),
+      info: "#3B82F6",
+      infoSubtle: hexToRgba("#3B82F6", 0.08),
     };
   }
 
@@ -476,6 +480,8 @@ function buildTheme(core: {
     warningSubtle: hexToRgba("#F59E0B", 0.08),
     error: "#EF4444",
     errorSubtle: hexToRgba("#EF4444", 0.08),
+    info: "#3B82F6",
+    infoSubtle: hexToRgba("#3B82F6", 0.08),
   };
 }
 

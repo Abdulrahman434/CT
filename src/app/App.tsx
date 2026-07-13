@@ -32,6 +32,7 @@ import { HospitalConfigurator } from "./components/HospitalConfigurator";
 import { ThemeAppearanceDialog } from "./components/ThemeAppearanceDialog";
 import { TasbihScreenSaver } from "./components/TasbihScreenSaver";
 import { FoodOrdering } from "./components/FoodOrdering";
+import { NeedSomething } from "./components/NeedSomething";
 import { OrderProvider } from "./components/OrderStore";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { PasswordGate } from "./components/PasswordGate";
@@ -312,6 +313,7 @@ function BedsideScreen() {
   const { isGuest, careMeUnlocked } = useGuestMode();
   const [showCall, setShowCall] = useState(false);
   const [showFoodOrder, setShowFoodOrder] = useState(false);
+  const [showNeedSomething, setShowNeedSomething] = useState(false);
   const [activeCareRole, setActiveCareRole] = useState<"nurse" | "doctor" | null>(null);
   const [layoutVersion, setLayoutVersion] = useState<1 | 2 | 3>(1);
   const [activeBroadcast, setActiveBroadcast] = useState<BroadcastNotification | null>(null);
@@ -518,7 +520,7 @@ function BedsideScreen() {
   const anyOtherOverlayOpen = !!(
     openCategory || showSurvey || showAboutUs || showSettings ||
     showNotifications || showTour || showConfigurator ||
-    showCareMeExpanded || showCall || showFoodOrder || activeBroadcast ||
+    showCareMeExpanded || showCall || showFoodOrder || showNeedSomething || activeBroadcast ||
     showIptv || showCareMePinDialog || lockMenuApp ||
     ctaPdfConfig || ctaMediaConfig || activeGame || activeTool
   );
@@ -1078,7 +1080,7 @@ function BedsideScreen() {
     } else if (categoryKey === "Order Food") {
       setShowFoodOrder(true);
     } else if (categoryKey === "Housekeeping") {
-      window.open("https://demo.hospitalopsai.com/patient/?mrd_id=3344&room=342", "_blank", "noopener,noreferrer");
+      setShowNeedSomething(true);
     } else if (categoryKey === "Consultation") {
       window.open("https://intracare.icare.medoment.com/login?mrnEncrypted=1611605&deviceId=Rom1", "_blank", "noopener,noreferrer");
     } else {
@@ -1261,6 +1263,7 @@ function BedsideScreen() {
         if (activeGame) { setActiveGame(null); return; }
         if (activeBroadcast) { setActiveBroadcast(null); return; }
         if (showFoodOrder) { setShowFoodOrder(false); return; }
+        if (showNeedSomething) { setShowNeedSomething(false); return; }
         if (showCall) { setShowCall(false); return; }
         if (showCareMeExpanded) { setShowCareMeExpanded(false); return; }
         if (showConfigurator) { setShowConfigurator(false); return; }
@@ -1353,7 +1356,7 @@ function BedsideScreen() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [openCategory, showSurvey, showAboutUs, showSettings,
     showNotifications, showTour, showTasbih, showConfigurator,
-    showCareMeExpanded, showCall, showFoodOrder, activeBroadcast,
+    showCareMeExpanded, showCall, showFoodOrder, showNeedSomething, activeBroadcast,
     activeGame, activeTool, showIptv, matchBinding]);
 
   return (
@@ -1785,6 +1788,11 @@ function BedsideScreen() {
         {/* Food Ordering Overlay */}
         {showFoodOrder && (
           <FoodOrdering onClose={() => setShowFoodOrder(false)} />
+        )}
+
+        {/* "I Need Something" flow (service requests + report an issue) */}
+        {showNeedSomething && (
+          <NeedSomething onClose={() => setShowNeedSomething(false)} />
         )}
 
         {/* Tasbih Screen Saver */}

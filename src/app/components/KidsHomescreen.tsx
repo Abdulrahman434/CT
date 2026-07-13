@@ -163,6 +163,17 @@ export default function KidsHomescreen({
   const brandInk = hslToHex(bh, clamp(bs, 55, 78), 30);
   const dotColor = hslToHex(bh, 28, 62);
 
+  /* Unified sidebar card style — white fill, hairline brand-tinted border,
+     soft shadow, 14px radius. Shared by every card in the left column so they
+     read as one system (spec: "Unified card style throughout"). */
+  const cardBorder = hslToHex(bh, clamp(bs * 0.4, 16, 42), 84);
+  const cardStyle: CSSProperties = {
+    background: "#ffffff",
+    borderRadius: 14,
+    border: `1.5px solid ${cardBorder}`,
+    boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
+  };
+
   /* ── Live clinical data (presentation-only transform) ── */
   const p = nurseStore.patient;
   const displayName = isRTL && p.nameAr ? p.nameAr : (p.nameKey ? t(p.nameKey) : p.name);
@@ -277,6 +288,7 @@ export default function KidsHomescreen({
     { key: "Call", emoji: "📞", label: "kids.tile.call", onClick: () => onOpenCategory("Call") },
     { key: "Feedback", emoji: "💬", label: "kids.tile.feedback", onClick: () => onOpenSurvey?.() },
     { key: "roomcontrol", emoji: "🕹️", label: "kids.tile.roomcontrol", onClick: () => onLaunchTool("roomcontrol") },
+    { key: "Patient Portal", emoji: "📱", label: "kids.tile.portal", onClick: () => onOpenCategory("Patient Portal") },
     { key: "podcast", emoji: "🎙️", label: "kids.side.podcast", onClick: () => window.open(PODCAST_URL, "_blank", "noopener,noreferrer") },
   ];
 
@@ -300,7 +312,6 @@ export default function KidsHomescreen({
         @keyframes kidsHeart { 0%,100% { transform: scale(1); } 15% { transform: scale(1.25); } 30% { transform: scale(1); } 45% { transform: scale(1.18); } 60% { transform: scale(1); } }
         @keyframes kidsTwinkle { 0%,100% { opacity: 0.55; transform: scale(1) rotate(0deg); } 50% { opacity: 0.12; transform: scale(1.3) rotate(18deg); } }
         @keyframes kidsBlob { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
-        @keyframes kidsWave { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(18deg); } 75% { transform: rotate(-12deg); } }
         @keyframes kidsSheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes kidsToastIn { from { transform: translateY(-18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes kidsFade { from { opacity: 0.25; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
@@ -400,309 +411,283 @@ export default function KidsHomescreen({
       {/* Main content */}
       <div className="relative z-10 flex-1 min-h-0 flex flex-col gap-4 px-6 pt-4 pb-4">
         {/* Body row */}
-        <div className={`flex-1 min-h-0 flex gap-5 ${isRTL ? "flex-row-reverse" : ""}`}>
-          {/* ── Left sidebar — Character & Progress card ── */}
-          <div className="shrink-0 min-h-0" style={{ width: 340 }}>
-            <div
-              className="h-full flex flex-col items-stretch gap-3 px-5 py-5 overflow-hidden"
-              style={{
-                background: "rgba(255,255,255,0.72)",
-                borderRadius: 28,
-                border: `3px solid ${theme.primary}`,
-                boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-                backdropFilter: "blur(2px)",
-              }}
-            >
-              {/* Mascot avatar */}
-              <div className="shrink-0 flex flex-col items-center gap-1.5">
-                <div
-                  className="flex items-center justify-center relative"
-                  style={{
-                    width: 96,
-                    height: 96,
-                    borderRadius: 9999,
-                    background: `radial-gradient(circle at 50% 35%, ${tMint.glow}, ${tLav.bg})`,
-                    border: `4px solid ${theme.primary}`,
-                    fontSize: 52,
-                    animation: "kidsFloat 3.4s ease-in-out infinite",
-                  }}
-                >
-                  {mascotMood}
-                  <span
-                    style={{ position: "absolute", bottom: -4, right: -2, fontSize: 26, transformOrigin: "70% 70%", animation: "kidsWave 1.6s ease-in-out infinite" }}
-                  >
-                    👋
-                  </span>
-                </div>
-                {/* Time-of-day greeting — same emoji + logic as the header */}
-                <p style={{ fontFamily: headFont, fontSize: 15, fontWeight: 700, color: theme.primary, textAlign: "center", lineHeight: 1.2 }}>
-                  {greetingEmoji} {t(greetingKey)},
-                </p>
-                <p style={{ fontFamily: headFont, fontSize: 30, fontWeight: 800, color: brandInk, textAlign: "center", lineHeight: 1.1 }}>
-                  {t("kids.name", firstName)}
-                </p>
-                <p style={{ fontSize: 13, fontWeight: 700, color: theme.primary, textAlign: "center", lineHeight: 1.3 }}>
-                  {t("kids.happyHere")}
-                </p>
-              </div>
-
-              {/* Daily Mood card */}
+        <div className={`flex-1 min-h-0 flex gap-4 ${isRTL ? "flex-row-reverse" : ""}`}>
+          {/* ── Left sidebar (210px) — unified white cards, top to bottom ── */}
+          <div className="shrink-0 min-h-0 flex flex-col gap-3" style={{ width: 210 }}>
+            {/* Mascot + time-of-day greeting card */}
+            <div className="shrink-0 flex flex-col items-center gap-1 px-3 py-3" style={cardStyle}>
+              {/* Floating mascot avatar (no wave emoji) */}
               <div
-                className="shrink-0 flex flex-col gap-2 px-3.5 py-3"
-                style={{ background: tRose.bg, borderRadius: 20, border: `2.5px solid ${tRose.border}` }}
+                className="flex items-center justify-center"
+                style={{
+                  width: 78,
+                  height: 78,
+                  borderRadius: 9999,
+                  background: `radial-gradient(circle at 50% 35%, ${tMint.glow}, ${tLav.bg})`,
+                  border: `3px solid ${theme.primary}`,
+                  fontSize: 42,
+                  animation: "kidsFloat 3.4s ease-in-out infinite",
+                }}
               >
-                <p style={{ fontFamily: headFont, fontSize: 15, fontWeight: 800, color: tRose.ink }}>
-                  😊 {t("kids.mood.title")}
-                </p>
-                <div className={`flex gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-                  {MOODS.map((m) => {
-                    const active = mood === m.key;
-                    return (
-                      <button
-                        key={m.key}
-                        onClick={() => selectMood(m.key)}
-                        className="flex-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-transform"
-                        style={{
-                          padding: "9px 4px",
-                          background: "#ffffff",
-                          borderRadius: 16,
-                          border: `2.5px solid ${active ? tRose.ink : tRose.border}`,
-                          transform: active ? "scale(1.07)" : "scale(1)",
-                          boxShadow: active ? `0 5px 14px ${tRose.border}66` : "none",
-                          outline: "none",
-                        }}
-                      >
-                        <span style={{ fontSize: 28, lineHeight: 1 }}>{m.emoji}</span>
-                        <span style={{ fontSize: 11.5, fontWeight: 800, color: tRose.ink }}>{t(m.label)}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {mascotMood}
               </div>
+              <p style={{ fontFamily: headFont, fontSize: 14, fontWeight: 700, color: theme.primary, textAlign: "center", lineHeight: 1.2 }}>
+                {greetingEmoji} {t(greetingKey)},
+              </p>
+              <p style={{ fontFamily: headFont, fontSize: 26, fontWeight: 800, color: brandInk, textAlign: "center", lineHeight: 1.05 }}>
+                {t("kids.name", firstName)}
+              </p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: theme.primary, textAlign: "center", lineHeight: 1.25 }}>
+                {t("kids.happyHere")}
+              </p>
+            </div>
 
-              {/* Nurse mini-card */}
+            {/* Daily Mood card */}
+            <div className="shrink-0 flex flex-col gap-2 px-3 py-2.5" style={cardStyle}>
+              <p style={{ fontFamily: headFont, fontSize: 13.5, fontWeight: 800, color: brandInk, lineHeight: 1.2 }}>
+                😊 {t("kids.mood.title")}
+              </p>
+              <div className={`flex gap-1.5 ${isRTL ? "flex-row-reverse" : ""}`}>
+                {MOODS.map((m) => {
+                  const active = mood === m.key;
+                  return (
+                    <button
+                      key={m.key}
+                      onClick={() => selectMood(m.key)}
+                      className="flex-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-transform"
+                      style={{
+                        padding: "8px 2px",
+                        background: active ? tRose.bg : "#ffffff",
+                        borderRadius: 12,
+                        border: `2px solid ${active ? tRose.ink : cardBorder}`,
+                        transform: active ? "scale(1.06)" : "scale(1)",
+                        boxShadow: active ? `0 5px 14px ${tRose.border}66` : "none",
+                        outline: "none",
+                      }}
+                    >
+                      <span style={{ fontSize: 24, lineHeight: 1 }}>{m.emoji}</span>
+                      <span style={{ fontSize: 10.5, fontWeight: 800, color: brandInk }}>{t(m.label)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Nurse card */}
+            <div className="shrink-0 flex flex-col gap-2 px-3 py-2.5" style={cardStyle}>
+              <button
+                onClick={onShowCareMeExpanded}
+                className={`flex items-center gap-2.5 cursor-pointer active:scale-[0.98] transition-transform ${isRTL ? "flex-row-reverse text-right" : ""}`}
+                style={{ background: "transparent", border: "none", outline: "none", padding: 0 }}
+              >
+                {/* Small circular nurse icon (not a photo) */}
+                <div
+                  className="flex items-center justify-center shrink-0"
+                  style={{ width: 40, height: 40, borderRadius: 9999, backgroundColor: tMint.bg, border: `2px solid ${tMint.border}`, fontSize: 22 }}
+                >
+                  👩‍⚕️
+                </div>
+                <div className={isRTL ? "text-right" : ""}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: theme.primary, opacity: 0.85 }}>{t("kids.yourNurse")}</p>
+                  <p style={{ fontFamily: headFont, fontSize: 15, fontWeight: 800, color: brandInk, lineHeight: 1.1 }}>{nurseName}</p>
+                </div>
+              </button>
+
+              {/* "Send a thank you 💗" pill */}
+              <button
+                onClick={() => setThanked(true)}
+                className="flex items-center justify-center cursor-pointer active:scale-[0.97] transition-transform"
+                style={{
+                  height: 32,
+                  padding: "0 12px",
+                  background: tRose.bg,
+                  borderRadius: 9999,
+                  border: `2px solid ${thanked ? tRose.ink : tRose.border}`,
+                  fontSize: 12,
+                  fontWeight: 800,
+                  color: tRose.ink,
+                  outline: "none",
+                }}
+              >
+                {thanked ? t("kids.nurse.thanked") : t("kids.nurse.thankYou")}
+              </button>
+            </div>
+
+            {/* Motivational carousel card — fills the gap to the vitals row */}
+            <div className="flex-1 min-h-0 flex flex-col gap-2 px-3 py-2.5" style={cardStyle}>
               <div
-                className="shrink-0 flex flex-col gap-2 px-3.5 py-2.5"
-                style={{ background: tMint.bg, borderRadius: 20, border: `2.5px solid ${tMint.border}` }}
+                className="relative flex-1 min-h-0"
+                onTouchStart={onCarouselTouchStart}
+                onTouchEnd={onCarouselTouchEnd}
               >
-                <button
-                  onClick={onShowCareMeExpanded}
-                  className={`flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform ${isRTL ? "flex-row-reverse text-right" : ""}`}
-                  style={{ background: "transparent", border: "none", outline: "none", padding: 0 }}
-                >
-                  {/* Simple illustrated nurse icon (not a photo) */}
-                  <div
-                    className="flex items-center justify-center shrink-0"
-                    style={{ width: 44, height: 44, borderRadius: 9999, backgroundColor: "#fff", border: `3px solid ${tMint.border}`, fontSize: 24 }}
-                  >
-                    👩‍⚕️
-                  </div>
-                  <div className={isRTL ? "text-right" : ""}>
-                    <p style={{ fontSize: 11.5, fontWeight: 700, color: tMint.ink, opacity: 0.85 }}>{t("kids.yourNurse")}</p>
-                    <p style={{ fontFamily: headFont, fontSize: 16, fontWeight: 800, color: tMint.ink, lineHeight: 1.1 }}>{nurseName}</p>
-                  </div>
-                </button>
+                {(() => {
+                  const card = MOTIVATION[slide];
+                  return (
+                    <div
+                      key={slide}
+                      className="h-full flex flex-col items-center justify-center text-center gap-1.5 px-5"
+                      style={{
+                        background: card.tint.bg,
+                        borderRadius: 12,
+                        border: `2px solid ${card.tint.border}`,
+                        animation: "kidsFade 0.45s ease",
+                      }}
+                    >
+                      <span style={{ fontSize: 34, lineHeight: 1, animation: "kidsFloat 3.6s ease-in-out infinite" }}>{card.emoji}</span>
+                      <p style={{ fontFamily: headFont, fontSize: 13.5, fontWeight: 800, color: card.tint.ink, lineHeight: 1.25 }}>{card.msg}</p>
+                    </div>
+                  );
+                })()}
 
-                {/* "Send a thank you" pill — soft white button inside the card */}
+                {/* Prev / Next arrows (positioned by reading direction) */}
                 <button
-                  onClick={() => setThanked(true)}
-                  className="flex items-center justify-center cursor-pointer active:scale-[0.97] transition-transform"
-                  style={{
-                    height: 34,
-                    padding: "0 14px",
-                    background: "#ffffff",
-                    borderRadius: 9999,
-                    border: `2px solid ${thanked ? tMint.ink : tMint.border}`,
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.10)",
-                    fontSize: 12.5,
-                    fontWeight: 800,
-                    color: tMint.ink,
-                    outline: "none",
-                  }}
+                  onClick={prevSlide}
+                  aria-label="Previous"
+                  className="absolute top-1/2 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+                  style={{ [isRTL ? "right" : "left"]: 2, transform: "translateY(-50%)", width: 24, height: 24, borderRadius: 9999, background: "rgba(255,255,255,0.9)", border: `2px solid ${MOTIVATION[slide].tint.border}`, fontSize: 15, fontWeight: 900, color: MOTIVATION[slide].tint.ink, outline: "none" } as CSSProperties}
                 >
-                  {thanked ? t("kids.nurse.thanked") : t("kids.nurse.thankYou")}
+                  {isRTL ? "›" : "‹"}
+                </button>
+                <button
+                  onClick={nextSlide}
+                  aria-label="Next"
+                  className="absolute top-1/2 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+                  style={{ [isRTL ? "left" : "right"]: 2, transform: "translateY(-50%)", width: 24, height: 24, borderRadius: 9999, background: "rgba(255,255,255,0.9)", border: `2px solid ${MOTIVATION[slide].tint.border}`, fontSize: 15, fontWeight: 900, color: MOTIVATION[slide].tint.ink, outline: "none" } as CSSProperties}
+                >
+                  {isRTL ? "‹" : "›"}
                 </button>
               </div>
 
-              {/* Motivational carousel — fills the space between nurse + vitals */}
-              <div className="flex-1 min-h-0 flex flex-col gap-2">
-                <div
-                  className="relative flex-1 min-h-0"
-                  onTouchStart={onCarouselTouchStart}
-                  onTouchEnd={onCarouselTouchEnd}
-                >
-                  {(() => {
-                    const card = MOTIVATION[slide];
-                    return (
-                      <div
-                        key={slide}
-                        className="h-full flex flex-col items-center justify-center text-center gap-2 px-7"
-                        style={{
-                          background: card.tint.bg,
-                          borderRadius: 16,
-                          border: `2px solid ${card.tint.border}`,
-                          animation: "kidsFade 0.45s ease",
-                        }}
-                      >
-                        <span style={{ fontSize: 38, lineHeight: 1, animation: "kidsFloat 3.6s ease-in-out infinite" }}>{card.emoji}</span>
-                        <p style={{ fontFamily: headFont, fontSize: 15, fontWeight: 800, color: card.tint.ink, lineHeight: 1.3 }}>{card.msg}</p>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Prev / Next arrows (positioned by reading direction) */}
-                  <button
-                    onClick={prevSlide}
-                    aria-label="Previous"
-                    className="absolute top-1/2 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
-                    style={{ [isRTL ? "right" : "left"]: 4, transform: "translateY(-50%)", width: 26, height: 26, borderRadius: 9999, background: "rgba(255,255,255,0.82)", border: `2px solid ${MOTIVATION[slide].tint.border}`, fontSize: 16, fontWeight: 900, color: MOTIVATION[slide].tint.ink, outline: "none" } as CSSProperties}
-                  >
-                    {isRTL ? "›" : "‹"}
-                  </button>
-                  <button
-                    onClick={nextSlide}
-                    aria-label="Next"
-                    className="absolute top-1/2 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
-                    style={{ [isRTL ? "left" : "right"]: 4, transform: "translateY(-50%)", width: 26, height: 26, borderRadius: 9999, background: "rgba(255,255,255,0.82)", border: `2px solid ${MOTIVATION[slide].tint.border}`, fontSize: 16, fontWeight: 900, color: MOTIVATION[slide].tint.ink, outline: "none" } as CSSProperties}
-                  >
-                    {isRTL ? "‹" : "›"}
-                  </button>
-                </div>
-
-                {/* Dot-indicator pagination */}
-                <div className={`shrink-0 flex items-center justify-center gap-1.5 ${isRTL ? "flex-row-reverse" : ""}`}>
-                  {MOTIVATION.map((m, i) => {
-                    const active = i === slide;
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => goSlide(i)}
-                        aria-label={`Slide ${i + 1}`}
-                        className="cursor-pointer transition-all"
-                        style={{
-                          width: active ? 18 : 7,
-                          height: 7,
-                          borderRadius: 9999,
-                          background: active ? theme.primary : `${theme.primary}33`,
-                          border: "none",
-                          outline: "none",
-                          padding: 0,
-                        }}
-                      />
-                    );
-                  })}
-                </div>
+              {/* Dot-indicator pagination */}
+              <div className={`shrink-0 flex items-center justify-center gap-1.5 ${isRTL ? "flex-row-reverse" : ""}`}>
+                {MOTIVATION.map((m, i) => {
+                  const active = i === slide;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => goSlide(i)}
+                      aria-label={`Slide ${i + 1}`}
+                      className="cursor-pointer transition-all"
+                      style={{
+                        width: active ? 16 : 6,
+                        height: 6,
+                        borderRadius: 9999,
+                        background: active ? theme.primary : `${theme.primary}33`,
+                        border: "none",
+                        outline: "none",
+                        padding: 0,
+                      }}
+                    />
+                  );
+                })}
               </div>
+            </div>
 
-              {/* Two friendly vital pills — no clinical labels */}
-              <div className="shrink-0 flex gap-3">
-                <div
-                  className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5"
-                  style={{ borderRadius: 18, background: tAmber.bg, border: `2.5px solid ${tAmber.border}` }}
-                >
-                  <span style={{ fontSize: 26, animation: "kidsFloat 4s ease-in-out infinite" }}>🌡️</span>
-                  <span style={{ fontFamily: headFont, fontSize: 22, fontWeight: 800, color: tAmber.ink }}>{temperature}°</span>
-                </div>
-                <div
-                  className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5"
-                  style={{ borderRadius: 18, background: tRose.bg, border: `2.5px solid ${tRose.border}` }}
-                >
-                  <span style={{ fontSize: 26, animation: "kidsHeart 1.4s ease-in-out infinite" }}>💓</span>
-                  <span style={{ fontFamily: headFont, fontSize: 22, fontWeight: 800, color: tRose.ink }}>{heartRate}</span>
-                </div>
+            {/* Two friendly vital pills — no clinical labels */}
+            <div className="shrink-0 flex gap-3">
+              <div
+                className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2"
+                style={cardStyle}
+              >
+                <span style={{ fontSize: 24, animation: "kidsFloat 4s ease-in-out infinite" }}>🌡️</span>
+                <span style={{ fontFamily: headFont, fontSize: 20, fontWeight: 800, color: tAmber.ink }}>{temperature}°</span>
+              </div>
+              <div
+                className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2"
+                style={cardStyle}
+              >
+                <span style={{ fontSize: 24, animation: "kidsHeart 1.4s ease-in-out infinite" }}>💓</span>
+                <span style={{ fontFamily: headFont, fontSize: 20, fontWeight: 800, color: tRose.ink }}>{heartRate}</span>
               </div>
             </div>
           </div>
 
-          {/* ── Center — 2×2 activity grid + Explore More pill ── */}
-          <div className="relative flex-1 min-w-0 flex flex-col items-center justify-center gap-6">
-            <div
-              className="grid gap-6"
-              style={{ gridTemplateColumns: "repeat(2, minmax(0, 340px))", gridAutoRows: "minmax(0, 248px)" }}
-            >
-              {grid.map((card, ci) => (
-                <button
-                  key={card.key}
-                  onClick={card.onClick}
-                  className="kids-tile relative overflow-hidden flex flex-col items-center justify-center gap-2 cursor-pointer"
+          {/* ── Center — four horizontal activity cards stacked, equal height ── */}
+          <div className="relative flex-1 min-w-0 flex flex-col gap-4">
+            {grid.map((card, ci) => (
+              <button
+                key={card.key}
+                onClick={card.onClick}
+                className={`kids-tile relative overflow-hidden flex items-center gap-6 cursor-pointer flex-1 min-h-0 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+                style={{
+                  backgroundColor: card.s.bg,
+                  borderRadius: 22,
+                  border: `3px solid ${card.s.border}`,
+                  boxShadow: `0 12px 30px ${card.s.border}44`,
+                  padding: "0 40px",
+                  outline: "none",
+                } as CSSProperties}
+              >
+                {/* Radial glow behind the icon */}
+                <span
+                  className="pointer-events-none"
                   style={{
-                    width: 340,
-                    height: 248,
-                    backgroundColor: card.s.bg,
-                    borderRadius: 28,
-                    border: `3px solid ${card.s.border}`,
-                    boxShadow: `0 14px 34px ${card.s.border}55`,
-                    outline: "none",
+                    position: "absolute",
+                    top: "50%",
+                    [isRTL ? "right" : "left"]: 20,
+                    transform: "translateY(-50%)",
+                    width: 150,
+                    height: 150,
+                    borderRadius: 9999,
+                    background: `radial-gradient(circle, ${card.s.glow}, transparent 70%)`,
+                    animation: "kidsBlob 5.5s ease-in-out infinite",
+                    animationDelay: `${ci * 0.4}s`,
                   } as CSSProperties}
-                >
-                  {/* Radial glow behind the icon */}
-                  <span
-                    className="pointer-events-none"
-                    style={{
-                      position: "absolute",
-                      top: 38,
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      width: 150,
-                      height: 150,
-                      borderRadius: 9999,
-                      background: `radial-gradient(circle, ${card.s.glow}, transparent 70%)`,
-                      animation: "kidsBlob 5.5s ease-in-out infinite",
-                      animationDelay: `${ci * 0.4}s`,
-                    }}
-                    aria-hidden="true"
-                  />
-                  <span style={{ position: "relative", fontSize: 78, lineHeight: 1, animation: "kidsBounce 2.4s ease-in-out infinite", animationDelay: `${ci * 0.35}s` }}>
-                    {card.emoji}
-                  </span>
-                  <span style={{ position: "relative", fontFamily: headFont, fontSize: 28, fontWeight: 800, color: card.s.ink }}>
+                  aria-hidden="true"
+                />
+                <span style={{ position: "relative", fontSize: 68, lineHeight: 1, animation: "kidsBounce 2.4s ease-in-out infinite", animationDelay: `${ci * 0.3}s` }}>
+                  {card.emoji}
+                </span>
+                <div className={`relative flex-1 min-w-0 flex flex-col ${isRTL ? "items-end" : "items-start"}`}>
+                  <span style={{ fontFamily: headFont, fontSize: 30, fontWeight: 800, color: card.s.ink, lineHeight: 1.1 }}>
                     {t(card.label)}
                   </span>
-                  <span style={{ position: "relative", fontSize: 14, fontWeight: 700, color: card.s.ink, opacity: 0.78 }}>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: card.s.ink, opacity: 0.78 }}>
                     {t(card.sub)}
                   </span>
-                </button>
-              ))}
-            </div>
-
-            {/* "✨ Explore More ➜" — white pill, accent-coloured text + arrow */}
-            <button
-              onClick={() => setMoreOpen(true)}
-              className="flex items-center gap-2.5 cursor-pointer active:scale-95 transition-transform"
-              style={{
-                height: 58,
-                padding: "0 30px",
-                backgroundColor: "#ffffff",
-                borderRadius: 9999,
-                boxShadow: "0 8px 22px rgba(0,0,0,0.14)",
-                outline: "none",
-              } as CSSProperties}
-            >
-              <span style={{ fontSize: 20 }}>✨</span>
-              <span style={{ fontFamily: headFont, fontSize: 20, fontWeight: 800, color: theme.primary }}>{t("kids.more.title")}</span>
-              <span style={{ fontSize: 20, fontWeight: 900, color: theme.primary }}>{isRTL ? "⬅" : "➜"}</span>
-            </button>
+                </div>
+                <span style={{ position: "relative", fontSize: 38, fontWeight: 900, color: card.s.ink, opacity: 0.7 }}>
+                  {isRTL ? "‹" : "›"}
+                </span>
+              </button>
+            ))}
           </div>
 
-          {/* ── Right sidebar — exactly four quick-access tiles ── */}
-          <div className="shrink-0 flex flex-col gap-4 min-h-0" style={{ width: 156 }}>
+          {/* ── Right sidebar (86px) — four quick tiles + Explore More ── */}
+          <div className="shrink-0 flex flex-col gap-3 min-h-0" style={{ width: 86 }}>
             {sideItems.map((item, i) => (
               <button
                 key={item.label}
                 onClick={item.onClick}
-                className="kids-tile flex-1 min-h-0 flex flex-col items-center justify-center gap-1.5 cursor-pointer"
+                className="kids-tile flex-1 min-h-0 flex flex-col items-center justify-center gap-1 cursor-pointer"
                 style={{
                   backgroundColor: item.s.bg,
-                  borderRadius: 24,
+                  borderRadius: 20,
                   border: `3px solid ${item.s.border}`,
                   boxShadow: `0 8px 20px ${item.s.border}44`,
                   outline: "none",
                 }}
               >
-                <span style={{ fontSize: 44, lineHeight: 1, animation: `kidsFloat ${5 + i * 0.4}s ease-in-out infinite` }}>{item.emoji}</span>
-                <span style={{ fontFamily: headFont, fontSize: 14, fontWeight: 800, color: item.s.ink, textAlign: "center", padding: "0 4px", lineHeight: 1.1 }}>{t(item.label)}</span>
+                <span style={{ fontSize: 34, lineHeight: 1, animation: `kidsFloat ${5 + i * 0.4}s ease-in-out infinite` }}>{item.emoji}</span>
+                <span style={{ fontFamily: headFont, fontSize: 10.5, fontWeight: 800, color: item.s.ink, textAlign: "center", padding: "0 2px", lineHeight: 1.1 }}>{t(item.label)}</span>
               </button>
             ))}
+
+            {/* Explore More — distinct dashed tile that opens the bottom drawer */}
+            <button
+              onClick={() => setMoreOpen(true)}
+              className="kids-tile shrink-0 flex flex-col items-center justify-center gap-1 cursor-pointer"
+              style={{
+                minHeight: 82,
+                backgroundColor: "#ffffff",
+                borderRadius: 20,
+                border: `2.5px dashed ${theme.primary}`,
+                outline: "none",
+              }}
+            >
+              <span style={{ fontSize: 26, lineHeight: 1 }}>✨</span>
+              <span style={{ fontFamily: headFont, fontSize: 10.5, fontWeight: 800, color: theme.primary, textAlign: "center", padding: "0 2px", lineHeight: 1.05 }}>{t("kids.more.title")}</span>
+            </button>
           </div>
         </div>
 
