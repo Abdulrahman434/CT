@@ -1,17 +1,18 @@
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Home } from "lucide-react";
 import { useTheme, TYPE_SCALE, WEIGHT, TEXT_STYLE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 
 interface InternalPageHeaderProps {
   title: string;
+  subtitle?: string;
   icon: React.ReactNode;
   onClose: () => void;
+  rightAction?: React.ReactNode;
 }
 
-export function InternalPageHeader({ title, icon, onClose }: InternalPageHeaderProps) {
+export function InternalPageHeader({ title, subtitle, icon, onClose, rightAction }: InternalPageHeaderProps) {
   const { theme } = useTheme();
   const { isRTL, fontFamily } = useLocale();
-  const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   return (
     <div className="shrink-0 flex items-center gap-5 px-12 pt-10 pb-6 relative z-10">
       <button
@@ -26,9 +27,11 @@ export function InternalPageHeader({ title, icon, onClose }: InternalPageHeaderP
           outline: 'none',
         }}
       >
-        <BackArrow size={24} style={{ color: "#fff" }} />
+        <Home size={22} style={{ color: "#fff" }} />
       </button>
-      <div className="flex items-center gap-4">
+      {/* Divider */}
+      <div style={{ width: "1.5px", height: "32px", backgroundColor: "rgba(255,255,255,0.18)", borderRadius: "1px" }} />
+      <div className="flex items-center gap-4 flex-1">
         <div
           className="flex items-center justify-center"
           style={{
@@ -53,8 +56,21 @@ export function InternalPageHeader({ title, icon, onClose }: InternalPageHeaderP
           >
             {title}
           </h2>
+          {subtitle && (
+            <p
+              style={{
+                fontFamily: fontFamily,
+                ...TEXT_STYLE.caption,
+                color: "rgba(255,255,255,0.55)",
+                marginTop: "2px",
+              }}
+            >
+              {subtitle}
+            </p>
+          )}
         </div>
       </div>
+      {rightAction && <div className="shrink-0">{rightAction}</div>}
     </div>
   );
 }

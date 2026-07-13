@@ -1,7 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW } from "../ThemeContext";
 import { useLocale } from "../i18n";
+import GameLanguageToggle from "./GameLanguageToggle";
 import { Trophy, RotateCcw, Timer, ArrowLeft } from "lucide-react";
+import { GAME_TRANSLATIONS } from "./gameTranslations";
 
 interface EmojiPair {
   id: number;
@@ -9,24 +11,65 @@ interface EmojiPair {
   matched: boolean;
 }
 
-const EMOJI_LIST = ["🌟", "🎨", "🌸", "🦋", "🍀", "🎵", "☀️", "🌙", "🎭", "🎪", "🎨", "🎯"];
+type Category = 'faces' | 'animals' | 'food' | 'travel' | 'sports';
+
+const CATEGORIES: Record<Category, string[]> = {
+  faces: ["😊", "😂", "🥰", "😎", "🤔", "😜", "🥳", "😇", "🤩", "🤯", "🧐", "😴"],
+  animals: ["🐶", "🐱", "🦁", "🐼", "🐨", "🐸", "🐵", "🐧", "🦋", "🐙", "🦄", "🦖"],
+  food: ["🍎", "🍕", "🍔", "🍣", "🌮", "🍩", "🍦", "🍓", "🥨", "🥑", "🥕", "🥐"],
+  travel: ["🚗", "✈️", "🚢", "🏔", "🏝", "🌋", "🏰", "🗼", "🗺️", "🚀", "🚂", "🎡"],
+  sports: ["⚽", "🏀", "🎾", "⚾", "🏐", "🥊", "🥋", "⛸️", "⛳", "🏊", "🏄", "🏇"]
+};
 
 export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void; onBackToGames: () => void }) {
   const { theme } = useTheme();
-  const { fontFamily } = useLocale();
+  const { fontFamily, isRTL, dir, locale } = useLocale();
+  const [gameLang, setGameLang] = useState<string>(localStorage.getItem('game-lang-emoji-match') ?? (locale === 'ar' ? 'ar' : 'en'));
+  const gt = GAME_TRANSLATIONS[gameLang === 'ar' ? 'ar' : 'en'];
+  const [category, setCategory] = useState<Category>('faces');
   const [leftEmojis, setLeftEmojis] = useState<EmojiPair[]>([]);
   const [rightEmojis, setRightEmojis] = useState<EmojiPair[]>([]);
   const [selectedLeft, setSelectedLeft] = useState<number | null>(null);
   const [selectedRight, setSelectedRight] = useState<number | null>(null);
   const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [highScore, setHighScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
   const [isPlaying, setIsPlaying] = useState(false);
   const [matches, setMatches] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [hasSavedGame, setHasSavedGame] = useState(false);
+  const [isBootstrapped, setIsBootstrapped] = useState(false);
 
-  const startGame = useCallback(() => {
-    // Select random emojis
-    const selectedEmojis = EMOJI_LIST.sort(() => Math.random() - 0.5).slice(0, 6);
-    
+  const isGameComplete = matches === leftEmojis.length && leftEmojis.length > 0;
+
+  const clearGameState = useCallback(() => {
+    localStorage.removeItem('emoji-match-game-state');
+  }, []);
+
+  const saveGameState = useCallback(() => {
+    if (!isPlaying || isGameComplete || timeLeft === 0) return;
+    const state = {
+      category,
+      leftEmojis,
+      rightEmojis,
+      score,
+      streak,
+      matches,
+      timeLeft,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('emoji-match-game-state', JSON.stringify(state));
+    console.log('=== SAVE ===', state);
+    console.log('=== SAVE GAME STATE ===', 'emoji-match-game-state', JSON.stringify(state));
+  }, [category, leftEmojis, rightEmojis, score, streak, matches, timeLeft, isPlaying, isGameComplete]);
+
+  const startGame = useCallback((newCat?: Category) => {
+    const targetCategory = newCat || category;
+    // Select random emojis from category
+    const selectedEmojis = CATEGORIES[targetCategory].sort(() => Math.random() - 0.5).slice(0, 6);
+
     // Create left column (shuffled)
     const left = selectedEmojis.map((emoji, index) => ({
       id: index,
@@ -46,10 +89,83 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
     setSelectedLeft(null);
     setSelectedRight(null);
     setScore(0);
+    setStreak(0);
     setMatches(0);
     setTimeLeft(60);
+    setCategory(targetCategory);
     setIsPlaying(true);
+    setShowCelebration(false);
+    setShowResumeModal(false);
+    setHasSavedGame(false);
+    clearGameState();
+  }, [category, clearGameState]);
+
+  const handleNewGame = useCallback(() => {
+    clearGameState();
+    setHasSavedGame(false);
+    setShowResumeModal(false);
+    startGame();
+  }, [clearGameState, startGame]);
+
+  const loadGameState = useCallback(() => {
+    try {
+      const saved = localStorage.getItem('emoji-match-game-state');
+    console.log('=== LOAD GAME STATE ===', 'emoji-match-game-state', saved);
+      if (saved) {
+        const state = JSON.parse(saved);
+        if (state && state.leftEmojis) {
+          setCategory(state.category);
+          setLeftEmojis(state.leftEmojis);
+          setRightEmojis(state.rightEmojis);
+          setScore(state.score);
+          setStreak(state.streak);
+          setMatches(state.matches);
+          setTimeLeft(state.timeLeft);
+          setIsPlaying(true);
+          setHasSavedGame(false);
+          setShowResumeModal(false);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load game state:", e);
+      clearGameState();
+      handleNewGame();
+    }
+  }, [clearGameState, handleNewGame]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('emoji-match-high-score');
+    console.log('=== LOAD GAME STATE ===', 'emoji-match-high-score', saved);
+    if (saved) setHighScore(parseInt(saved));
+
+    const savedState = localStorage.getItem('emoji-match-game-state');
+    console.log('=== LOAD GAME STATE ===', 'emoji-match-game-state', savedState);
+    if (savedState) {
+      setHasSavedGame(true);
+      setShowResumeModal(true);
+    }
+    setIsBootstrapped(true);
   }, []);
+
+  // Initial mount: Check for saved game or auto-start
+  useEffect(() => {
+    const saved = localStorage.getItem('emoji-match-game-state');
+    if (saved) {
+      setHasSavedGame(true);
+      setShowResumeModal(true);
+    } else {
+      startGame();
+    }
+    setIsBootstrapped(true);
+  }, []);
+
+  // Save game state whenever relevant values change
+  useEffect(() => {
+    if (isPlaying && !isGameComplete && isBootstrapped) {
+      saveGameState();
+    }
+  }, [isPlaying, isGameComplete, leftEmojis, rightEmojis, score, streak, matches, timeLeft, saveGameState, isBootstrapped]);
+
 
   useEffect(() => {
     if (isPlaying && timeLeft > 0) {
@@ -57,18 +173,19 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
       return () => clearTimeout(timer);
     } else if (timeLeft === 0) {
       setIsPlaying(false);
+      clearGameState();
     }
   }, [isPlaying, timeLeft]);
 
   const handleLeftClick = useCallback(
     (index: number) => {
       if (!isPlaying || leftEmojis[index].matched) return;
-      
+
       if (selectedLeft === index) {
         setSelectedLeft(null);
       } else {
         setSelectedLeft(index);
-        
+
         // If right is already selected, check for match
         if (selectedRight !== null) {
           if (leftEmojis[index].emoji === rightEmojis[selectedRight].emoji) {
@@ -79,15 +196,27 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
             newRight[selectedRight].matched = true;
             setLeftEmojis(newLeft);
             setRightEmojis(newRight);
-            setScore(score + 10);
+            const newStreak = streak + 1;
+            setStreak(newStreak);
+            setScore(score + 10 + (newStreak > 1 ? newStreak * 2 : 0));
             setMatches(matches + 1);
-            
+            setShowCelebration(true);
+            setTimeout(() => setShowCelebration(false), 600);
+
             // Check if all matched
             if (matches + 1 === leftEmojis.length) {
               setIsPlaying(false);
+              clearGameState();
+              if (score + 10 + (newStreak > 1 ? newStreak * 2 : 0) > highScore) {
+                setHighScore(score + 10 + (newStreak > 1 ? newStreak * 2 : 0));
+                localStorage.setItem('emoji-match-high-score', (score + 10 + (newStreak > 1 ? newStreak * 2 : 0)).toString());
+    console.log('=== SAVE GAME STATE ===', 'emoji-match-high-score', (score + 10 + (newStreak > 1 ? newStreak * 2 : 0)).toString());
+              }
             }
+          } else {
+            setStreak(0);
           }
-          
+
           // Reset selection after brief delay
           setTimeout(() => {
             setSelectedLeft(null);
@@ -96,18 +225,18 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
         }
       }
     },
-    [isPlaying, leftEmojis, rightEmojis, selectedLeft, selectedRight, score, matches]
+    [isPlaying, leftEmojis, rightEmojis, selectedLeft, selectedRight, score, matches, streak, highScore]
   );
 
   const handleRightClick = useCallback(
     (index: number) => {
       if (!isPlaying || rightEmojis[index].matched) return;
-      
+
       if (selectedRight === index) {
         setSelectedRight(null);
       } else {
         setSelectedRight(index);
-        
+
         // If left is already selected, check for match
         if (selectedLeft !== null) {
           if (leftEmojis[selectedLeft].emoji === rightEmojis[index].emoji) {
@@ -118,15 +247,27 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
             newRight[index].matched = true;
             setLeftEmojis(newLeft);
             setRightEmojis(newRight);
-            setScore(score + 10);
+            const newStreak = streak + 1;
+            setStreak(newStreak);
+            setScore(score + 10 + (newStreak > 1 ? newStreak * 2 : 0));
             setMatches(matches + 1);
-            
+            setShowCelebration(true);
+            setTimeout(() => setShowCelebration(false), 600);
+
             // Check if all matched
             if (matches + 1 === leftEmojis.length) {
               setIsPlaying(false);
+              clearGameState();
+              if (score + 10 + (newStreak > 1 ? newStreak * 2 : 0) > highScore) {
+                setHighScore(score + 10 + (newStreak > 1 ? newStreak * 2 : 0));
+                localStorage.setItem('emoji-match-high-score', (score + 10 + (newStreak > 1 ? newStreak * 2 : 0)).toString());
+    console.log('=== SAVE GAME STATE ===', 'emoji-match-high-score', (score + 10 + (newStreak > 1 ? newStreak * 2 : 0)).toString());
+              }
             }
+          } else {
+            setStreak(0);
           }
-          
+
           // Reset selection after brief delay
           setTimeout(() => {
             setSelectedLeft(null);
@@ -135,14 +276,15 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
         }
       }
     },
-    [isPlaying, leftEmojis, rightEmojis, selectedLeft, selectedRight, score, matches]
+    [isPlaying, leftEmojis, rightEmojis, selectedLeft, selectedRight, score, matches, streak, highScore]
   );
 
-  const isGameComplete = matches === leftEmojis.length && leftEmojis.length > 0;
+
 
   return (
     <div
       className="absolute inset-0 z-50 flex flex-col"
+      dir={dir}
       style={{
         backgroundColor: theme.background,
       }}
@@ -157,7 +299,8 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
           boxShadow: SHADOW.lg,
         }}
       >
-        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
+            <GameLanguageToggle gameKey="emoji-match" initial={locale === 'ar' ? 'ar' : 'en'} onChange={(l) => setGameLang(l)} />
           <button
             onClick={onBackToGames}
             className="flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
@@ -170,7 +313,7 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
               outline: "none",
             }}
           >
-            <ArrowLeft size={24} color={theme.textHeading} />
+            <ArrowLeft size={24} color={theme.textHeading} className={isRTL ? 'rotate-180' : ''} />
           </button>
           <h1
             style={{
@@ -180,10 +323,31 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
               color: theme.textHeading,
             }}
           >
-            Emoji Match
+            {gt.emojiMatchGame}
           </h1>
         </div>
         <div className="flex items-center gap-4">
+          <select
+            value={category}
+            onChange={(e) => startGame(e.target.value as Category)}
+            style={{
+              fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium,
+              padding: '8px 12px', borderRadius: theme.radiusMd, border: theme.cardBorder,
+              backgroundColor: theme.surfaceElevated, color: theme.textHeading, outline: 'none'
+            }}
+          >
+            <option value="faces">{gt.emojiFaces}</option>
+            <option value="animals">{gt.emojiAnimals}</option>
+            <option value="food">{gt.emojiFood}</option>
+            <option value="travel">{gt.emojiTravel}</option>
+            <option value="sports">{gt.emojiSports}</option>
+          </select>
+
+          <div className="flex flex-col items-end">
+            <span style={{ fontFamily, fontSize: '12px', color: theme.textMuted }}>{gt.best}: {highScore}</span>
+            <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.bold, color: theme.primary }}>{gt.streak}: {streak}x</span>
+          </div>
+
           <div
             className="flex items-center gap-2 px-6 py-3"
             style={{
@@ -218,11 +382,11 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 color: theme.accent,
               }}
             >
-              Score: {score}
+              {gt.score}: {score}
             </span>
           </div>
           <button
-            onClick={startGame}
+            onClick={handleNewGame}
             className="flex items-center gap-2 px-6 py-3 cursor-pointer active:scale-95 transition-transform"
             style={{
               backgroundColor: theme.primary,
@@ -240,7 +404,7 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 color: theme.textInverse,
               }}
             >
-              {!isPlaying && leftEmojis.length === 0 ? "Start Game" : "Restart"}
+              {!isPlaying && leftEmojis.length === 0 ? gt.startGame : gt.restart}
             </span>
           </button>
           <button
@@ -283,7 +447,7 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 textAlign: "center",
               }}
             >
-              Match the Emojis!
+              {gt.emojiMatchTitle}
             </h2>
             <p
               style={{
@@ -295,10 +459,10 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 maxWidth: "600px",
               }}
             >
-              Click on matching emojis from the left and right columns to connect them. Match all pairs before time runs out!
+              {gt.emojiDesc}
             </p>
             <button
-              onClick={startGame}
+              onClick={() => startGame()}
               className="px-12 py-5 cursor-pointer active:scale-95 transition-transform"
               style={{
                 backgroundColor: theme.primary,
@@ -311,7 +475,7 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 color: theme.textInverse,
               }}
             >
-              Start Game
+              {gt.startGame}
             </button>
           </div>
         ) : isGameComplete ? (
@@ -326,7 +490,7 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 color: theme.textHeading,
               }}
             >
-              Perfect Match! 🎉
+              {gt.emojiPerfect}
             </h2>
             <p
               style={{
@@ -336,7 +500,7 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 color: theme.primary,
               }}
             >
-              Final Score: {score}
+              {gt.finalScore}: {score}
             </p>
             <p
               style={{
@@ -346,10 +510,10 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 color: theme.textMuted,
               }}
             >
-              Time remaining: {timeLeft} seconds
+              {gt.emojiTimeRem} {timeLeft} {gt.emojiSeconds}
             </p>
             <button
-              onClick={startGame}
+              onClick={() => startGame()}
               className="px-12 py-5 cursor-pointer active:scale-95 transition-transform"
               style={{
                 backgroundColor: theme.primary,
@@ -362,7 +526,7 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 color: theme.textInverse,
               }}
             >
-              Play Again
+              {gt.playAgain}
             </button>
           </div>
         ) : timeLeft === 0 ? (
@@ -385,7 +549,7 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 color: theme.textHeading,
               }}
             >
-              Time's Up!
+              {gt.timesUp}
             </h2>
             <p
               style={{
@@ -395,7 +559,7 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 color: theme.primary,
               }}
             >
-              Score: {score}
+              {gt.score}: {score}
             </p>
             <p
               style={{
@@ -405,10 +569,10 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 color: theme.textMuted,
               }}
             >
-              You matched {matches} out of {leftEmojis.length} pairs
+              {gt.emojiMatched} {matches} {gt.emojiOutOf} {leftEmojis.length} {gt.emojiPairs}
             </p>
             <button
-              onClick={startGame}
+              onClick={() => startGame()}
               className="px-12 py-5 cursor-pointer active:scale-95 transition-transform"
               style={{
                 backgroundColor: theme.primary,
@@ -421,7 +585,7 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                 color: theme.textInverse,
               }}
             >
-              Try Again
+              {gt.tryAgain}
             </button>
           </div>
         ) : (
@@ -434,15 +598,15 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                   key={index}
                   onClick={() => handleLeftClick(index)}
                   disabled={item.matched}
-                  className="cursor-pointer transition-transform duration-200 active:scale-95"
+                  className="cursor-pointer transition-all duration-200 active:scale-95"
                   style={{
                     width: "200px",
                     height: "140px",
-                    backgroundColor: item.matched 
-                      ? theme.primarySubtle 
-                      : selectedLeft === index 
-                      ? theme.primary 
-                      : theme.surface,
+                    backgroundColor: item.matched
+                      ? theme.primarySubtle
+                      : selectedLeft === index
+                        ? theme.primary
+                        : theme.surface,
                     borderRadius: theme.radiusLg,
                     border: selectedLeft === index ? `3px solid ${theme.primary}` : theme.cardBorder,
                     boxShadow: selectedLeft === index ? `0 0 20px ${theme.primary}40` : SHADOW.md,
@@ -478,7 +642,7 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                     maxWidth: "150px",
                   }}
                 >
-                  Match the pairs
+                  {gt.emojiMatchTitle}
                 </p>
                 <div
                   className="px-4 py-2"
@@ -508,15 +672,15 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
                   key={index}
                   onClick={() => handleRightClick(index)}
                   disabled={item.matched}
-                  className="cursor-pointer transition-transform duration-200 active:scale-95"
+                  className="cursor-pointer transition-all duration-200 active:scale-95"
                   style={{
                     width: "200px",
                     height: "140px",
-                    backgroundColor: item.matched 
-                      ? theme.primarySubtle 
-                      : selectedRight === index 
-                      ? theme.primary 
-                      : theme.surface,
+                    backgroundColor: item.matched
+                      ? theme.primarySubtle
+                      : selectedRight === index
+                        ? theme.primary
+                        : theme.surface,
                     borderRadius: theme.radiusLg,
                     border: selectedRight === index ? `3px solid ${theme.primary}` : theme.cardBorder,
                     boxShadow: selectedRight === index ? `0 0 20px ${theme.primary}40` : SHADOW.md,
@@ -532,6 +696,88 @@ export function EmojiMatchGame({ onClose, onBackToGames }: { onClose: () => void
           </div>
         )}
       </div>
+      {/* Feedback Animation */}
+      {showCelebration && (
+        <div
+          className="absolute inset-0 pointer-events-none flex items-center justify-center z-[100]"
+          style={{
+            animation: "celebrationPulse 0.6s ease-out",
+          }}
+        >
+          <div className="flex gap-4">
+            {["⭐", "✨", "🎉", "✨", "⭐"].map((e, i) => (
+              <span key={i} style={{ fontSize: "64px", animation: `floatUp ${0.4 + i * 0.1}s ease-out` }}>{e}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Resume Modal */}
+      {showResumeModal && (
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{
+            backgroundColor: "rgba(0,0,0,0.7)",
+            backdropFilter: "blur(8px)",
+            zIndex: 150,
+          }}
+        >
+          <div
+            className="flex flex-col items-center gap-8 px-16 py-12"
+            style={{
+              backgroundColor: theme.surface,
+              borderRadius: theme.radiusCard,
+              boxShadow: SHADOW["2xl"],
+              border: theme.cardBorder,
+              maxWidth: "500px",
+              width: "90%"
+            }}
+          >
+            <div className="w-24 h-24 rounded-full bg-primarySubtle flex items-center justify-center" style={{ backgroundColor: theme.primarySubtle }}>
+              <RotateCcw size={48} color={theme.primary} />
+            </div>
+
+            <div className="text-center gap-2 flex flex-col">
+              <h2 style={{ fontFamily, fontSize: TYPE_SCALE["2xl"], fontWeight: WEIGHT.bold, color: theme.textHeading }}>
+                {gt.resumeGame}
+              </h2>
+              <p style={{ fontFamily, fontSize: TYPE_SCALE.md, color: theme.textMuted }}>
+                {gt.resumeDesc}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-4 w-full">
+              <button
+                onClick={loadGameState}
+                className="w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-95"
+                style={{ backgroundColor: theme.primary, color: theme.textInverse, fontSize: TYPE_SCALE.md }}
+              >
+                {gt.continuePlaying}
+              </button>
+              <button
+                onClick={handleNewGame}
+                className="w-full py-5 rounded-2xl font-bold transition-all hover:bg-black/5 active:scale-95"
+                style={{ backgroundColor: theme.surfaceElevated, color: theme.textHeading, border: theme.cardBorder, fontSize: TYPE_SCALE.md }}
+              >
+                {gt.startNewGame}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes celebrationPulse {
+          0% { background-color: rgba(74, 222, 128, 0); }
+          50% { background-color: rgba(74, 222, 128, 0.2); }
+          100% { background-color: rgba(74, 222, 128, 0); }
+        }
+        @keyframes floatUp {
+          0% { transform: translateY(20px) scale(0.5); opacity: 0; }
+          50% { opacity: 1; }
+          100% { transform: translateY(-100px) scale(1.2); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }

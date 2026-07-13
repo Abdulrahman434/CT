@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { ApiImage } from "./ApiImage";
 import {
   isAndroidApp,
   brightness as brightnessBridge,
@@ -9,7 +10,9 @@ import {
   dnd as dndBridge,
   nightLight as nightLightBridge,
   useAndroidEvent,
+  useDeviceInfo,
 } from "../utils/androidBridge";
+import { useNurseStore } from "./NurseDataStore";
 import {
   X,
   Sun,
@@ -42,14 +45,18 @@ import {
   Minimize,
   Stethoscope,
   Users,
+  UserCircle,
 } from "lucide-react";
 import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { useAuth } from "./AuthContext";
+import { clearAllDataAndReload } from "../lib/clearAllData";
 import { NurseInterface } from "./nurse/NurseInterface";
 import type { Locale } from "./i18n";
 import imgMosque from "../../assets/b51acb5e2ec4a2c930572c53103b020b12e76ee2.png";
 import { getPrayerStatus, getCountdown, formatPrayerTime, PRAYER_NAMES } from "../utils/prayerUtils";
+import { MyPreferencesDialog } from "./MyAccountDialog";
+import { isAccountSet } from "../lib/accountAuth";
 
 /* ═══════════════════════════════════════════════════════════════
  * All colors/fonts/radii in this file come from ThemeContext.
@@ -776,6 +783,17 @@ function BluetoothDialog({
     'bluetooth-device-found',
     (d) => {
       if (!isNative) return;
+
+      // Filter out unnamed or placeholder devices
+      const name = d.name?.trim() || "";
+      if (
+        !name ||
+        name.toLowerCase() === "unknown" ||
+        name.toLowerCase() === "unknown device"
+      ) {
+        return;
+      }
+
       setBtDevices((prev) => {
         const filtered = prev.filter((x) => x.id !== d.address);
         return [
@@ -864,77 +882,86 @@ function BluetoothDialog({
               )}
             </div>
 
-            {/* Paired devices section */}
-            {filteredPaired.length > 0 && (
-              <div className="flex flex-col gap-2">
-                <DialogSectionLabel>{tr("bt.paired")}</DialogSectionLabel>
-                {filteredPaired.map((device) => {
-                  const isConnected = connectedId === device.id;
-                  const DevIcon = device.icon;
-                  return (
-                    <DeviceListItem
-                      key={device.id}
-                      icon={<DevIcon size={18} style={{ color: isConnected ? t.primary : t.iconDefault }} />}
-                      name={device.name}
-                      subtitle={isConnected ? tr("wifi.connected") : tr("bt.pairedStatus")}
-                      isConnected={isConnected}
-                      onClick={() => {
-                        if (isConnected) {
-                          if (isNative) bluetoothBridge.disconnect(device.id);
-                          onDisconnect();
-                        } else {
+            {/* Paired + Available sections (Scrollable) */}
+            <div
+              className="flex flex-col gap-3"
+              style={{
+                maxHeight: "min(420px, 50vh)",
+                overflowY: "auto",
+              }}
+            >
+              {/* Paired devices section */}
+              {filteredPaired.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <DialogSectionLabel>{tr("bt.paired")}</DialogSectionLabel>
+                  {filteredPaired.map((device) => {
+                    const isConnected = connectedId === device.id;
+                    const DevIcon = device.icon;
+                    return (
+                      <DeviceListItem
+                        key={device.id}
+                        icon={<DevIcon size={18} style={{ color: isConnected ? t.primary : t.iconDefault }} />}
+                        name={device.name}
+                        subtitle={isConnected ? tr("wifi.connected") : tr("bt.pairedStatus")}
+                        isConnected={isConnected}
+                        onClick={() => {
+                          if (isConnected) {
+                            if (isNative) bluetoothBridge.disconnect(device.id);
+                            onDisconnect();
+                          } else {
+                            if (isNative) bluetoothBridge.connect(device.id);
+                            else onConnect(device.id);
+                          }
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Available devices section */}
+              {filteredAvailable.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <DialogSectionLabel>{tr("bt.available")}</DialogSectionLabel>
+                  {filteredAvailable.map((device) => {
+                    const DevIcon = device.icon;
+                    return (
+                      <DeviceListItem
+                        key={device.id}
+                        icon={<DevIcon size={18} style={{ color: t.iconDefault }} />}
+                        name={device.name}
+                        subtitle={device.type}
+                        isConnected={false}
+                        onClick={() => {
                           if (isNative) bluetoothBridge.connect(device.id);
                           else onConnect(device.id);
-                        }
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            )}
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
 
-            {/* Available devices section */}
-            {filteredAvailable.length > 0 && (
-              <div className="flex flex-col gap-2">
-                <DialogSectionLabel>{tr("bt.available")}</DialogSectionLabel>
-                {filteredAvailable.map((device) => {
-                  const DevIcon = device.icon;
-                  return (
-                    <DeviceListItem
-                      key={device.id}
-                      icon={<DevIcon size={18} style={{ color: t.iconDefault }} />}
-                      name={device.name}
-                      subtitle={device.type}
-                      isConnected={false}
-                      onClick={() => {
-                        if (isNative) bluetoothBridge.connect(device.id);
-                        else onConnect(device.id);
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            )}
-
-            {/* No results */}
-            {filteredPaired.length === 0 && filteredAvailable.length === 0 && (
-              <div
-                className="flex flex-col items-center justify-center gap-2"
-                style={{ padding: "20px 0" }}
-              >
-                <Search size={24} style={{ color: t.textDisabled }} />
-                <span
-                  style={{
-                    fontFamily: t.fontFamily,
-                    fontSize: "13px",
-                    fontWeight: 500,
-                    color: t.textMuted,
-                  }}
+              {/* No results */}
+              {filteredPaired.length === 0 && filteredAvailable.length === 0 && (
+                <div
+                  className="flex flex-col items-center justify-center gap-2"
+                  style={{ padding: "20px 0" }}
                 >
-                  {tr("bt.noMatch", search)}
-                </span>
-              </div>
-            )}
+                  <Search size={24} style={{ color: t.textDisabled }} />
+                  <span
+                    style={{
+                      fontFamily: t.fontFamily,
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      color: t.textMuted,
+                    }}
+                  >
+                    {tr("bt.noMatch", search)}
+                  </span>
+                </div>
+              )}
+            </div>
 
             {connectedId && (
               <DisconnectButton
@@ -1084,10 +1111,12 @@ function ClearDataDialog({
   const { theme: t } = useTheme();
   const { t: tr } = useLocale();
   const items = [
-    tr("settings.clearData.signOut"),
-    tr("settings.clearData.history"),
-    tr("settings.clearData.passwords"),
-    tr("settings.clearData.reset"),
+    tr("settings.clearData.signOut"),      // "Sign out"
+    tr("settings.clearData.history"),       // "Call history"
+    tr("settings.clearData.passwords"),     // "Saved passwords & PIN"
+    tr("settings.clearData.lockedApps"),    // "App lock settings"
+    tr("settings.clearData.preferences"),   // "Preferences & language"
+    tr("settings.clearData.reset"),         // "Return to login screen"
   ];
 
   const DANGER = "#D10044";
@@ -1285,6 +1314,7 @@ function CareTeamAccessDialog({
   const { t: tr } = useLocale();
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
+  const [pressedKey, setPressedKey] = useState<string | null>(null);
 
   const handleDigit = (d: string) => {
     if (pin.length < 4) {
@@ -1390,17 +1420,27 @@ function CareTeamAccessDialog({
           <div key={ri} className="flex items-center gap-3">
             {row.map((key, ki) => {
               if (key === "") return <div key={ki} style={{ width: "64px", height: "52px" }} />;
+              const isPressed = pressedKey === key;
               return (
                 <button
                   key={ki}
-                  onClick={() => (key === "del" ? handleDelete() : handleDigit(key))}
-                  className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+                  onClick={() => {
+                    if (key === "del") {
+                      handleDelete();
+                    } else {
+                      setPressedKey(key);
+                      setTimeout(() => setPressedKey(null), 150);
+                      handleDigit(key);
+                    }
+                  }}
+                  className="flex items-center justify-center cursor-pointer active:scale-90 transition-all"
                   style={{
                     width: "64px",
                     height: "52px",
                     borderRadius: t.radiusLg,
-                    backgroundColor: key === "del" ? t.accentSubtle : t.tileInactiveBg,
+                    backgroundColor: key === "del" ? t.accentSubtle : isPressed ? t.primary : t.tileInactiveBg,
                     border: "none",
+                    transition: "background-color 0.15s, transform 0.15s",
                   }}
                 >
                   <span
@@ -1408,7 +1448,8 @@ function CareTeamAccessDialog({
                       fontFamily: t.fontFamily,
                       fontSize: key === "del" ? "13px" : "20px",
                       fontWeight: 700,
-                      color: key === "del" ? t.accent : t.textHeading,
+                      color: key === "del" ? t.accent : isPressed ? "#fff" : t.textHeading,
+                      transition: "color 0.15s",
                     }}
                   >
                     {key === "del" ? tr("careteam.del") : key}
@@ -1480,7 +1521,7 @@ function PrayerCard({
                 overflow: "hidden",
               }}
             >
-              <img
+              <ApiImage
                 src={imgMosque}
                 alt=""
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
@@ -1684,18 +1725,38 @@ export function SettingsPanel({
   isFullscreen,
   activeCareRole,
   setActiveCareRole,
+  openAccountDirectly,
 }: {
   onClose: () => void;
   onFullscreenTap: () => void;
   isFullscreen: boolean;
   activeCareRole: "nurse" | "doctor" | null;
   setActiveCareRole: (role: "nurse" | "doctor" | null) => void;
+  openAccountDirectly?: boolean;
 }) {
   const { theme: t, darkMode, setDarkMode, castDevice, setCastDevice, locale: currentLocale, setLocale, prayerAlarm, setPrayerAlarm } = useTheme();
   const { t: tr, isRTL, fontFamily, locale } = useLocale();
   const { logout } = useAuth();
+  const deviceInfo = useDeviceInfo();
+  const nurseState = useNurseStore();
 
   const isNative = isAndroidApp();
+
+  // Room: from NurseDataStore (set by nurse in CareMe)
+  // Fallback: hardcoded "412"
+  const roomDisplay = nurseState.patient.room || "412";
+
+  // Device serial: from Android bridge
+  const serialDisplay = deviceInfo?.serial || null;
+
+  // Device ID shown: use serial if available, else old format
+  const deviceIdDisplay = serialDisplay
+    ? serialDisplay
+    : `${t.hospitalShortName}-BT-${roomDisplay}A`;
+
+  // IP address: from Android bridge
+  // Fallback: hardcoded
+  const ipDisplay = deviceInfo?.ipAddress || "10.10.42.118";
 
   // ── Brightness: init from bridge, sync via event ──
   const [brightnessVal, setBrightnessState] = useState(() =>
@@ -1790,6 +1851,13 @@ export function SettingsPanel({
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showLangDialog, setShowLangDialog] = useState(false);
   const [showCareTeamDialog, setShowCareTeamDialog] = useState(false);
+  const [showAccountDialog, setShowAccountDialog] = useState(false);
+
+  useEffect(() => {
+    if (openAccountDirectly) {
+      setShowAccountDialog(true);
+    }
+  }, [openAccountDirectly]);
 
   // Listen for CareMe "Nurse View" button event
   useEffect(() => {
@@ -2048,6 +2116,20 @@ export function SettingsPanel({
             />
           </div>
 
+          <div className="flex items-center gap-2.5 mt-2.5">
+            <ActionButton
+              icon={<UserCircle size={20} style={{ color: t.primary }} />}
+              label={tr("settings.preferences")}
+              subtitle={
+                isAccountSet() 
+                  ? tr("settings.preferences.subtitle.set") 
+                  : tr("settings.preferences.subtitle.unset")
+              }
+              variant="primary"
+              onClick={() => setShowAccountDialog(true)}
+            />
+          </div>
+
           {/* Spacer */}
           <div className="flex-1" />
 
@@ -2082,6 +2164,7 @@ export function SettingsPanel({
             className="flex flex-col items-center gap-1"
             style={{ padding: "8px 0 4px 0" }}
           >
+            {/* Line 1: Room number (from NurseDataStore) */}
             <span
               style={{
                 fontFamily: t.fontFamily,
@@ -2090,8 +2173,10 @@ export function SettingsPanel({
                 color: t.textMuted,
               }}
             >
-              Room 412 &middot; Bed A
+              {tr("settings.room")} {roomDisplay}
             </span>
+
+            {/* Line 2: Device serial / ID */}
             <span
               style={{
                 fontFamily: t.fontFamily,
@@ -2100,8 +2185,10 @@ export function SettingsPanel({
                 color: t.textDisabled,
               }}
             >
-              Device ID: {t.hospitalShortName}-BT-412A &middot; v2.4.1
+              {tr("settings.deviceId")}: {deviceIdDisplay}
             </span>
+
+            {/* Line 3: IP address */}
             <span
               style={{
                 fontFamily: t.fontFamily,
@@ -2110,8 +2197,23 @@ export function SettingsPanel({
                 color: t.textDisabled,
               }}
             >
-              IP: 10.10.42.118
+              IP: {ipDisplay}
             </span>
+
+            {/* Line 4: Android model (only show on kiosk, not browser) */}
+            {isAndroidApp() && deviceInfo?.model && (
+              <span
+                style={{
+                  fontFamily: t.fontFamily,
+                  fontSize: "10px",
+                  fontWeight: 400,
+                  color: t.textDisabled,
+                  opacity: 0.7,
+                }}
+              >
+                {deviceInfo.manufacturer} {deviceInfo.model}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -2154,9 +2256,11 @@ export function SettingsPanel({
       {showClearConfirm && (
         <ClearDataDialog
           onClose={() => setShowClearConfirm(false)}
-          onConfirm={() => {
+          onConfirm={async () => {
             setShowClearConfirm(false);
-            logout();
+            // clearAllDataAndReload() handles logout implicitly by 
+            // wiping all auth state and reloading — no need to call logout()
+            await clearAllDataAndReload();
           }}
         />
       )}
@@ -2166,6 +2270,13 @@ export function SettingsPanel({
           onClose={() => setShowLangDialog(false)}
           selected={selectedLang}
           onSelect={(lang) => { setSelectedLang(lang); setLocale(lang); }}
+        />
+      )}
+
+      {showAccountDialog && (
+        <MyPreferencesDialog
+          open={showAccountDialog}
+          onClose={() => setShowAccountDialog(false)}
         />
       )}
 

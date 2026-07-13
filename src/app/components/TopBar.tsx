@@ -1,10 +1,12 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { ApiImage } from "./ApiImage";
 import { Settings, Globe, Bell, Cast } from "lucide-react";
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, TEXT_STYLE, SPACE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import svgPaths from "../../imports/svg-ca68x68c4i";
 import { getPrayerTimes, PRAYER_KEYS, PRAYER_NAMES, formatPrayerTime, getPrayerStatus } from "../utils/prayerUtils";
 import { Prayer } from "adhan";
+import { ConnectionStatus } from "./ConnectionStatus";
 
 // Removed hardcoded prayerTimes
 
@@ -35,11 +37,34 @@ function SunIcon() {
   );
 }
 
-export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onMaghribTap, onIshaTap, onWeatherTap, onSettingsTap, onBellTap, unreadCount = 3 }: { showPrayer?: boolean; onFajrTap?: () => void; onDhuhrTap?: () => void; onAsrTap?: () => void; onMaghribTap?: () => void; onIshaTap?: () => void; onWeatherTap?: () => void; onSettingsTap?: () => void; onBellTap?: () => void; unreadCount?: number }) {
+export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onMaghribTap, onIshaTap, onWeatherTap, onSettingsTap, onBellTap, unreadCount = 3, logoUrl, hideSettings = false, greeting }: { showPrayer?: boolean; onFajrTap?: () => void; onDhuhrTap?: () => void; onAsrTap?: () => void; onMaghribTap?: () => void; onIshaTap?: () => void; onWeatherTap?: () => void; onSettingsTap?: () => void; onBellTap?: () => void; unreadCount?: number; logoUrl?: string; hideSettings?: boolean; greeting?: string }) {
   const { theme, castDevice, setLocale, locale: currentLocale } = useTheme();
   const { t, locale, isRTL, fontFamily } = useLocale();
   const [time, setTime] = useState(new Date());
   const [prayerData, setPrayerData] = useState(() => getPrayerStatus(new Date()));
+  const [temperature, setTemperature] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        const city = theme.location || "Jeddah";
+        const response = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=01a477912e47daf2010808cc62015829`
+        );
+        const data = await response.json();
+        if (data.main && data.main.temp !== undefined) {
+          setTemperature(Math.round(data.main.temp));
+        }
+      } catch (error) {
+        console.error("Weather fetch error:", error);
+      }
+    };
+
+    fetchWeather();
+    const weatherInterval = setInterval(fetchWeather, 30 * 60 * 1000);
+    return () => clearInterval(weatherInterval);
+  }, [theme.location]);
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -76,18 +101,21 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
       }}
     >
       {/* Left: Logo — always left-aligned within its column */}
-      <a 
-        href={theme.hospitalWebsiteUrl} 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        className="flex items-center justify-start h-full transition-opacity hover:opacity-80 active:opacity-60"
-      >
-        <img
-          alt={theme.hospitalName}
-          src={theme.logoUrl}
-          style={{ height: SPACE[10], width: "auto", maxWidth: "300px", objectFit: "contain" }}
-        />
-      </a>
+      <div className="flex items-center gap-4 h-full">
+        <a 
+          href={theme.id === "imc" ? `https://www.imc.med.sa/${locale}` : theme.hospitalWebsiteUrl} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="flex items-center justify-start h-full transition-opacity hover:opacity-80 active:opacity-60"
+        >
+          <ApiImage
+            alt={theme.hospitalName}
+            src={logoUrl || theme.logoUrl}
+            style={{ height: SPACE[10], width: "auto", maxWidth: "300px", objectFit: "contain" }}
+          />
+        </a>
+        <ConnectionStatus />
+      </div>
 
       {/* Center: Prayer Times — always dead-center on screen */}
       {showPrayer ? (
@@ -135,6 +163,9 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
                     {prayerTime}
                   </span>
                 </div>
+                {pKey !== PRAYER_KEYS[PRAYER_KEYS.length - 1] && (
+                  <div style={{ width: "1px", height: "26px", backgroundColor: "rgba(0,0,0,0.12)", borderRadius: "1px", flexShrink: 0 }} />
+                )}
               </div>
             );
           })}
@@ -145,6 +176,21 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
 
       {/* Right: Clock/Date + Weather + Lang + Settings — always right-aligned */}
       <div className="flex items-center justify-end gap-4">
+        {/* Optional friendly greeting (kids layout) — renders only when provided */}
+        {greeting && (
+          <span
+            style={{
+              fontFamily: fontFamily,
+              ...TEXT_STYLE.bodyEmphasis,
+              fontWeight: WEIGHT.bold,
+              color: theme.textHeading,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {greeting}
+          </span>
+        )}
+
         {/* Clock + Date stacked */}
         <div className="flex flex-col items-end">
           <span
@@ -192,7 +238,8 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
               color: theme.textHeading,
             }}
           >
-            38°C
+            {temperature !== null ? `${temperature}°C` : "38°C"}
+
           </span>
         </div>
 
@@ -294,24 +341,26 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
           </button>
         )}
 
-        {/* Settings — always visible */}
-        <div className="relative">
-          <button
-            data-nav="true"
-            className="rounded-full cursor-pointer flex items-center justify-center transition-transform active:scale-90"
-            style={{ 
-              backgroundColor: theme.primarySubtle, 
-              width: theme.touchTargetMin, 
-              height: theme.touchTargetMin,
-              outline: 'none',
-              border: 'none',
-            }}
-            aria-label="Settings"
-            onClick={onSettingsTap}
-          >
-            <Settings size={20} style={{ color: theme.primary }} />
-          </button>
-        </div>
+        {/* Settings — hidden in the kids layout (hideSettings) */}
+        {!hideSettings && (
+          <div className="relative">
+            <button
+              data-nav="true"
+              className="rounded-full cursor-pointer flex items-center justify-center transition-transform active:scale-90"
+              style={{
+                backgroundColor: theme.primarySubtle,
+                width: theme.touchTargetMin,
+                height: theme.touchTargetMin,
+                outline: 'none',
+                border: 'none',
+              }}
+              aria-label="Settings"
+              onClick={onSettingsTap}
+            >
+              <Settings size={20} style={{ color: theme.primary }} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

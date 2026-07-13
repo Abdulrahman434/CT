@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { getApiConfig } from "../lib/apiConfig";
 import * as pdfjsLib from "pdfjs-dist";
 import {
   X, ChevronUp, ChevronDown, ZoomIn, ZoomOut,
@@ -24,6 +25,19 @@ const DPR = typeof window !== "undefined" ? (window.devicePixelRatio || 1) : 1;
 
 interface PageDim { w: number; h: number }
 interface Props { onClose: () => void; pdfSource?: string; title?: string }
+
+function getResolvablePdfUrl(source: string): string {
+  if (!source) return source;
+  // Local path — serve as-is
+  if (source.startsWith("/")) return source;
+  // CDN URL — append apikey if missing
+  if (!source.includes("apikey=")) {
+    const { apiKey } = getApiConfig();
+    const sep = source.includes("?") ? "&" : "?";
+    return `${source}${sep}apikey=${apiKey}`;
+  }
+  return source;
+}
 
 // ═══════════════════════════════════════════════════════════
 // Component
@@ -87,7 +101,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
     setLoading(true);
     setError(null);
 
-    const task = pdfjsLib.getDocument(pdfSource);
+    const task = pdfjsLib.getDocument(getResolvablePdfUrl(pdfSource));
     task.promise.then(async (pdf: any) => {
       if (dead) return;
       docRef.current = pdf;

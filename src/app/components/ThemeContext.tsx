@@ -1,4 +1,4 @@
-﻿import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from "react";
 import type { Locale } from "./i18n";
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -63,15 +63,15 @@ import type { Locale } from "./i18n";
  */
 export const TYPE_SCALE = {
   /** 14px — labels, captions, compact UI elements */
-  sm:   "14px",
+  sm: "14px",
   /** 18px — body text, descriptions, UI controls (primary reading size) */
   base: "18px",
   /** 22px — emphasized text, buttons, card titles */
-  md:   "22px",
+  md: "22px",
   /** 26px — section headers, page titles */
-  lg:   "26px",
+  lg: "26px",
   /** 30px — patient name, hero text */
-  xl:   "30px",
+  xl: "30px",
   /** 34px — survey questions, modal headings, splash content */
   "2xl": "34px",
 } as const;
@@ -83,13 +83,13 @@ export const TYPE_SCALE = {
  */
 export const WEIGHT = {
   /** 400 — body text, descriptions */
-  normal:    400,
+  normal: 400,
   /** 500 — medium emphasis, subtitles */
-  medium:    500,
+  medium: 500,
   /** 600 — labels, badges, nav items */
-  semibold:  600,
+  semibold: 600,
   /** 700 — titles, buttons, card names */
-  bold:      700,
+  bold: 700,
   /** 800 — hero headings, strong emphasis */
   extrabold: 800,
 } as const;
@@ -101,15 +101,15 @@ export const WEIGHT = {
  */
 export const LEADING = {
   /** 1.0 — single-line badges, icons */
-  none:    1,
+  none: 1,
   /** 1.2 — display / hero text */
-  tight:   1.2,
+  tight: 1.2,
   /** 1.3 — headings */
-  snug:    1.3,
+  snug: 1.3,
   /** 1.4 — subheadings, cards */
   compact: 1.4,
   /** 1.5 — body text (default) */
-  normal:  1.5,
+  normal: 1.5,
   /** 1.6 — relaxed reading, descriptions */
   relaxed: 1.6,
 } as const;
@@ -122,13 +122,13 @@ export const LEADING = {
  */
 export const SHADOW = {
   /** Minimal lift — pressed states, subtle elements */
-  sm:  "0px 1px 2px rgba(31,41,46,0.06)",
+  sm: "0px 1px 2px rgba(31,41,46,0.06)",
   /** Standard card / panel elevation — the workhorse */
-  md:  "0px 1px 3px rgba(31,41,46,0.04), 0px 4px 12px rgba(31,41,46,0.06)",
+  md: "0px 1px 3px rgba(31,41,46,0.04), 0px 4px 12px rgba(31,41,46,0.06)",
   /** Raised elements — top bars, sticky headers */
-  lg:  "0px 1px 7px rgba(31,41,46,0), 0px 4px 11px rgba(31,41,46,0.06)",
+  lg: "0px 1px 7px rgba(31,41,46,0), 0px 4px 11px rgba(31,41,46,0.06)",
   /** Modals, overlays, floating panels */
-  xl:  "0px 4px 16px rgba(31,41,46,0.08), 0px 12px 32px rgba(31,41,46,0.12)",
+  xl: "0px 4px 16px rgba(31,41,46,0.08), 0px 12px 32px rgba(31,41,46,0.12)",
   /** Dramatic lift — full-screen dialogs, configurator */
   "2xl": "0px 16px 48px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.5)",
 } as const;
@@ -141,14 +141,14 @@ export const SHADOW = {
  *        `gap: SPACE[3]`       → "24px"
  */
 export const SPACE = {
-  0:  "0px",
-  1:  "8px",
-  2:  "16px",
-  3:  "24px",
-  4:  "32px",
-  5:  "40px",
-  6:  "48px",
-  8:  "64px",
+  0: "0px",
+  1: "8px",
+  2: "16px",
+  3: "24px",
+  4: "32px",
+  5: "40px",
+  6: "48px",
+  8: "64px",
   10: "80px",
   12: "96px",
   16: "128px",
@@ -187,20 +187,20 @@ export const SPACE = {
  *   display      → 30 / 700 / 1.2  — hero greetings, patient names
  */
 export const TEXT_STYLE = {
-  pageTitle:    { fontSize: TYPE_SCALE.lg,   fontWeight: WEIGHT.bold,      lineHeight: LEADING.snug,    letterSpacing: "-0.3px"  },
-  sectionTitle: { fontSize: TYPE_SCALE.md,   fontWeight: WEIGHT.bold,      lineHeight: LEADING.snug,    letterSpacing: "-0.2px"  },
-  cardTitle:    { fontSize: TYPE_SCALE.md,   fontWeight: WEIGHT.bold,      lineHeight: LEADING.compact, letterSpacing: "0px"     },
-  subtitle:     { fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold,  lineHeight: LEADING.compact, letterSpacing: "0px"     },
-  body:         { fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.normal,    lineHeight: LEADING.normal,  letterSpacing: "0px"     },
-  bodyEmphasis: { fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold,  lineHeight: LEADING.normal,  letterSpacing: "0px"     },
-  label:        { fontSize: TYPE_SCALE.sm,   fontWeight: WEIGHT.semibold,  lineHeight: LEADING.snug,    letterSpacing: "0.2px"   },
-  caption:      { fontSize: TYPE_SCALE.sm,   fontWeight: WEIGHT.medium,    lineHeight: LEADING.compact, letterSpacing: "0px"     },
-  micro:        { fontSize: TYPE_SCALE.sm,   fontWeight: WEIGHT.semibold,  lineHeight: LEADING.none,    letterSpacing: "0.3px"   },
-  pill:         { fontSize: TYPE_SCALE.sm,   fontWeight: WEIGHT.semibold,  lineHeight: 1.2,             letterSpacing: "0px"     },
-  button:       { fontSize: TYPE_SCALE.md,   fontWeight: WEIGHT.bold,      lineHeight: LEADING.none,    letterSpacing: "0px"     },
-  buttonSm:     { fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold,  lineHeight: LEADING.none,    letterSpacing: "0px"     },
-  helper:       { fontSize: TYPE_SCALE.sm,   fontWeight: WEIGHT.normal,    lineHeight: LEADING.compact, letterSpacing: "0px"     },
-  display:      { fontSize: TYPE_SCALE.xl,   fontWeight: WEIGHT.bold,      lineHeight: LEADING.tight,   letterSpacing: "-0.5px"  },
+  pageTitle: { fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, lineHeight: LEADING.snug, letterSpacing: "-0.3px" },
+  sectionTitle: { fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, lineHeight: LEADING.snug, letterSpacing: "-0.2px" },
+  cardTitle: { fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, lineHeight: LEADING.compact, letterSpacing: "0px" },
+  subtitle: { fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold, lineHeight: LEADING.compact, letterSpacing: "0px" },
+  body: { fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.normal, lineHeight: LEADING.normal, letterSpacing: "0px" },
+  bodyEmphasis: { fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold, lineHeight: LEADING.normal, letterSpacing: "0px" },
+  label: { fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.semibold, lineHeight: LEADING.snug, letterSpacing: "0.2px" },
+  caption: { fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium, lineHeight: LEADING.compact, letterSpacing: "0px" },
+  micro: { fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.semibold, lineHeight: LEADING.none, letterSpacing: "0.3px" },
+  pill: { fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.semibold, lineHeight: 1.2, letterSpacing: "0px" },
+  button: { fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, lineHeight: LEADING.none, letterSpacing: "0px" },
+  buttonSm: { fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold, lineHeight: LEADING.none, letterSpacing: "0px" },
+  helper: { fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.normal, lineHeight: LEADING.compact, letterSpacing: "0px" },
+  display: { fontSize: TYPE_SCALE.xl, fontWeight: WEIGHT.bold, lineHeight: LEADING.tight, letterSpacing: "-0.5px" },
 } as const;
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -225,6 +225,7 @@ export interface ThemeConfig {
   heroImageUrls: string[];   // multiple hero images for carousel
   heroCropPosition: string;  // object-position for hero image crop, e.g. "50% 15%"
   slideshowInterval: number; // custom interval for slides in seconds
+  heroOpacity: number;       // background photo opacity, percent 0–100 (default 40)
   location: string;
 
   /* ── Brand Colors ── */
@@ -248,6 +249,7 @@ export interface ThemeConfig {
   /* ── Text ── */
   textHeading: string;       // headings, primary text
   textBody: string;          // body paragraphs
+  textNormal: string;        // primary text (alias for textHeading)
   textMuted: string;         // secondary info, captions
   textDisabled: string;      // disabled / placeholder
   textInverse: string;       // text on dark/colored bg
@@ -313,6 +315,7 @@ function buildTheme(core: {
   heroImageUrls?: string[];
   heroCropPosition?: string;
   slideshowInterval?: number;
+  heroOpacity?: number;
   primary: string;
   primaryDark: string;
   primaryLight: string;
@@ -333,11 +336,12 @@ function buildTheme(core: {
     fontFamilyAr: c.fontFamilyAr,
     fontFamilyMono: `${c.fontFamily.split(",")[0]}, monospace`,
 
-    logoUrl: c.logoUrl || (c.id === "dsfh" ? DSFH_LOGO : c.id === "burjeel" ? burjeelLogo : c.id === "slh" ? slhLogo : c.id === "dallah" ? dallahLogo : c.id === "caremed" ? caremedLogo : ""),
-    heroImageUrl: c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : ""),
-    heroImageUrls: c.heroImageUrls && c.heroImageUrls.length > 0 ? c.heroImageUrls : [c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : "")],
+    logoUrl: c.logoUrl || (c.id === "dsfh" ? DSFH_LOGO : c.id === "burjeel" ? burjeelLogo : c.id === "slh" ? slhLogo : c.id === "dallah" ? dallahLogo : c.id === "caremed" ? caremedLogo : c.id === "imc" ? imcLogo : c.id === "careinn" ? careinnLogo : c.id === "prime" ? primeLogo : ""),
+    heroImageUrl: c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : c.id === "imc" ? imcHero : c.id === "careinn" ? careinnHero : c.id === "prime" ? primeHero : ""),
+    heroImageUrls: c.heroImageUrls && c.heroImageUrls.length > 0 ? c.heroImageUrls : [c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : c.id === "imc" ? imcHero : c.id === "careinn" ? careinnHero : c.id === "prime" ? primeHero : "")],
     heroCropPosition: c.heroCropPosition || "50% 15%",
     slideshowInterval: c.slideshowInterval || 5,
+    heroOpacity: c.heroOpacity ?? 40,
     location: (c as any).location || "Riyadh",
 
     primary: c.primary,
@@ -373,6 +377,7 @@ function buildTheme(core: {
 
       textHeading: "#1B2A32",
       textBody: "#1B2A32",
+      textNormal: "#1B2A32",
       textMuted: "#95A3AD",
       textDisabled: "#C0CAD0",
       textInverse: "#FFFFFF",
@@ -413,13 +418,13 @@ function buildTheme(core: {
   }
 
   /* ── DARK MODE ── */
-  const DARK_BG       = "#0F1419";
-  const DARK_SURFACE   = "#1A2027";
-  const DARK_ELEVATED  = "#222B34";
-  const DARK_TEXT      = "#E7EBED";
-  const DARK_TEXT_SEC  = "#8B99A4";
-  const DARK_MUTED     = "#5C6B77";
-  const DARK_DISABLED  = "#3D4A54";
+  const DARK_BG = "#0F1419";
+  const DARK_SURFACE = "#1A2027";
+  const DARK_ELEVATED = "#222B34";
+  const DARK_TEXT = "#E7EBED";
+  const DARK_TEXT_SEC = "#8B99A4";
+  const DARK_MUTED = "#5C6B77";
+  const DARK_DISABLED = "#3D4A54";
 
   return {
     ...shared,
@@ -434,6 +439,7 @@ function buildTheme(core: {
 
     textHeading: DARK_TEXT,
     textBody: DARK_TEXT_SEC,
+    textNormal: DARK_TEXT,
     textMuted: DARK_MUTED,
     textDisabled: DARK_DISABLED,
     textInverse: "#FFFFFF",
@@ -530,6 +536,15 @@ import dallahHero from "../../assets/dallah-hero-welcome.jpg";
 
 import caremedLogo from "../../assets/CareMedicalLogo.png";
 import caremedHero from "../../assets/CareMedicalHospital.jpeg";
+
+import imcLogo from "../../assets/imclogo.png";
+import imcHero from "../../assets/IMC-e1556123324461.jpg";
+
+import careinnLogo from "../../assets/careinn-hospital-logo.png";
+import careinnHero from "../../assets/careinn-hospital-hero.jpg";
+
+import primeLogo from "../../assets/prime-hospital-logo.png";
+import primeHero from "../../assets/prime-hospital-hero.jpg";
 
 /* Canonical built-in asset URLs — used as fallbacks for DSFH */
 export const DSFH_LOGO = logoImage;
@@ -633,6 +648,61 @@ export const CAREMED_CORE: HospitalCoreConfig = {
   location: "Riyadh",
 };
 
+export const IMC_CORE: HospitalCoreConfig = {
+  id: "imc",
+  hospitalName: "International Medical Center",
+  hospitalShortName: "IMC",
+  fontFamily: "'Mulish', sans-serif",
+  fontFamilyAr: "'Almarai', sans-serif",
+  logoUrl: imcLogo,
+  hospitalWebsiteUrl: "https://www.imc.med.sa/",
+  heroImageUrl: imcHero,
+  primary: "#015a9c",
+  primaryDark: "#041727",
+  primaryLight: "#DCE5EC",
+  accent: "#B68A35",
+  accentDark: "#7A5C23",
+  accentLight: "#F5EFE6",
+  location: "Jeddah",
+};
+
+export const CAREINN_CORE: HospitalCoreConfig = {
+  id: "careinn",
+  hospitalName: "CareInn Hospital",
+  hospitalShortName: "CareInn",
+  fontFamily: "'Mulish', sans-serif",
+  fontFamilyAr: "'Almarai', sans-serif",
+  logoUrl: careinnLogo,
+  hospitalWebsiteUrl: "",
+  heroImageUrl: careinnHero,
+  heroCropPosition: "50% 40%",
+  primary: "#1B2F5B",
+  primaryDark: "#152446",
+  primaryLight: "#e1e3e9",
+  accent: "#4A90D9",
+  accentDark: "#3970a9",
+  accentLight: "#e7f0fa",
+  location: "Riyadh",
+};
+
+export const PRIME_CORE: HospitalCoreConfig = {
+  id: "prime",
+  hospitalName: "Prime Hospital",
+  hospitalShortName: "Prime",
+  fontFamily: "'Montserrat', sans-serif",
+  fontFamilyAr: "'Almarai', sans-serif",
+  logoUrl: primeLogo,
+  hospitalWebsiteUrl: "https://www.primehospital.com/",
+  heroImageUrl: primeHero,
+  primary: "#F47B20",
+  primaryDark: "#C45E0A",
+  primaryLight: "#F9B27A",
+  accent: "#6D6E71",
+  accentDark: "#58595B",
+  accentLight: "#EBEBEC",
+  location: "Dubai - UAE",
+};
+
 /** All built-in hospital presets (always available, never deleted) */
 export const BUILTIN_PRESETS: HospitalCoreConfig[] = [
   DSFH_CORE,
@@ -640,7 +710,11 @@ export const BUILTIN_PRESETS: HospitalCoreConfig[] = [
   SLH_CORE,
   DALLAH_CORE,
   CAREMED_CORE,
+  IMC_CORE,
+  CAREINN_CORE,
+  PRIME_CORE,
 ];
+
 
 const DSFH_THEME = buildTheme(DSFH_CORE);
 
@@ -657,6 +731,7 @@ export interface HospitalCoreConfig {
   heroImageUrls?: string[];
   heroCropPosition?: string;
   slideshowInterval?: number;
+  heroOpacity?: number;      // background photo opacity, percent 0–100 (default 40)
   primary: string;
   primaryDark: string;
   primaryLight: string;
@@ -666,8 +741,105 @@ export interface HospitalCoreConfig {
   location?: string;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+ * LAYOUT 2 (CareInn) — fully independent theme, isolated from hospital configs
+ * ═══════════════════════════════════════════════════════════════════════════
+ * Layout 2 (the CiHomescreen "CareInn" design) must NEVER inherit colors from
+ * the active hospital config that drives Layout 1. It has its own localStorage
+ * slice and its own scoped CSS variables (applied on the Layout 2 wrapper in
+ * App.tsx), so editing a Layout 1 hospital can never affect Layout 2 and vice
+ * versa.
+ */
+export interface Layout2Theme {
+  primary: string;
+  primaryDark: string;
+  primaryLight: string;
+  accent: string;
+  accentDark: string;
+  accentLight: string;
+  presetName?: "dark" | "gold" | "green" | "light" | "custom";
+  pageBg?: string;
+  tileBg?: string;
+  clientLogo?: string;
+  typography?: string;
+  tileGroups?: Layout2TileGroups;
+}
+
+/**
+ * Per-tile-group appearance overrides for Layout 2 (CareInn homescreen) only.
+ * Each of the three on-screen tile clusters can be styled independently; an
+ * empty `bg` means "follow the active hospital theme" so untouched groups stay
+ * in sync with Layout 1. Consumed by the CSS vars CiHomescreen reads.
+ */
+export type TileIconColor = "primary" | "secondary" | "custom";
+
+export interface TileGroupStyle {
+  bg: string;          // hex background; "" => inherit the active theme color
+  opacity: number;     // background opacity, 0–100
+  scale: number;       // tile scale, 0.80–1.20 (1.00 = default)
+  iconColor: TileIconColor;
+  iconCustom: string;  // hex, used when iconColor === "custom"
+}
+
+export interface Layout2TileGroups {
+  left: TileGroupStyle;    // Left Sidebar Tiles  (Frame48, small tiles)
+  main: TileGroupStyle;    // Main Right Tiles    (Frame45, large tiles)
+  bottom: TileGroupStyle;  // Bottom Action Tiles (Frame53, small tiles)
+}
+
+// Defaults mirror the current dashboard appearance so the controls initialise
+// to exactly what is on screen today:
+//  - left/bottom small tiles: translucent (~10%) primary glass, primary icons
+//  - main large tiles: solid primary, fully opaque, white icons
+export const DEFAULT_TILE_GROUPS: Layout2TileGroups = {
+  left: { bg: "", opacity: 10, scale: 1.0, iconColor: "primary", iconCustom: "#1B2F5B" },
+  main: { bg: "", opacity: 100, scale: 1.0, iconColor: "custom", iconCustom: "#ffffff" },
+  bottom: { bg: "", opacity: 10, scale: 1.0, iconColor: "primary", iconCustom: "#1B2F5B" },
+};
+
+export const DEFAULT_LAYOUT2_THEME: Layout2Theme = {
+  primary: "#1B2F5B",
+  primaryDark: "#152446",
+  primaryLight: "#e1e3e9",
+  accent: "#4A90D9",
+  accentDark: "#3970a9",
+  accentLight: "#e7f0fa",
+  presetName: "dark",
+  pageBg: "#ffffff",
+  tileBg: "#16274d",
+  clientLogo: "",
+  typography: "'Inter', sans-serif",
+  tileGroups: DEFAULT_TILE_GROUPS,
+};
+
+// localStorage key — independent from "hospital-configs" (Layout 1 storage)
+const LAYOUT2_THEME_KEY = "careinn-layout2-theme";
+
+function loadLayout2Theme(): Layout2Theme {
+  try {
+    const raw = localStorage.getItem(LAYOUT2_THEME_KEY);
+    if (!raw) return DEFAULT_LAYOUT2_THEME;
+    const parsed = JSON.parse(raw) as Partial<Layout2Theme>;
+    // Deep-merge tileGroups so themes saved before this field existed (or with
+    // only some groups present) still get complete, valid group defaults.
+    const tileGroups: Layout2TileGroups = {
+      left: { ...DEFAULT_TILE_GROUPS.left, ...parsed.tileGroups?.left },
+      main: { ...DEFAULT_TILE_GROUPS.main, ...parsed.tileGroups?.main },
+      bottom: { ...DEFAULT_TILE_GROUPS.bottom, ...parsed.tileGroups?.bottom },
+    };
+    return { ...DEFAULT_LAYOUT2_THEME, ...parsed, tileGroups };
+  } catch {
+    return DEFAULT_LAYOUT2_THEME;
+  }
+}
+
+function saveLayout2ThemeToStorage(t: Layout2Theme) {
+  localStorage.setItem(LAYOUT2_THEME_KEY, JSON.stringify(t));
+}
+
 const STORAGE_KEY = "hospital-configs";
 const ACTIVE_KEY = "active-hospital-id";
+const LOCALE_KEY = "active-locale";
 
 function loadSavedConfigs(): HospitalCoreConfig[] {
   try {
@@ -683,11 +855,35 @@ function saveConfigs(configs: HospitalCoreConfig[]) {
 }
 
 function loadActiveId(): string {
-  return localStorage.getItem(ACTIVE_KEY) || "dsfh";
+  return localStorage.getItem(ACTIVE_KEY) || "careinn";
 }
 
 function saveActiveId(id: string) {
   localStorage.setItem(ACTIVE_KEY, id);
+}
+
+function loadLocale(): Locale {
+  return (localStorage.getItem(LOCALE_KEY) as Locale) || "en";
+}
+
+function saveLocale(l: Locale) {
+  localStorage.setItem(LOCALE_KEY, l);
+}
+
+function loadDarkMode(): boolean {
+  return localStorage.getItem("hbs-dark-mode") === "true";
+}
+
+function saveDarkMode(val: boolean) {
+  localStorage.setItem("hbs-dark-mode", val ? "true" : "false");
+}
+
+// Layout mode (1 = active hospital design, 2 = CareInn design, 3 = Kids design).
+// Written by MyAccountDialog under "careinn-layout-mode"; broadcast via
+// "layout-mode-changed". All layouts inherit the active hospital's brand.
+function loadLayoutMode(): 1 | 2 | 3 {
+  const v = localStorage.getItem("careinn-layout-mode");
+  return v === "2" ? 2 : v === "3" ? 3 : 1;
 }
 
 /* ── Context Type ── */
@@ -708,25 +904,30 @@ interface ThemeContextType {
   setLocale: (v: Locale) => void;
   prayerAlarm: boolean;
   setPrayerAlarm: (v: boolean) => void;
+  /** Layout 2 (CareInn) theme — independent of the active hospital config. */
+  layout2Theme: Layout2Theme;
+  saveLayout2Theme: (t: Layout2Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: DSFH_THEME,
   allConfigs: [DSFH_CORE],
   activeConfigId: "dsfh",
-  switchConfig: () => {},
-  saveConfig: () => {},
-  deleteConfig: () => {},
+  switchConfig: () => { },
+  saveConfig: () => { },
+  deleteConfig: () => { },
   patientAdmitted: true,
-  setPatientAdmitted: () => {},
+  setPatientAdmitted: () => { },
   darkMode: false,
-  setDarkMode: () => {},
+  setDarkMode: () => { },
   castDevice: null,
-  setCastDevice: () => {},
+  setCastDevice: () => { },
   locale: "en",
-  setLocale: () => {},
+  setLocale: () => { },
   prayerAlarm: true,
-  setPrayerAlarm: () => {},
+  setPrayerAlarm: () => { },
+  layout2Theme: DEFAULT_LAYOUT2_THEME,
+  saveLayout2Theme: () => { },
 });
 
 /* ── Inject CSS Custom Properties ──
@@ -736,51 +937,61 @@ const ThemeContext = createContext<ThemeContextType>({
 function injectCSSVars(t: ThemeConfig) {
   const root = document.documentElement;
   const vars: Record<string, string> = {
-    "--hbs-font":              t.fontFamily,
-    "--hbs-font-ar":           t.fontFamilyAr,
-    "--hbs-font-mono":         t.fontFamilyMono,
-    "--hbs-primary":           t.primary,
-    "--hbs-primary-dark":      t.primaryDark,
-    "--hbs-primary-light":     t.primaryLight,
-    "--hbs-primary-subtle":    t.primarySubtle,
-    "--hbs-accent":            t.accent,
-    "--hbs-accent-dark":       t.accentDark,
-    "--hbs-accent-light":      t.accentLight,
-    "--hbs-accent-subtle":     t.accentSubtle,
-    "--hbs-bg":                t.background,
-    "--hbs-surface":           t.surface,
-    "--hbs-surface-elevated":  t.surfaceElevated,
-    "--hbs-overlay":           t.overlay,
-    "--hbs-panel-bg":          t.panelBg,
-    "--hbs-text-heading":      t.textHeading,
-    "--hbs-text-body":         t.textBody,
-    "--hbs-text-muted":        t.textMuted,
-    "--hbs-text-disabled":     t.textDisabled,
-    "--hbs-text-inverse":      t.textInverse,
-    "--hbs-icon-default":      t.iconDefault,
-    "--hbs-icon-brand":        t.iconBrand,
-    "--hbs-border":            t.borderDefault,
-    "--hbs-border-subtle":     t.borderSubtle,
-    "--hbs-border-active":     t.borderActive,
-    "--hbs-tile-active":       t.tileActiveBg,
-    "--hbs-tile-inactive":     t.tileInactiveBg,
-    "--hbs-slider-track":      t.sliderTrack,
-    "--hbs-slider-thumb":      t.sliderThumb,
-    "--hbs-gradient-canvas":   t.gradientCanvas,
-    "--hbs-radius-sm":         t.radiusSm,
-    "--hbs-radius-md":         t.radiusMd,
-    "--hbs-radius-lg":         t.radiusLg,
-    "--hbs-radius-xl":         t.radiusXl,
-    "--hbs-radius-card":       t.radiusCard,
-    "--hbs-touch-min":         t.touchTargetMin,
-    "--hbs-card-padding":      t.cardPadding,
-    "--hbs-icon-bg":           t.iconBg,
-    "--hbs-success":           t.success,
-    "--hbs-success-subtle":    t.successSubtle,
-    "--hbs-warning":           t.warning,
-    "--hbs-warning-subtle":    t.warningSubtle,
-    "--hbs-error":             t.error,
-    "--hbs-error-subtle":      t.errorSubtle,
+    "--hbs-font": t.fontFamily,
+    "--hbs-font-ar": t.fontFamilyAr,
+    "--hbs-font-mono": t.fontFamilyMono,
+    "--hbs-primary": t.primary,
+    "--hbs-primary-dark": t.primaryDark,
+    "--hbs-primary-light": t.primaryLight,
+    "--hbs-primary-subtle": t.primarySubtle,
+    "--hbs-accent": t.accent,
+    "--hbs-accent-dark": t.accentDark,
+    "--hbs-accent-light": t.accentLight,
+    "--hbs-accent-subtle": t.accentSubtle,
+    "--hbs-bg": t.background,
+    "--hbs-surface": t.surface,
+    "--hbs-surface-elevated": t.surfaceElevated,
+    "--hbs-overlay": t.overlay,
+    "--hbs-panel-bg": t.panelBg,
+    "--hbs-text-heading": t.textHeading,
+    "--hbs-text-body": t.textBody,
+    "--hbs-text-muted": t.textMuted,
+    "--hbs-text-disabled": t.textDisabled,
+    "--hbs-text-inverse": t.textInverse,
+    "--hbs-icon-default": t.iconDefault,
+    "--hbs-icon-brand": t.iconBrand,
+    "--hbs-border": t.borderDefault,
+    "--hbs-border-subtle": t.borderSubtle,
+    "--hbs-border-active": t.borderActive,
+    "--hbs-tile-active": t.tileActiveBg,
+    "--hbs-tile-inactive": t.tileInactiveBg,
+    "--hbs-slider-track": t.sliderTrack,
+    "--hbs-slider-thumb": t.sliderThumb,
+    "--hbs-gradient-canvas": t.gradientCanvas,
+    "--hbs-radius-sm": t.radiusSm,
+    "--hbs-radius-md": t.radiusMd,
+    "--hbs-radius-lg": t.radiusLg,
+    "--hbs-radius-xl": t.radiusXl,
+    "--hbs-radius-card": t.radiusCard,
+    "--hbs-touch-min": t.touchTargetMin,
+    "--hbs-card-padding": t.cardPadding,
+    "--hbs-icon-bg": t.iconBg,
+    "--hbs-success": t.success,
+    "--hbs-success-subtle": t.successSubtle,
+    "--hbs-warning": t.warning,
+    "--hbs-warning-subtle": t.warningSubtle,
+    "--hbs-error": t.error,
+    "--hbs-error-subtle": t.errorSubtle,
+
+    // Standard CSS Custom Properties for layout styling
+    "--primary-color": t.primary,
+    "--primary-dark": t.primaryDark,
+    "--primary-light": t.primaryLight,
+    "--primary-subtle": t.primarySubtle,
+    "--accent-color": t.accent,
+    "--accent-dark": t.accentDark,
+    "--accent-light": t.accentLight,
+    "--accent-subtle": t.accentSubtle,
   };
   Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
 }
@@ -790,18 +1001,35 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [savedConfigs, setSavedConfigs] = useState<HospitalCoreConfig[]>(() => loadSavedConfigs());
   const [activeId, setActiveId] = useState(() => loadActiveId());
   const [patientAdmitted, setPatientAdmitted] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => loadDarkMode());
   const [castDevice, setCastDevice] = useState<string | null>(null);
-  const [locale, setLocale] = useState<Locale>("en");
+  const [locale, setLocale] = useState<Locale>(() => loadLocale());
   const [prayerAlarm, setPrayerAlarm] = useState(() => {
     const saved = localStorage.getItem("prayer-alarm");
     return saved === null ? true : saved === "true";
   });
 
+  const [layout2Theme, setLayout2Theme] = useState<Layout2Theme>(() => loadLayout2Theme());
+  const [layoutMode, setLayoutMode] = useState<1 | 2 | 3>(() => loadLayoutMode());
+
+  // Keep the effective theme in sync with the active layout mode so that, in
+  // Layout 2, the WHOLE app (home, games, tools, settings, overlays) is driven
+  // by the CareInn Layout 2 theme instead of the active hospital config.
+  useEffect(() => {
+    const handler = () => setLayoutMode(loadLayoutMode());
+    window.addEventListener("layout-mode-changed", handler);
+    return () => window.removeEventListener("layout-mode-changed", handler);
+  }, []);
+
   const updatePrayerAlarm = (val: boolean) => {
     setPrayerAlarm(val);
     localStorage.setItem("prayer-alarm", val ? "true" : "false");
   };
+
+  const saveLayout2Theme = useCallback((next: Layout2Theme) => {
+    setLayout2Theme(next);
+    saveLayout2ThemeToStorage(next);
+  }, []);
 
   // All configs = built-in presets (overridable by saved versions) + user-created configs
   const allConfigs: HospitalCoreConfig[] = (() => {
@@ -809,7 +1037,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const merged = BUILTIN_PRESETS.map((preset) => {
       const saved = savedConfigs.find((c) => c.id === preset.id);
       if (!saved) return preset;
-      const hasBuiltinAssets = ["dsfh", "burjeel", "slh", "dallah", "caremed"].includes(preset.id);
+      const hasBuiltinAssets = ["dsfh", "burjeel", "slh", "dallah", "caremed", "careinn", "prime"].includes(preset.id);
       return {
         ...preset,
         ...saved,
@@ -828,9 +1056,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return [...merged, ...userCreated];
   })();
 
-  // Resolve active config → theme
+  // Resolve effective config → theme.
+  // Both layouts use the active hospital config as-is, so Layout 2 (CareInn)
+  // inherits Layout 1's active brand colors AND logo automatically — when the
+  // admin edits the active hospital's brand colors, both layouts reflect them.
+  // (layout2Theme is retained for the configurator's editor but no longer
+  // overrides the rendered theme.)
   const activeCore = allConfigs.find((c) => c.id === activeId) || DSFH_CORE;
-  const baseTheme = buildTheme(activeCore, darkMode);
+  const effectiveCore: HospitalCoreConfig = activeCore;
+  const baseTheme = buildTheme(effectiveCore, darkMode);
   // Override fontFamily based on active locale so every component using
   // theme.fontFamily automatically gets the correct Arabic/English font.
   const theme = useMemo(() => ({
@@ -841,7 +1075,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Inject CSS vars on theme change
   useEffect(() => {
     injectCSSVars(theme);
-  }, [activeId, savedConfigs, darkMode, locale]);
+  }, [activeId, savedConfigs, darkMode, locale, layoutMode, layout2Theme]);
 
   const switchConfig = useCallback((id: string) => {
     setActiveId(id);
@@ -849,14 +1083,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const saveConfigFn = useCallback((config: HospitalCoreConfig) => {
-    const hasBuiltinAssets = ["dsfh", "burjeel", "slh", "dallah", "caremed"].includes(config.id);
+    const hasBuiltinAssets = ["dsfh", "burjeel", "slh", "dallah", "caremed", "careinn", "prime"].includes(config.id);
     const toSave = hasBuiltinAssets
       ? {
-          ...config,
-          logoUrl: isUserProvidedUrl(config.logoUrl) ? config.logoUrl : "",
-          heroImageUrl: isUserProvidedUrl(config.heroImageUrl) ? config.heroImageUrl : "",
-          heroImageUrls: config.heroImageUrls?.filter(isUserProvidedUrl),
-        }
+        ...config,
+        logoUrl: isUserProvidedUrl(config.logoUrl) ? config.logoUrl : "",
+        heroImageUrl: isUserProvidedUrl(config.heroImageUrl) ? config.heroImageUrl : "",
+        heroImageUrls: config.heroImageUrls?.filter(isUserProvidedUrl),
+      }
       : config;
 
     setSavedConfigs((prev) => {
@@ -878,8 +1112,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       return next;
     });
     if (activeId === id && !isBuiltin) {
-      setActiveId("dsfh");
-      saveActiveId("dsfh");
+      setActiveId("careinn");
+      saveActiveId("careinn");
     }
   }, [activeId]);
 
@@ -894,13 +1128,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       patientAdmitted,
       setPatientAdmitted,
       darkMode,
-      setDarkMode,
+      setDarkMode: (val: boolean) => {
+        setDarkMode(val);
+        saveDarkMode(val);
+      },
       castDevice,
       setCastDevice,
       locale,
-      setLocale,
+      setLocale: (l: Locale) => {
+        setLocale(l);
+        saveLocale(l);
+      },
       prayerAlarm,
       setPrayerAlarm: updatePrayerAlarm,
+      layout2Theme,
+      saveLayout2Theme,
     }}>
       {children}
     </ThemeContext.Provider>

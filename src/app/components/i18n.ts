@@ -34,11 +34,92 @@ const translations: Record<string, TranslationEntry> = {
   "general.aboutUs": { en: "About Us", ar: "عن المستشفى", ur: "ہمارے بارے میں" },
   "general.close": { en: "Close", ar: "إغلاق", ur: "بند کریں" },
   "general.cancel": { en: "Cancel", ar: "إلغاء", ur: "منسوخ" },
+  "general.logout": { en: "Logout", ar: "تسجيل الخروج", ur: "لاگ آؤٹ" },
   "general.confirm": { en: "Confirm", ar: "تأكيد", ur: "تصدیق کریں" },
   "general.back": { en: "Back", ar: "رجوع", ur: "واپس" },
   "general.room": { en: "Room", ar: "غرفة", ur: "کمرہ" },
   "general.bed": { en: "Bed", ar: "سرير", ur: "بستر" },
   "general.done": { en: "Done", ar: "تم", ur: "ہو گیا" },
+  "general.go": { en: "Go", ar: "اذهب", ur: "جاؤ" },
+  "general.loading": { en: "Loading...", ar: "جاري التحميل...", ur: "لوڈنگ ہو رہی ہے..." },
+
+  /* ─── Kids Layout (Layout 3) ─── */
+  "kids.greeting.morning": { en: "Good Morning", ar: "صباح الخير", ur: "صبح بخیر" },
+  "kids.greeting.afternoon": { en: "Good Afternoon", ar: "مساء الخير", ur: "سہ پہر بخیر" },
+  "kids.greeting.evening": { en: "Good Evening", ar: "مساء الخير", ur: "شام بخیر" },
+  "kids.hi": { en: "Hi {0}!", ar: "أهلاً {0}!", ur: "ہائے {0}!" },
+  "kids.name": { en: "{0}!", ar: "{0}!", ur: "{0}!" },
+  "kids.happyHere": { en: "We're happy you're here 💛", ar: "سعداء بوجودك هنا 💛", ur: "ہم خوش ہیں کہ آپ یہاں ہیں 💛" },
+  "kids.dailyMessage": { en: "Today is a great day to feel better!", ar: "اليوم يومٌ رائع لتشعر بتحسّن!", ur: "آج بہتر محسوس کرنے کا ایک شاندار دن ہے!" },
+  "kids.careTitle": { en: "How are you feeling?", ar: "كيف تشعر اليوم؟", ur: "آپ کیسا محسوس کر رہے ہیں؟" },
+
+  /* Kids — level badge + daily mission */
+  "kids.level": { en: "Level {0}", ar: "المستوى {0}", ur: "لیول {0}" },
+  "kids.starsToNext": { en: "{0} more stars to Level {1}!", ar: "{0} نجوم للوصول إلى المستوى {1}!", ur: "لیول {1} کے لیے {0} مزید ستارے!" },
+  "kids.mission.title": { en: "Today's Mission", ar: "مهمة اليوم", ur: "آج کا مشن" },
+  "kids.mission.watch": { en: "Watch a video", ar: "شاهد فيديو", ur: "ایک ویڈیو دیکھیں" },
+  "kids.mission.read": { en: "Read a story", ar: "اقرأ قصة", ur: "ایک کہانی پڑھیں" },
+  "kids.mission.brave": { en: "Be brave 😊", ar: "كن شجاعاً 😊", ur: "بہادر بنیں 😊" },
+
+  /* Kids — daily mood + nurse thank you */
+  "kids.mood.title": { en: "How are you feeling today?", ar: "كيف تشعر اليوم؟", ur: "آج آپ کیسا محسوس کر رہے ہیں؟" },
+  "kids.mood.happy": { en: "Happy", ar: "سعيد", ur: "خوش" },
+  "kids.mood.okay": { en: "Okay", ar: "بخير", ur: "ٹھیک" },
+  "kids.mood.sad": { en: "Sad", ar: "حزين", ur: "اداس" },
+  "kids.mood.toast.happy": { en: "Yay! Keep smiling, {0}! 🌟", ar: "رائع! استمرّ بالابتسام يا {0}! 🌟", ur: "واہ! مسکراتے رہو، {0}! 🌟" },
+  "kids.mood.toast.okay": { en: "That's okay! We're here for you 💙", ar: "لا بأس! نحن هنا من أجلك 💙", ur: "کوئی بات نہیں! ہم آپ کے ساتھ ہیں 💙" },
+  "kids.mood.toast.sad": { en: "We're sorry you feel that way. Want to talk to your nurse? 💗", ar: "نأسف لشعورك بهذا. هل تودّ التحدث إلى ممرضتك؟ 💗", ur: "ہمیں افسوس ہے کہ آپ ایسا محسوس کر رہے ہیں۔ کیا آپ اپنی نرس سے بات کرنا چاہتے ہیں؟ 💗" },
+  "kids.nurse.thankYou": { en: "Send a thank you 💗", ar: "أرسل شكراً 💗", ur: "شکریہ بھیجیں 💗" },
+  "kids.nurse.thanked": { en: "Thank you sent! 💗", ar: "تم إرسال الشكر! 💗", ur: "شکریہ بھیج دیا! 💗" },
+
+  /* Kids — motivational carousel */
+  "kids.motiv.steps": { en: "Every little step counts. Keep going!", ar: "كل خطوة صغيرة لها قيمة. واصل التقدّم!", ur: "ہر چھوٹا قدم اہم ہے۔ آگے بڑھتے رہو!" },
+  "kids.motiv.strong": { en: "You are strong, smart, and amazing!", ar: "أنت قويّ وذكيّ ورائع!", ur: "تم مضبوط، ذہین اور شاندار ہو!" },
+  "kids.motiv.grow": { en: "Challenges help you grow.", ar: "التحدّيات تساعدك على النموّ.", ur: "چیلنجز تمہیں بڑھنے میں مدد دیتے ہیں۔" },
+  "kids.motiv.better": { en: "You're doing better every day!", ar: "أنت تتحسّن كل يوم!", ur: "تم ہر دن بہتر ہو رہے ہو!" },
+  "kids.nurseLabel": { en: "Your friendly nurse", ar: "ممرضتك اللطيفة", ur: "آپ کی مہربان نرس" },
+  "kids.yourNurse": { en: "Your nurse", ar: "ممرضتك", ur: "آپ کی نرس" },
+  "kids.heart": { en: "Heartbeat", ar: "نبض القلب", ur: "دل کی دھڑکن" },
+  "kids.temperature": { en: "Temperature", ar: "درجة الحرارة", ur: "درجہ حرارت" },
+  "kids.bpm": { en: "BPM", ar: "نبضة/د", ur: "دھڑکن" },
+
+  /* Kids — navigation tiles */
+  "kids.tile.media": { en: "Watch & Videos", ar: "مشاهدة وفيديو", ur: "دیکھیں اور ویڈیوز" },
+  "kids.tile.reading": { en: "Read & Stories", ar: "قراءة وقصص", ur: "پڑھیں اور کہانیاں" },
+  "kids.tile.draw": { en: "Draw & Color", ar: "ارسم ولوّن", ur: "ڈرا اور رنگ" },
+  "kids.tile.portal": { en: "Patient Portal", ar: "بوابة المريض", ur: "پیشنٹ پورٹل" },
+  "kids.tile.social": { en: "Chat with Family", ar: "تحدث مع العائلة", ur: "خاندان سے بات" },
+  "kids.tile.games": { en: "Play Games", ar: "العب الألعاب", ur: "گیمز کھیلیں" },
+  "kids.tile.meeting": { en: "Video Call", ar: "مكالمة فيديو", ur: "ویڈیو کال" },
+  "kids.tile.internet": { en: "Browse", ar: "تصفح", ur: "براؤز کریں" },
+  "kids.tile.tools": { en: "My Tools", ar: "أدواتي", ur: "میرے اوزار" },
+  "kids.tile.education": { en: "Learn & Explore", ar: "تعلّم واكتشف", ur: "سیکھیں اور دریافت کریں" },
+  "kids.tile.consultation": { en: "Talk to Doctor", ar: "تحدث مع الطبيب", ur: "ڈاکٹر سے بات کریں" },
+  "kids.tile.housekeeping": { en: "Room Help", ar: "مساعدة الغرفة", ur: "کمرے کی مدد" },
+  "kids.tile.food": { en: "Order Food", ar: "اطلب الطعام", ur: "کھانا منگوائیں" },
+  "kids.tile.call": { en: "Call Someone", ar: "اتصل بشخص", ur: "کسی کو کال کریں" },
+  "kids.tile.feedback": { en: "Your Feedback", ar: "رأيك", ur: "آپ کی رائے" },
+  "kids.tile.roomcontrol": { en: "Room Control", ar: "التحكم بالغرفة", ur: "روم کنٹرول" },
+
+  /* Kids — two big hero buttons */
+  "kids.media.sub": { en: "Movies · Shows · Cartoons", ar: "أفلام · برامج · كرتون", ur: "فلمیں · شوز · کارٹون" },
+  "kids.games.sub": { en: "Puzzles · Fun · Challenges", ar: "ألغاز · مرح · تحديات", ur: "پزلز · مزہ · چیلنجز" },
+  "kids.reading.sub": { en: "Books · Tales · Stories", ar: "كتب · حكايات · قصص", ur: "کتابیں · کہانیاں · قصے" },
+  "kids.draw.sub": { en: "Paint · Colors · Art", ar: "رسم · ألوان · فن", ur: "پینٹ · رنگ · آرٹ" },
+  "kids.more": { en: "More", ar: "المزيد", ur: "مزید" },
+  "kids.more.title": { en: "Explore More", ar: "اكتشف المزيد", ur: "مزید دریافت کریں" },
+
+  /* Kids — right sidebar quick access */
+  "kids.side.roomControl": { en: "My Room", ar: "غرفتي", ur: "میرا کمرہ" },
+  "kids.side.quran": { en: "Quran", ar: "القرآن", ur: "قرآن" },
+  "kids.side.mirror": { en: "Mirror", ar: "المرآة", ur: "آئینہ" },
+  "kids.side.podcast": { en: "Podcast", ar: "بودكاست", ur: "پوڈکاسٹ" },
+
+  /* Kids — bottom action bar */
+  "kids.action.callNurse": { en: "Call Nurse", ar: "نادِ الممرضة", ur: "نرس کو بلائیں" },
+  "kids.action.needSomething": { en: "I Need Something", ar: "أحتاج شيئاً", ur: "مجھے کچھ چاہیے" },
+  "kids.action.sleep": { en: "Sleep Mode", ar: "وضع النوم", ur: "نیند موڈ" },
+  "kids.sleep.tapWake": { en: "Tap anywhere to wake up", ar: "اضغط في أي مكان للاستيقاظ", ur: "جاگنے کے لیے کہیں بھی تھپتھپائیں" },
 
   /* ─── Idle Screen ─── */
   "idle.welcome": { en: "Welcome to {0}", ar: "مرحباً بك في {0}", ur: "{0} میں خوش آمدید" },
@@ -52,10 +133,18 @@ const translations: Record<string, TranslationEntry> = {
   "greeting.mrn": { en: "MRN", ar: "رقم الملف", ur: "ایم آر این" },
   "greeting.room": { en: "Room {0}", ar: "غرفة {0}", ur: "کمرہ {0}" },
   "greeting.ext": { en: "Ext. {0}", ar: "تحويلة {0}", ur: "ایکسٹینشن {0}" },
+  "greeting.bed": { en: "Bed", ar: "سرير", ur: "بستر" },
+  "greeting.admitted": { en: "Admitted", ar: "تاريخ الدخول", ur: "داخلہ" },
 
   /* ─── Top Bar ─── */
   "topbar.am": { en: "AM", ar: "ص", ur: "AM" },
   "topbar.pm": { en: "PM", ar: "م", ur: "PM" },
+  "conn.connected": { en: "Connected", ar: "متصل", ur: "منسلک" },
+  "conn.offline": { en: "Offline", ar: "غير متصل", ur: "آف لائن" },
+  "conn.lastUpdate": { en: "last update", ar: "آخر تحديث", ur: "آخری اپ ڈیٹ" },
+  "conn.ago": { en: "ago", ar: "مضت", ur: "پہلے" },
+  "conn.refresh": { en: "Refresh", ar: "تحديث", ur: "ریفریش" },
+  "conn.activeOffline": { en: "active offline", ar: "نشط دون اتصال", ur: "ایکٹو آف لائن" },
 
   /* ─── Prayer Names ─── */
   "prayer.fajr": { en: "FAJR", ar: "الفجر", ur: "فجر" },
@@ -82,6 +171,17 @@ const translations: Record<string, TranslationEntry> = {
   "news.wifi": { en: "Care Medical Hospital recognized as a JCI Gold Seal of Approval® recipient for 2026.", ar: "مستشفى رعاية الطبية يحصل على ختم الاعتماد الذهبي من JCI لعام ٢٠٢٦.", ur: "کیئر میڈیکل ہسپتال کو 2026 کے لیے JCI گولڈ سیل آف اپروول® حاصل کرنے والے کے طور پر تسلیم کیا گیا ہے۔" },
   "news.carePlans": { en: "Our hospital launches the \"Healthier Tomorrow\" community wellness initiative across Jeddah.", ar: "المستشفى يطلق مبادرة «غدٍ أصحّ» للصحة المجتمعية في جدة.", ur: "ہمارے ہسپتال نے جدہ بھر میں \"کل بہتر صحت\" کی کمیونٹی فلاح و بہبود کا آغاز کیا ہے۔" },
   "news.menu": { en: "Care Medical Team wins Best Research Paper at the 2026 Saudi Healthcare Symposium.", ar: "فريق رعاية الطبي يفوز بجائزة أفضل بحث علمي في ملتقى الرعاية الصحية السعودي ٢٠٢٦.", ur: "کیئر میڈیکل ٹیم نے 2026 کے سعودی ہیلتھ کیئر سمپوزیم میں بہترین ریسرچ پیپر جیت لیا۔" },
+  "news.careinn.1": { en: "CareInn wins the Innovation Award in Patient Experience.", ar: "فازت CareInn بجائزة الابتكار في تجربة المريض.", ur: "CareInn نے مریضوں کے تجربے میں انوویشن ایوارڈ جیت لیا۔" },
+  "news.careinn.2": { en: "CareInn participates in WHX Dubai alongside VITEC.", ar: "تشارك CareInn في معرض WHX بدبي إلى جانب VITEC.", ur: "CareInn نے VITEC کے ساتھ WHX دبئی میں شرکت کی۔" },
+  "news.careinn.3": { en: "CareInn joins Arab Health to present its patient engagement solutions.", ar: "تنضم CareInn إلى معرض الصحة العربي لتقديم حلولها لمشاركة المرضى.", ur: "CareInn نے اپنے مریضوں کی شمولیت کے حل پیش کرنے کے لیے عرب ہیلتھ میں شمولیت اختیار کی۔" },
+  "news.careinn.4": { en: "CareInn takes part in the International Patient Experience Congress.", ar: "تشارك CareInn في المؤتمر الدولي لتجربة المريض.", ur: "CareInn بین الاقوامی پیشنٹ ایکسپیرینس کانگریس میں حصہ لیتی ہے۔" },
+  "news.careinn.5": { en: "CareInn showcases its solutions at Global Health Exhibition.", ar: "تعرض CareInn حلولها في ملتقى الصحة العالمي.", ur: "CareInn نے گلوبل ہیلتھ ایگزیبیشن میں اپنے حل کی نمائش کی۔" },
+  "news.careinn.6": { en: "CareInn presents CareInn15, CareSign, CareSuite, and CareConnect to healthcare leaders.", ar: "تقدم CareInn حلول CareInn15 و CareSign و CareSuite و CareConnect لقادة الرعاية الصحية.", ur: "CareInn نے ہیلتھ کیئر لیڈرز کو CareInn15، CareSign، CareSuite، اور CareConnect پیش کیا۔" },
+  "news.careinn.7": { en: "CareInn joins VITEC at WHX Dubai to showcase patient-aware TV experiences.", ar: "تنضم CareInn إلى VITEC في معرض WHX بدبي لعرض تجارب التلفزيون المتوافقة مع احتياجات المرضى.", ur: "CareInn نے WHX دبئی میں VITEC کے ساتھ شمولیت اختیار کی تاکہ مریضوں کو آگاہ کرنے والے ٹی وی تجربات کو دکھایا جا سکے۔" },
+  "news.careinn.8": { en: "CareInn highlights its healthcare solutions during major regional healthcare events.", ar: "تسلط CareInn الضوء على حلول الرعاية الصحية الخاصة بها خلال كبرى الفعاليات الصحية الإقليمية.", ur: "CareInn نے اہم علاقائی ہیلتھ کیئر ایونٹس کے دوران اپنے ہیلتھ کیئر کے حل پر روشنی ڈالی۔" },
+  "news.prime.1": { en: "Prime Hospital Dubai recognized among top specialty hospitals in the UAE.", ar: "مستشفى برايم دبي يُصنَّف ضمن أفضل المستشفيات التخصصية في الإمارات.", ur: "پرائم ہسپتال دبئی کو متحدہ عرب امارات کے بہترین اسپیشلٹی ہسپتالوں میں شمار کیا گیا۔" },
+  "news.prime.2": { en: "Prime Hospital launches new advanced cardiology unit in Dubai.", ar: "مستشفى برايم يطلق وحدة متقدمة جديدة لأمراض القلب في دبي.", ur: "پرائم ہسپتال نے دبئی میں نیا جدید کارڈیالوجی یونٹ شروع کیا۔" },
+  "news.prime.3": { en: "Prime Hospital joins Arab Health to showcase patient care innovations.", ar: "مستشفى برايم ينضم إلى معرض الصحة العربي لعرض ابتكارات رعاية المرضى.", ur: "پرائم ہسپتال نے مریضوں کی دیکھ بھال کی اختراعات پیش کرنے کے لیے عرب ہیلتھ میں شمولیت اختیار کی۔" },
   "news.dallah.1": { en: "Dallah Hospitals awarded 'Leading Provider of Integrated Healthcare Services' in Saudi Arabia.", ar: "مستشفيات دله تحصل على جائزة «المزود الرائد لخدمات الرعاية الصحية المتكاملة» في المملكة.", ur: "دلہ ہسپتالوں کو سعودی عرب میں 'انٹیگریٹڈ ہیلتھ کیئر سروسز کے معروف فراہم کنندہ' کا ایوارڈ دیا گیا۔" },
   "news.dallah.2": { en: "Dallah Healthcare announces the construction of the new state-of-the-art Al-Arid Hospital in Riyadh.", ar: "دله الصحية تعلن عن إنشاء مستشفى العارض الجديد والمتطور في الرياض.", ur: "دلہ ہیلتھ کیئر نے ریاض میں نئے اسٹیٹ آف دی آرٹ العارض ہسپتال کی تعمیر کا اعلان کیا۔" },
   "news.dallah.3": { en: "Dallah Healthcare completes 100% acquisition of Care Shield Holding, reinforcing Riyadh presence.", ar: "دله الصحية تكمل استحواذها بنسبة ١٠٠٪ على شركة درع الرعاية، مما يعزز تواجدها في الرياض.", ur: "دلہ ہیلتھ کیئر نے کیئر شیلڈ ہولڈنگ کا 100% حصول مکمل کر لیا، جس سے ریاض میں موجودگی مضبوط ہوئی۔" },
@@ -93,12 +193,37 @@ const translations: Record<string, TranslationEntry> = {
   "news.dsfh.jeddah.3": { en: "Fakeeh Care Group expands with new Surgical Tower and 300-bed South Obhur hospital.", ar: "مجموعة فقيه للرعاية تتوسع ببرج جراحي جديد ومستشفى بسعة 300 سرير في جنوب أبحر.", ur: "فقیہ کیئر گروپ نے نئے سرجیکل ٹاور اور جنوبی ابحر میں 300 بستروں کے ہسپتال کے ساتھ توسیع کی۔" },
   "news.dsfh.jeddah.4": { en: "DSFH Jeddah recognized among World's Best Smart Hospitals 2026 for digital leadership.", ar: "مستشفى فقيه بجدة ضمن أفضل المستشفيات الذكية عالمياً لعام 2026 لريادته الرقمية.", ur: "جدہ میں فقیہ ہسپتال کو ڈیجیٹل قیادت کے لیے 2026 کے دنیا کے بہترین سمارٹ ہسپتالوں میں تسلیم کیا گیا۔" },
   "news.dsfh.jeddah.5": { en: "DSFH Jeddah ranked #1 private hospital in Neurology, Pediatrics, Orthopedics, and Oncology.", ar: "مستشفى فقيه بجدة الأول خاصاً في تخصصات الأعصاب، الأطفال، العظام، وعلم الأورام.", ur: "جدہ میں فقیہ ہسپتال نیورولوجی، اطفال، آرتھوپیڈکس اور آنکولوجی میں نمبر 1 نجی ہسپتال قرار پایا۔" },
+  "news.imc.1": { en: "IMC announces the establishment of a state-of-the-art medical college in Jeddah for 1,200 students.", ar: "المركز الطبي الدولي يعلن عن إنشاء كلية طبية متطورة بجدة تستوعب ١٢٠٠ طالب وطالبة.", ur: "آئی ایم سی نے جدہ میں 1200 طلباء کے لیے ایک جدید ترین میڈیکل کالج کے قیام کا اعلان کیا ہے۔" },
+  "news.imc.2": { en: "Expansion Plans: IMC to open new Wellcare Clinics in Obhur and Makkah regions.", ar: "خطط التوسع: المركز الطبي الدولي يفتتح عيادات ويل كير الجديدة في منطقتي أبحر ومكة المكرمة.", ur: "توسیع کے منصوبے: آئی ایم سی ابحر اور مکہ مکرمہ کے علاقوں میں نئے ویل کیئر کلینکس کھولے گا۔" },
+  "news.imc.3": { en: "New Obhur Hospital: A full-service medical facility under development in North Jeddah.", ar: "مستشفى أبحر الجديد: مرفق طبي متكامل الخدمات قيد التطوير في شمال جدة.", ur: "نیا ابحر ہسپتال: شمالی جدہ میں ایک مکمل سروس والی طبی سہولت زیر تعمیر ہے۔" },
+  "news.imc.4": { en: "Mayo Clinic Partnership: IMC continues its global collaboration for specialized healthcare.", ar: "شراكة مايو كلينك: المركز الطبي الدولي يواصل تعاونه العالمي للرعاية الصحية المتخصصة.", ur: "میو کلینک پارٹنرشپ: آئی ایم سی خصوصی صحت کی دیکھ بھال کے لیے اپنا عالمی تعاون جاری رکھے ہوئے ہے۔" },
+  "news.imc.5": { en: "Digital Door Strategy: IMC enhances patient journey through advanced digital transformation.", ar: "استراتيجية الباب الرقمي: المركز الطبي الدولي يعزز رحلة المريض من خلال التحول الرقمي المتقدم.", ur: "ڈیجیٹل ڈور اسٹریٹیجی: آئی ایم سي جدید ڈیجیٹل تبدیلی کے ذریعے مریض کے سفر کو بہتر بناتا ہے۔" },
+
+  /* ─── Burjeel News ─── */
+  "news.burjeel.1": { en: "Burjeel unveils major integrated healthcare project in MBZ City, Abu Dhabi.", ar: "برجيل تكشف عن مشروع رعاية صحية متكامل ضخم في مدينة محمد بن زايد بأبوظبي.", ur: "برجیل نے ابوظبی کے محمد بن زاید سٹی میں بڑے مربوط ہیلتھ کیئر پروجیکٹ کی نقاب کشائی کی۔" },
+  "news.burjeel.2": { en: "Burjeel Medical City launches specialized Sleep Clinic for advanced sleep medicine.", ar: "مدينة برجيل الطبية تطلق عيادة نوم متخصصة لطب النوم المتقدم.", ur: "برجیل میڈیکل سٹی نے جدید سلیپ میڈیسن کے لیے خصوصی سلیپ کلینک کا آغاز کیا۔" },
+  "news.burjeel.3": { en: "Burjeel Hospital Abu Dhabi opens new Korean Pavilion for specialized expertise.", ar: "مستشفى برجيل أبوظبي يفتتح الجناح الكوري الجديد للخبرات المتخصصة.", ur: "برجیل اسپتال ابوظبی نے خصوصی مہارت کے لیے نیا کورین پویلین کھولا۔" },
+  "news.burjeel.4": { en: "Burjeel Holdings reports strong profit growth for Q1 2026, up 44.5%.", ar: "برجيل القابضة تعلن عن نمو قوي في الأرباح للربع الأول من 2026 بنسبة 44.5%.", ur: "برجیل ہولڈنگز نے 2026 کی پہلی سہ ماہی کے لیے 44.5 فیصد منافع میں اضافے کی اطلاع دی۔" },
+  "news.burjeel.5": { en: "New specialized centers for oncology and cardiology launched at Burjeel facilities.", ar: "إطلاق مراكز متخصصة جديدة للأورام وأمراض القلب في مرافق برجيل.", ur: "برجیل کی سہولیات میں آنکولوجی اور کارڈیالوجی کے لیے نئے خصوصی مراکز کا آغاز کیا گیا۔" },
 
   /* ─── Hub Items ─── */
   "hub.media": { en: "Media", ar: "الوسائط", ur: "میڈیا" },
   "hub.media.desc": { en: "TV, music & radio", ar: "تلفزيون، موسيقى وراديو", ur: "ٹی وی، موسیقی اور ریڈیو" },
   "hub.reading": { en: "Reading", ar: "القراءة", ur: "مطالعہ" },
   "hub.reading.desc": { en: "Books & magazines", ar: "كتب ومجلات", ur: "کتابیں اور رسائل" },
+
+  /* ─── IPTV ─── */
+  "tv.onlyOnKiosk": { en: "TV is only available on the kiosk", ar: "البث المباشر متاح فقط على الشاشة", ur: "ٹی وی صرف کیوسک پر دستیاب ہے" },
+  "tv.loading": { en: "Loading Channels...", ar: "جاري تحميل القنوات...", ur: "چینلز لوڈ ہو رہے ہیں..." },
+  "tv.noChannels": { en: "No channels available", ar: "لا توجد قنوات متاحة", ur: "کوئی چینل دستیاب نہیں ہے" },
+  "tv.stop": { en: "Stop TV", ar: "إيقاف البث", ur: "ٹی وی بند کریں" },
+
+  /* ─── Care Plan Empty States ─── */
+  "careplan.emptyHeader": { en: "No Care Plan available", ar: "لا توجد خطة رعاية متاحة", ur: "کوئی کیئر پلان دستیاب نہیں ہے" },
+  "careplan.emptyDesc": { en: "Your Careplan will appear here once it has been allowed by your Care Team.", ar: "ستظهر خطة الرعاية الخاصة بك هنا بمجرد السماح بها من قبل فريق الرعاية.", ur: "آپ کی کیئر پلان یہاں ظاہر ہوگی جب آپ کی کیئر ٹیم اس کی اجازت دے گی۔" },
+  "discharge.emptyHeader": { en: "No discharge plan available", ar: "لا توجد خطة خروج متاحة", ur: "ڈسچارج پلان دستیاب نہیں ہے" },
+  "discharge.emptyDesc": { en: "Information about your discharge will appear here as you near the end of your stay.", ar: "ستظهر معلومات خروجك هنا مع اقتراب نهاية إقامتك.", ur: "آپ کے ڈسچارج کے بارے میں معلومات آپ کے قیام کے اختتام کے قریب هنا ستظهر۔" },
+
   "hub.social": { en: "Social", ar: "التواصل", ur: "سماجی" },
   "hub.social.desc": { en: "Stay connected", ar: "ابقَ على تواصل", ur: "رابطے میں رہیں" },
   "hub.games": { en: "Games", ar: "الألعاب", ur: "کھیل" },
@@ -127,7 +252,49 @@ const translations: Record<string, TranslationEntry> = {
   "shortcut.patientPortal": { en: "Patient Portal", ar: "بوابة المريض", ur: "پیشنٹ پورٹل" },
   "shortcut.podcast": { en: "Podcast", ar: "بودكاست", ur: "پوڈکاسٹ" },
   "shortcut.dallahPodcast": { en: "Dallah Podcast", ar: "بودكاست دله", ur: "دلہ پوڈکاسٹ" },
+  "shortcut.burjeelPodcast": { en: "Burjeel Podcast", ar: "بودكاست برجيل", ur: "برجیل پوڈکاسٹ" },
   "shortcut.academy": { en: "Academy", ar: "الأكاديمية", ur: "اکیڈمی" },
+  "shortcut.adminPortal": { en: "Admin Portal", ar: "بوابة الإدارة", ur: "ایڈمن پورٹل" },
+  "shortcut.roomControl": { en: "Room Control", ar: "التحكم بالغرفة", ur: "کمرے کا کنٹرول" },
+
+  /* ─── Room Control ─── */
+  "room.title": { en: "Room Control", ar: "التحكم بالغرفة", ur: "کمرے کا کنٹرول" },
+  "room.tab.lights": { en: "Lights", ar: "الإضاءة", ur: "لائٹس" },
+  "room.tab.curtains": { en: "Curtains", ar: "الستائر", ur: "پردے" },
+  "room.tab.ac": { en: "Climate", ar: "التكييف", ur: "ایئر کنڈیشننگ" },
+  "room.light.main": { en: "Main Light", ar: "الإضاءة الرئيسية", ur: "مین لائٹ" },
+  "room.light.bedside": { en: "Bedside Light", ar: "إضاءة السرير", ur: "بیڈ سائیڈ لائٹ" },
+  "room.light.bathroom": { en: "Bathroom", ar: "الحمام", ur: "باتھ روم" },
+  "room.light.reading": { en: "Reading Light", ar: "إضاءة القراءة", ur: "پڑھنے کی لائٹ" },
+  "room.light.allLights": { en: "All Lights", ar: "جميع الأضواء", ur: "تمام لائٹس" },
+  "room.active": { en: "active", ar: "نشطة", ur: "فعال" },
+  "room.brightness": { en: "Brightness", ar: "السطوع", ur: "چمک" },
+  "room.curtain.window": { en: "Window Curtain", ar: "ستارة النافذة", ur: "کھڑکی کا پردہ" },
+  "room.curtain.privacy": { en: "Privacy Curtain", ar: "ستارة الخصوصية", ur: "پرائیویسی پردہ" },
+  "room.curtain.open": { en: "Open", ar: "مفتوح", ur: "کھلا" },
+  "room.curtain.half": { en: "Half", ar: "نصف", ur: "آدھا" },
+  "room.curtain.closed": { en: "Closed", ar: "مغلق", ur: "بند" },
+  "room.position": { en: "Position", ar: "الموضع", ur: "پوزیشن" },
+  "room.ac.title": { en: "Air Conditioning", ar: "التكييف", ur: "ایئر کنڈیشننگ" },
+  "room.ac.running": { en: "Running", ar: "يعمل", ur: "چل رہا ہے" },
+  "room.ac.off": { en: "Off", ar: "متوقف", ur: "بند" },
+  "room.ac.mode": { en: "MODE", ar: "الوضع", ur: "موڈ" },
+  "room.ac.cool": { en: "Cool", ar: "تبريد", ur: "ٹھنڈا" },
+  "room.ac.heat": { en: "Heat", ar: "تدفئة", ur: "گرم" },
+  "room.ac.fan": { en: "Fan", ar: "مروحة", ur: "پنکھا" },
+  "room.ac.fanSpeed": { en: "FAN SPEED", ar: "سرعة المروحة", ur: "پنکھے کی رفتار" },
+  "room.ac.low": { en: "Low", ar: "منخفض", ur: "کم" },
+  "room.ac.medium": { en: "Medium", ar: "متوسط", ur: "درمیانہ" },
+  "room.ac.high": { en: "High", ar: "مرتفع", ur: "تیز" },
+  "room.scene.comfort": { en: "Comfort", ar: "راحة", ur: "آرام" },
+  "room.scene.sleep": { en: "Sleep", ar: "نوم", ur: "نیند" },
+  "room.scene.bright": { en: "Bright", ar: "ساطع", ur: "روشن" },
+  "room.scene.reading": { en: "Reading", ar: "قراءة", ur: "مطالعہ" },
+  "room.light.low": { en: "Low", ar: "خافت", ur: "کم" },
+  "room.light.med": { en: "Medium", ar: "متوسط", ur: "درمیانہ" },
+  "room.light.high": { en: "Bright", ar: "ساطع", ur: "تیز" },
+  "room.curtain.stop": { en: "Stop", ar: "إيقاف", ur: "رکیں" },
+  "room.curtain.stopped": { en: "Stopped", ar: "متوقف", ur: "رکا ہوا" },
 
   /* ─── Care Medical Education Items ─── */
   "caremed.edu.normalBirth": { en: "Normal Birth", ar: "الولادة الطبيعية", ur: "نارمل پیدائش" },
@@ -138,6 +305,10 @@ const translations: Record<string, TranslationEntry> = {
   "caremed.edu.generalHealth": { en: "General Health\nQuestions", ar: "أسئلة عن\nالصحة العامة", ur: "عام صحت کے متعلق سوالات" },
   "caremed.edu.medications": { en: "Questions About\nMedications", ar: "أسئلة بخصوص\nالأدوية", ur: "ادویات کے متعلق سوالات" },
 
+  /* ─── Burjeel Education Items ─── */
+  "burjeel.edu.fertility": { en: "Trust Fertility Education", ar: "تثقيف الخصوبة - ترست", ur: "ٹرسٹ فرٹیلٹی ایجوکیشن" },
+  "burjeel.edu.guide": { en: "Patient Education Video", ar: "فيديو تثقيف المرضى", ur: "مریض کی تعلیم کی ویڈیو" },
+
   /* ─── CareMe Slides ─── */
   "care.title": { en: "CareMe", ar: "رعايتي", ur: "میری دیکھ بھال" },
   "care.subtitle": { en: "Your health journey at a glance", ar: "رحلتك الصحية في لمحة", ur: "آپ کی صحت کا سفر ایک نظر میں" },
@@ -145,7 +316,7 @@ const translations: Record<string, TranslationEntry> = {
   "care.overview.title": { en: "Care Overview", ar: "ملخص الرعاية", ur: "دیکھ بھال کا جائزہ" },
   "care.team.title": { en: "My Care Team", ar: "فريق الرعاية", ur: "میری نگہداشت کی ٹیم" },
   "care.plan.title": { en: "My Care Plan", ar: "خطة الرعاية", ur: "میرا کیئر پلان" },
-  "care.diet.title": { en: "Diet Codes", ar: "النظام الغذائي", ur: "خوراک کے قوانین" },
+  "care.diet.title": { en: "Patient Diet", ar: "حمية المريض", ur: "مریض کی خوراک" },
   "care.baby.title": { en: "Baby Camera", ar: "كاميرا الطفل", ur: "بیبی کیمرہ" },
   "care.labs.title": { en: "Lab Results", ar: "نتائج المختبر", ur: "لیب کے نتائج" },
   "care.imaging.title": { en: "Scans & Imaging", ar: "الأشعة والتصوير", ur: "کین اور امیجنگ" },
@@ -236,10 +407,9 @@ const translations: Record<string, TranslationEntry> = {
   "careplan.tomorrow": { en: "Tomorrow", ar: "غداً", ur: "کل" },
   "careplan.overallTitle": { en: "Overall Plan", ar: "خطة شاملة", ur: "مجموعی منصوبہ" },
   "careplan.overallDesc": { en: "Here is our treatment plan, it will be updated regularly", ar: "هذه هي خطتنا العلاجية، وسيتم تحديثها بانتظام", ur: "یہ ہمارا علاج کا منصوبہ ہے، اسے باقاعدگی سے اپ ڈیٹ کیا جائے گا" },
-  "careplan.emptyHeader": { en: "No Care Plan available", ar: "لا توجد خطة رعاية متاحة", ur: "کوئی کیئر پلان دستیاب نہیں ہے۔" },
-  "careplan.emptyDesc": { en: "your Careplan will appear here once it is been allowed by your Care Team.", ar: "ستظهر خطة الرعاية الخاصة بك هنا بمجرد السماح بها من قبل فريق الرعاية الخاص بك.", ur: "آپ کا کیئر پلان یہاں ظاہر ہو جائے گا جب آپ کی کیئر ٹیم اسے اجازت دے دے گی۔" },
-  "discharge.emptyHeader": { en: "No discharge plan available", ar: "لا توجد خطة خروج متاحة", ur: "ڈسچارج کا کوئی منصوبہ دستیاب نہیں ہے۔" },
-  "discharge.emptyDesc": { en: "Your discharge plan will appear here once it is ready.", ar: "ستظهر خطة الخروج الخاصة بك هنا بمجرد جاهزيتها.", ur: "آپ کا ڈسچارج پلان تیار ہونے کے بعد یہاں ظاہر ہوگا۔" },
+
+  "settings.room": { en: "Room", ar: "غرفة", ur: "کمرہ" },
+  "settings.deviceId": { en: "Device ID", ar: "معرف الجهاز", ur: "ڈیوائس ID" },
 
   /* ─── Admission / Discharge Labels ─── */
   "care.admitted": { en: "Admitted", ar: "تاريخ الدخول", ur: "داخلہ" },
@@ -333,7 +503,9 @@ const translations: Record<string, TranslationEntry> = {
   "settings.clearData.signOut": { en: "Sign out of all apps", ar: "تسجيل الخروج من جميع التطبيقات", ur: "تمام ایپس سے سائن آؤٹ کریں" },
   "settings.clearData.history": { en: "Clear browsing history & cache", ar: "مسح سجل التصفح والتخزين المؤقت", ur: "براؤزنگ ہسٹری اور کیشے کو صاف کریں" },
   "settings.clearData.passwords": { en: "Remove saved passwords", ar: "إزالة كلمات المرور المحفوظة", ur: "محفوظ کردہ پاس ورڈز ہٹائیں" },
-  "settings.clearData.reset": { en: "Reset custom settings", ar: "إعادة تعيين الإعدادات", ur: "حسب ضرورت ترتیبات دوبارہ ترتیب دیں" },
+  "settings.clearData.lockedApps": { en: "App lock settings cleared", ar: "مسح إعدادات قفل التطبيقات", ur: "ایپ لاک سیٹنگز صاف" },
+  "settings.clearData.preferences": { en: "Language & preferences reset", ar: "إعادة تعيين اللغة والتفضيلات", ur: "زبان اور ترجیحات ری سیٹ" },
+  "settings.clearData.reset": { en: "Return to login screen", ar: "العودة إلى شاشة تسجيل الدخول", ur: "لاگ ان اسکرین پر واپس جائیں" },
   "settings.clearData.question": { en: "Are you sure you want to clear all data?", ar: "هل أنت متأكد من مسح جميع البيانات؟", ur: "کیا آپ واقعی تمام ڈیٹا صاف کرنا چاہتے ہیں؟" },
   "settings.clearData.desc": { en: "This action cannot be undone. It will prepare the terminal for the next patient.", ar: "لا يمكن التراجع عن هذا الإجراء. سيقوم بإعداد الشاشة للمريض التالي.", ur: "اس کارروائی کو واپس نہیں کیا جا سکتا۔ یہ اگلے مریض کے لیے ٹرمینل تیار کرے گا۔" },
 
@@ -346,6 +518,7 @@ const translations: Record<string, TranslationEntry> = {
   "careteam.del": { en: "DEL", ar: "حذف", ur: "حذف" },
   "careteam.history": { en: "Clinical History", ar: "السجل السريري", ur: "طبی تاریخ" },
   "careteam.addRecord": { en: "Add New Observation", ar: "إضافة ملاحظة جديدة", ur: "نیا مشاہدہ شامل کریں" },
+  "careteam.gotoEmr": { en: "go to hospital EMR", ar: "الذهاب إلى السجل الطبي الإلكتروني", ur: "ہسپتال کے ای ایم آر پر جائیں" },
   "patient.attached": { en: "Attached Documents", ar: "المستندات المرفقة", ur: "منسلک دستاویزات" },
 
   /* ─── Clinical Interface ─── */
@@ -385,6 +558,7 @@ const translations: Record<string, TranslationEntry> = {
 
   /* ─── Notifications Panel ─── */
   "notif.title": { en: "Notifications", ar: "الإشعارات", ur: "اطلاعات" },
+  "notif.missed": { en: "Missed", ar: "فائت", ur: "چھوٹ گیا" },
   "notif.markAllRead": { en: "Mark all as read", ar: "تحديد الكل كمقروء", ur: "تمام کو پڑھا ہوا قرار دیں" },
   "notif.clearAll": { en: "Clear all", ar: "مسح الكل", ur: "تمام مٹائیں" },
   "notif.swipeHint": { en: "Swipe left to dismiss", ar: "اسحب لليمين للحذف", ur: "مٹانے کے لیے بائیں جانب سوائپ کریں" },
@@ -392,6 +566,11 @@ const translations: Record<string, TranslationEntry> = {
   "notif.noNew": { en: "No new notifications at the moment.", ar: "لا توجد إشعارات في الوقت الحالي.", ur: "اس وقت کوئی نئی اطلاع نہیں ہے۔" },
 
   /* ─── Notification Items ─── */
+  "notif.ctaSurvey": { en: "Hospital Feedback Survey", ar: "استطلاع الرأي للمستشفى", ur: "ہسپتال کا سروے" },
+  "notif.ctaPdf": { en: "Patient Guide Guidebook", ar: "دليل إرشادات المريض", ur: "مریض کی گائیڈ بک" },
+  "notif.ctaImage": { en: "Daily Healthy Diet Chart", ar: "مخطط النظام الغذائي الصحي اليومي", ur: "روزمرہ کی خوراک کا چارٹ" },
+  "notif.ctaVideo": { en: "CareInn Presentation Video", ar: "فيديو تعريفي لكيرإن", ur: "کیر ان تعریفی ویڈیو" },
+  "notif.ctaUrl": { en: "Hospital Medical Portal", ar: "بوابة المريض الطبية", ur: "مریض کا پورٹل" },
   "notif.labsReady": { en: "Lab results are ready", ar: "نتائج المختبر جاهزة", ur: "لیب کے نتائج تیار ہیں" },
   "notif.surveyRequest": { en: "We value your feedback", ar: "نحن نقدر ملاحظاتك", ur: "ہم آپ کی رائے کی قدر کرتے ہیں" },
   "notif.mriReady": { en: "MRI results ready for review", ar: "نتائج الرنين المغناطيسي جاهزة للمراجعة", ur: "ایم آر آئی کے نتائج معائنے کے لیے تیار ہیں" },
@@ -484,10 +663,14 @@ const translations: Record<string, TranslationEntry> = {
   "about.dallahDna": { en: "Dallah DNA", ar: "دله DNA", ur: "دلہ ڈی این اے" },
   "about.caremedInBrief": { en: "CareMed InBrief", ar: "نبذة عن رعاية الطبية", ur: "کیئر میڈ مختصر طور پر" },
   "about.numbers": { en: "{0} In Numbers", ar: "{0} في أرقام", ur: "{0} اعداد و شمار میں" },
+  "about.imcHistory": { en: "IMC History", ar: "تاريخ المركز الطبي الدولي", ur: "آئی ایم سی کی تاریخ" },
   "about.services": { en: "Services", ar: "الخدمات", ur: "خدمات" },
   "about.accreditations": { en: "Accreditations", ar: "الاعتمادات", ur: "اعتمادات" },
   "about.awards": { en: "Awards", ar: "الجوائز", ur: "ایوارڈز" },
   "about.digital": { en: "Digital Services", ar: "الخدمات الرقمية", ur: "ڈیجیٹل خدمات" },
+  "about.participations": { en: "Participations", ar: "المشاركات", ur: "شراکتیں" },
+  "about.certifications": { en: "Certifications", ar: "الشهادات", ur: "سرٹیفیکیشنز" },
+  "about.clients": { en: "Clients", ar: "العملاء", ur: "کلائنٹس" },
   "about.patientRights": { en: "Patient Rights", ar: "حقوق المريض", ur: "مریض کے حقوق" },
   "about.watchVideo": { en: "Watch Our Hospital Video", ar: "شاهد فيديو المستشفى", ur: "ہمارے ہسپتال کی ویڈیو دیکھیں" },
   "about.video": { en: "Video", ar: "فيديو", ur: "ویڈیو" },
@@ -511,6 +694,8 @@ const translations: Record<string, TranslationEntry> = {
   "launcher.tools": { en: "Tools", ar: "الأدوات", ur: "اوزار" },
   "launcher.education": { en: "Education", ar: "تثقيف المرضى", ur: "تعلیم" },
   "launcher.launching": { en: "Launching {0}...", ar: "جارٍ تشغيل {0}...", ur: "{0} شروع ہو رہا ہے..." },
+  "launcher.invalidUrl": { en: "Please enter a valid URL", ar: "يرجى إدخال عنوان URL صحيح", ur: "براہ کرم ایک درست URL درج کریں" },
+  "launcher.urlPlaceholder": { en: "Enter website address (e.g. www.google.com)", ar: "أدخل عنوان الموقع (مثلاً www.google.com)", ur: "ویب سائٹ کا پتہ درج کریں" },
 
   /* ─── Room Info ─── */
   "room.info": { en: "Room 412", ar: "غرفة ٤١٢", ur: "کمرہ 412" },
@@ -644,6 +829,140 @@ const translations: Record<string, TranslationEntry> = {
   "call.history": { en: "Call History", ar: "سجل المكالمات", ur: "کال کی تاریخ" },
   "call.all": { en: "All", ar: "الكل", ur: "تمام" },
   "call.noHistory": { en: "No call history", ar: "لا يوجد سجل مكالمات", ur: "کال کی کوئی تاریخ نہیں" },
+
+  /* ─── NFC Manager ─── */
+  "nfc.title": { en: "NFC Cards", ar: "بطاقات NFC", ur: "این ایف سی کارڈز" },
+  "nfc.description": { en: "Manage physical cards assigned to this terminal.", ar: "إدارة البطاقات المخصصة لهذه الشاشة.", ur: "اس ٹرمینل کے لیے تفویض کردہ فزیکل کارڈز کا نظم کریں۔" },
+  "nfc.patientCard": { en: "Patient Login Card", ar: "بطاقة دخول المريض", ur: "مریض کا لاگ ان کارڈ" },
+  "nfc.nurseCard": { en: "Nurse Override Card", ar: "بطاقة التمريض", ur: "نرس کا اوور رائیڈ کارڈ" },
+  "nfc.custom": { en: "CUSTOM", ar: "مخصص", ur: "اپنی مرضی کے مطابق" },
+  "nfc.registerCard": { en: "Register Card", ar: "تسجيل بطاقة", ur: "کارڈ رجسٹر کریں" },
+  "nfc.replaceCard": { en: "Replace Card", ar: "تغيير البطاقة", ur: "کارڈ تبدیل کریں" },
+  "nfc.resetToDefault": { en: "Reset to default", ar: "استعادة الافتراضي", ur: "پہلے سے طے شدہ پر ری سیٹ کریں" },
+  "nfc.resetAll": { en: "Reset All", ar: "إعادة تعيين الكل", ur: "سب ری سیٹ کریں" },
+  "nfc.tapCard": { en: "Tap card to terminal now...", ar: "مرر البطاقة على الشاشة الآن...", ur: "اب کارڈ کو ٹرمینل پر ٹیپ کریں..." },
+  "nfc.cancel": { en: "Cancel", ar: "إلغاء", ur: "منسوخ" },
+  "nfc.saved": { en: "Card Registered!", ar: "تم تسجيل البطاقة!", ur: "کارڈ رجسٹر ہو گیا!" },
+
+  /* ─── Internet Browser ─── */
+  "browser.connectionHelp": { en: "Connection Help", ar: "مساعدة في الاتصال", ur: "کنکشن میں مدد" },
+  "browser.connectionTrouble": { en: "Connection Trouble?", ar: "مشكلة في الاتصال؟", ur: "کنکشن میں دشواری؟" },
+  "browser.blockedDesc": { en: "This website might be blocked or taking too long to load inside the app. For the best experience, please open it in a full window.", ar: "قد يكون هذا الموقع محظوراً أو يستغرق وقتاً طويلاً للتحميل داخل التطبيق. للحصول على أفضل تجربة، يرجى فتحه في نافذة كاملة.", ur: "ہو سکتا ہے کہ یہ ویب سائٹ بلاک ہو یا ایپ کے اندر لوڈ ہونے میں بہت زیادہ وقت لے رہی ہو۔ بہترین تجربے کے لیے، براہ کرم اسے مکمل ونڈو میں کھولیں۔" },
+  "browser.openExternal": { en: "Open in External Browser", ar: "فتح في متصفح خارجي", ur: "بیرونی براؤزر میں کھولیں" },
+  "browser.waitLonger": { en: "Try waiting a bit longer", ar: "حاول الانتظار لفترة أطول قليلاً", ur: "تھوڑی دیر اور انتظار کرنے کی کوشش کریں" },
+  "browser.securityNotice": { en: "You are browsing within the secure CareInn environment. External links are monitored.", ar: "أنت تتصفح داخل بيئة CareInn الآمنة. يتم مراقبة الروابط الخارجية.", ur: "آپ CareInn کے محفوظ ماحول میں براؤز کر رہے ہیں۔ بیرونی لنکس کی نگرانی کی جاتی ہے۔" },
+  // Account / Authentication
+  "settings.account": { en: "My Account", ar: "حسابي" },
+  "settings.account.subtitle.set": { en: "Account Configured", ar: "تم إعداد الحساب" },
+  "settings.account.subtitle.unset": { en: "Tap to set up PIN & NFC", ar: "انقر لإعداد الرمز السري والبطاقة" },
+  "settings.account.overview.changeP": { en: "Change PIN", ar: "تغيير الرمز السري" },
+  "settings.account.overview.changeNfc": { en: "Register New NFC Card", ar: "تسجيل بطاقة جديدة" },
+  "settings.account.overview.remove": { en: "Remove Account", ar: "إزالة الحساب" },
+  "settings.account.overview.removeConfirm": { en: "Are you sure you want to logout from your account?", ar: "هل أنت متأكد أنك تريد تسجيل الخروج من حسابك؟" },
+  "settings.account.setPin.title": { en: "Set a 4-Digit PIN", ar: "قم بتعيين رمز سري من 4 أرقام" },
+  "settings.account.setPin.subtitle": { en: "This PIN will be used to unlock your screen.", ar: "سيتم استخدام هذا الرمز لفتح شاشتك." },
+  "settings.account.confirmPin.title": { en: "Confirm your PIN", ar: "تأكيد الرمز السري" },
+  "settings.account.pin.mismatch": { en: "PINs do not match. Please try again.", ar: "الرموز غير متطابقة. يرجى المحاولة مرة أخرى." },
+  "settings.account.nfc.prompt.title": { en: "Register an NFC Card?", ar: "هل تريد تسجيل بطاقة NFC؟" },
+  "settings.account.nfc.prompt.body": { en: "You can tap a compatible NFC card or wristband to unlock the screen without entering your PIN.", ar: "يمكنك لمس بطاقة أو سوار متوافق لفتح الشاشة دون إدخال الرمز السري." },
+  "settings.account.nfc.skip": { en: "Skip for now", ar: "تخطي الآن" },
+  "settings.account.nfc.register": { en: "Register Card", ar: "تسجيل البطاقة" },
+  "settings.account.nfc.tap1.title": { en: "Tap Your Card Now", ar: "قم بتمرير بطاقتك الآن" },
+  "settings.account.nfc.tap1.body": { en: "Hold your NFC card or wristband near the reader.", ar: "ضع بطاقتك أو سوارك بالقرب من القارئ." },
+  "settings.account.nfc.tap2.title": { en: "Tap Again to Confirm", ar: "قم بتمريرها مرة أخرى للتأكيد" },
+  "settings.account.nfc.mismatch": { en: "Cards do not match. Please try again.", ar: "البطاقات غير متطابقة. يرجى المحاولة مرة أخرى." },
+  "settings.account.success.set": { en: "Account successfully set up!", ar: "تم إعداد الحساب بنجاح!" },
+  "settings.account.success.updated": { en: "Account updated successfully!", ar: "تم تحديث الحساب بنجاح!" },
+  "settings.account.cancel": { en: "Cancel", ar: "إلغاء" },
+
+  // Lock Screen
+  "lock.title": { en: "Enter PIN", ar: "أدخل الرمز السري" },
+  "lock.nfc.hint": { en: "or tap your NFC card to unlock", ar: "أو قم بتمرير بطاقتك لفتح الشاشة" },
+  "lock.wrongPin": { en: "Incorrect PIN", ar: "الرمز السري غير صحيح" },
+
+  "lock.guest.button": {
+    en: "Continue as Guest",
+    ar: "متابعة كضيف",
+    ur: "بطور مہمان جاری رکھیں"
+  },
+  "lock.guest.subtitle": {
+    en: "Limited access — name and medical info hidden",
+    ar: "وصول محدود — الاسم والمعلومات الطبية مخفية",
+    ur: "محدود رسائی — نام اور طبی معلومات پوشیدہ"
+  },
+  "guest.careMe.locked.title": {
+    en: "CareMe locked",
+    ar: "بياناتي الطبية مقفلة",
+    ur: "میری دیکھ بھال مقفل ہے"
+  },
+  "guest.careMe.locked.subtitle": {
+    en: "Tap to enter your PIN and view your medical info",
+    ar: "اضغط لإدخال رمز PIN وعرض معلوماتك الطبية",
+    ur: "اپنا PIN درج کرنے اور طبی معلومات دیکھنے کے لیے ٹیپ کریں"
+  },
+  "guest.careMe.unlock.button": {
+    en: "Unlock",
+    ar: "فتح",
+    ur: "کھولیں"
+  },
+  "guest.careMe.dialog.title": {
+    en: "Unlock CareMe",
+    ar: "فتح بياناتي الطبية",
+    ur: "میری دیکھ بھال کھولیں"
+  },
+  "guest.careMe.dialog.enterPin": {
+    en: "Enter your PIN",
+    ar: "أدخل رمز PIN",
+    ur: "اپنا PIN درج کریں"
+  },
+  "guest.careMe.dialog.incorrect": {
+    en: "Incorrect PIN",
+    ar: "رمز غير صحيح",
+    ur: "غلط PIN"
+  },
+
+  /* ── App Lock ── */
+  "appLock.lock.title": { en: "Lock this app", ar: "قفل هذا التطبيق", ur: "یہ ایپ مقفل کریں" },
+  "appLock.lock.subtitle": { en: "Require PIN to open", ar: "يتطلب رمز PIN للفتح", ur: "کھولنے کے لیے PIN درکار" },
+  "appLock.lock.button": { en: "Lock", ar: "قفل", ur: "مقفل کریں" },
+  "appLock.unlock.title": { en: "Unlock this app", ar: "إلغاء قفل هذا التطبيق", ur: "ایپ کھولیں" },
+  "appLock.unlock.subtitle": { en: "Currently requires PIN to open", ar: "يتطلب حاليًا رمز PIN للفتح", ur: "فی الحال PIN درکار ہے" },
+  "appLock.unlock.button": { en: "Unlock", ar: "فتح القفل", ur: "غیر مقفل کریں" },
+  "appLock.verify.title": { en: "Enter PIN to unlock", ar: "أدخل PIN للفتح", ur: "PIN درج کریں" },
+  "appLock.open.title": { en: "Enter PIN to open", ar: "أدخل PIN للفتح", ur: "کھولنے کے لیے PIN درج کریں" },
+  "appLock.noPinSetup.title": { en: "No PIN set", ar: "لم يتم تعيين رمز PIN", ur: "PIN سیٹ نہیں" },
+  "appLock.noPinSetup.subtitle": { en: "Set up a PIN first to lock apps", ar: "قم بإعداد رمز PIN أولاً لقفل التطبيقات", ur: "ایپس مقفل کرنے کے لیے پہلے PIN سیٹ کریں" },
+  "appLock.noPinSetup.button": { en: "Set up PIN", ar: "إعداد PIN", ur: "PIN ترتیب دیں" },
+  "appLock.locked": { en: "Locked", ar: "مقفل", ur: "مقفل" },
+  "appLock.unlocked": { en: "Unlocked", ar: "تم الفتح", ur: "کھل گیا" },
+  "appLock.cancel": { en: "Cancel", ar: "إلغاء", ur: "منسوخ کریں" },
+
+  /* ── My Preferences ── */
+  "settings.preferences": { en: "My Preferences", ar: "تفضيلاتي", ur: "میری ترجیحات" },
+  "settings.preferences.subtitle.set": { en: "PIN & server configured", ar: "تم ضبط الرمز والخادم", ur: "PIN اور سرور ترتیب دیا گیا" },
+  "settings.preferences.subtitle.unset": { en: "Set up your preferences", ar: "اضبط تفضيلاتك", ur: "اپنی ترجیحات ترتیب دیں" },
+
+  /* ── Backgrounds Preferences ── */
+  "prefs.backgrounds": { en: "Backgrounds", ar: "الخلفيات", ur: "پس منظر" },
+  "prefs.backgrounds.slideshow": { en: "Slideshow", ar: "عرض شرائح", ur: "سلائیڈ شو" },
+  "prefs.backgrounds.custom": { en: "Custom", ar: "مخصص", ur: "حسب ضرورت" },
+  "prefs.backgrounds.slideshow.label": { en: "Show as slideshow", ar: "عرض كشرائح", ur: "سلائیڈ شو دکھائیں" },
+  "prefs.backgrounds.slideshow.hint": { en: "Cycles through all images automatically", ar: "يتنقل بين جميع الصور تلقائياً", ur: "تمام تصاویر کے درمیان خودبخود چلتا ہے" },
+  "prefs.backgrounds.loading": { en: "Loading images...", ar: "جار تحميل الصور...", ur: "تصاویر لوڈ ہو رہی ہیں..." },
+  "prefs.backgrounds.default": { en: "Default", ar: "افتراضي", ur: "ڈیفالٹ" },
+  "prefs.backgrounds.empty": { en: "No images available", ar: "لا توجد صور متاحة", ur: "کوئی تصویر دستیاب نہیں" },
+
+  /* ─── App Install ─── */
+  "appInstall.installing": { en: "Installing", ar: "جار تثبيت", ur: "انسٹال ہو رہا ہے" },
+  "appInstall.hint":       { en: "This only happens once", ar: "يحدث هذا مرة واحدة فقط", ur: "یہ صرف ایک بار ہوتا ہے" },
+
+  /* ─── Offline Banner ─── */
+  "offline.title":     { en: "No Internet Connection", ar: "لا يوجد اتصال بالإنترنت", ur: "انٹرنیٹ کنکشن نہیں" },
+  "offline.subtitle":  { en: "Showing last saved content. Connect to WiFi to refresh.", ar: "يتم عرض المحتوى المحفوظ. اتصل بالواي فاي للتحديث.", ur: "آخری محفوظ مواد دکھایا جا رہا ہے۔" },
+  "offline.openWifi":  { en: "Open WiFi Settings", ar: "فتح إعدادات الواي فاي", ur: "وائی فائی سیٹنگز کھولیں" },
+  "offline.adminPin":  { en: "Continue Offline", ar: "الاستمرار بدون اتصال", ur: "آف لائن جاری رکھیں" },
+  "offline.enterPin":  { en: "Enter admin PIN", ar: "أدخل رمز PIN للمسؤول", ur: "ایڈمن PIN درج کریں" },
+  "offline.cancel":    { en: "Cancel", ar: "إلغاء", ur: "منسوخ" }
 };
 
 /* ── Number Localization ── */
@@ -653,6 +972,15 @@ export function localizeNumber(n: number | string, locale: Locale): string {
     return s.replace(/[0-9]/g, w => "٠١٢٣٤٥٦٧٨٩"[+w]);
   }
   return s;
+}
+
+
+
+/* ── Target-specific translator ── */
+export function translateWithLocale(key: string, locale: Locale): string {
+  const entry = translations[key];
+  if (!entry) return key;
+  return entry[locale] ?? entry.en ?? key;
 }
 
 /* ── Translator function factory ── */

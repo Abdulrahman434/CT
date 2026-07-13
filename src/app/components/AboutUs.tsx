@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Info, FileText, Play, Film, Trophy, Star, Medal, Zap } from "lucide-react";
+import { Info, FileText, Play, Film, Trophy, Star, Medal, Zap, Globe, MapPin } from "lucide-react";
 import { useTheme, TYPE_SCALE, WEIGHT } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { InternalPageHeader } from "./InternalPageHeader";
+import { useCmsHospital, useCmsAboutUs } from '../../lib/useCmsContent';
+import { ApiImage } from "./ApiImage";
 import logoImg from "../../assets/496960c397c9050764df477822163c6970cb738d.png";
 import dnaImg from "../../assets/7d25bcb72cca7f6efa0a0c3b850e8605d6d73401.png";
 import numbersImg from "../../assets/f59e36074e912058a9f8c7099b196139f6e61a09.png";
@@ -18,6 +20,22 @@ import dallahAwardsEn from "../../assets/dallah-awards-en.png";
 import dallahAccredsAr from "../../assets/dallah-accreds-ar.png";
 import dallahAccredsEn from "../../assets/dallah-accreds-en.png";
 import dsfhAchievementBanner from "../../assets/dsfh_jeddah_achievement_banner.png";
+import imcVideo from "../../assets/IMC.mp4";
+import imcDna from "../../assets/about-imc.png";
+import imcAccreds from "../../assets/accredsimc.jpeg";
+import imcHistory from "../../assets/imchistory.png";
+import careinnDna from "../../assets/careinn-about-dna.png";
+import careinnDnaAr from "../../assets/careinn-about-dna-ar.png";
+import careinnParticipations from "../../assets/careinn-participations.png";
+import careinnCertifications from "../../assets/careinn-certifications.png";
+import careinnClients from "../../assets/careinn-clients.jpg";
+
+import burjeelDna from "../../assets/BurjeelDNA.png";
+import burjeelNumbers from "../../assets/BurjeelNumbers.png";
+import burjeelServices from "../../assets/BurjeelServices.png";
+import burjeelAccreds from "../../assets/burjeelaccreds.png";
+
+import primeAccreds from "../../assets/prime-accreditations.png";
 
 interface AboutSection {
   id: string;
@@ -81,31 +99,114 @@ const dallahPatientRightsAr = `سيقوم مكتب الاستقبال أو طا�
 
 const dallahAccreditationsText = ``; // Replaced by images
 
-const getSections = (themeId: string, isRTL: boolean): AboutSection[] => [
+/* ── Prime Hospital — About Us content ── */
+const primeDna = `Personalised Care Personally!
+
+At Prime Hospital, care is personal, warm, and complete. Every patient is treated as an individual, with attention to their unique needs at every step of their journey.
+
+Our Brand Identity
+• Tagline — "Personalised Care Personally!"
+• Primary Colour — Orange, reflecting warmth and human connection
+• Secondary Colour — Grey, reflecting reliability and trust
+• Typeface — Montserrat
+
+Our Values
+• Personalised Care — treatment tailored to each individual
+• Warmth — compassion in every interaction
+• Reliability — dependable, consistent quality of care
+• Completeness — comprehensive services under one roof`;
+
+const primeNumbers = `Prime Hospital at a Glance
+
+• 100+ Beds — comprehensive inpatient capacity
+• 30+ Specialties — a full range of medical and surgical care
+• 15+ Years of Service — trusted care in Dubai
+• 200+ Doctors & Specialists — experienced multidisciplinary teams
+• 500,000+ Patients Served — and growing every year
+
+* Indicative figures.`;
+
+const primeServices = `Centres of Excellence & Specialties
+
+• Cardiology — advanced heart care and diagnostics
+• Orthopaedics — joint, bone, and sports injury care
+• Neurology — brain, spine, and nervous system care
+• Paediatrics — dedicated care for infants and children
+• Obstetrics & Gynaecology — women's health and maternity
+• Emergency Care — 24/7 emergency and critical care
+
+Supporting Services
+• General & Internal Medicine
+• Surgery & Day-Care Procedures
+• Radiology & Advanced Imaging
+• Laboratory & Diagnostics
+• Pharmacy Services`;
+
+const primeDigital = `Digital Care at Your Fingertips
+
+• Online Appointment Booking — schedule visits anytime, anywhere
+• Patient Portal — view reports, records, and visit history
+• Telemedicine — virtual consultations with our specialists
+• Mobile App — manage appointments and health on the go
+• Digital Check-In — faster, paperless registration`;
+
+const getSections = (themeId: string, isRTL: boolean, locale: string): AboutSection[] => [
   {
     id: "hospital",
     title: themeId === "dallah" ? "About Dallah" : "Our Hospital",
     titleKey: themeId === "dallah" ? "about.aboutDallah" : "about.ourHospital",
-    video: themeId === "caremed" ? "HW7Od_8C3_I" : themeId === "dallah" ? "JPgxKaOQf3s" : "4VXy7_qn608",
+    video: themeId === "burjeel" ? "OH71A4YxCG4" : themeId === "imc" ? imcVideo : themeId === "careinn" ? (locale === "ar" ? "5ZQofr0sVn4" : "pbnYEIewk6Q") : themeId === "caremed" ? "HW7Od_8C3_I" : themeId === "dallah" ? "JPgxKaOQf3s" : themeId === "prime" ? "qM3E7ALQ4TM" : "4VXy7_qn608",
   },
   {
     id: "dna",
-    title: themeId === "caremed" ? "CareMed InBrief" : themeId === "dallah" ? "Dallah DNA" : "Fakeeh Care DNA",
+    title: themeId === "caremed" ? "CareMed InBrief" : themeId === "dallah" ? "Dallah DNA" : themeId === "prime" ? "Prime DNA" : "Fakeeh Care DNA",
     titleKey: themeId === "caremed" ? "about.caremedInBrief" : themeId === "dallah" ? "about.dallahDna" : "about.dna",
-    image: themeId === "dallah" ? dallahDna : themeId === "caremed" ? (isRTL ? careMedInBriefAr : careMedInBriefEn) : dnaImg,
+    ...(themeId === "prime"
+      ? { content: primeDna }
+      : { image: themeId === "burjeel" ? burjeelDna : themeId === "careinn" ? (isRTL ? careinnDnaAr : careinnDna) : themeId === "imc" ? imcDna : themeId === "dallah" ? dallahDna : themeId === "caremed" ? (isRTL ? careMedInBriefAr : careMedInBriefEn) : dnaImg }),
   },
-  {
+  ...(themeId === "careinn" ? [] : [{
     id: "numbers",
-    title: themeId === "caremed" ? "CareMed In Numbers" : themeId === "dallah" ? "Accreditations" : "Fakeeh In Numbers",
-    titleKey: themeId === "dallah" ? "about.accreditations" : "about.numbers",
-    image: themeId === "dallah" ? (isRTL ? dallahAccredsAr : dallahAccredsEn) : themeId === "caremed" ? (isRTL ? numbersAr : numbersEn) : numbersImg,
-    content: themeId === "dallah" ? undefined : undefined,
-  },
+    title: themeId === "imc" ? "IMC History" : themeId === "caremed" ? "CareMed In Numbers" : themeId === "dallah" ? "Accreditations" : themeId === "prime" ? "Prime In Numbers" : "Fakeeh In Numbers",
+    titleKey: themeId === "imc" ? "about.imcHistory" : themeId === "dallah" ? "about.accreditations" : "about.numbers",
+    ...(themeId === "prime"
+      ? { content: primeNumbers }
+      : { image: themeId === "burjeel" ? burjeelNumbers : themeId === "imc" ? imcHistory : themeId === "dallah" ? (isRTL ? dallahAccredsAr : dallahAccredsEn) : themeId === "caremed" ? (isRTL ? numbersAr : numbersEn) : numbersImg }),
+  }]),
   {
     id: "services",
     title: "Services",
     titleKey: "about.services",
-    content: `Comprehensive Medical & Surgical Services
+    image: themeId === "burjeel" ? burjeelServices : undefined,
+    content: themeId === "burjeel" ? undefined : themeId === "prime" ? primeServices : themeId === "careinn"
+      ? (locale === "ar" ? `• CareInn15
+شاشة تفاعلية بجانب السرير تتيح للمرضى سهولة الوصول إلى خدمات المستشفى والترفيه والطلبات والمعلومات الأساسية أثناء إقامتهم. توفر تجربة أكثر تواصلاً وراحة داخل الغرفة.
+
+• CareTV
+تجربة تلفزيون ذكية في المستشفى تجلب خدمات المرضى والمعلومات والترفيه إلى شاشة الغرفة. تساعد المستشفيات على تحويل التلفزيون إلى نقطة اتصال أكثر فائدة وتتمحور حول المريض.
+
+• CareSign
+حل لافتات رقمية لغرف المرضى وأبواب العيادات، يعرض معلومات الغرفة أو الطبيب أو الزيارة بوضوح. يحسن التواصل ويدعم بيئة رعاية أكثر تنظيماً.
+
+• CareSuite
+منصة تشغيلية تساعد فرق المستشفى على إدارة حالة الغرف وطلبات الخدمة والتدبير المنزلي وسير العمل اليومي. تحسن التنسيق بين الأقسام وتدعم أوقات استجابة أسرع.
+
+• CareConnect
+حل تواصل افتراضي يربط المرضى بفرق الرعاية من خلال تفاعلات رقمية منظمة. يدعم الاستشارة عن بُعد والمتابعة وتسهيل التواصل خلال رحلة المريض.` : `• CareInn15
+An interactive bedside screen that gives patients easy access to hospital services, entertainment, requests, and key information during their stay. It supports a more connected and comfortable in-room experience.
+
+• CareTV
+A smart hospital TV experience that brings patient services, information, and entertainment to the room screen. It helps hospitals turn the TV into a more useful and patient-centered touchpoint.
+
+• CareSign
+A digital signage solution for patient rooms and clinic doors, displaying relevant room, doctor, or visit information clearly. It improves communication and supports a more organized care environment.
+
+• CareSuite
+An operational platform that helps hospital teams manage room status, service requests, housekeeping, and daily workflows. It improves coordination between departments and supports faster response times.
+
+• CareConnect
+A virtual communication solution that connects patients with care teams through structured digital interactions. It supports remote consultation, follow-up, and easier communication during the patient journey.`)
+      : `Comprehensive Medical & Surgical Services
 
 Emergency & Critical Care
 • 24/7 Emergency Department
@@ -133,15 +234,17 @@ Support Services
   },
   {
     id: "accreditations",
-    title: themeId === "dallah" ? "Awards" : "Accreditations",
-    titleKey: themeId === "dallah" ? "about.awards" : "about.accreditations",
-    image: themeId === "dallah" ? (isRTL ? dallahAwardsAr : dallahAwardsEn) : themeId === "caremed" ? accredsImg : accreditationsImg,
+    title: themeId === "careinn" ? "Certifications" : themeId === "dallah" ? "Awards" : "Accreditations",
+    titleKey: themeId === "careinn" ? "about.certifications" : themeId === "dallah" ? "about.awards" : "about.accreditations",
+    image: themeId === "burjeel" ? burjeelAccreds : themeId === "careinn" ? careinnCertifications : themeId === "imc" ? imcAccreds : themeId === "dallah" ? (isRTL ? dallahAwardsAr : dallahAwardsEn) : themeId === "caremed" ? accredsImg : themeId === "prime" ? primeAccreds : accreditationsImg,
   },
   {
     id: "digital",
-    title: themeId === "dallah" ? "Patient Rights" : "Digital Services",
-    titleKey: themeId === "dallah" ? "about.patientRights" : "about.digital",
-    content: themeId === "dallah" ? (isRTL ? dallahPatientRightsAr : dallahPatientRightsEn) : `Connected Care at Your Fingertips
+    title: themeId === "careinn" ? "Participations" : themeId === "dallah" ? "Patient Rights" : "Digital Services",
+    titleKey: themeId === "careinn" ? "about.participations" : themeId === "dallah" ? "about.patientRights" : "about.digital",
+    ...(themeId === "careinn"
+      ? { image: careinnParticipations }
+      : { content: themeId === "dallah" ? (isRTL ? dallahPatientRightsAr : dallahPatientRightsEn) : themeId === "prime" ? primeDigital : `Connected Care at Your Fingertips
 
 Patient Portal
 • View lab results & medical records
@@ -165,7 +268,7 @@ Smart Hospital Features
 • Electronic Health Records (EHR)
 • AI-assisted diagnostics
 • Robotic surgery capabilities
-• Advanced patient monitoring systems`,
+• Advanced patient monitoring systems` }),
   },
   ...(themeId === "dsfh"
     ? [
@@ -176,12 +279,22 @@ Smart Hospital Features
         },
       ]
     : []),
+  ...(themeId === "careinn"
+    ? [
+        {
+          id: "clients",
+          title: "Clients",
+          titleKey: "about.clients",
+          image: careinnClients,
+        },
+      ]
+    : []),
 ];
 
 export function AboutUs({ onClose }: { onClose: () => void }) {
   const { theme } = useTheme();
-  const { t, isRTL } = useLocale();
-  const sections = getSections(theme.id, isRTL);
+  const { t, isRTL, locale } = useLocale();
+  const sections = getSections(theme.id, isRTL, locale);
   const [activeSection, setActiveSection] = useState(sections[0].id);
   const [videoPlaying, setVideoPlaying] = useState(false);
 
@@ -193,6 +306,9 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
     setVideoPlaying(false);
   };
 
+  const cmsHospital = useCmsHospital();
+  const aboutUsCms = useCmsAboutUs(cmsHospital.data?.documentId, locale as any);
+
   return (
     <div
       className="absolute inset-0 z-50 flex flex-col"
@@ -202,7 +318,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
       }}
     >
       {/* Hospital background image */}
-      <img
+      <ApiImage
         src={theme.heroImageUrl}
         alt=""
         aria-hidden
@@ -286,7 +402,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
         >
           {/* Hospital Logo */}
           <a
-            href={theme.hospitalWebsiteUrl}
+            href={theme.id === "imc" ? `https://www.imc.med.sa/${locale}` : theme.hospitalWebsiteUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-3xl overflow-hidden flex items-center justify-center transition-transform hover:scale-[1.02] active:scale-[0.98]"
@@ -299,7 +415,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
               textDecoration: "none",
             }}
           >
-            <img
+            <ApiImage
               src={theme.logoUrl}
               alt={theme.hospitalName}
               style={{
@@ -380,14 +496,16 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                   flexShrink: 0,
                 }}
               >
-                {t(currentSection.titleKey, theme.hospitalShortName)}
+                {currentSection.id === "hospital" 
+                  ? (aboutUsCms.data?.title ?? t(currentSection.titleKey, theme.hospitalShortName))
+                  : t(currentSection.titleKey, theme.hospitalShortName)}
               </h3>
             )}
 
             {/* Section Image (if exists) */}
             {currentSection.image && (
               <div className="flex-1 rounded-2xl overflow-hidden flex items-center justify-center">
-                <img
+                <ApiImage
                   src={currentSection.image}
                   alt={currentSection.title}
                   className="w-full h-full object-contain"
@@ -406,7 +524,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                     style={{ border: "none", padding: 0, background: "none" }}
                     aria-label="Play video"
                   >
-                    <img
+                    <ApiImage
                       src={theme.heroImageUrl}
                       alt={currentSection.title}
                       className="absolute inset-0 w-full h-full object-cover"
@@ -454,15 +572,23 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                     </div>
                   </button>
                 ) : (
-                  /* YouTube embed */
-                  <iframe
-                    className="absolute inset-0 w-full h-full"
-                    src={`https://www.youtube.com/embed/${currentSection.video}?autoplay=1&rel=0`}
-                    title={currentSection.title}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+                  currentSection.video?.includes("/") || currentSection.video?.includes(".") ? (
+                    <video
+                      className="absolute inset-0 w-full h-full object-contain bg-black"
+                      src={currentSection.video}
+                      controls
+                      autoPlay
+                    />
+                  ) : (
+                    <iframe
+                      className="absolute inset-0 w-full h-full"
+                      src={`https://www.youtube.com/embed/${currentSection.video}?autoplay=1&rel=0`}
+                      title={currentSection.title}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  )
                 )}
               </div>
             )}
@@ -472,7 +598,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
               <div className="flex-1 overflow-y-auto about-scrollable-content flex flex-col gap-6 pt-2">
                 {/* Achievement Banner */}
                 <div className="shrink-0 rounded-3xl overflow-hidden shadow-sm border border-gray-100" style={{ height: "240px" }}>
-                  <img 
+                  <ApiImage 
                     src={dsfhAchievementBanner} 
                     alt="Latest achievements"
                     className="w-full h-full object-cover"
@@ -539,9 +665,38 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                   whiteSpace: "pre-line",
                 }}
               >
-                {currentSection.content}
+                {currentSection.id === "hospital" 
+                  ? (aboutUsCms.data?.body ?? currentSection.content)
+                  : currentSection.content}
               </div>
             ) : null}
+
+            {/* Prime Hospital — contact footer */}
+            {theme.id === "prime" && (
+              <div
+                className="shrink-0 flex items-center gap-8 flex-wrap pt-4 mt-4"
+                style={{ borderTop: `1px solid ${theme.primarySubtle}`, fontFamily: theme.fontFamily }}
+              >
+                <a
+                  href={theme.hospitalWebsiteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                  style={{ textDecoration: "none" }}
+                >
+                  <Globe size={18} color={theme.primary} />
+                  <span style={{ fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.semibold, color: theme.primary }}>
+                    {theme.hospitalWebsiteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                  </span>
+                </a>
+                <div className="flex items-center gap-2">
+                  <MapPin size={18} color={theme.primary} />
+                  <span style={{ fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium, color: "#4A5568" }}>
+                    {theme.location}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

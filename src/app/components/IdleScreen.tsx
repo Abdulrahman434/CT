@@ -1,9 +1,10 @@
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, LEADING, TEXT_STYLE } from "./ThemeContext";
+import { ApiImage } from "./ApiImage";
 import { useLocale } from "./i18n";
 
 export function IdleScreen() {
   const { theme } = useTheme();
-  const { t, fontFamily } = useLocale();
+  const { t, fontFamily, locale } = useLocale();
 
   return (
     <div
@@ -38,10 +39,10 @@ export function IdleScreen() {
       />
 
       <div className="relative z-10 flex flex-col items-center gap-8 text-center">
-        <a href={theme.hospitalWebsiteUrl} target="_blank" rel="noopener noreferrer" 
+        <a href={theme.id === "imc" ? `https://www.imc.med.sa/${locale}` : theme.hospitalWebsiteUrl} target="_blank" rel="noopener noreferrer" 
           className="transition-transform hover:scale-105 active:scale-95"
           style={{ textDecoration: "none" }}>
-          <img
+          <ApiImage
             src={theme.logoUrl}
             alt="Hospital"
             className="w-auto object-contain"

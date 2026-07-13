@@ -3,11 +3,21 @@ import { createRoot } from "react-dom/client";
 import App from "./app/App.tsx";
 import "./styles/index.css";
 
-// Prevent browser back button navigation
-window.history.pushState(null, "", window.location.href);
-window.onpopstate = function() {
-  window.history.pushState(null, "", window.location.href);
-};
+// Back button logic moved to App.tsx for better control
+
 
 createRoot(document.getElementById("root")!).render(<App />);
-  
+
+// Register service worker for offline caching
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then(reg => {
+        console.log('[SW] Registered:', reg.scope);
+      })
+      .catch(err => {
+        console.warn('[SW] Registration failed:', err);
+      });
+  });
+}

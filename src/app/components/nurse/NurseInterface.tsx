@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   X, ClipboardList, Stethoscope, User, Heart, DollarSign,
   FlaskConical, Image as ImageIcon, Baby, LogOut, Activity,
-  Hash, DoorOpen, Clock, Plus,
+  Hash, DoorOpen, Clock, Plus, Bed, CreditCard, ExternalLink,
 } from "lucide-react";
 import { useTheme } from "../ThemeContext";
 import { useLocale } from "../i18n";
@@ -16,6 +16,7 @@ import { ImagingTab } from "./tabs/ImagingTab";
 import { BabyCameraTab } from "./tabs/BabyCameraTab";
 import { DischargePlanTab } from "./tabs/DischargePlanTab";
 import { ObservationsTab } from "./tabs/ObservationsTab";
+import { NfcTab } from "./tabs/NfcTab";
 
 interface TabDef {
   key: SectionKey;
@@ -34,6 +35,7 @@ const TABS: TabDef[] = [
   { key: "baby", label: "Baby Camera", icon: Baby, hasVisibility: true },
   { key: "discharge", label: "Discharge Plan", icon: LogOut, hasVisibility: true },
   { key: "observations", label: "Observations", icon: Activity, hasVisibility: true },
+  { key: "nfc", label: "Update Nurse Info", icon: CreditCard, hasVisibility: false },
 ];
 
 interface NurseInterfaceProps {
@@ -60,6 +62,7 @@ export function NurseInterface({ role, onClose }: NurseInterfaceProps) {
       case "baby": return <BabyCameraTab role={role} />;
       case "discharge": return <DischargePlanTab role={role} />;
       case "observations": return <ObservationsTab role={role} />;
+      case "nfc": return <NfcTab />;
       default: return null;
     }
   };
@@ -109,9 +112,13 @@ export function NurseInterface({ role, onClose }: NurseInterfaceProps) {
         <div className="flex-1 grid grid-cols-4 gap-0">
           {[
             { label: "MRN", value: patient.mrn, icon: <Hash size={15} /> },
-            { label: "Patient", value: `${patient.name} (${patient.age}y)`, icon: <User size={15} /> },
+            { 
+              label: "Patient", 
+              value: `${(tr("direction") === "rtl" && patient.nameAr) ? patient.nameAr : patient.name} (${patient.age}y)`, 
+              icon: <User size={15} /> 
+            },
             { label: "Room", value: patient.room, icon: <DoorOpen size={15} /> },
-            { label: "Admitted", value: patient.admissionDate, icon: <Clock size={15} /> },
+            { label: "Bed", value: patient.bed || "—", icon: <Bed size={15} /> },
           ].map((item, i) => (
             <div key={i} className="flex relative items-center justify-center">
               {i > 0 && (
@@ -179,6 +186,22 @@ export function NurseInterface({ role, onClose }: NurseInterfaceProps) {
           {renderTab()}
         </div>
       </div>
+
+      {/* ── Footer Link ── */}
+      {role === "nurse" && (
+        <div className="flex justify-end px-8 pb-4 shrink-0">
+          <a
+            href="https://client.careinn.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-600 hover:underline font-semibold flex items-center gap-1.5 cursor-pointer"
+            style={{ color: t.primary }}
+          >
+            <ExternalLink size={14} />
+            {tr("careteam.gotoEmr")}
+          </a>
+        </div>
+      )}
 
       <style>{`
         .nurse-card {

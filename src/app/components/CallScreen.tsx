@@ -1,4 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { ApiImage } from "./ApiImage";
+import { sip, useSipCallState, useSipRegistration, useSipContacts, useSipAvailable, useSipLocalExtension, isAndroidApp } from "../utils/androidBridge";
+import { 
+  loadHistory, saveEntry, formatDuration, formatCallTime,
+  groupByDate, type CallHistoryEntry 
+} from '../utils/callHistory';
 import { motion, AnimatePresence } from "motion/react";
 import {
   Phone,
@@ -30,6 +36,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { useTheme, TEXT_STYLE, WEIGHT, TYPE_SCALE, SHADOW } from "./ThemeContext";
+import { InternalPageHeader } from "./InternalPageHeader";
 import { useLocale } from "./i18n";
 import { playTone } from "./useRipple";
 import type { LucideIcon } from "lucide-react";
@@ -225,11 +232,191 @@ function useCallAudio(callState: CallState) {
 
 export function CallScreen({ onClose }: { onClose: () => void }) {
   const { theme } = useTheme();
-  const { t, isRTL, fontFamily } = useLocale();
+  const { t, isRTL, fontFamily, locale } = useLocale();
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
-  const [callState, setCallState] = useState<CallState>("idle");
-  const [callTarget, setCallTarget] = useState<Extension | null>(null);
+  // SIP Data
+  const contacts = useSipContacts();
+  const { callState: sipCallState, remote } = useSipCallState();
+  const regState = useSipRegistration();
+  const isSipAvailable = useSipAvailable();
+  const localExtension = useSipLocalExtension();
+
+
+  // Local Simulation State
+  const [simCallState, setSimCallState] = useState<CallState>("idle");
+  const [simCallTarget, setSimCallTarget] = useState<Extension | null>(null);
+
+  const [callHistory, setCallHistory] = useState<CallHistoryEntry[]>(
+    () => loadHistory()
+  );
+
+  const callStartTimeRef = useRef<number | null>(null);
+  const callTargetExtRef = useRef<string>('');
+  const callTargetNameRef = useRef<string>('');
+  const callDirectionRef = useRef<'incoming' | 'outgoing'>('outgoing');
+
+  // Bridge state takes priority ONLY for incoming calls and 
+  // connected state — everything else follows simCallState
+  const bridgeIsIncoming = sipCallState === 'IncomingReceived';
+  const bridgeIsConnected = sipCallState === 'Connected' || 
+                            sipCallState === 'StreamsRunning';
+  const bridgeIsEnded = sipCallState === 'End' || 
+                        sipCallState === 'Released' || 
+                        sipCallState === 'Error';
+
+  const isSipIdle = sipCallState === 'Idle' || bridgeIsEnded;
+
+  // Effective call state:
+  // - Bridge incoming overrides everything (patient can't miss a call)
+  // - Bridge connected promotes outgoing→active
+  // - Bridge ended resets (via useEffect below)
+  // - Everything else: trust simCallState for instant UI feedback
+  const callState: CallState = bridgeIsIncoming
+    ? "incoming"
+    : (bridgeIsConnected && simCallState === "outgoing")
+    ? "active"
+    : simCallState;
+
+  const callTarget = simCallTarget;
+
+  useEffect(() => {
+    // Track call start
+    if (callState === 'active') {
+      callStartTimeRef.current = Date.now();
+    }
+
+    // Track outgoing call initiated
+    if (callState === 'outgoing' && simCallTarget) {
+      callTargetExtRef.current = simCallTarget.ext;
+      callTargetNameRef.current = simCallTarget.nameKey;
+      callDirectionRef.current = 'outgoing';
+    }
+
+    // Track incoming call
+    if (callState === 'incoming' && simCallTarget) {
+      callTargetExtRef.current = simCallTarget.ext;
+      callTargetNameRef.current = simCallTarget.nameKey;
+      callDirectionRef.current = 'incoming';
+      callStartTimeRef.current = null; // not started yet
+    }
+
+    // Record when call ends
+    if (
+      (callState === 'idle' || 
+       callState === 'released' as any) &&
+      callTargetExtRef.current
+    ) {
+      const wasActive = callStartTimeRef.current !== null;
+      const durationSeconds = wasActive
+        ? Math.floor((Date.now() - callStartTimeRef.current!) / 1000)
+        : 0;
+
+      // Only record if we had a real call attempt
+      // (not just simulation mode reset)
+      if (isSipAvailable && callTargetExtRef.current) {
+        const entry: CallHistoryEntry = {
+          id: `call-${Date.now()}`,
+          extension: callTargetExtRef.current,
+          name: callTargetNameRef.current || callTargetExtRef.current,
+          direction: callDirectionRef.current,
+          type: wasActive ? 'attended' : 'missed',
+          timestamp: Date.now(),
+          durationSeconds,
+        };
+
+        saveEntry(entry);
+        setCallHistory(loadHistory()); // refresh from storage
+      }
+
+      // Reset refs
+      callStartTimeRef.current = null;
+      callTargetExtRef.current = '';
+      callTargetNameRef.current = '';
+    }
+  }, [callState, simCallTarget, isSipAvailable]);
+
+  // Use real history if available, fallback to mocks
+  const hasRealHistory = callHistory.length > 0;
+
+  const realMissed: CallLogEntry[] = callHistory
+    .filter(h => h.type === 'missed')
+    .map(h => ({
+      id: h.id,
+      extensionId: h.extension,
+      nameKey: h.name,          // raw name, not translation key
+      ext: h.extension,
+      time: formatCallTime(h.timestamp),
+      type: 'missed' as const,
+      direction: h.direction,
+    }));
+
+  const realAttended: CallLogEntry[] = callHistory
+    .filter(h => h.type === 'attended')
+    .map(h => ({
+      id: h.id,
+      extensionId: h.extension,
+      nameKey: h.name,
+      ext: h.extension,
+      time: formatCallTime(h.timestamp),
+      duration: formatDuration(h.durationSeconds),
+      type: 'attended' as const,
+      direction: h.direction,
+    }));
+
+  // Final display data — real if available, mocks if not
+  const displayMissed = hasRealHistory ? realMissed : MOCK_MISSED;
+  const displayAttended = hasRealHistory ? realAttended : MOCK_ATTENDED;
+  const displayAll = hasRealHistory 
+    ? [...callHistory].sort((a,b) => b.timestamp - a.timestamp)
+        .map(h => ({
+          id: h.id,
+          extensionId: h.extension,
+          nameKey: h.name,
+          ext: h.extension,
+          time: formatCallTime(h.timestamp),
+          duration: h.durationSeconds > 0 
+              ? formatDuration(h.durationSeconds) : undefined,
+          type: h.type,
+          direction: h.direction,
+        } as CallLogEntry))
+    : [...MOCK_MISSED, ...MOCK_ATTENDED]
+        .sort((a,b) => b.id.localeCompare(a.id));
+
+  // Sync bridge call target for incoming calls
+  useEffect(() => {
+    if (bridgeIsIncoming) {
+      const sipCaller = contacts.find(c => c.extension === remote);
+      const callerDisplayName = sipCaller
+        ? (locale === 'ar' ? sipCaller.nameAr : sipCaller.nameEn)
+        : remote || 'Unknown';  // fallback: show the extension number
+
+      setSimCallTarget({
+        id: remote || "unknown",
+        nameKey: callerDisplayName,
+        descKey: "",
+        ext: remote || "?",
+        icon: Phone,
+        iconColor: "#E11D48",
+        iconBg: "rgba(225,29,72,0.08)",
+      });
+      setSimCallState("incoming");
+    }
+  }, [bridgeIsIncoming, remote, contacts, locale]);
+
+  // Reset when bridge reports call ended
+  useEffect(() => {
+    if (bridgeIsEnded && simCallState !== "idle") {
+      const t = setTimeout(() => {
+        setSimCallState("idle");
+        setSimCallTarget(null);
+        setShowKeypad(false);
+        setInCallDigits("");
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [bridgeIsEnded, simCallState]);
+
   const [muted, setMuted] = useState(false);
   const [speaker, setSpeaker] = useState(false);
   const [onHold, setOnHold] = useState(false);
@@ -240,44 +427,104 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
 
   const callTimer = useCallTimer(callState === "active");
   useCallAudio(callState);
-  
+
+  const displayContacts = (contacts && contacts.length > 0)
+    ? contacts.map(c => ({
+        extension: c.extension,
+        displayName: locale === 'ar' ? c.nameAr : c.nameEn,
+        emergency: !!c.emergency
+      }))
+    : EXTENSIONS.map(ext => ({
+        extension: ext.ext,
+        displayName: t(ext.nameKey),
+        emergency: !!ext.emergency
+      }));
+
   const primary = theme.primary;
   const DANGER = "#D10044";
 
-  useEffect(() => {
-    if (callState === "outgoing") {
-      const timer = setTimeout(() => setCallState("active"), 3000);
-      return () => clearTimeout(timer);
+  const handleDial = useCallback((ext: { 
+    extension: string, 
+    displayName: string, 
+    emergency?: boolean 
+  }) => {
+    // Set target FIRST so the overlay has a name to display
+    setSimCallTarget({
+      id: ext.extension,
+      nameKey: ext.displayName,
+      descKey: "",
+      ext: ext.extension,
+      icon: ext.emergency ? Heart : Phone,
+      iconColor: "#fff",
+      iconBg: "transparent",
+      emergency: ext.emergency
+    });
+    // Set state SECOND to trigger the overlay
+    setSimCallState("outgoing");
+    // Call SIP LAST — bridge events arrive async, UI is already showing
+    if (isSipAvailable) {
+      sip.call(ext.extension);
     }
-  }, [callState]);
+    // No else needed — simulation: bridge won't fire, 
+    // so we advance to active after 3s
+    if (!isSipAvailable) {
+      setTimeout(() => setSimCallState("active"), 3000);
+    }
+  }, [isSipAvailable]);
 
-  const handleDial = useCallback((ext: Extension) => {
-    setCallTarget(ext);
-    setMuted(false); setSpeaker(false); setOnHold(false);
-    setCallState("outgoing");
-  }, []);
+  // ── Handset Event Listeners ──
+
 
   const handleDialCustom = useCallback(() => {
     if (!dialInput) return;
-    const found = EXTENSIONS.find((e) => e.ext === dialInput);
-    const target: Extension = found ?? { id: "custom", nameKey: "call.ext", descKey: "", ext: dialInput };
-    setCallTarget(target);
-    setMuted(false); setSpeaker(false); setOnHold(false);
-    setCallState("outgoing");
-  }, [dialInput]);
+    handleDial({ 
+      extension: dialInput, 
+      displayName: dialInput,
+      emergency: false,
+    });
+  }, [dialInput, handleDial]);
 
   const handleSimulateIncoming = useCallback(() => {
-    setCallTarget(EXTENSIONS[0]);
-    setCallState("incoming");
+    setSimCallTarget(EXTENSIONS[0]); // Simulate incoming from Nurse
+    setSimCallState("incoming");
   }, []);
+
+
 
   const handleAccept = useCallback(() => {
-    setCallState("active");
-    setMuted(false); setSpeaker(false); setOnHold(false);
-  }, []);
+    if (isSipAvailable) {
+      sip.answer();
+      // Move to active immediately — poll will confirm Connected state
+      setSimCallState("active");
+      setMuted(false);
+      setSpeaker(false);
+      setOnHold(false);
+    } else {
+      // Simulation fallback
+      setSimCallState("active");
+      setMuted(false);
+      setSpeaker(false);
+      setOnHold(false);
+    }
+  }, [isSipAvailable]);
 
-  const handleDecline = useCallback(() => { setCallState("idle"); setCallTarget(null); setShowKeypad(false); setInCallDigits(""); }, []);
-  const handleEnd = useCallback(() => { setCallState("idle"); setCallTarget(null); setShowKeypad(false); setInCallDigits(""); }, []);
+  const handleDecline = useCallback(() => {
+    if (isSipAvailable) sip.hangup();
+    // Reset immediately — don't wait for poll
+    setSimCallState("idle");
+    setSimCallTarget(null);
+    setShowKeypad(false);
+    setInCallDigits("");
+  }, [isSipAvailable]);
+
+  const handleEnd = useCallback(() => {
+    if (isSipAvailable) sip.hangup();
+    // Reset immediately — don't wait for poll
+    setSimCallState("idle");
+    setSimCallTarget(null);
+    setShowKeypad(false);
+    setInCallDigits("");
+  }, [isSipAvailable]);
 
   const onKeypadPress = useCallback((digit: string) => {
     playDTMF(digit);
@@ -293,12 +540,100 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
     setDialInput((prev) => prev.slice(0, -1));
   }, [dialInput]);
 
+  // ── Handset Event Listeners ──
+
+  // Listen for handset "focus dialer" — focus the keypad input
+  useEffect(() => {
+    const handler = () => {
+      setDialInput(""); // clear previous input
+      const firstKey = document.querySelector(
+        '[data-keypad-digit="1"]'
+      ) as HTMLElement;
+      if (firstKey) firstKey.focus();
+    };
+    window.addEventListener('handset-focus-dialer', handler);
+    return () => window.removeEventListener('handset-focus-dialer', handler);
+  }, []);
+
+  // Listen for handset "nurse call" — call emergency contact
+  useEffect(() => {
+    const handler = () => {
+      const emergencyContact = contacts.find(c => c.emergency);
+      if (emergencyContact) {
+        handleDial({
+          extension: emergencyContact.extension,
+          displayName: locale === 'ar' 
+            ? emergencyContact.nameAr 
+            : emergencyContact.nameEn,
+          emergency: true,
+        });
+      } else {
+        const nurseExt = EXTENSIONS.find(e => e.id === "nurse");
+        if (nurseExt) {
+          handleDial({
+            extension: nurseExt.ext,
+            displayName: t(nurseExt.nameKey),
+            emergency: true,
+          });
+        }
+      }
+    };
+    window.addEventListener('handset-nurse-call', handler);
+    return () => window.removeEventListener('handset-nurse-call', handler);
+  }, [contacts, handleDial, locale, t]);
+
+  // Listen for handset digit keys — append to dialer when call page open
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { digit } = (e as CustomEvent<{ digit: string }>).detail;
+      if (simCallState === "idle") {
+        setDialInput(prev => prev.length >= 15 ? prev : prev + digit);
+      }
+    };
+    window.addEventListener('handset-dial-digit', handler);
+    return () => window.removeEventListener('handset-dial-digit', handler);
+  }, [simCallState]);
+
+  // Listen for handset "dial" action (accept call or dial input)
+  useEffect(() => {
+    const handler = () => {
+      if (callState === "incoming") {
+        handleAccept();
+      } else if (callState === "idle" && dialInput) {
+        handleDialCustom();
+      }
+    };
+    window.addEventListener('handset-dial-action', handler);
+    return () => window.removeEventListener('handset-dial-action', handler);
+  }, [callState, dialInput, handleAccept, handleDialCustom]);
+
+  // Listen for handset "hangup" action (decline or end call)
+  useEffect(() => {
+    const handler = () => {
+      if (callState === "incoming") {
+        handleDecline();
+      } else if (callState === "active" || callState === "outgoing") {
+        handleEnd();
+      }
+    };
+    window.addEventListener('handset-hangup-action', handler);
+    return () => window.removeEventListener('handset-hangup-action', handler);
+  }, [callState, handleDecline, handleEnd]);
+
   /* ═══════════════════════════════════════════════════════════════════════
    * RENDER — Call-in-progress overlays (dark)
    * ══════════════════════════════════════════════════════════════════════ */
-  if (callState !== "idle" && callTarget) {
+  if (callState !== "idle" && simCallTarget) {
     return (
-      <div className="absolute inset-0 z-50 flex flex-col" style={{ animation: "callScreenIn 0.25s ease-out" }}>
+      <div 
+        className="flex flex-col"
+        style={{ 
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 9999,
+          animation: "callScreenIn 0.25s ease-out"
+        }}
+      >
         <div className="absolute inset-0" style={{
           background: callState === "incoming"
             ? `linear-gradient(160deg, ${primary} 0%, ${theme.primaryDark} 50%, #0a1628 100%)`
@@ -336,7 +671,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="text-center">
-            <p style={{ fontFamily, ...TEXT_STYLE.display, color: "#FFFFFF", margin: 0 }}>{t(callTarget.nameKey)}</p>
+            <p style={{ fontFamily, ...TEXT_STYLE.display, color: "#FFFFFF", margin: 0 }}>{callTarget.nameKey.startsWith('call.') ? t(callTarget.nameKey) : callTarget.nameKey}</p>
             <p style={{ fontFamily, ...TEXT_STYLE.body, color: "rgba(255,255,255,0.5)", marginTop: "8px" }}>
               {t("call.ext")} {callTarget.ext}
             </p>
@@ -379,7 +714,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                    {[["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]].map((row, ri) => (
                       <div key={ri} className="flex gap-4 justify-center">
                         {row.map((digit) => (
-                           <button key={digit} data-no-tick="true" onPointerDown={() => { playDTMF(digit); setInCallDigits(prev => prev.length >= 16 ? prev : prev + digit); }} className="active:scale-90 transition-transform" style={{
+                           <button key={digit} data-keypad-digit={digit} data-no-tick="true" onPointerDown={() => { playDTMF(digit); setInCallDigits(prev => prev.length >= 16 ? prev : prev + digit); }} className="active:scale-90 transition-transform" style={{
                              width:"68px", height:"68px", borderRadius:theme.radiusFull, backgroundColor:"rgba(255,255,255,0.12)",
                              display:"flex", alignItems:"center", justifyContent:"center", border: "none",
                            }}>
@@ -413,7 +748,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
               ) : (
                 /* ── Normal call controls ── */
                 <div className="flex items-center justify-center gap-10">
-                  <CallControlButton icon={muted ? MicOff : Mic} label={muted ? t("call.unmute") : t("call.mute")} active={muted} onTap={() => setMuted(!muted)} fontFamily={fontFamily} />
+                  <CallControlButton icon={(isSipAvailable ? sip.isMuted() : muted) ? MicOff : Mic} label={(isSipAvailable ? sip.isMuted() : muted) ? t("call.unmute") : t("call.mute")} active={isSipAvailable ? sip.isMuted() : muted} onTap={() => isSipAvailable ? sip.setMuted(!sip.isMuted()) : setMuted(!muted)} fontFamily={fontFamily} />
                   <CallControlButton icon={Volume2} label={t("call.speaker")} active={speaker} onTap={() => setSpeaker(!speaker)} fontFamily={fontFamily} />
                   <CallControlButton icon={onHold ? Play : Pause} label={onHold ? t("call.resume") : t("call.hold")} active={onHold} onTap={() => setOnHold(!onHold)} fontFamily={fontFamily} />
                   <CallControlButton icon={Grid3X3} label={t("call.keypad")} active={false} onTap={() => setShowKeypad(true)} fontFamily={fontFamily} />
@@ -484,7 +819,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
       }}
     >
       {/* Subtle hero texture */}
-      <img
+      <ApiImage
         src={theme.heroImageUrl}
         alt="" aria-hidden
         className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
@@ -493,56 +828,34 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
       <div className="absolute inset-0 pointer-events-none" style={{ background: "rgba(0,0,0,0.15)", backdropFilter: "blur(6px)" }} />
 
       {/* ── Header ── */}
-      <div className={`shrink-0 flex items-center justify-between pt-8 pb-2 relative z-10 ${isRTL ? "pr-[172px] pl-[172px]" : "pl-[172px] pr-[172px]"}`}>
-        <div className="flex items-center gap-4 relative">
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center hover:scale-105 active:scale-95 transition-transform cursor-pointer absolute"
+      <InternalPageHeader
+        title={t("call.title")}
+        subtitle={isSipAvailable ? t("call.tapToCall") : "Using simulation mode (Bridge unavailable)"}
+        icon={
+          <Phone size={26} fill={regState === 'Ok' ? "#22C55E" : regState === 'Progress' ? "#EAB308" : "#EF4444"} style={{ color: regState === 'Ok' ? "#22C55E" : regState === 'Progress' ? "#EAB308" : "#EF4444" }} />
+        }
+        onClose={onClose}
+        rightAction={
+          <button 
+            onClick={handleSimulateIncoming}
+            className="flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform hover:brightness-110" 
             style={{
-              width: "52px", height: "52px", borderRadius: theme.radiusLg,
-              backgroundColor: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)",
-              [isRTL ? "right" : "left"]: "-112px"
+              borderRadius: theme.radiusLg, backgroundColor: "rgba(255,255,255,0.1)",
+              border: "1px solid rgba(255,255,255,0.15)", padding: "10px 24px 10px 16px", boxShadow: SHADOW.sm,
+              outline: "none",
             }}
           >
-            <BackArrow size={24} style={{ color: "#fff" }} />
+            <div className="w-10 h-10 flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "rgba(255,255,255,0.12)", color: "#fff", borderRadius: theme.radiusMd }}>
+              <Phone size={20} />
+            </div>
+            <div className="text-left">
+              <p style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "14px", color: "rgba(255,255,255,0.7)" }}>{t("call.yourExtension")}</p>
+              <p style={{ fontFamily: theme.fontFamilyMono, fontSize: "20px", fontWeight: WEIGHT.bold, color: "#fff", letterSpacing: "1px", lineHeight: 1 }}>{localExtension || '—'}</p>
+            </div>
           </button>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center" style={{
-              width: "52px", height: "52px", borderRadius: theme.radiusLg,
-              backgroundColor: "rgba(255,255,255,0.12)",
-            }}>
-              <Phone size={26} fill="#fff" style={{ color: "#fff" }} />
-            </div>
-            <div>
-              <h2 style={{ fontFamily, ...TEXT_STYLE.display, fontSize: "32px", color: "#FFFFFF", lineHeight: "36px" }}>
-                {t("call.title")}
-              </h2>
-              <p style={{ fontFamily, ...TEXT_STYLE.caption, color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>
-                {t("call.tapToCall")}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <button 
-          onClick={handleSimulateIncoming}
-          className="flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform hover:brightness-110" 
-          style={{
-            borderRadius: theme.radiusLg, backgroundColor: "rgba(255,255,255,0.1)",
-            border: "1px solid rgba(255,255,255,0.15)", padding: "10px 24px 10px 16px", boxShadow: SHADOW.sm,
-            outline: "none",
-          }}
-        >
-          <div className="w-10 h-10 flex items-center justify-center shrink-0"
-            style={{ backgroundColor: "rgba(255,255,255,0.12)", color: "#fff", borderRadius: theme.radiusMd }}>
-            <Phone size={20} />
-          </div>
-          <div className="text-left">
-            <p style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "14px", color: "rgba(255,255,255,0.7)" }}>{t("call.yourExtension")}</p>
-            <p style={{ fontFamily: theme.fontFamilyMono, fontSize: "20px", fontWeight: WEIGHT.bold, color: "#fff", letterSpacing: "1px", lineHeight: 1 }}>4120</p>
-          </div>
-        </button>
-      </div>
+        }
+      />
 
       {/* ── 3-Column Content ── */}
       <div className={`min-h-0 flex pt-8 pb-20 relative z-10 ${isRTL ? "pr-[172px] pl-[172px]" : "pl-[172px] pr-[172px]"}`} style={{ flex: "1 1 0", maxHeight: "calc(100% - 130px)", gap: "20px" }}>
@@ -572,7 +885,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
             }}>
               {(["all", "missed", "attended"] as const).map((key) => {
                 const active = historyTab === key;
-                const count = key === "missed" ? MOCK_MISSED.length : key === "attended" ? MOCK_ATTENDED.length : MOCK_MISSED.length + MOCK_ATTENDED.length;
+                const count = key === "missed" ? displayMissed.length : key === "attended" ? displayAttended.length : displayAll.length;
                 return (
                   <button
                     key={key}
@@ -609,21 +922,14 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
             <AnimatePresence mode="wait">
               {historyTab === "all" ? (
                 <motion.div key="all" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                  {MOCK_MISSED.length === 0 && MOCK_ATTENDED.length === 0 ? (
+                  {displayAll.length === 0 ? (
                     <EmptyState message={t("call.noHistory")} />
                   ) : (
                     <div className="flex flex-col gap-3">
                       <p className="px-2 pt-1 pb-2" style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "16px", color: theme.textMuted }}>{t("call.today")}</p>
-                      {MOCK_MISSED.map((entry) => (
+                      {displayAll.map((entry) => (
                         <CallLogRow key={entry.id} entry={entry} onCallback={(e) => {
-                          const ext = EXTENSIONS.find((x) => x.id === e.extensionId);
-                          if (ext) handleDial(ext);
-                        }} />
-                      ))}
-                      {MOCK_ATTENDED.map((entry) => (
-                        <CallLogRow key={entry.id} entry={entry} onCallback={(e) => {
-                          const ext = EXTENSIONS.find((x) => x.id === e.extensionId);
-                          if (ext) handleDial(ext);
+                          handleDial({ extension: e.ext, displayName: e.nameKey.startsWith('call.') ? t(e.nameKey) : e.nameKey });
                         }} />
                       ))}
                     </div>
@@ -631,15 +937,14 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                 </motion.div>
               ) : historyTab === "missed" ? (
                 <motion.div key="missed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                  {MOCK_MISSED.length === 0 ? (
+                  {displayMissed.length === 0 ? (
                     <EmptyState message={t("call.noMissed")} />
                   ) : (
                     <div className="flex flex-col gap-3">
                       <p className="px-2 pt-1 pb-2" style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "16px", color: theme.textMuted }}>{t("call.today")}</p>
-                      {MOCK_MISSED.map((entry) => (
+                      {displayMissed.map((entry) => (
                         <CallLogRow key={entry.id} entry={entry} onCallback={(e) => {
-                          const ext = EXTENSIONS.find((x) => x.id === e.extensionId);
-                          if (ext) handleDial(ext);
+                          handleDial({ extension: e.ext, displayName: e.nameKey.startsWith('call.') ? t(e.nameKey) : e.nameKey });
                         }} />
                       ))}
                     </div>
@@ -647,15 +952,14 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                 </motion.div>
               ) : (
                 <motion.div key="attended" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                  {MOCK_ATTENDED.length === 0 ? (
+                  {displayAttended.length === 0 ? (
                     <EmptyState message={t("call.noAttended")} />
                   ) : (
                     <div className="flex flex-col gap-3">
                       <p className="px-2 pt-1 pb-2" style={{ fontFamily, ...TEXT_STYLE.caption, fontSize: "16px", color: theme.textMuted }}>{t("call.today")}</p>
-                      {MOCK_ATTENDED.map((entry) => (
+                      {displayAttended.map((entry) => (
                         <CallLogRow key={entry.id} entry={entry} onCallback={(e) => {
-                          const ext = EXTENSIONS.find((x) => x.id === e.extensionId);
-                          if (ext) handleDial(ext);
+                          handleDial({ extension: e.ext, displayName: e.nameKey.startsWith('call.') ? t(e.nameKey) : e.nameKey });
                         }} />
                       ))}
                     </div>
@@ -771,9 +1075,9 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
               gridTemplateColumns: "repeat(2, 1fr)",
               gap: "16px",
             }}>
-              {EXTENSIONS.slice(0, 6).map((ext) => (
-                <ExtensionCard key={ext.id} ext={ext} onDial={handleDial} />
-              ))}
+              {displayContacts.map((c) => (
+                 <ExtensionCard key={c.extension} contact={c} onDial={() => handleDial(c)} />
+               ))}
             </div>
           </div>
         </div>
@@ -796,13 +1100,13 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
  * SUB-COMPONENTS
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension) => void }) {
+function ExtensionCard({ contact, onDial }: { contact: { extension: string, displayName: string, emergency?: boolean }; onDial: () => void }) {
   const { theme } = useTheme();
-  const { t, fontFamily } = useLocale();
+  const { fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
-  const ExtIcon = ext.icon;
+  const ExtIcon = contact.emergency ? Heart : Phone;
   
-  const isHighlighted = ext.id === "nurse";
+  const isHighlighted = contact.emergency;
   const isFilled = isHighlighted ? !pressed : pressed;
 
   return (
@@ -810,9 +1114,10 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
-      onClick={() => onDial(ext)}
-      className="flex flex-col items-center justify-center gap-3 cursor-pointer transition-transform"
+      onClick={onDial}
+      className="flex flex-col items-center justify-center gap-3 transition-transform"
       style={{
+        cursor: "pointer",
         aspectRatio: "1 / 1",
         padding: "16px 12px",
         borderRadius: theme.radiusXl,
@@ -840,7 +1145,7 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
         fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold,
         color: isFilled ? theme.textInverse : theme.textHeading, margin: 0, lineHeight: "1.2",
       }}>
-        {t(ext.nameKey)}
+        {contact.displayName}
       </p>
 
       {/* Extension number */}
@@ -848,7 +1153,7 @@ function ExtensionCard({ ext, onDial }: { ext: Extension; onDial: (e: Extension)
         fontFamily: theme.fontFamilyMono, fontSize: "15px", fontWeight: WEIGHT.medium,
         color: isFilled ? "rgba(255,255,255,0.8)" : theme.textMuted,
       }}>
-        {ext.ext}
+        {contact.extension}
       </span>
     </button>
   );
@@ -898,7 +1203,7 @@ function CallLogRow({ entry, onCallback }: { entry: CallLogEntry; onCallback: (e
           fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold,
           color: isMissed ? DANGER : theme.textHeading, margin: 0,
         }}>
-          {t(entry.nameKey)}
+          {entry.nameKey.startsWith('call.') ? t(entry.nameKey) : entry.nameKey}
         </p>
         <div className="flex items-center gap-3 mt-1">
           <span style={{
@@ -965,6 +1270,7 @@ function KeypadButton({ digit, onPress }: { digit: string; onPress: (digit: stri
   
   return (
     <button
+      data-keypad-digit={digit}
       data-no-tick="true"
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}

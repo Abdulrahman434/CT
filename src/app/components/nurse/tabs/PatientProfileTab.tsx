@@ -12,7 +12,7 @@ export function PatientProfileTab({ role }: { role: "nurse" | "doctor" }) {
   const isReadOnly = role === "doctor";
 
   const handleSave = () => {
-    nurseActions.updatePatient(draft);
+    nurseActions.updatePatientFromNurse(draft);
     setSaved(true);
     setEditing(false);
     setTimeout(() => setSaved(false), 2000);
@@ -24,11 +24,12 @@ export function PatientProfileTab({ role }: { role: "nurse" | "doctor" }) {
   };
 
   const fields = [
-    { key: "name", label: "Full Name (English)", span: 1 },
-    { key: "nameAr", label: "Full Name (Arabic)", span: 1 },
+    { key: "name", label: "Full Name (English)", span: 1, disabled: true },
+    { key: "nameAr", label: "Full Name (Arabic)", span: 1, disabled: true },
     { key: "age", label: "Age" },
     { key: "mrn", label: "MRN" },
     { key: "room", label: "Room" },
+    { key: "bed", label: "Bed" },
     { key: "extension", label: "Extension" },
     { key: "admissionDate", label: "Admission Date" },
     { key: "dischargeDate", label: "Expected Discharge" },
@@ -64,12 +65,16 @@ export function PatientProfileTab({ role }: { role: "nurse" | "doctor" }) {
               <input
                 value={draft[f.key]}
                 onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}
+                disabled={(f as any).disabled}
                 className="w-full outline-none transition-all"
                 style={{
                   padding: "10px 14px", borderRadius: 12, fontSize: "15px", fontWeight: 600,
-                  color: t.textHeading, border: `1.5px solid ${t.borderDefault}`, backgroundColor: t.surface,
+                  color: (f as any).disabled ? t.textDisabled : t.textHeading, 
+                  border: `1.5px solid ${t.borderDefault}`, 
+                  backgroundColor: (f as any).disabled ? t.borderSubtle : t.surface,
+                  cursor: (f as any).disabled ? "not-allowed" : "text"
                 }}
-                onFocus={(e) => (e.target.style.borderColor = t.primary)}
+                onFocus={(e) => !(f as any).disabled && (e.target.style.borderColor = t.primary)}
                 onBlur={(e) => (e.target.style.borderColor = t.borderDefault)}
               />
             ) : (

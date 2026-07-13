@@ -47,8 +47,47 @@ interface AndroidSystemInterface {
   // Volume (system media volume, 0.0 – 1.0)
   setVolume(value: number): void;
   getVolume(): number;
-}
 
+  // Apps
+  launchApp(componentName: string): void;
+  isAppInstalled(packageName: string): boolean;
+  installApk?(apkUrl: string, packageName: string): void;
+  showToast?(message: string, longDuration: boolean): void;
+  setLaunchableApps?(packagesJson: string): void;
+
+  // IPTV
+  fetchIptvChannels(): void;
+  playIptv(url: string, channelName: string): void;
+  playChannelList?(channelsJson: string, startIndex: number): void;
+  stopIptv(): void;
+  isIptvPlaying(): boolean;
+
+  // SIP methods
+  sipGetContacts(): string;           // returns JSON string
+  sipCall(extension: string): void;
+  sipAnswer(): void;
+  sipHangup(): void;
+  sipSetMuted(muted: boolean): void;
+  sipIsMuted(): boolean;
+  sipGetCallState(): string;
+  sipGetRegistrationState(): string;
+  sipGetLocalExtension(): string;
+
+  // Clear All Data
+  clearAllDataAndReload?(): void;
+
+  // Device Info
+  getDeviceInfo?(): string;           // returns JSON string
+
+  // API Config
+  getApiConfig?(): string;
+  updateApiConfig?(serverIp: string, apiKey: string): void;
+  resetApiConfig?(): void;
+
+  // Image proxy — fetches http:// image, returns base64 data URL
+  // Used to bypass mixed content restrictions in HTTPS WebView
+  fetchImageAsBase64?(url: string): string;
+}
 /* ─── CustomEvent detail shapes dispatched by the Android side ─── */
 export interface BrightnessChangedDetail {
   value: number; // 0.0 – 1.0
@@ -116,7 +155,25 @@ export type AndroidEventName =
   | "cast-connected"
   | "permission-denied"
   | "dnd-state-changed"
-  | "night-light-changed";
+  | "night-light-changed"
+  | "app-launched"
+  | "app-launch-failed"
+  | "iptv-channels-loaded"
+  | "iptv-channels-error"
+  | "iptv-playing"
+  | "iptv-stopped"
+  | "sip-registration-state"
+  | "sip-call-state"
+  | "sip-contacts-updated"
+  | "sip-credentials-updated"
+  | "api-config-updated"
+  | "update-available"
+  | "update-progress"
+  | "update-installed"
+  | "apk-install-progress"
+  | "apk-install-success"
+  | "apk-install-error"
+  | "kiosk-resumed";
 
 /* ─── Augment the global Window type ─── */
 declare global {

@@ -1,4 +1,4 @@
-﻿import { Coordinates, CalculationMethod, PrayerTimes, Prayer } from "adhan";
+import { Coordinates, CalculationMethod, PrayerTimes, Prayer } from "adhan";
 import { format } from "date-fns";
 
 /**
@@ -136,8 +136,17 @@ export function getRelativeTimeString(now: Date, target: Date, locale: string = 
  */
 export function getPrayerStatus(now: Date = new Date(), city: string = "Jeddah") {
   const currentTimes = getPrayerTimes(now, city);
-  const current = currentTimes.currentPrayer();
-  const next = currentTimes.nextPrayer();
+  let current = currentTimes.currentPrayer();
+  let next = currentTimes.nextPrayer();
+
+  // If next is Sunrise, the next actual prayer is Dhuhr
+  if (next === Prayer.Sunrise) {
+    next = Prayer.Dhuhr;
+  }
+  // If current is Sunrise, the current prayer is Fajr (since Sunrise is not an obligatory prayer)
+  if (current === Prayer.Sunrise) {
+    current = Prayer.Fajr;
+  }
 
   let targetTime = currentTimes.timeForPrayer(next);
   let currentTime = currentTimes.timeForPrayer(current);

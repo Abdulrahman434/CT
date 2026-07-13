@@ -307,7 +307,7 @@ export function ObservationsTab({ role }: { role: "nurse" | "doctor" }) {
           </div>
         </div>
       </div>
-      </div>
+    </div>
     </div>
   );
 }

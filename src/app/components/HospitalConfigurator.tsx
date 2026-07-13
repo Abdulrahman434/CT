@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { ApiImage } from "./ApiImage";
 import {
   X,
   Plus,
@@ -301,7 +302,7 @@ function ImageUploadField({
             padding: previewHeight === "60px" ? "8px" : "0",
           }}
         >
-          <img
+          <ApiImage
             src={value}
             alt="Preview"
             style={{
@@ -310,9 +311,6 @@ function ImageUploadField({
               objectFit: previewHeight === "60px" ? "contain" : "cover",
               width: previewHeight === "60px" ? "auto" : "100%",
               height: "100%",
-            }}
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
             }}
           />
         </div>
@@ -422,7 +420,7 @@ function HeroCropPicker({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
-        <img
+        <ApiImage
           src={imageUrl}
           alt="Crop source"
           draggable={false}
@@ -515,7 +513,7 @@ function HeroCropPicker({
             backgroundColor: "rgba(0,0,0,0.03)",
           }}
         >
-          <img
+          <ApiImage
             src={imageUrl}
             alt="Crop preview"
             style={{
@@ -1225,6 +1223,39 @@ export function HospitalConfigurator({ onClose }: { onClose: () => void }) {
                     </div>
                   </div>
                 )}
+
+                {/* Background image opacity */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        color: "#95A3AD",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      Background Image Opacity
+                    </span>
+                    <span style={{ fontSize: "12px", fontWeight: 700, color: t.primary }}>
+                      {editingConfig.heroOpacity ?? 40}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={editingConfig.heroOpacity ?? 40}
+                    onChange={(e) => updateField("heroOpacity", parseInt(e.target.value))}
+                    style={{ width: "100%", accentColor: t.primary, cursor: "pointer" }}
+                  />
+                  <span style={{ fontSize: "11px", fontWeight: 500, color: "#C0CAD0", lineHeight: "16px" }}>
+                    How visible the hospital background photo appears. 0% is fully transparent,
+                    100% fully visible. Default is 40%.
+                  </span>
+                </div>
 
                 {/* ── Live Preview ── */}
                 <SectionHeader icon={<Info size={15} />} label="Live Preview" />

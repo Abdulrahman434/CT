@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { Eye, EyeOff, Play, X } from "lucide-react";
+import { ApiImage } from "./ApiImage";
 import careinnLogo from "../../assets/careinn-logo.png";
 import heroImage from "../../assets/careinn-hero.jpg";
 
@@ -67,7 +68,7 @@ export function PasswordGate() {
           flexShrink: 0,
         }}
       >
-        <img
+        <ApiImage
           src={heroImage}
           alt="Healthcare Redefined"
           style={{
@@ -96,7 +97,7 @@ export function PasswordGate() {
             right: "36px",
           }}
         >
-          <img
+          <ApiImage
             src={careinnLogo}
             alt="CareInn"
             style={{ height: "180px", width: "auto", objectFit: "contain" }}

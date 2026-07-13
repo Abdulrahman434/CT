@@ -16,12 +16,28 @@ import {
   Info,
   Moon,
   Edit2,
+  Search,
+  Shield,
+  X,
+  Lock,
 } from "lucide-react";
+import { ApiImage } from "./ApiImage";
+
+import { useLockedApps } from "../lib/lockedApps";
+import { useLongPress } from "../lib/useLongPress";
+import { AppLockMenu } from "./AppLockMenu";
+import { LockBadge } from "./LockBadge";
+import { AppIconPlaceholder } from "./figma/AppIconPlaceholder";
+
+// import { InternetBrowser } from "./InternetBrowser";
 import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { useRipple } from "./useRipple";
 import { InternalPageHeader } from "./InternalPageHeader";
 import { PdfReaderModal } from "./PdfReaderModal";
+import { apps, isAndroidApp, KNOWN_APPS } from "../utils/androidBridge";
+import { useApiPdfApps, API_CATEGORY_MAP, getPackagesCache } from "../lib/hospitalApi";
+import edgeLogo from "../../assets/edge_logo.png";
 import chromeIcon from "../../assets/272d9a4c809b16af18cfbe153fa4edc5816536b3.png";
 import saudiGazetteLogo from "../../assets/5a0099c6364ba06a603226f636904e61c8e17c07.png";
 import iptvIcon from "../../assets/e66dff686b2ee163965b5d28c8ab0d919a5e5307.png";
@@ -65,6 +81,7 @@ import theSecretIcon from "../../assets/0020d69d075db3cf35e4a115636a15027a1101fe
 interface AppItem {
   id: string;
   name: string;
+  nameAr?: string;
   nameKey?: string;
   /** CSS background (can be gradient) */
   bg: string;
@@ -80,6 +97,10 @@ interface AppItem {
   isInteractive?: boolean;
   url?: string;
   pdfSource?: string;
+  packageName?: string;  // Android package name — checked for install state
+  apkUrl?: string;       // CDN URL to download APK if not installed
+  imageUrl?: string;     // API image URL
+  appType?: "apk" | "url" | "pdf";
 }
 
 interface CategoryConfig {
@@ -89,9 +110,77 @@ interface CategoryConfig {
   apps: AppItem[];
 }
 
+type CategoryKey = string;
+
+function dedupeApps(list: any[]): any[] {
+  const norm = (s?: string) =>
+    (s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+
+  const getIdentityKey = (app: any): string => {
+    if (app.packageName) return `pkg:${app.packageName.toLowerCase()}`;
+    if (app.url) return `url:${app.url.trim().toLowerCase()}`;
+    return `name:${norm(app.nameKey || app.name)}`;
+  };
+
+  const getPriority = (app: any): number => {
+    if (app.packageName && app.apkUrl) return 3;
+    if (app.packageName) return 2;
+    if (app.url) return 1;
+    return 0;
+  };
+
+  const out: any[] = [];
+  const identityMap = new Map<string, number>();
+
+  for (const app of list) {
+    const key = getIdentityKey(app);
+    if (identityMap.has(key)) {
+      const dupIndex = identityMap.get(key)!;
+      const existingApp = out[dupIndex];
+      const newPriority = getPriority(app);
+      const oldPriority = getPriority(existingApp);
+
+      if (newPriority > oldPriority) {
+        const merged = {
+          ...app,
+          url: app.url || existingApp.url,
+          pdfSource: app.pdfSource || existingApp.pdfSource,
+          isInteractive: app.isInteractive || existingApp.isInteractive,
+          // Preserve visual styling from existing (hardcoded) app
+          name: existingApp.name,
+          nameKey: existingApp.nameKey,
+          nameAr: existingApp.nameAr,
+          bg: existingApp.bg,
+          mark: existingApp.mark,
+          textColor: existingApp.textColor,
+          markSize: existingApp.markSize,
+          markWeight: existingApp.markWeight,
+          markFont: existingApp.markFont,
+          customRender: existingApp.customRender,
+        };
+        out[dupIndex] = merged;
+      } else {
+        const merged = {
+          ...existingApp,
+          packageName: existingApp.packageName || app.packageName,
+          apkUrl: existingApp.apkUrl || app.apkUrl,
+          url: existingApp.url || app.url,
+          imageUrl: existingApp.imageUrl || app.imageUrl,
+          appType: existingApp.appType || app.appType,
+        };
+        out[dupIndex] = merged;
+      }
+    } else {
+      identityMap.set(key, out.length);
+      out.push(app);
+    }
+  }
+  return out;
+}
+
 /* ── App data with accurate branding ────────────────────────── */
 
-function getCategories(theme: any, locale: string = "en"): Record<string, CategoryConfig> {
+function getCategories(theme: any, locale: string = "en", t: any): Record<string, CategoryConfig> {
   return {
     Media: {
       label: "Media",
@@ -105,7 +194,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           mark: "",
           textColor: "#333",
           customRender: () => (
-            <img src={iptvIcon} alt="Live TV" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={iptvIcon} alt="Live TV" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
         {
@@ -116,7 +205,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           textColor: "#fff",
           url: "https://www.youtube.com/",
           customRender: () => (
-            <img src={youtubeIcon} alt="YouTube" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={youtubeIcon} alt="YouTube" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
         {
@@ -127,7 +216,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           textColor: "#E50914",
           url: "https://www.netflix.com/",
           customRender: () => (
-            <img src={netflixIcon} alt="Netflix" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={netflixIcon} alt="Netflix" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
         {
@@ -138,7 +227,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           textColor: "#333",
           url: "https://www.primevideo.com/",
           customRender: () => (
-            <img src={primeVideoIcon} alt="Prime Video" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={primeVideoIcon} alt="Prime Video" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
         {
@@ -149,7 +238,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           textColor: "#333",
           url: "https://shahid.mbc.net/ar",
           customRender: () => (
-            <img src={mbcIcon} alt="Shahid" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={mbcIcon} alt="Shahid" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
         {
@@ -306,9 +395,10 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#fff",
           mark: "القرآن",
           textColor: "#333",
+          packageName: "com.arabiait.quran.v2",
           url: "https://app.quranflash.com/book/Medina1?ar#/reader/chapter/3",
           customRender: () => (
-            <img src={quranBookIcon} alt="Quran" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={quranBookIcon} alt="Quran" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
       ],
@@ -324,9 +414,10 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#25D366",
           mark: "",
           textColor: "#fff",
+          packageName: "com.whatsapp",
           url: "https://web.whatsapp.com/",
           customRender: () => (
-            <img src={whatsappIcon} alt="WhatsApp" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={whatsappIcon} alt="WhatsApp" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
         {
@@ -337,7 +428,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           textColor: "#333",
           url: "https://www.facebook.com/",
           customRender: () => (
-            <img src={facebookIcon} alt="Facebook" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={facebookIcon} alt="Facebook" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
         {
@@ -348,7 +439,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           textColor: "#fff",
           url: "https://www.instagram.com/",
           customRender: () => (
-            <img src={instagramIcon} alt="Instagram" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={instagramIcon} alt="Instagram" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
         {
@@ -357,6 +448,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#000000",
           mark: "𝕏",
           textColor: "#ffffff",
+          packageName: "com.twitter.android",
           url: "https://x.com/",
           markSize: 56,
           markWeight: 400,
@@ -367,9 +459,10 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#fff",
           mark: "",
           textColor: "#333",
+          packageName: "com.snapchat.android",
           url: "https://www.snapchat.com/",
           customRender: () => (
-            <img src={snapchatIcon} alt="Snapchat" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={snapchatIcon} alt="Snapchat" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
         {
@@ -380,7 +473,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           textColor: "#333",
           url: "https://www.tiktok.com/",
           customRender: () => (
-            <img src={tiktokIcon} alt="TikTok" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={tiktokIcon} alt="TikTok" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
       ],
@@ -580,6 +673,113 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           ),
           isInteractive: true,
         },
+        {
+          id: "simonsays",
+          name: locale === "ar" ? "سيمون يقول" : "Simon Says",
+          bg: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+          mark: "",
+          textColor: "#fff",
+          customRender: () => (
+            <div className="relative flex items-center justify-center" style={{ width: 150, height: 150 }}>
+              <div className="grid grid-cols-2 gap-1.5 w-20 h-20">
+                <div style={{ backgroundColor: "#ef4444", borderRadius: "4px 0 0 0" }} />
+                <div style={{ backgroundColor: "#3b82f6", borderRadius: "0 4px 0 0" }} />
+                <div style={{ backgroundColor: "#10b981", borderRadius: "0 0 0 4px" }} />
+                <div style={{ backgroundColor: "#f59e0b", borderRadius: "0 0 4px 0" }} />
+              </div>
+            </div>
+          ),
+          isInteractive: true,
+        },
+        {
+          id: "wordsearch",
+          name: locale === "ar" ? "البحث عن الكلمات" : "Word Search",
+          bg: "linear-gradient(135deg, #ec4899 0%, #be185d 100%)",
+          mark: "ABC",
+          textColor: "#fff",
+          markSize: 40,
+          isInteractive: true,
+        },
+        {
+          id: "reactiontime",
+          name: locale === "ar" ? "سرعة الاستجابة" : "Reaction Time",
+          bg: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+          mark: "",
+          textColor: "#fff",
+          customRender: () => (
+            <div className="relative flex items-center justify-center" style={{ width: 150, height: 150 }}>
+              <div className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center">
+                <div className="w-12 h-12 bg-white rounded-full animate-pulse" />
+              </div>
+            </div>
+          ),
+          isInteractive: true,
+        },
+        {
+          id: "brainmath",
+          name: locale === "ar" ? "رياضيات العقل" : "Brain Math",
+          bg: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          mark: "",
+          textColor: "#fff",
+          customRender: () => (
+            <div className="relative flex items-center justify-center" style={{ width: 150, height: 150 }}>
+              <div className="flex flex-col items-center">
+                <span style={{ fontSize: 40 }}>🧠</span>
+                <span className="font-black text-2xl" style={{ marginTop: -10 }}>7 + 5</span>
+              </div>
+            </div>
+          ),
+          isInteractive: true,
+        },
+        {
+          id: "triviaquiz",
+          name: locale === "ar" ? "مسابقة المعلومات" : "Trivia Quiz",
+          bg: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+          mark: "❓",
+          textColor: "#fff",
+          markSize: 60,
+          isInteractive: true,
+        },
+        {
+          id: "picturepuzzle",
+          name: locale === "ar" ? "لعبة الألغاز" : "Puzzle",
+          bg: "linear-gradient(135deg, #1A56DB 0%, #06B6D4 100%)",
+          mark: "",
+          textColor: "#fff",
+          customRender: () => (
+            <div className="relative flex items-center justify-center" style={{ width: 150, height: 150 }}>
+              <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <filter id="pieceShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="4" stdDeviation="3" floodOpacity="0.25"/>
+                  </filter>
+                </defs>
+                <path 
+                  d="M35 35 H65 V45 A7 7 0 1 1 65 55 V65 H55 A7 7 0 1 0 45 65 H35 V35 Z" 
+                  fill="white" 
+                  filter="url(#pieceShadow)"
+                />
+              </svg>
+            </div>
+          ),
+          isInteractive: true,
+        },
+        {
+          id: "wordchain",
+          name: locale === "ar" ? "سلسلة الكلمات" : "Word Chain",
+          bg: "#065F46",
+          mark: "",
+          textColor: "#fff",
+          customRender: () => (
+            <div className="relative flex items-center justify-center" style={{ width: 150, height: 150 }}>
+              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+            </div>
+          ),
+          isInteractive: true,
+        },
       ],
     },
     Meeting: {
@@ -593,8 +793,9 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#fff",
           mark: "",
           textColor: "#333",
+          packageName: "com.microsoft.teams",
           customRender: () => (
-            <img src={teamsIcon} alt="Teams" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={teamsIcon} alt="Teams" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
         {
@@ -604,7 +805,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           mark: "",
           textColor: "#333",
           customRender: () => (
-            <img src={webexIcon} alt="Webex" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={webexIcon} alt="Webex" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
         {
@@ -613,8 +814,9 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#fff",
           mark: "",
           textColor: "#333",
+          packageName: "com.skype.raider",
           customRender: () => (
-            <img src={skypeIcon} alt="Skype" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={skypeIcon} alt="Skype" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
         {
@@ -624,7 +826,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           mark: "",
           textColor: "#333",
           customRender: () => (
-            <img src={zoomIcon} alt="Zoom" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={zoomIcon} alt="Zoom" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
         {
@@ -634,7 +836,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           mark: "",
           textColor: "#333",
           customRender: () => (
-            <img src={meetIcon} alt="Google Meet" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={meetIcon} alt="Google Meet" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
       ],
@@ -644,34 +846,16 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
       labelKey: "launcher.internet",
       icon: Globe,
       apps: [
-        ...(theme.id === "dsfh"
-          ? [
-              {
-                id: "dsfh-updates",
-                name: locale === "ar" ? "تحديثات فقيه" : "Fakeeh Updates",
-                bg: theme.primary,
-                mark: "",
-                textColor: "#fff",
-                url: locale === "ar" ? "https://dsfhriyadh.fakeeh.care/about-us/updates" : "https://en.dsfhriyadh.fakeeh.care/about-us/updates",
-                customRender: () => (
-                  <div className="flex flex-col items-center justify-center p-4" style={{ width: 150, height: 150 }}>
-                    <div className="flex items-center justify-center mb-2" style={{ width: 64, height: 64, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: theme.radiusLg }}>
-                      <Globe size={32} color="#fff" strokeWidth={1.5} />
-                    </div>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#fff", textAlign: "center" }}>{locale === "ar" ? "آخر التحديثات" : "Latest Updates"}</span>
-                  </div>
-                ),
-              },
-            ]
-          : []),
+        // Removed Fakeeh Updates per user request
         {
           id: "chrome",
-          name: locale === "ar" ? "كروم" : "Chrome",
+          name: locale === "ar" ? "جوجل" : "Google",
           bg: "#fff",
           mark: "",
           textColor: "#333",
+          url: "https://www.google.com/search?igu=1",
           customRender: () => (
-            <img src={chromeIcon} alt="Chrome" style={{ width: 90, height: 90, objectFit: "contain" }} />
+            <ApiImage src={chromeIcon} alt="Chrome" style={{ width: 90, height: 90, objectFit: "contain" }} />
           ),
         },
         {
@@ -680,16 +864,18 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#fff",
           mark: "",
           textColor: "#fff",
+          url: "https://saudigazette.com.sa",
           customRender: () => (
-            <img src={saudiGazetteLogo} alt="Saudi Gazette" style={{ width: 110, height: 110, objectFit: "contain" }} />
+            <ApiImage src={saudiGazetteLogo} alt="Saudi Gazette" style={{ width: 110, height: 110, objectFit: "contain" }} />
           ),
         },
         {
           id: "bbc",
-          name: locale === "ar" ? "بي بي سي الإخبارية" : "BBC News",
+          name: locale === "ar" ? "بي بي سي" : "BBC News",
           bg: "#1a1a1a",
           mark: "",
           textColor: "#fff",
+          url: "https://www.bbc.com/news/lite",
           customRender: () => (
             <div className="flex flex-col items-center gap-1">
               <div className="flex">
@@ -709,8 +895,34 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#CC0000",
           mark: "CNN",
           textColor: "#fff",
+          url: "https://edition.cnn.com/mobile",
           markSize: 32,
           markWeight: 900,
+        },
+        {
+          id: "wikipedia",
+          name: locale === "ar" ? "ويكيبيديا" : "Wikipedia",
+          bg: "#fff",
+          mark: "W",
+          textColor: "#333",
+          url: "https://www.wikipedia.org",
+          customRender: () => (
+            <div className="flex items-center justify-center bg-slate-100 rounded-xl w-full h-full">
+              <span className="text-5xl font-serif text-slate-800">W</span>
+            </div>
+          ),
+        },
+        {
+          id: "url-browser",
+          name: locale === "ar" ? "متصفح الروابط" : "URL Browser",
+          bg: "#fff",
+          mark: "",
+          textColor: "#fff",
+          customRender: () => (
+            <div className="flex flex-col items-center justify-center w-full h-full">
+              <ApiImage src={edgeLogo} alt="Browser" style={{ width: 120, height: 120, objectFit: "contain" }} />
+            </div>
+          ),
         },
         {
           id: "okaz",
@@ -718,8 +930,9 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           bg: "#fff",
           mark: "",
           textColor: "#333",
+          url: "https://okaz.com.sa",
           customRender: () => (
-            <img src={okazIcon} alt="Okaz" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={okazIcon} alt="Okaz" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
         },
       ],
@@ -736,7 +949,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           mark: "",
           textColor: "#333",
           customRender: () => (
-            <img src={calculatorIcon} alt="Calculator" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={calculatorIcon} alt="Calculator" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
           isInteractive: true,
         },
@@ -761,7 +974,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           mark: "",
           textColor: "#333",
           customRender: () => (
-            <img src={alarmIcon} alt="Reminders" style={{ width: 150, height: 150, objectFit: "cover" }} />
+            <ApiImage src={alarmIcon} alt="Reminders" style={{ width: 150, height: 150, objectFit: "cover" }} />
           ),
           isInteractive: true,
         },
@@ -938,7 +1151,7 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           mark: "",
           textColor: "#333",
           customRender: () => (
-            <img src={mirrorIcon} alt="Mirror" style={{ width: 130, height: 130, objectFit: "contain" }} />
+            <ApiImage src={mirrorIcon} alt="Mirror" style={{ width: 130, height: 130, objectFit: "contain" }} />
           ),
           isInteractive: true,
         },
@@ -948,7 +1161,31 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
       label: "Education",
       labelKey: "launcher.education",
       icon: BookOpenText,
-      apps: theme.id === "caremed"
+      apps: theme.id === "careinn"
+        ? /* ── CareInn product materials ── */
+          [
+            { id: "ci-edu-careinn15",  name: "CareInn15",    pdf: "/pdfs/careinn/CareInn15.pdf" },
+            { id: "ci-edu-caretv",     name: "CareTV",       pdf: "/pdfs/careinn/CareTV.pdf" },
+            { id: "ci-edu-caresuite",  name: "CareSuite",    pdf: "/pdfs/careinn/CareSuite.pdf" },
+            { id: "ci-edu-careconnect",name: "CareConnect",  pdf: "/pdfs/careinn/CareConnect.pdf" },
+            { id: "ci-edu-caresign",   name: "CareSign",     pdf: "/pdfs/careinn/CareSign.pdf" },
+          ].map((item) => ({
+            id: item.id,
+            name: item.name,
+            bg: "transparent",
+            mark: "",
+            textColor: "#333",
+            pdfSource: item.pdf,
+            customRender: () => (
+              <div className="flex flex-col items-center justify-center text-center" style={{ width: 150, height: 150, padding: 12, background: "#fff", borderRadius: theme.radiusXl }}>
+                <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: "#E8453C", borderRadius: theme.radiusLg }}>
+                  <FileText size={32} color="#fff" strokeWidth={1.5} />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 800, color: "#E8453C", letterSpacing: 0.5 }}>PDF</span>
+              </div>
+            ),
+          }))
+        : theme.id === "caremed"
         ? /* ── Care Medical patient education from care.med.sa ── */
           [
             { id: "cm-edu-normal-birth", nameKey: "caremed.edu.normalBirth", viewId: "30715" },
@@ -1036,6 +1273,27 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
                   <FileText size={32} color="#fff" strokeWidth={1.5} />
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 800, color: "#E8453C", letterSpacing: 0.5 }}>PDF</span>
+              </div>
+            ),
+          }))
+        : theme.id === "burjeel"
+        ? /* ── Burjeel Hospital educational materials ── */
+          [
+            { id: "bj-edu-trust", name: "burjeel.edu.fertility", url: "https://trustfertility.com/patients-educational-material/" },
+            { id: "bj-edu-video", name: "burjeel.edu.guide", url: "https://www.youtube.com/watch?v=ifnyskCCV0g", isVideo: true },
+          ].map((item) => ({
+            id: item.id,
+            name: t(item.name),
+            bg: "transparent",
+            mark: "",
+            textColor: "#333",
+            url: item.url,
+            customRender: () => (
+              <div className="flex flex-col items-center justify-center text-center" style={{ width: 150, height: 150, padding: 12, background: "#fff", borderRadius: theme.radiusXl }}>
+                <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: item.isVideo ? "#E8453C" : theme.primary, borderRadius: theme.radiusLg }}>
+                  {item.isVideo ? <PlayCircle size={32} color="#fff" /> : <BookOpenText size={32} color="#fff" />}
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 800, color: item.isVideo ? "#E8453C" : theme.primary, letterSpacing: 0.5 }}>{item.isVideo ? "VIDEO" : "LINK"}</span>
               </div>
             ),
           }))
@@ -1129,8 +1387,6 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
               { id: "edu-emotional-health", name: "Emotional Health\nAfter Delivery", nameKey: "edu.emotionalHealth", type: "video" as const },
               { id: "edu-scar-care", name: "Scar Care &\nHealing Timeline", nameKey: "edu.scarCare", type: "pdf" as const },
               { id: "edu-sleep-tips", name: "Sleep Positions\nAfter C-Section", nameKey: "edu.sleepTips", type: "pdf" as const },
-              { id: "edu-pelvic-floor", name: "Pelvic Floor\nExercises", nameKey: "edu.pelvicFloor", type: "video" as const },
-              { id: "edu-when-to-call", name: "When to Call\nYour Doctor", nameKey: "edu.whenToCall", type: "pdf" as const },
             ].map((item) => ({
               id: item.id,
               name: item.name,
@@ -1161,32 +1417,59 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
 
 /* ── App Tile ──────────────────────────────────────────────── */
 
-function AppTile({ app, onTap }: { app: AppItem; onTap: () => void }) {
-  const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.15)");
-  const { t } = useLocale();
+function AppTile({ app, onTap, onLongPress, isLocked }: { app: AppItem; onTap: () => void; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
-  const displayName = app.nameKey ? t(app.nameKey) : app.name;
+  const { t, locale } = useLocale();
+  const [pressed, setPressed] = useState(false);
+  const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.15)");
+
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
+  const displayName = app.nameKey
+    ? t(app.nameKey)
+    : (locale === "ar" && app.nameAr ? app.nameAr : app.name);
 
   return (
     <button
-      onPointerDown={onPointerDown}
-      onClick={onTap}
-      className="relative overflow-hidden flex flex-col items-center gap-3 hover:scale-[1.05] active:scale-[0.94] transition-transform duration-200 cursor-pointer"
+      data-nav="true"
+      onPointerDown={(e) => { onPointerDown(e); handlers.onPointerDown(); setPressed(true); }}
+      onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
+      onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
+      onClick={() => handleClick(onTap)}
+      className="relative flex flex-col items-center gap-3 transition-transform duration-100 ease-out active:scale-95 cursor-pointer"
+      style={{ 
+        width: 160, 
+        transform: pressed ? "scale(0.96)" : "scale(1)",
+        outline: "none",
+        border: "none",
+        background: "none",
+        padding: 0
+      }}
     >
-      {rippleElements}
+      {/* Icon Square */}
       <div
-        className="flex items-center justify-center relative overflow-hidden"
+        className="relative overflow-hidden flex items-center justify-center shrink-0"
         style={{
-          width: "150px",
-          height: "150px",
+          width: 140,
+          height: 140,
           borderRadius: theme.radiusXl,
           background: app.bg,
+          boxShadow: "0 10px 25px -5px rgba(0,0,0,0.3), 0 8px 10px -6px rgba(0,0,0,0.3)",
+          border: "1.5px solid rgba(255,255,255,0.1)",
         }}
       >
+        {rippleElements}
+        {isLocked && <LockBadge />}
         {app.customRender ? (
           <div className="absolute inset-0 flex items-center justify-center overflow-hidden" style={{ borderRadius: theme.radiusXl }}>
             {app.customRender()}
           </div>
+        ) : app.imageUrl ? (
+          <ImageWithFallbackInTile
+            src={app.imageUrl}
+            name={app.nameKey ? t(app.nameKey) : app.name}
+            type={app.appType ?? "url"}
+            tileRadius={theme.radiusXl}
+          />
         ) : (
           <span
             className="relative z-10"
@@ -1220,6 +1503,55 @@ function AppTile({ app, onTap }: { app: AppItem; onTap: () => void }) {
   );
 }
 
+function ImageWithFallbackInTile({
+  src, name, type, tileRadius,
+}: {
+  src: string;
+  name: string;
+  type: "apk" | "url" | "pdf";
+  tileRadius: string;
+}) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed || !src || src === "?") {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center" style={{ borderRadius: tileRadius }}>
+        <AppIconPlaceholder
+          name={name}
+          type={type === "pdf" ? "url" : type}
+          size={120}
+          borderRadius={20}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <ApiImage
+      src={src}
+      alt={name}
+      onError={() => setFailed(true)}
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        borderRadius: tileRadius,
+      }}
+      showFallbackWhileLoading
+      fallback={
+        <div className="absolute inset-0 flex items-center justify-center" style={{ borderRadius: tileRadius }}>
+          <AppIconPlaceholder
+            name={name}
+            type={type === "pdf" ? "url" : type}
+            size={120}
+            borderRadius={20}
+          />
+        </div>
+      }
+    />
+  );
+}
+
 /* ── Overlay ──────────────────────────────────────────────── */
 
 export function AppLauncher({
@@ -1227,17 +1559,33 @@ export function AppLauncher({
   onClose,
   onLaunchGame,
   onLaunchTool,
+  onLaunchIptv,
+  onOpenUrl,
+  onRequestPinSetup,
+  lockMenu,
+  onLockMenuChange: setLockMenu = () => {}
 }: {
   categoryKey: string;
   onClose: () => void;
   onLaunchGame?: (gameId: string) => void;
   onLaunchTool?: (toolId: string) => void;
+  onLaunchIptv?: () => void;
+  onOpenUrl?: (url: string) => void;
+  onRequestPinSetup?: () => void;
+  lockMenu?: string | null;
+  onLockMenuChange?: (val: string | null) => void;
 }) {
   const { theme } = useTheme();
   const { t, locale, isRTL } = useLocale();
+  const lockedIds = useLockedApps();
   const [activeKey, setActiveKey] = useState(categoryKey);
-  const allCategories = getCategories(theme, locale);
-  const category = allCategories[activeKey];
+  const allCategories = getCategories(theme, locale, t);
+  const apiPdfApps = useApiPdfApps(activeKey);
+  const baseCategory = allCategories[activeKey];
+  const category = baseCategory ? {
+    ...baseCategory,
+    apps: dedupeApps([...baseCategory.apps, ...apiPdfApps]),
+  } : baseCategory;
   const [launchedApp, setLaunchedApp] = useState<string | null>(null);
   const [showPdf, setShowPdf] = useState(false);
   const [pdfSource, setPdfSource] = useState<string | undefined>(undefined);
@@ -1247,6 +1595,66 @@ export function AppLauncher({
   const [isSwiping, setIsSwiping] = useState(false);
   const swipeStartX = useRef<number | null>(null);
   const touchOffset = useRef<number>(0);
+
+  // APK install progress state
+  const [installingApp, setInstallingApp] = useState<{
+    packageName: string;
+    name: string;
+    apkUrl: string;
+    progress?: number;
+  } | null>(null);
+
+  // Listen for install progress/success/error events from Android
+  useEffect(() => {
+    const onProgress = (e: Event) => {
+      const { packageName, percent } = (e as CustomEvent).detail;
+      setInstallingApp(prev => {
+        if (prev && prev.packageName === packageName) {
+          return { ...prev, progress: percent };
+        }
+        return prev;
+      });
+    };
+    const onSuccess = (e: Event) => {
+      const { packageName } = (e as CustomEvent).detail;
+      try {
+        // rebuild the allowlist from cached packages so the new app is allowed
+        const allApk = getPackagesCache()
+          .filter((p: any) => p.type === "APK" && p.packageName)
+          .map((p: any) => p.packageName);
+        if (!allApk.includes(packageName)) allApk.push(packageName);
+        window.AndroidSystem?.setLaunchableApps?.(JSON.stringify(allApk));
+      } catch {}
+      window.AndroidSystem?.launchApp?.(packageName);
+      setInstallingApp(null);
+    };
+    const onError = (e: Event) => {
+      const { packageName } = (e as CustomEvent).detail;
+      setInstallingApp(prev => {
+        if (prev?.packageName === packageName) {
+          window.AndroidSystem?.showToast?.(
+            "Installation failed. Opening web version.", false);
+          return null;
+        }
+        return prev;
+      });
+    };
+    window.addEventListener("apk-install-progress", onProgress);
+    window.addEventListener("apk-install-success",  onSuccess);
+    window.addEventListener("apk-install-error",    onError);
+    return () => {
+      window.removeEventListener("apk-install-progress", onProgress);
+      window.removeEventListener("apk-install-success",  onSuccess);
+      window.removeEventListener("apk-install-error",    onError);
+    };
+  }, []);
+
+  // Internet Browser States (hidden for now, might be used later)
+  // const [showBrowser, setShowBrowser] = useState(false);
+  // const [browserUrl, setBrowserUrl] = useState("");
+  const [showUrlNavigator, setShowUrlNavigator] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [urlError, setUrlError] = useState("");
 
   // Reset page index when switching categories
   useEffect(() => {
@@ -1296,24 +1704,114 @@ export function AppLauncher({
   };
   const currentApps = category.apps.slice(pageIndex * appsPerPage, (pageIndex + 1) * appsPerPage);
 
-  const handleAppTap = (app: AppItem) => {
-    // Check if it's a tool first (based on category)
+  const isValidUrl = (input: string) => {
+    const val = input.trim().toLowerCase();
+    
+    // 1. Block any input with spaces (this prevents search engine usage)
+    if (val.includes(' ')) return false;
+
+    // 2. Check for direct URL indicators
+    const hasProtocol = val.startsWith('http://') || val.startsWith('https://');
+    const hasWww = val.startsWith('www.');
+    const hasDomainExtension = val.includes('.') && val.split('.').pop()!.length >= 2;
+
+    // Must be either a protocol URL or a clear domain.com string
+    return hasProtocol || hasWww || hasDomainExtension;
+  };
+
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const input = searchInput.trim();
+    if (!input) return;
+
+    if (isValidUrl(input)) {
+      setUrlError("");
+      let finalUrl = input;
+      if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+        finalUrl = 'https://' + finalUrl;
+      }
+
+      // Special handling for Google to make it iframe-friendly
+      if (finalUrl.includes("google.com") && !finalUrl.includes("igu=1")) {
+        finalUrl = `https://www.google.com/search?igu=1`;
+      }
+      
+      window.open(finalUrl, "_blank", "noopener,noreferrer");
+    } else {
+      setUrlError(t("launcher.invalidUrl") || "Please enter a valid URL");
+    }
+  };
+
+  const handleAppTap = (app: any) => {
+    console.log("[TAP]", JSON.stringify({
+      id: app.id, packageName: app.packageName, apkUrl: app.apkUrl,
+      url: app.url, isInteractive: app.isInteractive,
+      appType: app.appType, isAndroid: isAndroidApp()
+    }));
+
+    // Special case for the standalone URL Browser app
+    if (app.id === "url-browser") {
+      setShowUrlNavigator(true);
+      return;
+    }
+
+    // 1a. Native APK app — launch if installed, else install
+    if (app.packageName && isAndroidApp()) {
+      if (apps.isInstalled(app.packageName)) {
+        window.AndroidSystem?.launchApp?.(app.packageName);
+        return;
+      }
+      if (app.apkUrl) {
+        setInstallingApp({
+          packageName: app.packageName,
+          name: app.nameKey ? t(app.nameKey) : app.name,
+          apkUrl: app.apkUrl,           // already cloud-keyed via Change 2
+          progress: 0,
+        });
+        window.AndroidSystem?.installApk?.(app.apkUrl, app.packageName);
+        return;
+      }
+      if (app.url) {
+        if (onOpenUrl) onOpenUrl(app.url);
+        else window.open(app.url, "_blank", "noopener,noreferrer");
+        return;
+      }
+      return;
+    }
+
+    // 1b. URL fallback
+    if (app.url) {
+      if (isAndroidApp() && onOpenUrl) {
+        onOpenUrl(app.url);
+      } else {
+        window.open(app.url, "_blank", "noopener,noreferrer");
+      }
+      return;
+    }
+
+    // 2. Check if it's a category/folder icon (to switch views)
+    const categoryIds = ["media", "games", "tools", "social", "reading", "meeting", "internet", "education"];
+    if (categoryIds.includes(app.id)) {
+      const targetKey = app.id.charAt(0).toUpperCase() + app.id.slice(1);
+      setActiveKey(targetKey as CategoryKey);
+      setPageIndex(0); // Reset page on category switch
+      return;
+    }
+
+    // 3. Category-specific interactive logic (Tools & Games)
     if (category.labelKey === "launcher.tools" && app.isInteractive && onLaunchTool) {
       onLaunchTool(app.id);
       return;
     }
 
-    // Check if it's an interactive game
     if (category.labelKey === "launcher.games" && app.isInteractive && onLaunchGame) {
       onLaunchGame(app.id);
       return;
     }
 
-    if (app.url) {
-      window.open(app.url, "_blank", "noopener,noreferrer");
-      return;
-    }
+    // 4. (Removed redundant app.url check)
 
+    // 5. Handle PDFs
     if (app.pdfSource) {
       setPdfSource(app.pdfSource);
       setPdfTitle(app.name);
@@ -1322,19 +1820,30 @@ export function AppLauncher({
     }
 
     if (app.id === "careinn-whitepaper") {
-      setPdfSource(undefined); // use default hardcoded one
+      setPdfSource(undefined); 
       setPdfTitle("CareInn Whitepaper");
       setShowPdf(true);
       return;
     }
 
+    // 6. Handle IPTV
     if (app.id === "iptv") {
-      setLaunchedApp("com.bitsarabia.bedsideterminalsolution/.careinn.iptvStreamActivity");
-      setTimeout(() => setLaunchedApp(null), 2000);
+      if (onLaunchIptv) {
+        onLaunchIptv();
+        return;
+      }
+      if (!isAndroidApp()) {
+        console.warn('IPTV is only available in the kiosk app');
+        return;
+      }
+      apps.launch(KNOWN_APPS.iptv);
       return;
     }
 
-    const displayName = app.nameKey ? t(app.nameKey) : app.name;
+    // 7. General Toast feedback for other apps
+    const displayName = app.nameKey
+      ? t(app.nameKey)
+      : (locale === "ar" && app.nameAr ? app.nameAr : app.name);
     setLaunchedApp(displayName);
     setTimeout(() => setLaunchedApp(null), 2000);
   };
@@ -1347,12 +1856,12 @@ export function AppLauncher({
     <div
       className="absolute inset-0 z-50 flex flex-col"
       style={{
-        background: `linear-gradient(160deg, ${primary} 0%, ${theme.primaryDark} 40%, #0a1628 100%)`,
+        background: `linear-gradient(160deg, ${theme.primary} 0%, ${theme.primaryDark} 40%, #0a1628 100%)`,
         animation: "appLauncherIn 0.2s ease-out",
       }}
     >
       {/* Hospital background image — subtle, blue-dominant */}
-      <img
+      <ApiImage
         src={theme.heroImageUrl}
         alt=""
         aria-hidden
@@ -1425,7 +1934,19 @@ export function AppLauncher({
                   }}
                 >
                   {pageApps.map((app) => (
-                    <AppTile key={app.id} app={app} onTap={() => handleAppTap(app)} />
+                    <AppTile
+                      key={app.id}
+                      app={app}
+                      onTap={() => {
+                        if (lockedIds.has(app.id)) {
+                          setLockMenu(app.id + "__open");
+                        } else {
+                          handleAppTap(app);
+                        }
+                      }}
+                      onLongPress={() => setLockMenu(app.id)}
+                      isLocked={lockedIds.has(app.id)}
+                    />
                   ))}
                 </div>
               </div>
@@ -1541,6 +2062,187 @@ export function AppLauncher({
           pdfSource={pdfSource}
           title={pdfTitle}
         />
+      )}
+
+      {/* Dedicated URL Navigator Screen (Standalone App View) */}
+      {showUrlNavigator && (
+        <div 
+          className="absolute inset-0 z-[60] flex flex-col animate-in fade-in zoom-in-95 duration-200"
+          style={{ 
+            background: theme.background,
+          }}
+        >
+          <InternalPageHeader 
+            title={locale === "ar" ? "متصفح الروابط" : "URL Browser"}
+            icon={<Globe size={26} color={theme.primary} />}
+            onClose={() => setShowUrlNavigator(false)}
+          />
+          
+          <div className="flex-1 flex flex-col items-center justify-center px-16">
+            <div className="w-full max-w-3xl animate-in slide-in-from-bottom-8 duration-500">
+              <h3 className="text-lg font-medium mb-6 text-center" style={{ color: theme.textMuted }}>
+                {locale === "ar" ? "أدخل رابط الموقع المباشر" : "Enter Direct Website URL"}
+              </h3>
+              
+              <form 
+                onSubmit={handleSearchSubmit}
+                className="flex items-stretch h-20 rounded-2xl overflow-hidden border backdrop-blur-xl"
+                style={{ backgroundColor: theme.surfaceElevated, borderColor: theme.borderDefault }}
+              >
+                <div className="flex-1 px-8 flex items-center">
+                  <input 
+                    type="text"
+                    autoFocus
+                    value={searchInput}
+                    onChange={(e) => { setSearchInput(e.target.value); if (urlError) setUrlError(""); }}
+                    placeholder="https://example.com"
+                    className="w-full bg-transparent border-none outline-none text-2xl font-medium"
+                    style={{ color: theme.textHeading }}
+                    dir="ltr"
+                    spellCheck={false}
+                    autoComplete="off"
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  className="px-12 font-bold text-xl transition-all active:scale-95"
+                  style={{ backgroundColor: theme.primary, color: theme.textInverse }}
+                >
+                  GO
+                </button>
+              </form>
+              
+              {urlError && (
+                <div className="mt-6 text-center text-red-400 font-bold text-lg animate-bounce">
+                  {urlError}
+                </div>
+              )}
+
+              <div className="mt-12 grid grid-cols-2 gap-6 text-sm" style={{ color: theme.textMuted }}>
+                <div className="flex items-center gap-3 p-4 rounded-xl" style={{ backgroundColor: theme.surfaceElevated }}>
+                  <Shield size={18} />
+                  <span>Secure Direct Access</span>
+                </div>
+                <div className="flex items-center gap-3 p-4 rounded-xl" style={{ backgroundColor: theme.surfaceElevated }}>
+                  <X size={18} />
+                  <span>No Search Engine</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Embedded Browser Overlay (hidden for now, might be used later) */}
+      {/* 
+      {showBrowser && (
+        <InternetBrowser 
+          key={browserUrl} 
+          initialUrl={browserUrl} 
+          onClose={() => {
+            setShowBrowser(false);
+          }} 
+        />
+      )}
+      */}
+
+      {/* App Lock Menu Overlay */}
+      {lockMenu && (
+        <AppLockMenu
+          appId={lockMenu.replace("__open", "")}
+          appName={category.apps.find(a => a.id === lockMenu.replace("__open", ""))?.name || lockMenu.replace("__open", "")}
+          isCurrentlyLocked={lockedIds.has(lockMenu.replace("__open", ""))}
+          anchorRect={null}
+          onClose={() => setLockMenu(null)}
+          onRequestPinSetup={onRequestPinSetup || (() => {})}
+          onOpenApp={lockMenu.endsWith("__open") ? () => {
+            const id = lockMenu.replace("__open", "");
+            const targetApp = category.apps.find(a => a.id === id);
+            if (targetApp) handleAppTap(targetApp);
+          } : undefined}
+        />
+      )}
+
+      {/* APK Install Progress Overlay */}
+      {installingApp && (
+        <div style={{
+          position:       "fixed",
+          inset:          0,
+          zIndex:         9998,
+          background:     "rgba(0,0,0,0.75)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+          display:        "flex",
+          flexDirection:  "column",
+          alignItems:     "center",
+          justifyContent: "center",
+        }}>
+          <div style={{
+            backgroundColor: theme.surface,
+            borderRadius:    theme.radiusXl,
+            padding:         "36px 48px",
+            display:         "flex",
+            flexDirection:   "column",
+            alignItems:      "center",
+            gap:             "20px",
+            minWidth:        "320px",
+            boxShadow:       "0 24px 64px rgba(0,0,0,0.5)",
+          }}>
+            {/* Pulsing icon */}
+            <div style={{
+              width: 56,
+              height: 56,
+              borderRadius: "50%",
+              backgroundColor: theme.primarySubtle,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              animation: "breathePulse 1.6s ease-in-out infinite",
+            }}>
+              <Download size={28} style={{ color: theme.primary }} />
+            </div>
+
+            {/* App name */}
+            <p style={{
+              fontFamily: theme.fontFamily,
+              fontSize: "17px",
+              fontWeight: 700,
+              color: theme.textHeading,
+              margin: 0,
+              textAlign: "center",
+            }}>
+              {t("appInstall.installing")} {installingApp.name}
+            </p>
+
+            {/* Progress bar */}
+            <div style={{
+              width:           "100%",
+              height:          "8px",
+              borderRadius:    "4px",
+              backgroundColor: theme.borderDefault ?? "rgba(0,0,0,0.1)",
+              overflow:        "hidden",
+            }}>
+              <div style={{
+                height:          "100%",
+                width:           `${installingApp.progress ?? 0}%`,
+                borderRadius:    "4px",
+                backgroundColor: theme.primary,
+                transition:      "width 0.3s ease",
+              }} />
+            </div>
+
+            {/* Percentage + hint */}
+            <p style={{
+              fontFamily: theme.fontFamily,
+              fontSize: "13px",
+              color: theme.textMuted,
+              margin: 0,
+              textAlign: "center",
+            }}>
+              {installingApp.progress ?? 0}% · {t("appInstall.hint")}
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );

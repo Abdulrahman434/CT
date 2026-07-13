@@ -10,6 +10,7 @@ import { createContext, useContext, useState, useCallback, ReactNode, useEffect 
  *   "slh"      → Saint Louis Hospital only
  *   "caremed"  → Care Medical only
  *   "fakeeh"   → Dr. Soliman Fakeeh Hospital only
+ *   "prime"    → Prime Hospital only
  *   "careinn"  → Full access (all hospitals, configurator enabled)
  *
  * ═══════════════════════════════════════════════════════════════════════════ */
@@ -22,6 +23,8 @@ export const HASHED_PASSWORD_MAP: Record<string, string> = {
   "8b7a9742d607bb9e1d5689ee574d24e0e7d9771c73208c08750473b886ef61ba": "caremed",
   "183f1e06fe841b761a073d9057ba11164292e7846fbe8e474230aebb4635f41e": "dsfh",    // "fakeeh"
   "7e453343b3477a0d9538df8e905ecb160aea04b9215528ffc21056ddb6d2cd09": "careinn", // full access
+  "c598203581040f62b32d0d9c64555333e5ae42dc82878ed73644bc2abf3dbdde": "imc",
+  "dccc5d01dabcd1c0b9fa89c91e7f4bde603121ee0172b4ff394e6bb30d295e41": "prime",
 };
 
 /** The SHA-256 hash for the careinn full-access password */
@@ -76,36 +79,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [authState]);
 
   const login = useCallback(async (password: string): Promise<boolean> => {
-    const normalizedPassword = password.toLowerCase().trim();
+    const normalizedInput = password.toLowerCase().trim();
+    const isCmsMode = normalizedInput.endsWith("-hospital");
+    const basePassword = isCmsMode ? normalizedInput.slice(0, -9) : normalizedInput;
     
     // Create SHA-256 hash using Web Crypto API (requires secure context)
     let hashHex = "";
     if (window.isSecureContext && crypto?.subtle) {
-      const msgBuffer = new TextEncoder().encode(normalizedPassword);
+      const msgBuffer = new TextEncoder().encode(basePassword);
       const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     } else {
       // Fallback for non-secure contexts (direct matching for known tokens)
       // This is a safety measure for dev/hospital environments without HTTPS
-      if (normalizedPassword === "careinn") hashHex = CAREINN_HASH;
-      else if (normalizedPassword === "dallah") hashHex = "ff7bddf032faa3aad1699dcefdc3516cf2d8d58c8786b9f71174df7de47b1a39";
-      else if (normalizedPassword === "caremed") hashHex = "8b7a9742d607bb9e1d5689ee574d24e0e7d9771c73208c08750473b886ef61ba";
-      else if (normalizedPassword === "fakeeh") hashHex = "183f1e06fe841b761a073d9057ba11164292e7846fbe8e474230aebb4635f41e";
-      else if (normalizedPassword === "burjeel") hashHex = "26a692dd0d4f558fc8c3b7cb1749e812605a4095b58777d3a690cc1ebfc15f2a";
-      else if (normalizedPassword === "slh") hashHex = "025705ec8cab15dbf71655031ccc2081b8af1dde1bc70539ba56f8f20b8a7a27";
+      if (basePassword === "careinn") hashHex = CAREINN_HASH;
+      else if (basePassword === "dallah") hashHex = "ff7bddf032faa3aad1699dcefdc3516cf2d8d58c8786b9f71174df7de47b1a39";
+      else if (basePassword === "caremed") hashHex = "8b7a9742d607bb9e1d5689ee574d24e0e7d9771c73208c08750473b886ef61ba";
+      else if (basePassword === "fakeeh") hashHex = "183f1e06fe841b761a073d9057ba11164292e7846fbe8e474230aebb4635f41e";
+      else if (basePassword === "burjeel") hashHex = "26a692dd0d4f558fc8c3b7cb1749e812605a4095b58777d3a690cc1ebfc15f2a";
+      else if (basePassword === "slh") hashHex = "025705ec8cab15dbf71655031ccc2081b8af1dde1bc70539ba56f8f20b8a7a27";
+      else if (basePassword === "imc") hashHex = "c598203581040f62b32d0d9c64555333e5ae42dc82878ed73644bc2abf3dbdde";
+      else if (basePassword === "prime") hashHex = "dccc5d01dabcd1c0b9fa89c91e7f4bde603121ee0172b4ff394e6bb30d295e41";
     }
 
     const mapping = HASHED_PASSWORD_MAP[hashHex];
     if (!mapping) return false;
 
+    // CMS Opt-in handling
+    if (isCmsMode) {
+      localStorage.setItem('cms-mode', 'true');
+    } else {
+      localStorage.removeItem('cms-mode');
+    }
+
     const isFullAccess = hashHex === CAREINN_HASH;
+    const hospitalId = isFullAccess ? null : mapping;
+
+    // For careinn (full access), default to the CareInn hospital config
+    if (isFullAccess) {
+      localStorage.setItem('active-hospital-id', 'careinn');
+    } else if (hospitalId) {
+      localStorage.setItem('active-hospital-id', hospitalId);
+    }
+
     setAuthState({
       isAuthenticated: true,
       password: null, // Avoid storing plaintext password in state anymore
-      lockedHospitalId: isFullAccess ? null : mapping,
+      lockedHospitalId: hospitalId,
       isFullAccess,
     });
+
+    // Notify other contexts and hooks
+    window.dispatchEvent(new Event('hospital-changed'));
+    window.dispatchEvent(new Event('cms-mode-changed'));
+    
     return true;
   }, []);
 

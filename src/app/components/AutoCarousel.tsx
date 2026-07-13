@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ApiImage } from "./ApiImage";
 
 /**
  * AutoCarousel — fills its nearest `position: relative` parent completely.
@@ -13,6 +14,7 @@ export function AutoCarousel({
   objectFit = "cover",
   intervalSeconds = 5,
   style = {},
+  onImageClick,
 }: {
   images: string[];
   opacity?: number;
@@ -21,6 +23,7 @@ export function AutoCarousel({
   intervalSeconds?: number;
   /** Extra inline styles on the container (e.g. zIndex) */
   style?: React.CSSProperties;
+  onImageClick?: (url: string) => void;
 }) {
   const [index, setIndex] = useState(0);
   const validImages = images?.filter(Boolean) ?? [];
@@ -38,7 +41,7 @@ export function AutoCarousel({
   // Single image — no animation, just a plain fill
   if (validImages.length === 1) {
     return (
-      <img
+      <ApiImage
         src={validImages[0]}
         alt=""
         aria-hidden="true"
@@ -50,10 +53,11 @@ export function AutoCarousel({
           objectFit,
           objectPosition,
           opacity,
-          pointerEvents: "none",
-          userSelect: "none",
+          pointerEvents: onImageClick ? "auto" : "none",
+          cursor: onImageClick ? "pointer" : "default",
           ...style,
         }}
+        onClick={onImageClick ? () => onImageClick(validImages[0]) : undefined}
       />
     );
   }
@@ -68,13 +72,14 @@ export function AutoCarousel({
         width: "100%",
         height: "100%",
         overflow: "hidden",
-        pointerEvents: "none",
-        userSelect: "none",
+        pointerEvents: onImageClick ? "auto" : "none",
+        cursor: onImageClick ? "pointer" : "default",
         ...style,
       }}
+      onClick={onImageClick ? () => onImageClick(validImages[index]) : undefined}
     >
       {validImages.map((img, i) => (
-        <img
+        <ApiImage
           key={i}
           src={img}
           alt=""

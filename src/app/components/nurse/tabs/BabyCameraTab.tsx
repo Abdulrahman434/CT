@@ -1,4 +1,5 @@
 import { Baby, Eye, EyeOff, Circle } from "lucide-react";
+import { ApiImage } from "../../ApiImage";
 import { useTheme } from "../../ThemeContext";
 import { useNurseStore, nurseActions } from "../../NurseDataStore";
 
@@ -40,7 +41,7 @@ export function BabyCameraTab({ role }: { role: "nurse" | "doctor" }) {
           <div key={cam.id} className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.borderDefault}`, opacity: cam.visible ? 1 : 0.4 }}>
             {/* Video placeholder */}
             <div className="relative w-full" style={{ aspectRatio: "16/9", backgroundColor: "#000" }}>
-              <img src={cam.src} alt={cam.name} className="w-full h-full object-cover" />
+              <ApiImage src={cam.src} alt={cam.name} className="w-full h-full object-cover" />
               <div className="absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded-md" style={{ backgroundColor: "rgba(239,68,68,0.9)" }}>
                 <Circle size={7} fill="#fff" style={{ color: "#fff" }} />
                 <span style={{ fontSize: "10px", fontWeight: 800, color: "#fff", letterSpacing: "0.5px" }}>LIVE</span>

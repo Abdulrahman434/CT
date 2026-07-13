@@ -1,16 +1,44 @@
 import { useState } from "react";
+import { ApiImage } from "./ApiImage";
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, TEXT_STYLE, SPACE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { useRipple } from "./useRipple";
 import svgPaths from "../../imports/svg-ca68x68c4i";
-import { Stethoscope, BookOpenText, MessageSquareMore } from "lucide-react";
-import whatsappIcon from "@/assets/7583d2073e01dcd488456b25bc53248baf8547e8.png";
+import { Stethoscope, BookOpenText, MessageSquareMore, Utensils } from "lucide-react";
+import roomControlIcon from "@/assets/room-control-icon.png";
 import quranIcon from "@/assets/5303963df7d14bbca33ccffa43f982a464344809.png";
 import mirrorIcon from "@/assets/0ab7565691ddb8401a21da44af1864e8f4058536.png";
 import podcastIcon from "@/assets/5513479d879a8c3fcdd1f6832dd30ce350c81789.png";
 import caremedicalicon from "@/assets/caremedicalicon.png";
 import dallahPodcastIcon from "@/assets/dallah-podcast.png";
 import patientPortalIcon from "@/assets/patient-portal.png";
+import burjeelLogo from "@/assets/c8626cd3ed1ce90e9b3bab4a5f97a7315203f204.png";
+import careinnAdminPortalIcon from "@/assets/careinn-admin-icon.png";
+import { Lock } from "lucide-react";
+import { useLockedApps } from "../lib/lockedApps";
+import { useLongPress } from "../lib/useLongPress";
+import { AppLockMenu } from "./AppLockMenu";
+import { LockBadge } from "./LockBadge";
+
+export interface SectionVisibility {
+  show_iptv: boolean;
+  show_care_plan: boolean;
+  show_about_us: boolean;
+  show_prayer_times: boolean;
+  show_food_menu: boolean;
+  show_resources: boolean;
+  show_care_team: boolean;
+}
+
+const DEFAULT_VISIBILITY: SectionVisibility = {
+  show_iptv: true,
+  show_care_plan: true,
+  show_about_us: true,
+  show_prayer_times: true,
+  show_food_menu: true,
+  show_resources: true,
+  show_care_team: true,
+};
 
 interface ShortcutItem {
   labelKey: string;
@@ -20,17 +48,23 @@ interface ShortcutItem {
 
 const getShortcutItems = (hospitalId: string): ShortcutItem[] => {
   let podcastData;
-  if (hospitalId === "caremed") {
+  if (hospitalId === "careinn") {
+    podcastData = { labelKey: "shortcut.adminPortal", icon: careinnAdminPortalIcon, url: "https://dashboard.careinn.com" };
+  } else if (hospitalId === "caremed") {
     podcastData = { labelKey: "shortcut.podcast", icon: caremedicalicon, url: "https://www.youtube.com/playlist?list=PLbWY8VfHuoBSK7XeJJtutBSTeY_e7Kut3" };
   } else if (hospitalId === "dallah") {
     podcastData = { labelKey: "shortcut.dallahPodcast", icon: dallahPodcastIcon, url: "https://www.youtube.com/watch?v=FTacFGIn8aA&list=PLptiCCjrXsQt5lExxVzvUx61Hd65Tsefg" };
+  } else if (hospitalId === "burjeel") {
+    podcastData = { labelKey: "shortcut.burjeelPodcast", icon: burjeelLogo, url: "https://www.youtube.com/watch?v=OH71A4YxCG4&list=PL6o7wstkQMs50lz5esnwetX5fbgP7G8im" };
   } else {
     podcastData = { labelKey: "shortcut.podcast", icon: podcastIcon, url: "https://www.youtube.com/watch?v=1WKyerFH34U&list=PL_JVZV-KlG7oFe-fUAMnbYsWyTU9k8ljF" };
   }
 
   return [
-    { labelKey: "shortcut.whatsapp", icon: whatsappIcon, url: "" },
-    { labelKey: "shortcut.quran", icon: quranIcon, url: "https://app.quranflash.com/book/Medina1?ar#/reader/chapter/3" },
+    { labelKey: "shortcut.roomControl", icon: roomControlIcon, url: "roomcontrol" },
+    hospitalId === "burjeel"
+      ? { labelKey: "shortcut.patientPortal", icon: patientPortalIcon, url: "https://patientportal.vpshealth.com/home/login" }
+      : { labelKey: "shortcut.quran", icon: quranIcon, url: "https://app.quranflash.com/book/Medina1?ar#/reader/chapter/3" },
     hospitalId === "caremed"
       ? { labelKey: "shortcut.academy", icon: caremedicalicon, url: "https://care.classera.com/explore/courses?lang=en" }
       : hospitalId === "dallah"
@@ -67,7 +101,7 @@ const hubItems = [
 const serviceItems = [
   { label: "Consultation", labelKey: "service.consultation", svgPaths: [] as string[], lucideIcon: Stethoscope },
   { label: "Housekeeping", labelKey: "service.housekeeping", svgPaths: [svgPaths.p24941500, "M16.6667 2.5V5.83333", "M18.3333 4.16667H15", "M3.33333 14.1667V15.8333", "M4.16667 15H2.5"], clipId: "clip_house" },
-  { label: "Order Food", labelKey: "service.orderFood", svgPaths: [svgPaths.p3a2bba00, svgPaths.p7df6000, svgPaths.p30991400, "M15.8333 4.16667L10 10"], clipId: "clip_food" },
+  { label: "Order Food", labelKey: "service.orderFood", svgPaths: [] as string[], lucideIcon: Utensils },
   { label: "Call", labelKey: "service.call", svgPaths: [svgPaths.p1a7ce800], clipId: "clip_call" },
 ];
 
@@ -131,11 +165,15 @@ function HubCard({
   onTap,
   contained,
   compact,
+  onLongPress,
+  isLocked
 }: {
   item: (typeof hubItems)[0];
   onTap: () => void;
   contained?: boolean;
   compact?: boolean;
+  onLongPress: () => void;
+  isLocked: boolean;
 }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
@@ -145,13 +183,15 @@ function HubCard({
   const iconBoxSize = compact ? "48px" : "72px";
   const iconRadius = compact ? theme.radiusMd : theme.radiusLg;
 
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
+
   return (
     <button
       data-nav="true"
-      onPointerDown={(e) => { onPointerDown(e); setPressed(true); }}
-      onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
-      onClick={onTap}
+      onPointerDown={(e) => { onPointerDown(e); handlers.onPointerDown(); setPressed(true); }}
+      onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
+      onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
+      onClick={() => handleClick(onTap)}
       className={`relative overflow-hidden flex flex-col items-center justify-center ${compact ? "gap-1.5" : "gap-3"} transition-transform duration-100 ease-out cursor-pointer h-full w-full`}
       style={{
         backgroundColor: pressed ? theme.primary : contained ? theme.surfaceElevated : theme.surface,
@@ -168,7 +208,7 @@ function HubCard({
       aria-label={`${t(item.labelKey)}: ${t(item.desc)}`}
     >
       {rippleElements}
-      {/* Icon circle */}
+      {isLocked && <LockBadge />}
       <div
         className="flex items-center justify-center shrink-0"
         style={{
@@ -200,7 +240,7 @@ function HubCard({
 }
 
 /* ─── Service Card — CareMe / Call / Education ─── */
-function ServiceCard({ item, onTap, square, contained, compact }: { item: (typeof serviceItems)[0] & { viewBox?: string }; onTap?: () => void; square?: boolean; contained?: boolean; compact?: boolean }) {
+function ServiceCard({ item, onTap, square, contained, compact, onLongPress, isLocked }: { item: (typeof serviceItems)[0] & { viewBox?: string }; onTap?: () => void; square?: boolean; contained?: boolean; compact?: boolean; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.12)");
@@ -211,13 +251,15 @@ function ServiceCard({ item, onTap, square, contained, compact }: { item: (typeo
   const iconRadius = compact ? theme.radiusMd : theme.radiusLg;
   const gapSize = compact ? 2 : 3;
 
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
+
   return (
     <button
       data-nav="true"
-      onPointerDown={(e) => { onPointerDown(e); setPressed(true); }}
-      onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
-      onClick={onTap}
+      onPointerDown={(e) => { onPointerDown(e); handlers.onPointerDown(); setPressed(true); }}
+      onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
+      onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
+      onClick={() => handleClick(() => onTap?.())}
       className={`relative overflow-hidden flex flex-col items-center justify-center gap-${gapSize} transition-transform duration-100 ease-out cursor-pointer${square ? " flex-1 w-full" : " w-full h-full"}`}
       style={{
         height: square ? undefined : undefined,
@@ -236,6 +278,7 @@ function ServiceCard({ item, onTap, square, contained, compact }: { item: (typeo
       aria-label={item.label}
     >
       {rippleElements}
+      {isLocked && <LockBadge />}
       {/* Icon */}
       <div
         className="flex items-center justify-center shrink-0"
@@ -293,7 +336,7 @@ function ServiceCard({ item, onTap, square, contained, compact }: { item: (typeo
 }
 
 /* ─── Survey Card — filled version for ShortcutsColumn ─── */
-function SurveyCardFilled({ onOpen, compact }: { onOpen: () => void; compact?: boolean }) {
+function SurveyCardFilled({ onOpen, compact, onLongPress, isLocked }: { onOpen: () => void; compact?: boolean; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.12)");
@@ -303,13 +346,15 @@ function SurveyCardFilled({ onOpen, compact }: { onOpen: () => void; compact?: b
   const iconSize = compact ? 28 : 40;
   const iconRadius = compact ? theme.radiusMd : theme.radiusLg;
 
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
+
   return (
     <button
       data-nav="true"
-      onPointerDown={(e) => { onPointerDown(e); setPressed(true); }}
-      onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
-      onClick={onOpen}
+      onPointerDown={(e) => { onPointerDown(e); handlers.onPointerDown(); setPressed(true); }}
+      onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
+      onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
+      onClick={() => handleClick(onOpen)}
       className={`relative overflow-hidden flex flex-col items-center justify-center ${compact ? "gap-1" : "gap-3"} w-full h-full transition-transform duration-150 cursor-pointer`}
       style={{
         backgroundColor: pressed ? theme.accent : theme.surface,
@@ -350,17 +395,20 @@ function SurveyCardFilled({ onOpen, compact }: { onOpen: () => void; compact?: b
 }
 
 /* ─── Survey Card — outline version for QuickActionsRow ─── */
-function SurveyCard({ square, contained }: { square?: boolean; contained?: boolean }) {
+function SurveyCard({ square, contained, onOpen, onLongPress, isLocked }: { square?: boolean; contained?: boolean; onOpen: () => void; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t } = useLocale();
   const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.12)");
   const [pressed, setPressed] = useState(false);
 
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
+
   return (
     <button
-      onPointerDown={(e) => { onPointerDown(e); setPressed(true); }}
-      onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
+      onPointerDown={(e) => { onPointerDown(e); handlers.onPointerDown(); setPressed(true); }}
+      onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
+      onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
+      onClick={() => handleClick(onOpen)}
       className={`relative overflow-hidden flex flex-col items-center justify-center gap-3 w-full transition-transform duration-150 cursor-pointer${square ? " flex-1" : ""}`}
       style={{
         backgroundColor: pressed ? theme.accent : contained ? theme.accentSubtle : theme.surface,
@@ -406,28 +454,21 @@ function SurveyCard({ square, contained }: { square?: boolean; contained?: boole
   );
 }
 
-/* ─── Shortcut Tile — app icon + label ─── */
-function ShortcutTile({ item, contained, onLaunchTool }: { item: ShortcutItem; contained?: boolean; onLaunchTool?: (id: string) => void }) {
+function ShortcutTile({ item, contained, onTap, onLongPress, isLocked }: { item: ShortcutItem; contained?: boolean; onTap: () => void; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
 
-  const handleTap = () => {
-    if (item.labelKey === "shortcut.mirror" && onLaunchTool) {
-      onLaunchTool("mirror");
-      return;
-    }
-    if (item.url) {
-      window.open(item.url, "_blank", "noopener,noreferrer");
-    }
-  };
+  // handleTap removed, using onTap from props
+
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
 
   return (
     <button
-      onPointerDown={() => setPressed(true)}
-      onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
-      onClick={handleTap}
+      onPointerDown={() => { handlers.onPointerDown(); setPressed(true); }}
+      onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
+      onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
+      onClick={() => handleClick(onTap)}
       className="relative overflow-hidden flex flex-col items-center justify-center gap-2 transition-transform duration-150 cursor-pointer w-full h-full"
       style={{
         borderRadius: theme.radiusCard,
@@ -443,12 +484,13 @@ function ShortcutTile({ item, contained, onLaunchTool }: { item: ShortcutItem; c
       }}
       aria-label={t(item.labelKey)}
     >
-      {item.labelKey === "shortcut.patientPortal" || item.labelKey === "shortcut.dallahPodcast" ? (
+      {isLocked && <LockBadge />}
+      {item.labelKey === "shortcut.patientPortal" || item.labelKey === "shortcut.dallahPodcast" || item.labelKey === "shortcut.burjeelPodcast" || item.labelKey === "shortcut.adminPortal" ? (
         <div 
           style={{
             width: SPACE[12],
             height: SPACE[12],
-            backgroundColor: item.labelKey === "shortcut.dallahPodcast" ? "#00A3C1" : "#fff",
+            backgroundColor: (item.labelKey === "shortcut.dallahPodcast" || item.labelKey === "shortcut.burjeelPodcast") ? "#00A3C1" : item.labelKey === "shortcut.adminPortal" ? "#4EBEE3" : "#fff",
             borderRadius: theme.radiusXl,
             display: "flex",
             alignItems: "center",
@@ -457,19 +499,19 @@ function ShortcutTile({ item, contained, onLaunchTool }: { item: ShortcutItem; c
             border: "1px solid #eeeeee",
           }}
         >
-          <img
+          <ApiImage
             src={item.icon}
             alt={t(item.labelKey)}
             style={{
               maxWidth: "100%",
               maxHeight: "100%",
               objectFit: "contain",
-              filter: item.labelKey === "shortcut.dallahPodcast" ? "brightness(0) invert(1)" : "none",
+              filter: (item.labelKey === "shortcut.dallahPodcast" || item.labelKey === "shortcut.burjeelPodcast" || item.labelKey === "shortcut.adminPortal") ? "brightness(0) invert(1)" : "none",
             }}
           />
         </div>
       ) : (
-        <img
+        <ApiImage
           src={item.icon}
           alt={t(item.labelKey)}
           style={{
@@ -477,6 +519,7 @@ function ShortcutTile({ item, contained, onLaunchTool }: { item: ShortcutItem; c
             height: SPACE[12],
             borderRadius: theme.radiusXl,
             objectFit: "cover",
+            filter: item.labelKey === "shortcut.roomControl" ? "saturate(0) brightness(0.85) contrast(0.9)" : "none",
           }}
         />
       )}
@@ -496,28 +539,22 @@ function ShortcutTile({ item, contained, onLaunchTool }: { item: ShortcutItem; c
 }
 
 /* ─── Shortcut Tile — compact version for right column ─── */
-function ShortcutTileCompact({ item, onLaunchTool }: { item: ShortcutItem; onLaunchTool?: (id: string) => void }) {
+function ShortcutTileCompact({ item, onTap, onLongPress, isLocked }: { item: ShortcutItem; onTap: () => void; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
 
-  const handleTap = () => {
-    if (item.labelKey === "shortcut.mirror" && onLaunchTool) {
-      onLaunchTool("mirror");
-      return;
-    }
-    if (item.url) {
-      window.open(item.url, "_blank", "noopener,noreferrer");
-    }
-  };
+  // handleTap removed, using onTap from props
+
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
 
   return (
     <button
       data-nav="true"
-      onPointerDown={() => setPressed(true)}
-      onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
-      onClick={handleTap}
+      onPointerDown={() => { handlers.onPointerDown(); setPressed(true); }}
+      onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
+      onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
+      onClick={() => handleClick(onTap)}
       className="relative overflow-hidden flex flex-col items-center justify-center gap-2.5 transition-transform duration-150 cursor-pointer w-full h-full"
       style={{
         borderRadius: theme.radiusLg,
@@ -529,12 +566,13 @@ function ShortcutTileCompact({ item, onLaunchTool }: { item: ShortcutItem; onLau
       }}
       aria-label={t(item.labelKey)}
     >
-      {item.labelKey === "shortcut.patientPortal" || item.labelKey === "shortcut.dallahPodcast" ? (
+      {isLocked && <LockBadge />}
+      {item.labelKey === "shortcut.patientPortal" || item.labelKey === "shortcut.dallahPodcast" || item.labelKey === "shortcut.burjeelPodcast" || item.labelKey === "shortcut.adminPortal" ? (
         <div 
           style={{
             width: "88px",
             height: "88px",
-            backgroundColor: item.labelKey === "shortcut.dallahPodcast" ? "#00A3C1" : "#fff",
+            backgroundColor: (item.labelKey === "shortcut.dallahPodcast" || item.labelKey === "shortcut.burjeelPodcast") ? "#00A3C1" : item.labelKey === "shortcut.adminPortal" ? "#4EBEE3" : "#fff",
             borderRadius: theme.radiusLg,
             display: "flex",
             alignItems: "center",
@@ -543,19 +581,19 @@ function ShortcutTileCompact({ item, onLaunchTool }: { item: ShortcutItem; onLau
             border: "1px solid #eeeeee",
           }}
         >
-          <img
+          <ApiImage
             src={item.icon}
             alt={t(item.labelKey)}
             style={{
               maxWidth: "100%",
               maxHeight: "100%",
               objectFit: "contain",
-              filter: item.labelKey === "shortcut.dallahPodcast" ? "brightness(0) invert(1)" : "none",
+              filter: (item.labelKey === "shortcut.dallahPodcast" || item.labelKey === "shortcut.burjeelPodcast" || item.labelKey === "shortcut.adminPortal") ? "brightness(0) invert(1)" : "none",
             }}
           />
         </div>
       ) : (
-        <img
+        <ApiImage
           src={item.icon}
           alt={t(item.labelKey)}
           style={{
@@ -563,6 +601,7 @@ function ShortcutTileCompact({ item, onLaunchTool }: { item: ShortcutItem; onLau
             height: "88px",
             borderRadius: theme.radiusLg,
             objectFit: "cover",
+            filter: item.labelKey === "shortcut.roomControl" ? "saturate(0) brightness(0.85) contrast(0.9)" : "none",
           }}
         />
       )}
@@ -583,28 +622,22 @@ function ShortcutTileCompact({ item, onLaunchTool }: { item: ShortcutItem; onLau
 }
 
 /* ─── Shortcut Tile — bare version for bottom row ─── */
-function ShortcutTileBare({ item, onLaunchTool }: { item: ShortcutItem; onLaunchTool?: (id: string) => void }) {
+function ShortcutTileBare({ item, onTap, onLongPress, isLocked }: { item: ShortcutItem; onTap: () => void; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
 
-  const handleTap = () => {
-    if (item.labelKey === "shortcut.mirror" && onLaunchTool) {
-      onLaunchTool("mirror");
-      return;
-    }
-    if (item.url) {
-      window.open(item.url, "_blank", "noopener,noreferrer");
-    }
-  };
+  // handleTap removed, using onTap from props
+
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
 
   return (
     <button
       data-nav="true"
-      onPointerDown={() => setPressed(true)}
-      onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
-      onClick={handleTap}
+      onPointerDown={() => { handlers.onPointerDown(); setPressed(true); }}
+      onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
+      onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
+      onClick={() => handleClick(onTap)}
       className="relative overflow-hidden flex flex-col items-center justify-center gap-2 transition-transform duration-150 cursor-pointer w-full h-full"
       style={{
         borderRadius: theme.radiusXl,
@@ -616,16 +649,45 @@ function ShortcutTileBare({ item, onLaunchTool }: { item: ShortcutItem; onLaunch
       }}
       aria-label={t(item.labelKey)}
     >
-      <img
-        src={item.icon}
-        alt={t(item.labelKey)}
-        style={{
-          width: "120px",
-          height: "120px",
-          borderRadius: theme.radiusXl,
-          objectFit: "cover",
-        }}
-      />
+      {isLocked && <LockBadge />}
+      {item.labelKey === "shortcut.patientPortal" || item.labelKey === "shortcut.dallahPodcast" || item.labelKey === "shortcut.burjeelPodcast" || item.labelKey === "shortcut.adminPortal" ? (
+        <div
+          style={{
+            width: "120px",
+            height: "120px",
+            backgroundColor: (item.labelKey === "shortcut.dallahPodcast" || item.labelKey === "shortcut.burjeelPodcast") ? "#00A3C1" : item.labelKey === "shortcut.adminPortal" ? "#4EBEE3" : "#fff",
+            borderRadius: theme.radiusXl,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 8,
+            border: "1px solid #eeeeee",
+          }}
+        >
+          <ApiImage
+            src={item.icon}
+            alt={t(item.labelKey)}
+            style={{
+              maxWidth: "100%",
+              maxHeight: "100%",
+              objectFit: "contain",
+              filter: (item.labelKey === "shortcut.dallahPodcast" || item.labelKey === "shortcut.burjeelPodcast" || item.labelKey === "shortcut.adminPortal") ? "brightness(0) invert(1)" : "none",
+            }}
+          />
+        </div>
+      ) : (
+        <ApiImage
+          src={item.icon}
+          alt={t(item.labelKey)}
+          style={{
+            width: "120px",
+            height: "120px",
+            borderRadius: theme.radiusXl,
+            objectFit: "cover",
+            filter: item.labelKey === "shortcut.roomControl" ? "saturate(0) brightness(0.85) contrast(0.9)" : "none",
+          }}
+        />
+      )}
       <span
         style={{
           fontFamily: fontFamily,
@@ -643,19 +705,21 @@ function ShortcutTileBare({ item, onLaunchTool }: { item: ShortcutItem; onLaunch
 }
 
 /* ─── About Us Button — horizontal pill button ─── */
-function AboutUsButton({ onTap }: { onTap: () => void }) {
+function AboutUsButton({ onTap, onLongPress, isLocked }: { onTap: () => void; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.12)");
   const [pressed, setPressed] = useState(false);
 
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
+
   return (
     <button
       data-nav="true"
-      onPointerDown={(e) => { onPointerDown(e); setPressed(true); }}
-      onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
-      onClick={onTap}
+      onPointerDown={(e) => { onPointerDown(e); handlers.onPointerDown(); setPressed(true); }}
+      onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
+      onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
+      onClick={() => handleClick(onTap)}
       className="relative overflow-hidden flex items-center gap-3 transition-transform duration-150 cursor-pointer w-full h-full"
       style={{
         backgroundColor: pressed ? theme.primary : theme.surface,
@@ -700,11 +764,48 @@ function AboutUsButton({ onTap }: { onTap: () => void }) {
 }
 
 /* ─── Engagement Grid: 4×2 hub + bottom row ─── */
-export function ServicesGrid({ onOpenCategory, onLaunchTool, contained, swapped, compact }: { onOpenCategory?: (key: string) => void; onLaunchTool?: (id: string) => void; contained?: boolean; swapped?: boolean; compact?: boolean }) {
+export function ServicesGrid({ 
+  onOpenCategory, 
+  onLaunchTool, 
+  contained, 
+  swapped, 
+  compact,
+  visibility = DEFAULT_VISIBILITY,
+  onRequestPinSetup,
+  lockMenu,
+  onLockMenuChange: setLockMenu = () => {}
+}: { 
+  onOpenCategory?: (key: string) => void; 
+  onLaunchTool?: (id: string) => void; 
+  contained?: boolean; 
+  swapped?: boolean; 
+  compact?: boolean;
+  visibility?: SectionVisibility;
+  onRequestPinSetup?: () => void;
+  lockMenu?: string | null;
+  onLockMenuChange?: (val: string | null) => void;
+}) {
   const { theme } = useTheme();
+  const { t } = useLocale();
+  const lockedIds = useLockedApps();
+
   const shortcutItems = getShortcutItems(theme.id);
   const gridGap = compact ? "gap-3" : "gap-6";
   const bottomHeight = compact ? "140px" : "192px";
+
+  const isHubItemVisible = (label: string) => {
+    if (label === "Media") return visibility.show_iptv;
+    if (label === "Reading") return visibility.show_resources;
+    return true;
+  };
+
+  const isServiceVisible = (label: string) => {
+    if (label === "Consultation") return visibility.show_care_plan;
+    if (label === "Order Food") return visibility.show_food_menu;
+    if (label === "Call") return visibility.show_care_team;
+    return true;
+  };
+
   return (
     <div className={`flex flex-col flex-1 min-h-0`}>
       {/* 4×2 hub grid */}
@@ -718,20 +819,34 @@ export function ServicesGrid({ onOpenCategory, onLaunchTool, contained, swapped,
               className={`flex flex-col ${gridGap}`}
             >
               <div className="flex-1 min-h-0">
-                <HubCard
-                  item={top}
-                  onTap={() => onOpenCategory?.(top.label)}
-                  contained={contained}
-                  compact={compact}
-                />
+                {isHubItemVisible(top.label) ? (
+                  <HubCard
+                    item={top}
+                    onTap={() => {
+                      if (lockedIds.has(top.labelKey)) setLockMenu(top.labelKey + "__open");
+                      else onOpenCategory?.(top.label);
+                    }}
+                    onLongPress={() => setLockMenu(top.labelKey)}
+                    isLocked={lockedIds.has(top.labelKey)}
+                    contained={contained}
+                    compact={compact}
+                  />
+                ) : <div className="w-full h-full" />}
               </div>
               <div className="flex-1 min-h-0">
-                <HubCard
-                  item={bottom}
-                  onTap={() => onOpenCategory?.(bottom.label)}
-                  contained={contained}
-                  compact={compact}
-                />
+                {isHubItemVisible(bottom.label) ? (
+                  <HubCard
+                    item={bottom}
+                    onTap={() => {
+                      if (lockedIds.has(bottom.labelKey)) setLockMenu(bottom.labelKey + "__open");
+                      else onOpenCategory?.(bottom.label);
+                    }}
+                    onLongPress={() => setLockMenu(bottom.labelKey)}
+                    isLocked={lockedIds.has(bottom.labelKey)}
+                    contained={contained}
+                    compact={compact}
+                  />
+                ) : <div className="w-full h-full" />}
               </div>
             </div>
           );
@@ -759,28 +874,78 @@ export function ServicesGrid({ onOpenCategory, onLaunchTool, contained, swapped,
               }}
             >
               {shortcutItems.map((item) => (
-                <ShortcutTileBare key={item.labelKey} item={item} onLaunchTool={onLaunchTool} />
+                <ShortcutTileBare
+                  key={item.labelKey}
+                  item={item}
+                  onTap={() => {
+                    if (lockedIds.has(item.labelKey)) setLockMenu(item.labelKey + "__open");
+                    else {
+                      if (item.labelKey === "shortcut.mirror" && onLaunchTool) onLaunchTool("mirror");
+                      else if (item.url === "roomcontrol" && onLaunchTool) onLaunchTool("roomcontrol");
+                      else if (item.url) window.open(item.url, "_blank", "noopener,noreferrer");
+                    }
+                  }}
+                  onLongPress={() => setLockMenu(item.labelKey)}
+                  isLocked={lockedIds.has(item.labelKey)}
+                />
               ))}
             </div>
           )
           : serviceItems.map((item) => (
-              <ServiceCard
-                key={item.label}
-                item={item}
-                contained={contained}
-                compact={compact}
-                onTap={() => onOpenCategory?.(item.label)}
-              />
+              isServiceVisible(item.label) ? (
+                <ServiceCard
+                  key={item.label}
+                  item={item}
+                  contained={contained}
+                  compact={compact}
+                  onTap={() => {
+                    if (lockedIds.has(item.label)) setLockMenu(item.label + "__open");
+                    else onOpenCategory?.(item.label);
+                  }}
+                  onLongPress={() => setLockMenu(item.label)}
+                  isLocked={lockedIds.has(item.label)}
+                />
+              ) : <div key={item.label} className="w-full h-full" />
             ))
         }
       </div>
+
+      {lockMenu && (
+        <AppLockMenu
+          appId={lockMenu.replace("__open", "")}
+          appName={t(lockMenu.replace("__open", ""))}
+          isCurrentlyLocked={lockedIds.has(lockMenu.replace("__open", ""))}
+          anchorRect={null}
+          onClose={() => setLockMenu(null)}
+          onRequestPinSetup={onRequestPinSetup || (() => {})}
+          onOpenApp={lockMenu.endsWith("__open") 
+            ? () => {
+                const id = lockMenu.replace("__open", "");
+                const hub = hubItems.find(h => h.labelKey === id || h.label === id);
+                if (hub) onOpenCategory?.(hub.label);
+                const svc = serviceItems.find(s => s.label === id);
+                if (svc) onOpenCategory?.(svc.label);
+                const sc = shortcutItems.find(s => s.labelKey === id);
+                if (sc) {
+                  if (sc.labelKey === "shortcut.mirror" && onLaunchTool) onLaunchTool("mirror");
+                  else if (sc.url === "roomcontrol" && onLaunchTool) onLaunchTool("roomcontrol");
+                  else if (sc.url) window.open(sc.url, "_blank", "noopener,noreferrer");
+                }
+              } 
+            : undefined}
+        />
+      )}
     </div>
   );
 }
 
 /* ─── Right Column — shortcuts (default) or services (swapped) ─── */
-export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped }: { contained?: boolean; onOpenSurvey?: () => void; onLaunchTool?: (id: string) => void; swapped?: boolean }) {
+export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped, onRequestPinSetup }: { contained?: boolean; onOpenSurvey?: () => void; onLaunchTool?: (id: string) => void; swapped?: boolean; onRequestPinSetup?: () => void }) {
   const { theme } = useTheme();
+  const { t } = useLocale();
+  const lockedIds = useLockedApps();
+  const [lockMenu, setLockMenu] = useState<string | null>(null);
+
   const shortcutItems = getShortcutItems(theme.id);
   if (swapped) {
     return (
@@ -789,15 +954,46 @@ export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped
         <div className="flex flex-col gap-6 flex-1 min-h-0 justify-end">
           {serviceItems.map((item) => (
             <div key={item.label} className="flex-1 min-h-0">
-              <ServiceCard item={item} contained={contained} compact onTap={() => {}} />
+              <ServiceCard
+                item={item}
+                contained={contained}
+                compact
+                onTap={() => {
+                  if (lockedIds.has(item.label)) setLockMenu(item.label + "__open");
+                }}
+                onLongPress={() => setLockMenu(item.label)}
+                isLocked={lockedIds.has(item.label)}
+              />
             </div>
           ))}
         </div>
 
         {/* Share Feedback — fixed 192px to align with shortcuts row */}
         <div className="shrink-0" style={{ height: "192px" }}>
-          <SurveyCardFilled onOpen={() => onOpenSurvey?.()} />
+          <SurveyCardFilled
+            onOpen={() => {
+              if (lockedIds.has("service.shareFeedback")) setLockMenu("service.shareFeedback__open");
+              else onOpenSurvey?.();
+            }}
+            onLongPress={() => setLockMenu("service.shareFeedback")}
+            isLocked={lockedIds.has("service.shareFeedback")}
+          />
         </div>
+        {lockMenu && (
+          <AppLockMenu
+            appId={lockMenu.replace("__open", "")}
+            appName={t(lockMenu.replace("__open", ""))}
+            isCurrentlyLocked={lockedIds.has(lockMenu.replace("__open", ""))}
+            anchorRect={null}
+            onClose={() => setLockMenu(null)}
+            onRequestPinSetup={onRequestPinSetup || (() => {})}
+            onOpenApp={lockMenu.endsWith("__open") ? () => {
+              const id = lockMenu.replace("__open", "");
+              if (id === "service.shareFeedback") onOpenSurvey?.();
+              else onOpenSurvey?.(); // fallback
+            } : undefined}
+          />
+        )}
       </div>
     );
   }
@@ -818,21 +1014,67 @@ export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped
         {/* Vertical tiles */}
         <div className="flex flex-col gap-2 flex-1">
           {shortcutItems.map((item) => (
-            <ShortcutTileCompact key={item.labelKey} item={item} onLaunchTool={onLaunchTool} />
+            <ShortcutTileCompact
+              key={item.labelKey}
+              item={item}
+              onTap={() => {
+                if (lockedIds.has(item.labelKey)) setLockMenu(item.labelKey + "__open");
+                else {
+                  if (item.labelKey === "shortcut.mirror" && onLaunchTool) onLaunchTool("mirror");
+                  else if (item.url === "roomcontrol" && onLaunchTool) onLaunchTool("roomcontrol");
+                  else if (item.url) window.open(item.url, "_blank", "noopener,noreferrer");
+                }
+              }}
+              onLongPress={() => setLockMenu(item.labelKey)}
+              isLocked={lockedIds.has(item.labelKey)}
+            />
           ))}
         </div>
       </div>
 
       {/* Survey — separate card, same height as services row (190px) */}
       <div className="shrink-0" style={{ height: "192px" }}>
-        <SurveyCardFilled onOpen={() => onOpenSurvey?.()} />
+        <SurveyCardFilled
+          onOpen={() => {
+            if (lockedIds.has("service.shareFeedback")) setLockMenu("service.shareFeedback__open");
+            else onOpenSurvey?.();
+          }}
+          onLongPress={() => setLockMenu("service.shareFeedback")}
+          isLocked={lockedIds.has("service.shareFeedback")}
+        />
       </div>
+      {lockMenu && (
+        <AppLockMenu
+          appId={lockMenu.replace("__open", "")}
+          appName={t(lockMenu.replace("__open", ""))}
+          isCurrentlyLocked={lockedIds.has(lockMenu.replace("__open", ""))}
+          anchorRect={null}
+          onClose={() => setLockMenu(null)}
+          onRequestPinSetup={onRequestPinSetup || (() => {})}
+          onOpenApp={lockMenu.endsWith("__open") ? () => {
+            const id = lockMenu.replace("__open", "");
+            if (id === "service.shareFeedback") onOpenSurvey?.();
+            else {
+              const sc = shortcutItems.find(s => s.labelKey === id);
+              if (sc) {
+                if (sc.labelKey === "shortcut.mirror" && onLaunchTool) onLaunchTool("mirror");
+                else if (sc.url === "roomcontrol" && onLaunchTool) onLaunchTool("roomcontrol");
+                else if (sc.url) window.open(sc.url, "_blank", "noopener,noreferrer");
+              }
+            }
+          } : undefined}
+        />
+      )}
     </div>
   );
 }
 
 /* ─── Quick Actions Row — horizontal stack for bottom row ─── */
-export function QuickActionsRow({ vertical, contained }: { vertical?: boolean; contained?: boolean }) {
+export function QuickActionsRow({ vertical, contained, onOpenSurvey, onRequestPinSetup }: { vertical?: boolean; contained?: boolean; onOpenSurvey?: () => void; onRequestPinSetup?: () => void }) {
+  const { t } = useLocale();
+  const lockedIds = useLockedApps();
+  const [lockMenu, setLockMenu] = useState<string | null>(null);
+
   return (
     <div className={`flex flex-col gap-3 ${vertical ? "h-full" : "shrink-0"}`}>
       <div
@@ -840,10 +1082,45 @@ export function QuickActionsRow({ vertical, contained }: { vertical?: boolean; c
         style={vertical ? undefined : { height: "110px" }}
       >
         {serviceItems.map((item) => (
-          <ServiceCard key={item.label} item={item} square={vertical} contained={contained} />
+          <ServiceCard
+            key={item.label}
+            item={item}
+            square={vertical}
+            contained={contained}
+            onTap={() => {
+              if (lockedIds.has(item.label)) setLockMenu(item.label + "__open");
+            }}
+            onLongPress={() => setLockMenu(item.label)}
+            isLocked={lockedIds.has(item.label)}
+          />
         ))}
-        {vertical && <SurveyCard square contained={contained} />}
+        {vertical && (
+          <SurveyCard
+            square
+            contained={contained}
+            onOpen={() => {
+              if (lockedIds.has("service.survey")) setLockMenu("service.survey__open");
+              else onOpenSurvey?.();
+            }}
+            onLongPress={() => setLockMenu("service.survey")}
+            isLocked={lockedIds.has("service.survey")}
+          />
+        )}
       </div>
+      {lockMenu && (
+        <AppLockMenu
+          appId={lockMenu.replace("__open", "")}
+          appName={t(lockMenu.replace("__open", ""))}
+          isCurrentlyLocked={lockedIds.has(lockMenu.replace("__open", ""))}
+          anchorRect={null}
+          onClose={() => setLockMenu(null)}
+          onRequestPinSetup={onRequestPinSetup || (() => {})}
+          onOpenApp={lockMenu.endsWith("__open") ? () => {
+            const id = lockMenu.replace("__open", "");
+            if (id === "service.survey") onOpenSurvey?.();
+          } : undefined}
+        />
+      )}
     </div>
   );
 }
@@ -856,23 +1133,112 @@ const v3HubOrder = [
   hubItems[4], hubItems[6],  // Meeting, Tools
 ];
 
-export function HubGridCompact({ onOpenCategory }: { onOpenCategory?: (key: string) => void }) {
+export function HubGridCompact({ 
+  onOpenCategory,
+  visibility = DEFAULT_VISIBILITY,
+  onRequestPinSetup
+}: { 
+  onOpenCategory?: (key: string) => void;
+  visibility?: SectionVisibility;
+  onRequestPinSetup?: () => void;
+}) {
+  const { t } = useLocale();
+  const lockedIds = useLockedApps();
+  const [lockMenu, setLockMenu] = useState<string | null>(null);
+
+  const isHubItemVisible = (label: string) => {
+    if (label === "Media") return visibility.show_iptv;
+    if (label === "Reading") return visibility.show_resources;
+    return true;
+  };
+
   return (
     <div className="grid grid-cols-2 gap-3 flex-1 min-h-0">
       {v3HubOrder.map((item) => (
-        <HubCard key={item.label} item={item} onTap={() => onOpenCategory?.(item.label)} />
+        isHubItemVisible(item.label) ? (
+          <HubCard
+            key={item.label}
+            item={item}
+            onTap={() => {
+              if (lockedIds.has(item.labelKey)) setLockMenu(item.labelKey + "__open");
+              else onOpenCategory?.(item.label);
+            }}
+            onLongPress={() => setLockMenu(item.labelKey)}
+            isLocked={lockedIds.has(item.labelKey)}
+          />
+        ) : <div key={item.label} className="w-full h-full" />
       ))}
+      {lockMenu && (
+        <AppLockMenu
+          appId={lockMenu.replace("__open", "")}
+          appName={t(lockMenu.replace("__open", ""))}
+          isCurrentlyLocked={lockedIds.has(lockMenu.replace("__open", ""))}
+          anchorRect={null}
+          onClose={() => setLockMenu(null)}
+          onRequestPinSetup={onRequestPinSetup || (() => {})}
+          onOpenApp={lockMenu.endsWith("__open") ? () => {
+            const id = lockMenu.replace("__open", "");
+            const hub = hubItems.find(h => h.labelKey === id);
+            if (hub) onOpenCategory?.(hub.label);
+          } : undefined}
+        />
+      )}
     </div>
   );
 }
 
 /* ─── V3 Service Cards Row: standalone bottom row ─── */
-export function ServiceCardsRow({ onOpenCategory }: { onOpenCategory?: (key: string) => void }) {
+export function ServiceCardsRow({ 
+  onOpenCategory,
+  visibility = DEFAULT_VISIBILITY,
+  onRequestPinSetup
+}: { 
+  onOpenCategory?: (key: string) => void;
+  visibility?: SectionVisibility;
+  onRequestPinSetup?: () => void;
+}) {
+  const { t } = useLocale();
+  const lockedIds = useLockedApps();
+  const [lockMenu, setLockMenu] = useState<string | null>(null);
+
+  const isServiceVisible = (label: string) => {
+    if (label === "Consultation") return visibility.show_care_plan;
+    if (label === "Order Food") return visibility.show_food_menu;
+    if (label === "Call") return visibility.show_care_team;
+    return true;
+  };
+
   return (
     <div className="grid grid-cols-4 gap-6 shrink-0 items-center" style={{ height: "192px" }}>
       {serviceItems.map((item) => (
-        <ServiceCard key={item.label} item={item} onTap={() => onOpenCategory?.(item.label)} />
+        isServiceVisible(item.label) ? (
+          <ServiceCard
+            key={item.label}
+            item={item}
+            onTap={() => {
+              if (lockedIds.has(item.label)) setLockMenu(item.label + "__open");
+              else onOpenCategory?.(item.label);
+            }}
+            onLongPress={() => setLockMenu(item.label)}
+            isLocked={lockedIds.has(item.label)}
+          />
+        ) : <div key={item.label} className="w-full h-full" />
       ))}
+      {lockMenu && (
+        <AppLockMenu
+          appId={lockMenu.replace("__open", "")}
+          appName={t(lockMenu.replace("__open", ""))}
+          isCurrentlyLocked={lockedIds.has(lockMenu.replace("__open", ""))}
+          anchorRect={null}
+          onClose={() => setLockMenu(null)}
+          onRequestPinSetup={onRequestPinSetup || (() => {})}
+          onOpenApp={lockMenu.endsWith("__open") ? () => {
+            const id = lockMenu.replace("__open", "");
+            const svc = serviceItems.find(s => s.label === id);
+            if (svc) onOpenCategory?.(svc.label);
+          } : undefined}
+        />
+      )}
     </div>
   );
 }

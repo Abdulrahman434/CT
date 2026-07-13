@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   X, Stethoscope, Activity, Thermometer, Wind, Droplet,
   Save, User, ClipboardList, CheckCircle2, Clock, Plus,
-  History, Trash2, FileText, AlertTriangle, Hash, DoorOpen
+  History, Trash2, FileText, AlertTriangle, Hash, DoorOpen, ExternalLink
 } from "lucide-react";
 import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
@@ -469,6 +469,22 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
           </div>
         </div>
       </div>
+
+      {/* ── Footer Link ── */}
+      {role === "nurse" && (
+        <div className="flex justify-end px-8 pb-4 shrink-0">
+          <a
+            href="https://client.careinn.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-600 hover:underline font-semibold flex items-center gap-1.5 cursor-pointer"
+            style={{ color: t.primary }}
+          >
+            <ExternalLink size={14} />
+            {tr("careteam.gotoEmr")}
+          </a>
+        </div>
+      )}
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useTheme, TYPE_SCALE, WEIGHT, TEXT_STYLE, SHADOW } from "./ThemeContext";
 import { useLocale } from "./i18n";
-import { CheckCircle2, AlertTriangle, Info, Megaphone, ShieldCheck } from "lucide-react";
+import { ApiImage } from "./ApiImage";
+import { CheckCircle2, AlertTriangle, Info, Megaphone, ShieldCheck, ExternalLink, ClipboardList, FileText, Image as ImageIcon, Play, Clock } from "lucide-react";
 import imgMosque from "../../assets/b51acb5e2ec4a2c930572c53103b020b12e76ee2.png";
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -33,7 +34,15 @@ export interface BroadcastNotification {
   priority: BroadcastPriority;
   timestamp: string; // display time
   acknowledgedAt?: string;
-  type?: "prayer" | "general";
+  type?: "prayer" | "general" | "announcement";
+  createdAt?: number;
+  isMissed?: boolean;
+  missedAt?: string;
+  cta?: { en: string; ar: string };
+  ctaAction?: "open-url" | "open-survey" | "open-pdf" | "open-image" | "open-video";
+  ctaUrl?: string;
+  ctaSurveyId?: string;
+  isLater?: boolean;
 }
 
 const PRIORITY_CONFIG: Record<BroadcastPriority, {
@@ -79,7 +88,7 @@ function PriorityIcon({ priority, type, size = 28, color }: { priority: Broadcas
   if (type === "prayer") {
     return (
       <div style={{ width: size + 4, height: size + 4, borderRadius: "50%", overflow: "hidden" }}>
-        <img src={imgMosque} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <ApiImage src={imgMosque} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
     );
   }
@@ -112,7 +121,7 @@ export function HospitalBroadcast({
   onAcknowledge,
 }: {
   notification: BroadcastNotification;
-  onAcknowledge: (id: string) => void;
+  onAcknowledge: (id: string, action?: "read" | "later" | "skip") => void;
 }) {
   const { theme } = useTheme();
   const { isRTL, fontFamily, locale } = useLocale();
@@ -126,14 +135,15 @@ export function HospitalBroadcast({
     requestAnimationFrame(() => setVisible(true));
   }, []);
 
-  const handleAcknowledge = () => {
+  const handleAcknowledge = (action: "read" | "later" | "skip" = "read") => {
     setAcknowledging(true);
     setTimeout(() => {
-      onAcknowledge(notification.id);
+      onAcknowledge(notification.id, action);
     }, 400);
   };
 
   const isUrgent = notification.priority === "urgent";
+  const isPrayer = notification.type === "prayer";
 
   return (
     <div
@@ -275,7 +285,7 @@ export function HospitalBroadcast({
 
           {/* Acknowledge button */}
           <button
-            onClick={handleAcknowledge}
+            onClick={() => handleAcknowledge("read")}
             className="w-full cursor-pointer flex items-center justify-center gap-3 active:scale-[0.97] transition-transform"
             style={{
               height: "60px",
@@ -286,7 +296,19 @@ export function HospitalBroadcast({
               boxShadow: `0 4px 20px ${isUrgent ? "rgba(209,0,68,0.3)" : `${theme.primary}30`}`,
             }}
           >
-            <CheckCircle2 size={22} style={{ color: theme.textInverse }} />
+            {notification.ctaAction === "open-url" ? (
+              <ExternalLink size={22} style={{ color: theme.textInverse }} />
+            ) : notification.ctaAction === "open-survey" ? (
+              <ClipboardList size={22} style={{ color: theme.textInverse }} />
+            ) : notification.ctaAction === "open-pdf" ? (
+              <FileText size={22} style={{ color: theme.textInverse }} />
+            ) : notification.ctaAction === "open-image" ? (
+              <ImageIcon size={22} style={{ color: theme.textInverse }} />
+            ) : notification.ctaAction === "open-video" ? (
+              <Play size={22} style={{ color: theme.textInverse }} />
+            ) : (
+              <CheckCircle2 size={22} style={{ color: theme.textInverse }} />
+            )}
             <span
               style={{
                 fontFamily,
@@ -294,9 +316,48 @@ export function HospitalBroadcast({
                 color: theme.textInverse,
               }}
             >
-              {locale === "ar" ? "تم الاطلاع" : "I've Read This"}
+              {notification.cta ? loc(notification.cta) : (locale === "ar" ? "تم الاطلاع" : "I've Read This")}
             </span>
           </button>
+
+          {/* Skip / Check Later secondary options (Hidden for prayer notifications) */}
+          {!isPrayer && (
+            <div className="flex gap-4 mt-4 w-full">
+              <button
+                onClick={() => handleAcknowledge("later")}
+                className="flex-1 cursor-pointer flex items-center justify-center gap-2 active:scale-[0.97] transition-all"
+                style={{
+                  height: "48px",
+                  borderRadius: theme.radiusMd,
+                  backgroundColor: "rgba(255, 255, 255, 0.04)",
+                  border: `1.2px solid ${cfg.borderColor}`,
+                  color: theme.textBody,
+                }}
+              >
+                <Clock size={15} style={{ color: theme.textMuted }} />
+                <span style={{ fontFamily, ...TEXT_STYLE.button, fontSize: "14px", color: theme.textBody }}>
+                  {locale === "ar" ? "الاطلاع لاحقاً" : "Check Later"}
+                </span>
+              </button>
+
+              <button
+                onClick={() => handleAcknowledge("skip")}
+                className="flex-1 cursor-pointer flex items-center justify-center gap-2 active:scale-[0.97] transition-all"
+                style={{
+                  display: "none", // Kept hidden per user request
+                  height: "48px",
+                  borderRadius: theme.radiusMd,
+                  backgroundColor: "transparent",
+                  border: "none",
+                  color: theme.textMuted,
+                }}
+              >
+                <span style={{ fontFamily, ...TEXT_STYLE.button, fontSize: "14px", color: theme.textMuted }}>
+                  {locale === "ar" ? "تخطي" : "Skip"}
+                </span>
+              </button>
+            </div>
+          )}
 
           {/* Persistence notice with shield icon */}
           <div
