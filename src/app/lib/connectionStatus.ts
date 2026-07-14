@@ -118,20 +118,9 @@ export function useConnectionStatus() {
         window.location.href = CLOUD_URL;   // jump to live app
         return;
       }
-      // still offline → hide refresh for 60s (cooldown), stay bundled
-      setRefreshAvailable(false);
-      setCooldown(true);
-      setTimeout(() => {
-        setCooldown(false);
-        setRefreshAvailable(true);
-      }, REFRESH_COOLDOWN_MS);
-      return;
     }
-    // cloud states: re-probe + ask app to re-fetch
-    setRefreshAvailable(false);
-    await runProbe();
-    window.dispatchEvent(new CustomEvent("careinn-manual-refresh"));
-  }, [bundled, runProbe]);
+    window.location.reload();
+  }, [bundled]);
 
   const state: ConnState = bundled
     ? "bundled"

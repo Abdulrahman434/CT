@@ -7,6 +7,7 @@ import svgPaths from "../../imports/svg-ca68x68c4i";
 import { getPrayerTimes, PRAYER_KEYS, PRAYER_NAMES, formatPrayerTime, getPrayerStatus } from "../utils/prayerUtils";
 import { Prayer } from "adhan";
 import { ConnectionStatus } from "./ConnectionStatus";
+import { useLongPress } from "../lib/useLongPress";
 
 // Removed hardcoded prayerTimes
 
@@ -43,6 +44,10 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
   const [time, setTime] = useState(new Date());
   const [prayerData, setPrayerData] = useState(() => getPrayerStatus(new Date()));
   const [temperature, setTemperature] = useState<number | null>(null);
+
+  const weatherLongPress = useLongPress(() => {
+    window.location.reload();
+  }, 1000);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -228,7 +233,8 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
             height: theme.touchTargetMin,
             padding: `0 ${SPACE[2]}`,
           }}
-          onClick={onWeatherTap}
+          {...weatherLongPress.handlers}
+          onClick={() => weatherLongPress.handleClick(onWeatherTap || (() => {}))}
         >
           <SunIcon />
           <span

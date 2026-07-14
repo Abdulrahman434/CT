@@ -1020,7 +1020,11 @@ const translations: Record<string, TranslationEntry> = {
   "offline.openWifi":  { en: "Open WiFi Settings", ar: "فتح إعدادات الواي فاي", ur: "وائی فائی سیٹنگز کھولیں" },
   "offline.adminPin":  { en: "Continue Offline", ar: "الاستمرار بدون اتصال", ur: "آف لائن جاری رکھیں" },
   "offline.enterPin":  { en: "Enter admin PIN", ar: "أدخل رمز PIN للمسؤول", ur: "ایڈمن PIN درج کریں" },
-  "offline.cancel":    { en: "Cancel", ar: "إلغاء", ur: "منسوخ" }
+  "offline.cancel":    { en: "Cancel", ar: "إلغاء", ur: "منسوخ" },
+
+  /* ─── Updates ─── */
+  "update.available": { en: "An update is available", ar: "يتوفر تحديث", ur: "ایک اپ ڈیٹ دستیاب ہے" },
+  "update.reload":    { en: "Reload now", ar: "إعادة التحميل الآن", ur: "ابھی ری لوڈ کریں" }
 };
 
 /* ── Number Localization ── */

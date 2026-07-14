@@ -18,6 +18,7 @@ import { RippleStyles } from "./components/useRipple";
 import { AppLauncher } from "./components/AppLauncher";
 import { SurveyModal } from "./components/SurveyModal";
 import { PdfReaderModal } from "./components/PdfReaderModal";
+import { UpdateBanner } from "./components/UpdateBanner";
 import { MediaViewerModal } from "./components/MediaViewerModal";
 import { AboutUs } from "./components/AboutUs";
 import { SettingsPanel } from "./components/SettingsPanel";
@@ -2140,6 +2141,7 @@ function AuthenticatedApp() {
           <BedsideScreen />
         </ErrorBoundary>
       </OrderProvider>
+      <UpdateBanner />
     </ThemeProvider>
   );
 }
