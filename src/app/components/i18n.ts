@@ -174,6 +174,7 @@ const translations: Record<string, TranslationEntry> = {
   "need.rel.yesterdayAt": { en: "Yesterday at {0}", ar: "أمس في {0}", ur: "کل {0}" },
   "need.rel.dateAt": { en: "{0} at {1}", ar: "{0} في {1}", ur: "{0}، {1}" },
   "need.ref": { en: "Ref: {0}", ar: "مرجع: {0}", ur: "حوالہ: {0}" },
+  "need.requestedOn": { en: "Requested on", ar: "طُلب في", ur: "درخواست کی گئی" },
   "need.rel.today": { en: "Today", ar: "اليوم", ur: "آج" },
   "need.rel.yesterday": { en: "Yesterday", ar: "أمس", ur: "کل" },
   "need.rel.daysAgo": { en: "{0} days ago", ar: "قبل {0} أيام", ur: "{0} دن پہلے" },
