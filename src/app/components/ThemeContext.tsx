@@ -552,6 +552,9 @@ import careinnHero from "../../assets/careinn-hospital-hero.jpg";
 import primeLogo from "../../assets/prime-hospital-logo.png";
 import primeHero from "../../assets/prime-hospital-hero.jpg";
 
+import kauhLogo from "../../assets/kauh-logo.png";
+import kauhHero from "../../assets/kauh-hero.jpg";
+
 /* Canonical built-in asset URLs — used as fallbacks for DSFH */
 export const DSFH_LOGO = logoImage;
 export const DSFH_HERO = hospitalImg;
@@ -709,6 +712,26 @@ export const PRIME_CORE: HospitalCoreConfig = {
   location: "Dubai - UAE",
 };
 
+export const KAUH_CORE: HospitalCoreConfig = {
+  id: "kauh",
+  hospitalName: "King Abdulaziz University Hospital",
+  hospitalShortName: "شفاء",
+  fontFamily: "'Mulish', sans-serif",
+  fontFamilyAr: "'Almarai', sans-serif",
+  logoUrl: kauhLogo,
+  hospitalWebsiteUrl: "https://shifaa.kau.edu.sa/Default-ar.aspx",
+  heroImageUrl: kauhHero,
+  heroCropPosition: "50% 40%",
+  heroOpacity: 40,
+  primary: "#2BAD8A",
+  primaryDark: "#218F6E",
+  primaryLight: "#DCF5EC",
+  accent: "#1A5C40",
+  accentDark: "#123D2B",
+  accentLight: "#E5F5EE",
+  location: "Jeddah, Saudi Arabia",
+};
+
 /** All built-in hospital presets (always available, never deleted) */
 export const BUILTIN_PRESETS: HospitalCoreConfig[] = [
   DSFH_CORE,
@@ -719,6 +742,7 @@ export const BUILTIN_PRESETS: HospitalCoreConfig[] = [
   IMC_CORE,
   CAREINN_CORE,
   PRIME_CORE,
+  KAUH_CORE,
 ];
 
 
