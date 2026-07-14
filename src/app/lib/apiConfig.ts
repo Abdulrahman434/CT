@@ -38,9 +38,18 @@ export function getApiConfig(): ApiConfigData {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULTS };
     const saved = JSON.parse(raw);
+    let apiKey = saved.apiKey?.trim();
+    if (apiKey === "efc9bcbf-6951-436a-8694-c13cc6f30913") {
+      apiKey = DEFAULTS.apiKey;
+      // Write it back to localStorage so it stays updated
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        serverIp: saved.serverIp?.trim() || DEFAULTS.serverIp,
+        apiKey: DEFAULTS.apiKey,
+      }));
+    }
     return {
       serverIp: saved.serverIp?.trim() || DEFAULTS.serverIp,
-      apiKey: saved.apiKey?.trim() || DEFAULTS.apiKey,
+      apiKey: apiKey || DEFAULTS.apiKey,
     };
   } catch { return { ...DEFAULTS }; }
 }
