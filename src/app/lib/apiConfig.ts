@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const STORAGE_KEY = "careinn-api-config";
 
 const CLOUD_HOST = "control.careinn.com";
-const CLOUD_KEY  = "efc9bcbf-6951-436a-8694-c13cc6f30913";
+const CLOUD_KEY  = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
 const LOCAL_KEY  = "20b91694-7ea1-4a44-91a6-2878664428b3";
 
 export function apiKeyForUrl(u: string): string {
@@ -25,7 +25,7 @@ export interface ApiConfigData {
 
 const DEFAULTS: ApiConfigData = {
   serverIp: 'https://control.careinn.com/api',
-  apiKey: 'efc9bcbf-6951-436a-8694-c13cc6f30913',
+  apiKey: '2345fcba-1633-46c9-a27e-ed0ca9ee17e9',
 };
 
 export const SECONDARY_OPTION: ApiConfigData = {
@@ -38,9 +38,18 @@ export function getApiConfig(): ApiConfigData {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULTS };
     const saved = JSON.parse(raw);
+    let apiKey = saved.apiKey?.trim();
+    if (apiKey === "efc9bcbf-6951-436a-8694-c13cc6f30913") {
+      apiKey = DEFAULTS.apiKey;
+      // Write it back to localStorage so it stays updated
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        serverIp: saved.serverIp?.trim() || DEFAULTS.serverIp,
+        apiKey: DEFAULTS.apiKey,
+      }));
+    }
     return {
       serverIp: saved.serverIp?.trim() || DEFAULTS.serverIp,
-      apiKey: saved.apiKey?.trim() || DEFAULTS.apiKey,
+      apiKey: apiKey || DEFAULTS.apiKey,
     };
   } catch { return { ...DEFAULTS }; }
 }

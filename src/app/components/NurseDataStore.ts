@@ -190,8 +190,8 @@ export interface NurseStoreState {
   /** Allergies (raw string chips) */
   allergies: string[];
 
-  /** Diet codes (e.g. "NAS", "DM") */
-  dietCodes: { code: string; label: string }[];
+  /** Patient diet — single-select, matches DietType from menuData + "npo" */
+  patientDiet: string;
 
   /** Pain score 0–10 */
   painScore: number;
@@ -274,10 +274,7 @@ function createDefaultState(): NurseStoreState {
 
     allergies: ["Penicillin", "Latex", "Shellfish"],
 
-    dietCodes: [
-      { code: "NAS", label: "No Added Salt" },
-      { code: "DM", label: "Diabetic Diet" },
-    ],
+    patientDiet: "regular",
 
     painScore: 5,
 
@@ -359,7 +356,15 @@ function loadCachedState(): Partial<NurseStoreState> {
   try {
     const raw = localStorage.getItem(NURSE_STORE_CACHE_KEY);
     if (!raw) return {};
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    // Legacy migration: old format had dietCodes[], new format has patientDiet string
+    if (parsed.dietCodes && !parsed.patientDiet) {
+      delete parsed.dietCodes; // fall back to default "regular"
+    }
+    // Legacy migration: old abbreviations → new DietType values
+    if (parsed.patientDiet === "soft") parsed.patientDiet = "soft-diet";
+    if (parsed.patientDiet === "chemo") parsed.patientDiet = "chemotherapy";
+    return parsed;
   } catch { return {}; }
 }
 
@@ -524,15 +529,9 @@ const nurseStore = (() => {
       notify();
     },
 
-    // ── Diet Codes ──
-    addDietCode: (code: string, label: string) => {
-      if (!state.dietCodes.find((d) => d.code === code)) {
-        state = { ...state, dietCodes: [...state.dietCodes, { code, label }] };
-        notify();
-      }
-    },
-    removeDietCode: (code: string) => {
-      state = { ...state, dietCodes: state.dietCodes.filter((d) => d.code !== code) };
+    // ── Patient Diet (single-select) ──
+    setPatientDiet: (diet: string) => {
+      state = { ...state, patientDiet: diet };
       notify();
     },
 

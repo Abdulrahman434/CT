@@ -649,20 +649,20 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
       {/* Survey footer nav */}
       {currentSlide < 8 && (
         <div
-          className="flex items-center justify-between px-12 py-8 border-t"
+          className="flex items-center justify-between px-10 py-5"
           style={{ borderColor: theme.borderDefault, zIndex: 20, direction: "ltr" }}
         >
           {/* LTR left = Previous / RTL left = Next */}
           {isRTL ? (
             currentSlide === 7 ? (
               <button onClick={handleSurveySubmit} className="flex items-center gap-2 transition-transform duration-200"
-                style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", padding: "12px 32px", borderRadius: theme.radiusMd, backgroundColor: BRAND }}>
+                style={{ fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", height: "52px", padding: "0 28px", borderRadius: "14px", backgroundColor: BRAND, border: `1px solid rgba(255,255,255,0.35)` }}>
                 <ChevronLeft size={22} />
                 {t("survey.submit")}
               </button>
             ) : (
               <button onClick={handleNext} className="flex items-center gap-2 transition-transform duration-200"
-                style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", padding: "12px 32px", borderRadius: theme.radiusMd, backgroundColor: BRAND }}>
+                style={{ fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", height: "52px", padding: "0 28px", borderRadius: "14px", backgroundColor: BRAND, border: `1px solid rgba(255,255,255,0.35)` }}>
                 <ChevronLeft size={22} />
                 {t("survey.next")}
               </button>
@@ -672,10 +672,10 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
               onClick={currentSlide === 0 ? () => setPath("hub") : handlePrevious}
               className="flex items-center gap-2 transition-transform duration-200"
               style={{
-                fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold,
+                fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold,
                 color: BRAND, cursor: "pointer",
-                padding: "12px 24px", borderRadius: theme.radiusMd,
-                backgroundColor: theme.primarySubtle,
+                height: "52px", padding: "0 24px", borderRadius: "14px",
+                backgroundColor: "#fff", border: `1.5px solid ${theme.borderDefault}`,
               }}
             >
               <ChevronLeft size={22} />
@@ -704,10 +704,10 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
               onClick={currentSlide === 0 ? () => setPath("hub") : handlePrevious}
               className="flex items-center gap-2 transition-transform duration-200"
               style={{
-                fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold,
+                fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold,
                 color: BRAND, cursor: "pointer",
-                padding: "12px 24px", borderRadius: theme.radiusMd,
-                backgroundColor: theme.primarySubtle,
+                height: "52px", padding: "0 24px", borderRadius: "14px",
+                backgroundColor: "#fff", border: `1.5px solid ${theme.borderDefault}`,
               }}
             >
               {currentSlide === 0 ? t("feedback.back") : t("survey.previous")}
@@ -715,13 +715,13 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
             </button>
           ) : currentSlide === 7 ? (
             <button onClick={handleSurveySubmit} className="flex items-center gap-2 transition-transform duration-200"
-              style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", padding: "12px 32px", borderRadius: theme.radiusMd, backgroundColor: BRAND }}>
+              style={{ fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", height: "52px", padding: "0 28px", borderRadius: "14px", backgroundColor: BRAND, border: `1px solid rgba(255,255,255,0.35)` }}>
               {t("survey.submit")}
               <ChevronRight size={22} />
             </button>
           ) : (
             <button onClick={handleNext} className="flex items-center gap-2 transition-transform duration-200"
-              style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", padding: "12px 32px", borderRadius: theme.radiusMd, backgroundColor: BRAND }}>
+              style={{ fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold, color: theme.textInverse, cursor: "pointer", height: "52px", padding: "0 28px", borderRadius: "14px", backgroundColor: BRAND, border: `1px solid rgba(255,255,255,0.35)` }}>
               {t("survey.next")}
               <ChevronRight size={22} />
             </button>
@@ -768,10 +768,10 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
 
     return (
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        <div className="flex-1 flex flex-col overflow-hidden items-center justify-center">
-          <div className="w-full max-w-[800px] flex flex-col h-full shrink-0">
+        <div className="flex-1 flex flex-col overflow-y-auto items-center justify-center">
+          <div className="w-full max-w-[800px] flex flex-col">
             {/* Header */}
-            <div className="shrink-0 flex items-center gap-4 px-0 pt-10 pb-4">
+            <div className="shrink-0 flex items-center gap-4 px-0 pt-20 pb-4">
               <div className="flex items-center justify-center"
                 style={{ width: 44, height: 44, borderRadius: theme.radiusLg, backgroundColor: CONCERN_SUBTLE }}>
                 <AlertTriangle size={22} style={{ color: CONCERN_COLOR }} />
@@ -844,7 +844,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 flex items-center justify-between px-12 py-8 border-t" style={{ borderColor: theme.borderDefault, direction: "ltr" }}>
+        <div className="shrink-0 flex items-center justify-between px-10 py-5" style={{ borderColor: theme.borderDefault, direction: "ltr" }}>
           {isRTL ? (
             <>
               <button
@@ -852,10 +852,10 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
                 disabled={!concernArea || (!concernText.trim() && !concernHasRecording)}
                 className="flex items-center gap-2 transition-transform duration-200 active:scale-[0.96] cursor-pointer"
                 style={{
-                  fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: "#fff",
-                  padding: "12px 32px", borderRadius: theme.radiusMd,
+                  fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold, color: "#fff",
+                  height: "52px", padding: "0 28px", borderRadius: "14px",
                   backgroundColor: (!concernArea || (!concernText.trim() && !concernHasRecording)) ? theme.textDisabled : CONCERN_COLOR,
-                  border: "none", opacity: (!concernArea || (!concernText.trim() && !concernHasRecording)) ? 0.5 : 1,
+                  border: `1px solid rgba(255,255,255,0.35)`, opacity: (!concernArea || (!concernText.trim() && !concernHasRecording)) ? 0.5 : 1,
                   boxShadow: `0 4px 16px ${CONCERN_SUBTLE}`,
                 }}
               >
@@ -863,7 +863,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
                 {t("survey.submit")}
               </button>
               <button onClick={() => setPath("hub")} className="flex items-center gap-2 cursor-pointer transition-transform duration-200"
-                style={{ background: "none", border: "none", padding: "12px 24px", borderRadius: theme.radiusMd, backgroundColor: "transparent", fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
+                style={{ background: "none", border: `1.5px solid ${theme.borderDefault}`, height: "52px", padding: "0 24px", borderRadius: "14px", backgroundColor: "#fff", fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
                 {t("feedback.back")}
                 <ChevronRight size={22} />
               </button>
@@ -871,7 +871,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
           ) : (
             <>
               <button onClick={() => setPath("hub")} className="flex items-center gap-2 cursor-pointer transition-transform duration-200"
-                style={{ background: "none", border: "none", padding: "12px 24px", borderRadius: theme.radiusMd, backgroundColor: "transparent", fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
+                style={{ background: "none", border: `1.5px solid ${theme.borderDefault}`, height: "52px", padding: "0 24px", borderRadius: "14px", backgroundColor: "#fff", fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
                 <ChevronLeft size={22} />
                 {t("feedback.back")}
               </button>
@@ -880,10 +880,10 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
                 disabled={!concernArea || (!concernText.trim() && !concernHasRecording)}
                 className="flex items-center gap-2 transition-transform duration-200 active:scale-[0.96] cursor-pointer"
                 style={{
-                  fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: "#fff",
-                  padding: "12px 32px", borderRadius: theme.radiusMd,
+                  fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold, color: "#fff",
+                  height: "52px", padding: "0 28px", borderRadius: "14px",
                   backgroundColor: (!concernArea || (!concernText.trim() && !concernHasRecording)) ? theme.textDisabled : CONCERN_COLOR,
-                  border: "none", opacity: (!concernArea || (!concernText.trim() && !concernHasRecording)) ? 0.5 : 1,
+                  border: `1px solid rgba(255,255,255,0.35)`, opacity: (!concernArea || (!concernText.trim() && !concernHasRecording)) ? 0.5 : 1,
                   boxShadow: `0 4px 16px ${CONCERN_SUBTLE}`,
                 }}
               >
@@ -933,10 +933,10 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
 
     return (
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        <div className="flex-1 flex flex-col overflow-hidden items-center justify-center">
-          <div className="w-full max-w-[800px] flex flex-col h-full shrink-0">
+        <div className="flex-1 flex flex-col overflow-y-auto items-center justify-center">
+          <div className="w-full max-w-[800px] flex flex-col">
             {/* Header */}
-            <div className="shrink-0 flex items-center gap-4 px-0 pt-10 pb-4">
+            <div className="shrink-0 flex items-center gap-4 px-0 pt-20 pb-4">
               <div className="flex items-center justify-center"
                 style={{ width: 44, height: 44, borderRadius: theme.radiusLg, backgroundColor: APPRECIATION_SUBTLE }}>
                 <Heart size={22} style={{ color: APPRECIATION_COLOR }} />
@@ -1009,7 +1009,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 flex items-center justify-between px-12 py-8 border-t" style={{ borderColor: theme.borderDefault, direction: "ltr" }}>
+        <div className="shrink-0 flex items-center justify-between px-10 py-5" style={{ borderColor: theme.borderDefault, direction: "ltr" }}>
           {isRTL ? (
             <>
               <button
@@ -1017,10 +1017,10 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
                 disabled={!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)}
                 className="flex items-center gap-2 transition-transform duration-200 active:scale-[0.96] cursor-pointer"
                 style={{
-                  fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: "#fff",
-                  padding: "12px 32px", borderRadius: theme.radiusMd,
+                  fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold, color: "#fff",
+                  height: "52px", padding: "0 28px", borderRadius: "14px",
                   backgroundColor: (!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)) ? theme.textDisabled : APPRECIATION_COLOR,
-                  border: "none", opacity: (!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)) ? 0.5 : 1,
+                  border: `1px solid rgba(255,255,255,0.35)`, opacity: (!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)) ? 0.5 : 1,
                   boxShadow: `0 4px 16px ${APPRECIATION_SUBTLE}`,
                 }}
               >
@@ -1028,7 +1028,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
                 {t("appreciation.send")}
               </button>
               <button onClick={() => setPath("hub")} className="flex items-center gap-2 cursor-pointer transition-transform duration-200"
-                style={{ background: "none", border: "none", padding: "12px 24px", borderRadius: theme.radiusMd, backgroundColor: "transparent", fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
+                style={{ background: "none", border: `1.5px solid ${theme.borderDefault}`, height: "52px", padding: "0 24px", borderRadius: "14px", backgroundColor: "#fff", fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
                 {t("feedback.back")}
                 <ChevronRight size={22} />
               </button>
@@ -1036,7 +1036,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
           ) : (
             <>
               <button onClick={() => setPath("hub")} className="flex items-center gap-2 cursor-pointer transition-transform duration-200"
-                style={{ background: "none", border: "none", padding: "12px 24px", borderRadius: theme.radiusMd, backgroundColor: "transparent", fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
+                style={{ background: "none", border: `1.5px solid ${theme.borderDefault}`, height: "52px", padding: "0 24px", borderRadius: "14px", backgroundColor: "#fff", fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold, color: theme.textMuted }}>
                 <ChevronLeft size={22} />
                 {t("feedback.back")}
               </button>
@@ -1045,10 +1045,10 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
                 disabled={!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)}
                 className="flex items-center gap-2 transition-transform duration-200 active:scale-[0.96] cursor-pointer"
                 style={{
-                  fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.semibold, color: "#fff",
-                  padding: "12px 32px", borderRadius: theme.radiusMd,
+                  fontFamily, fontSize: "18px", fontWeight: WEIGHT.semibold, color: "#fff",
+                  height: "52px", padding: "0 28px", borderRadius: "14px",
                   backgroundColor: (!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)) ? theme.textDisabled : APPRECIATION_COLOR,
-                  border: "none", opacity: (!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)) ? 0.5 : 1,
+                  border: `1px solid rgba(255,255,255,0.35)`, opacity: (!appreciationTarget || (!appreciationText.trim() && !appreciationHasRecording)) ? 0.5 : 1,
                   boxShadow: `0 4px 16px ${APPRECIATION_SUBTLE}`,
                 }}
               >

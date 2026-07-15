@@ -504,7 +504,7 @@ export function MyPreferencesDialog({
               <button
                 onClick={() => {
                   setServerIp("https://control.careinn.com/api");
-                  setApiKey("efc9bcbf-6951-436a-8694-c13cc6f30913");
+                  setApiKey("2345fcba-1633-46c9-a27e-ed0ca9ee17e9");
                 }}
                 className="px-3 py-1.5 rounded-full font-bold cursor-pointer transition-all active:scale-95 shrink-0"
                 style={{ backgroundColor: t.primarySubtle, color: t.primary, fontSize: "12px", border: "none" }}

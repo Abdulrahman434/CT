@@ -379,7 +379,7 @@ const translations: Record<string, TranslationEntry> = {
   "care.overview.title": { en: "Care Overview", ar: "ملخص الرعاية", ur: "دیکھ بھال کا جائزہ" },
   "care.team.title": { en: "My Care Team", ar: "فريق الرعاية", ur: "میری نگہداشت کی ٹیم" },
   "care.plan.title": { en: "My Care Plan", ar: "خطة الرعاية", ur: "میرا کیئر پلان" },
-  "care.diet.title": { en: "Diet Codes", ar: "النظام الغذائي", ur: "خوراک کے قوانین" },
+  "care.diet.title": { en: "Patient Diet", ar: "حمية المريض", ur: "مریض کی خوراک" },
   "care.baby.title": { en: "Baby Camera", ar: "كاميرا الطفل", ur: "بیبی کیمرہ" },
   "care.labs.title": { en: "Lab Results", ar: "نتائج المختبر", ur: "لیب کے نتائج" },
   "care.imaging.title": { en: "Scans & Imaging", ar: "الأشعة والتصوير", ur: "کین اور امیجنگ" },
@@ -1025,7 +1025,11 @@ const translations: Record<string, TranslationEntry> = {
   "offline.openWifi":  { en: "Open WiFi Settings", ar: "فتح إعدادات الواي فاي", ur: "وائی فائی سیٹنگز کھولیں" },
   "offline.adminPin":  { en: "Continue Offline", ar: "الاستمرار بدون اتصال", ur: "آف لائن جاری رکھیں" },
   "offline.enterPin":  { en: "Enter admin PIN", ar: "أدخل رمز PIN للمسؤول", ur: "ایڈمن PIN درج کریں" },
-  "offline.cancel":    { en: "Cancel", ar: "إلغاء", ur: "منسوخ" }
+  "offline.cancel":    { en: "Cancel", ar: "إلغاء", ur: "منسوخ" },
+
+  /* ─── Updates ─── */
+  "update.available": { en: "An update is available", ar: "يتوفر تحديث", ur: "ایک اپ ڈیٹ دستیاب ہے" },
+  "update.reload":    { en: "Reload now", ar: "إعادة التحميل الآن", ur: "ابھی ری لوڈ کریں" }
 };
 
 /* ── Number Localization ── */
