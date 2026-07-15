@@ -37,6 +37,7 @@ import burjeelAccreds from "../../assets/burjeelaccreds.png";
 
 import primeAccreds from "../../assets/prime-accreditations.png";
 import kauhHeroImg from "../../assets/kauh-hero.jpg";
+import shifaaAccreds from "../../assets/shifaa-accreds.jpg";
 
 interface AboutSection {
   id: string;
@@ -378,7 +379,7 @@ Support Services
     id: "accreditations",
     title: themeId === "careinn" ? "Certifications" : themeId === "dallah" ? "Awards" : themeId === "kauh" ? "الاعتمادات والجوائز" : "Accreditations",
     titleKey: themeId === "careinn" ? "about.certifications" : themeId === "dallah" ? "about.awards" : "about.accreditations",
-    image: themeId === "burjeel" ? burjeelAccreds : themeId === "careinn" ? careinnCertifications : themeId === "imc" ? imcAccreds : themeId === "dallah" ? (isRTL ? dallahAwardsAr : dallahAwardsEn) : themeId === "caremed" ? accredsImg : themeId === "prime" ? primeAccreds : themeId === "kauh" ? kauhHeroImg : accreditationsImg,
+    image: themeId === "burjeel" ? burjeelAccreds : themeId === "careinn" ? careinnCertifications : themeId === "imc" ? imcAccreds : themeId === "dallah" ? (isRTL ? dallahAwardsAr : dallahAwardsEn) : themeId === "caremed" ? accredsImg : themeId === "prime" ? primeAccreds : themeId === "kauh" ? shifaaAccreds : accreditationsImg,
   },
   {
     id: "digital",
