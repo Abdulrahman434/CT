@@ -1,7 +1,9 @@
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, LEADING, TEXT_STYLE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { ChevronLeft, ChevronRight, X, FileText, AlertTriangle, Heart, Mic, CheckCircle2, Play, Pause, Square, RotateCcw, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageSquareHeart, FileText, AlertTriangle, Heart, Mic, CheckCircle2, Play, Pause, Square, RotateCcw, Trash2 } from "lucide-react";
+import { InternalPageHeader } from "./InternalPageHeader";
+import { ApiImage } from "./ApiImage";
 import thankYouImage from "../../assets/23db5e568918c9a319b272caa7a9e865d4fbd418.png";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -355,43 +357,23 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
    * ═══════════════════════════════════════════════════════════════ */
   const renderHubScreen = () => (
     <div className="flex flex-col items-center justify-center h-full px-16 text-center">
-      <h2
-        style={{
-          fontFamily,
-          fontSize: TYPE_SCALE["2xl"],
-          fontWeight: WEIGHT.bold,
-          color: theme.textHeading,
-          marginBottom: "48px",
-          lineHeight: LEADING.tight,
-        }}
-      >
-        {t("survey.intro")}
-      </h2>
-
       <div className="flex items-center justify-center gap-6 w-full max-w-[1000px]">
         {/* Quick Survey Card */}
         <button
           onClick={() => setPath("survey")}
-          className="flex-1 flex flex-col items-center cursor-pointer transition-all duration-200 active:scale-[0.98]"
+          className="sm-card flex-1 flex flex-col items-center cursor-pointer"
           style={{
             padding: "48px 24px",
-            borderRadius: "24px",
+            borderRadius: theme.radiusCard,
             backgroundColor: theme.surface,
             border: `1.5px solid ${theme.borderDefault}`,
             boxShadow: SHADOW.sm,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = BRAND;
-            e.currentTarget.style.boxShadow = SHADOW.md;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = theme.borderDefault;
-            e.currentTarget.style.boxShadow = SHADOW.sm;
+            outline: "none",
           }}
         >
           <div
-            className="flex items-center justify-center mb-6"
-            style={{ width: 80, height: 80, borderRadius: "50%", backgroundColor: theme.primarySubtle }}
+            className="sm-iconbox flex items-center justify-center mb-6"
+            style={{ width: 80, height: 80, borderRadius: theme.radiusFull, backgroundColor: theme.primarySubtle }}
           >
             <FileText size={40} style={{ color: BRAND }} />
           </div>
@@ -406,26 +388,19 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
         {/* Raise a Concern Card */}
         <button
           onClick={() => setPath("concern")}
-          className="flex-1 flex flex-col items-center cursor-pointer transition-all duration-200 active:scale-[0.98]"
+          className="sm-card flex-1 flex flex-col items-center cursor-pointer"
           style={{
             padding: "48px 24px",
-            borderRadius: "24px",
+            borderRadius: theme.radiusCard,
             backgroundColor: theme.surface,
             border: `1.5px solid ${theme.borderDefault}`,
             boxShadow: SHADOW.sm,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = CONCERN_COLOR;
-            e.currentTarget.style.boxShadow = SHADOW.md;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = theme.borderDefault;
-            e.currentTarget.style.boxShadow = SHADOW.sm;
+            outline: "none",
           }}
         >
           <div
-            className="flex items-center justify-center mb-6"
-            style={{ width: 80, height: 80, borderRadius: "50%", backgroundColor: CONCERN_SUBTLE }}
+            className="sm-iconbox flex items-center justify-center mb-6"
+            style={{ width: 80, height: 80, borderRadius: theme.radiusFull, backgroundColor: CONCERN_SUBTLE }}
           >
             <AlertTriangle size={40} style={{ color: CONCERN_COLOR }} />
           </div>
@@ -440,26 +415,19 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
         {/* Send Appreciation Card */}
         <button
           onClick={() => setPath("appreciation")}
-          className="flex-1 flex flex-col items-center cursor-pointer transition-all duration-200 active:scale-[0.98]"
+          className="sm-card flex-1 flex flex-col items-center cursor-pointer"
           style={{
             padding: "48px 24px",
-            borderRadius: "24px",
+            borderRadius: theme.radiusCard,
             backgroundColor: theme.surface,
             border: `1.5px solid ${theme.borderDefault}`,
             boxShadow: SHADOW.sm,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = APPRECIATION_COLOR;
-            e.currentTarget.style.boxShadow = SHADOW.md;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = theme.borderDefault;
-            e.currentTarget.style.boxShadow = SHADOW.sm;
+            outline: "none",
           }}
         >
           <div
-            className="flex items-center justify-center mb-6"
-            style={{ width: 80, height: 80, borderRadius: "50%", backgroundColor: APPRECIATION_SUBTLE }}
+            className="sm-iconbox flex items-center justify-center mb-6"
+            style={{ width: 80, height: 80, borderRadius: theme.radiusFull, backgroundColor: APPRECIATION_SUBTLE }}
           >
             <Heart size={40} style={{ color: APPRECIATION_COLOR }} />
           </div>
@@ -803,7 +771,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
         <div className="flex-1 flex flex-col overflow-hidden items-center justify-center">
           <div className="w-full max-w-[800px] flex flex-col h-full shrink-0">
             {/* Header */}
-            <div className="shrink-0 flex items-center gap-4 px-0 pt-20 pb-4">
+            <div className="shrink-0 flex items-center gap-4 px-0 pt-10 pb-4">
               <div className="flex items-center justify-center"
                 style={{ width: 44, height: 44, borderRadius: theme.radiusLg, backgroundColor: CONCERN_SUBTLE }}>
                 <AlertTriangle size={22} style={{ color: CONCERN_COLOR }} />
@@ -968,7 +936,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
         <div className="flex-1 flex flex-col overflow-hidden items-center justify-center">
           <div className="w-full max-w-[800px] flex flex-col h-full shrink-0">
             {/* Header */}
-            <div className="shrink-0 flex items-center gap-4 px-0 pt-20 pb-4">
+            <div className="shrink-0 flex items-center gap-4 px-0 pt-10 pb-4">
               <div className="flex items-center justify-center"
                 style={{ width: 44, height: 44, borderRadius: theme.radiusLg, backgroundColor: APPRECIATION_SUBTLE }}>
                 <Heart size={22} style={{ color: APPRECIATION_COLOR }} />
@@ -1099,34 +1067,56 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
    * ═══════════════════════════════════════════════════════════════ */
   return (
     <div
-      className="fixed inset-0 flex flex-col"
+      className="fixed inset-0 flex flex-col overflow-hidden"
       style={{
-        backgroundColor: theme.surface,
+        background: `linear-gradient(160deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`,
         zIndex: 1000,
         direction: isRTL ? "rtl" : "ltr",
+        ["--sm-primary" as any]: theme.primary,
       }}
     >
-      {/* Close button */}
-      <button
-        onClick={onClose}
-        className="absolute top-8 p-3 transition-transform duration-200"
-        style={{
-          borderRadius: theme.radiusLg,
-          backgroundColor: theme.tileInactiveBg,
-          zIndex: 30,
-          ...(isRTL ? { left: "32px" } : { right: "32px" }),
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = theme.sliderBg; }}
-        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = theme.tileInactiveBg; }}
-      >
-        <X size={28} style={{ color: theme.textMuted }} />
-      </button>
+      {/* Subtle hospital hero photo — consistent with other internal pages */}
+      <ApiImage
+        src={theme.heroImageUrl}
+        alt=""
+        aria-hidden
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+        style={{ opacity: 0.08, mixBlendMode: "luminosity", userSelect: "none" }}
+      />
 
-      {/* Main content area */}
-      {path === "hub" && renderHubScreen()}
-      {path === "survey" && renderSurveyPath()}
-      {path === "concern" && renderConcernPath()}
-      {path === "appreciation" && renderAppreciationPath()}
+      <style>{`
+        .sm-card { transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+        .sm-card:hover { border-color: var(--sm-primary); box-shadow: ${SHADOW.md}; transform: translateY(-4px); }
+        .sm-card:active { transform: scale(0.985); }
+        .sm-iconbox { transition: transform .2s ease; }
+        .sm-card:hover .sm-iconbox { transform: scale(1.06); }
+      `}</style>
+
+      {/* ─── Header (white text on brand gradient) ─── */}
+      <InternalPageHeader
+        title={t("survey.intro")}
+        subtitle={theme.hospitalName}
+        icon={<MessageSquareHeart size={24} />}
+        onClose={onClose}
+      />
+
+      {/* ─── Main content — large white rounded card ─── */}
+      <div className="flex-1 min-h-0 px-12 pt-2 pb-8 relative z-10 flex flex-col">
+        <div
+          className="flex-1 min-h-0 flex flex-col overflow-hidden"
+          style={{
+            backgroundColor: theme.surface,
+            borderRadius: theme.radiusXl,
+            boxShadow: SHADOW.xl,
+            border: theme.cardBorder,
+          }}
+        >
+          {path === "hub" && renderHubScreen()}
+          {path === "survey" && renderSurveyPath()}
+          {path === "concern" && renderConcernPath()}
+          {path === "appreciation" && renderAppreciationPath()}
+        </div>
+      </div>
     </div>
   );
 }
