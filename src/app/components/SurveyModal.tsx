@@ -465,7 +465,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
     const currentAnswer = answers[question.id];
 
     return (
-      <div className="flex flex-col items-center justify-center h-full px-16">
+      <div className="flex flex-col items-center justify-center min-h-full px-16 py-10">
         {/* Question number badge */}
         <div
           className="flex items-center justify-center rounded-full mb-6"
@@ -580,7 +580,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
   };
 
   const renderSurveyFeedbackSlide = () => (
-    <div className="flex flex-col items-center justify-center h-full px-16">
+    <div className="flex flex-col items-center justify-center min-h-full px-16 py-10">
       <h3 style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "16px", textAlign: "center" }}>
         {t("survey.additionalFeedback")}
       </h3>
@@ -614,7 +614,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
   );
 
   const renderSurveyThankYou = () => (
-    <div className="flex flex-col items-center justify-center h-full px-16 text-center"
+    <div className="flex flex-col items-center justify-center min-h-full px-16 py-10 text-center"
       style={{ backgroundColor: theme.primarySubtle }}>
       {/* Check icon */}
       <div className="flex items-center justify-center mb-8"
@@ -640,7 +640,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
       {renderSurveyProgressBar()}
 
       {/* Main content */}
-      <div className="flex-1 overflow-hidden" style={{ paddingTop: "2px" }}>
+      <div className="flex-1 overflow-y-auto" style={{ paddingTop: "2px" }}>
         {currentSlide >= 0 && currentSlide <= 6 && renderQuestionSlide(currentSlide)}
         {currentSlide === 7 && renderSurveyFeedbackSlide()}
         {currentSlide === 8 && renderSurveyThankYou()}
@@ -768,10 +768,10 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
 
     return (
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        <div className="flex-1 flex flex-col overflow-y-auto items-center justify-center">
-          <div className="w-full max-w-[800px] flex flex-col">
+        <div className="flex-1 flex flex-col overflow-hidden items-center justify-center">
+          <div className="w-full max-w-[800px] flex flex-col h-full shrink-0">
             {/* Header */}
-            <div className="shrink-0 flex items-center gap-4 px-0 pt-20 pb-4">
+            <div className="shrink-0 flex items-center gap-4 px-0 pt-10 pb-4">
               <div className="flex items-center justify-center"
                 style={{ width: 44, height: 44, borderRadius: theme.radiusLg, backgroundColor: CONCERN_SUBTLE }}>
                 <AlertTriangle size={22} style={{ color: CONCERN_COLOR }} />
@@ -933,10 +933,10 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
 
     return (
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        <div className="flex-1 flex flex-col overflow-y-auto items-center justify-center">
-          <div className="w-full max-w-[800px] flex flex-col">
+        <div className="flex-1 flex flex-col overflow-hidden items-center justify-center">
+          <div className="w-full max-w-[800px] flex flex-col h-full shrink-0">
             {/* Header */}
-            <div className="shrink-0 flex items-center gap-4 px-0 pt-20 pb-4">
+            <div className="shrink-0 flex items-center gap-4 px-0 pt-10 pb-4">
               <div className="flex items-center justify-center"
                 style={{ width: 44, height: 44, borderRadius: theme.radiusLg, backgroundColor: APPRECIATION_SUBTLE }}>
                 <Heart size={22} style={{ color: APPRECIATION_COLOR }} />
