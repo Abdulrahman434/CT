@@ -571,6 +571,12 @@ const translations: Record<string, TranslationEntry> = {
   "settings.clearData.reset": { en: "Return to login screen", ar: "العودة إلى شاشة تسجيل الدخول", ur: "لاگ ان اسکرین پر واپس جائیں" },
   "settings.clearData.question": { en: "Are you sure you want to clear all data?", ar: "هل أنت متأكد من مسح جميع البيانات؟", ur: "کیا آپ واقعی تمام ڈیٹا صاف کرنا چاہتے ہیں؟" },
   "settings.clearData.desc": { en: "This action cannot be undone. It will prepare the terminal for the next patient.", ar: "لا يمكن التراجع عن هذا الإجراء. سيقوم بإعداد الشاشة للمريض التالي.", ur: "اس کارروائی کو واپس نہیں کیا جا سکتا۔ یہ اگلے مریض کے لیے ٹرمینل تیار کرے گا۔" },
+  "settings.clearData.clearMyData.title": { en: "Clear My Data", ar: "مسح بياناتي", ur: "میرا ڈیٹا صاف کریں" },
+  "settings.clearData.clearMyData.desc": { en: "Clears third-party apps, browser cache, and website logins. Your preferences and PIN remain safe.", ar: "يمسح التطبيقات الخارجية وسجل التصفح وتسجيلات الدخول. تظل إعداداتك ورمز PIN الخاص بك آمنين.", ur: "تھرڈ پارٹی ایپس، براؤزر کیشے اور ویب سائٹ لاگ ان کو صاف کرتا ہے۔ آپ کی ترجیحات اور PIN محفوظ رہیں گے۔" },
+  "settings.clearData.clearEverything.title": { en: "Clear Everything", ar: "مسح كل شيء", ur: "سب کچھ صاف کریں" },
+  "settings.clearData.clearEverything.desc": { en: "Resets the device fully to factory defaults. Wipes all preferences, language setup, and PIN.", ar: "إعادة ضبط الجهاز بالكامل إلى إعدادات المصنع. يمسح جميع التفضيلات وإعداد اللغة ورمز PIN.", ur: "ڈیوائس کو فیکٹری ڈیفالٹس پر مکمل طور پر ری سیٹ کرتا ہے۔ تمام ترجیحات، زبان کے سیٹ اپ اور PIN کو صاف کرتا ہے۔" },
+  "settings.clearData.btn.clearEverything": { en: "Clear Everything", ar: "مسح كل شيء", ur: "سب کچھ صاف کریں" },
+  "settings.clearData.btn.clearMyData": { en: "Clear My Data", ar: "مسح بياناتي", ur: "میرا ڈیٹا صاف کریں" },
 
   /* ─── Care Team Access Dialog ─── */
   "careteam.title": { en: "Care Team Access", ar: "دخول فريق الرعاية", ur: "کیئر ٹیم رسائی" },

@@ -50,7 +50,7 @@ import {
 import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { useAuth } from "./AuthContext";
-import { clearAllDataAndReload } from "../lib/clearAllData";
+import { clearAllDataAndReload, clearUserDataAndReload } from "../lib/clearAllData";
 import { NurseInterface } from "./nurse/NurseInterface";
 import type { Locale } from "./i18n";
 import imgMosque from "../../assets/b51acb5e2ec4a2c930572c53103b020b12e76ee2.png";
@@ -1103,21 +1103,15 @@ function CastDialog({
 /* ─── Clear Data Confirmation Dialog ─── */
 function ClearDataDialog({
   onClose,
-  onConfirm,
+  onClearMyData,
+  onClearEverything,
 }: {
   onClose: () => void;
-  onConfirm: () => void;
+  onClearMyData: () => void;
+  onClearEverything: () => void;
 }) {
   const { theme: t } = useTheme();
   const { t: tr } = useLocale();
-  const items = [
-    tr("settings.clearData.signOut"),      // "Sign out"
-    tr("settings.clearData.history"),       // "Call history"
-    tr("settings.clearData.passwords"),     // "Saved passwords & PIN"
-    tr("settings.clearData.lockedApps"),    // "App lock settings"
-    tr("settings.clearData.preferences"),   // "Preferences & language"
-    tr("settings.clearData.reset"),         // "Return to login screen"
-  ];
 
   const DANGER = "#D10044";
   const DANGER_SUBTLE = "rgba(209,0,68,0.06)";
@@ -1167,91 +1161,72 @@ function ClearDataDialog({
         </span>
       </div>
 
-      {/* What will be cleared */}
-      <div style={{ padding: "16px 24px" }}>
-        <div
-          className="flex flex-col gap-2"
-          style={{
-            padding: "14px 16px",
-            borderRadius: t.radiusLg,
-            backgroundColor: DANGER_SUBTLE,
-            border: `1px solid ${DANGER_BORDER}`,
-          }}
-        >
-          {items.map((item, i) => (
-            <div key={i} className="flex items-start gap-2.5">
-              <div
-                className="shrink-0 mt-0.5"
-                style={{
-                  width: "6px",
-                  height: "6px",
-                  borderRadius: t.radiusFull,
-                  backgroundColor: DANGER,
-                  opacity: 0.5,
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: t.fontFamily,
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: t.textMuted,
-                  lineHeight: "18px",
-                }}
-              >
-                {item}
-              </span>
-            </div>
-          ))}
+      {/* Description Cards of Options */}
+      <div className="flex flex-col gap-3" style={{ padding: "8px 24px" }}>
+        <div style={{ padding: "10px 12px", borderRadius: t.radiusMd, border: `1.5px solid ${t.borderDefault}`, backgroundColor: t.surfaceElevated }}>
+          <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 700, color: t.textHeading, display: "block" }}>
+            {tr("settings.clearData.clearMyData.title") || "Clear My Data"}
+          </span>
+          <span style={{ fontFamily: t.fontFamily, fontSize: "12px", color: t.textMuted, marginTop: "2px", display: "block", lineHeight: "16px" }}>
+            {tr("settings.clearData.clearMyData.desc") || "Clears third-party apps, browser cache, and website logins. Your preferences and PIN remain safe."}
+          </span>
+        </div>
+        <div style={{ padding: "10px 12px", borderRadius: t.radiusMd, border: `1.5px solid ${DANGER_BORDER}`, backgroundColor: DANGER_SUBTLE }}>
+          <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 700, color: DANGER, display: "block" }}>
+            {tr("settings.clearData.clearEverything.title") || "Clear Everything"}
+          </span>
+          <span style={{ fontFamily: t.fontFamily, fontSize: "12px", color: t.textMuted, marginTop: "2px", display: "block", lineHeight: "16px" }}>
+            {tr("settings.clearData.clearEverything.desc") || "Resets the device fully to factory defaults. Wipes all preferences, language setup, and PIN."}
+          </span>
         </div>
       </div>
 
       {/* Actions */}
       <div
-        className="flex gap-3"
+        className="flex flex-col gap-2.5"
         style={{ padding: "8px 24px 24px 24px" }}
       >
         <button
-          onClick={onClose}
-          className="flex-1 flex items-center justify-center cursor-pointer active:scale-[0.96] transition-transform"
+          onClick={onClearEverything}
+          className="w-full flex items-center justify-center cursor-pointer active:scale-[0.98] transition-transform"
           style={{
-            height: "48px",
-            borderRadius: t.radiusLg,
-            backgroundColor: t.tileInactiveBg,
-            border: "none",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: t.fontFamily,
-              fontSize: "15px",
-              fontWeight: 700,
-              color: t.textHeading,
-            }}
-          >
-            {tr("general.cancel")}
-          </span>
-        </button>
-        <button
-          onClick={onConfirm}
-          className="flex-1 flex items-center justify-center cursor-pointer active:scale-[0.96] transition-transform"
-          style={{
-            height: "48px",
-            borderRadius: t.radiusLg,
+            height: "44px",
+            borderRadius: t.radiusMd,
             backgroundColor: DANGER,
             border: "none",
             boxShadow: `0 4px 16px ${DANGER_SUBTLE}`,
           }}
         >
-          <span
-            style={{
-              fontFamily: t.fontFamily,
-              fontSize: "15px",
-              fontWeight: 700,
-              color: "#FFFFFF",
-            }}
-          >
-            {tr("settings.clearData")}
+          <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 700, color: "#FFFFFF" }}>
+            {tr("settings.clearData.btn.clearEverything") || "Clear Everything"}
+          </span>
+        </button>
+        <button
+          onClick={onClearMyData}
+          className="w-full flex items-center justify-center cursor-pointer active:scale-[0.98] transition-transform"
+          style={{
+            height: "44px",
+            borderRadius: t.radiusMd,
+            backgroundColor: t.tileInactiveBg,
+            border: `1px solid ${t.borderDefault}`,
+          }}
+        >
+          <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 700, color: t.textHeading }}>
+            {tr("settings.clearData.btn.clearMyData") || "Clear My Data"}
+          </span>
+        </button>
+        <button
+          onClick={onClose}
+          className="w-full flex items-center justify-center cursor-pointer active:scale-[0.98] transition-transform"
+          style={{
+            height: "40px",
+            borderRadius: t.radiusMd,
+            backgroundColor: "transparent",
+            border: "none",
+          }}
+        >
+          <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 600, color: t.textMuted }}>
+            {tr("general.cancel")}
           </span>
         </button>
       </div>
@@ -2256,10 +2231,12 @@ export function SettingsPanel({
       {showClearConfirm && (
         <ClearDataDialog
           onClose={() => setShowClearConfirm(false)}
-          onConfirm={async () => {
+          onClearMyData={async () => {
             setShowClearConfirm(false);
-            // clearAllDataAndReload() handles logout implicitly by 
-            // wiping all auth state and reloading — no need to call logout()
+            await clearUserDataAndReload();
+          }}
+          onClearEverything={async () => {
+            setShowClearConfirm(false);
             await clearAllDataAndReload();
           }}
         />
