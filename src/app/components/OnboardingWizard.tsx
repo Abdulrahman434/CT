@@ -701,8 +701,8 @@ export function OnboardingWizard({
             <div
               className="absolute inset-y-0 w-1/2 overflow-hidden pointer-events-none z-0"
               style={{
-                right: isRTL ? "auto" : 0,
-                left: isRTL ? 0 : "auto",
+                right: 0,
+                left: "auto",
               }}
             >
               <img
@@ -719,9 +719,7 @@ export function OnboardingWizard({
                 style={{
                   position: "absolute",
                   inset: 0,
-                  background: isRTL
-                    ? `linear-gradient(to right, transparent 0%, ${t.surface} 100%)`
-                    : `linear-gradient(to left, transparent 0%, ${t.surface} 100%)`,
+                  background: `linear-gradient(to left, transparent 0%, ${t.surface} 100%)`,
                 }}
               />
             </div>
@@ -753,12 +751,21 @@ export function OnboardingWizard({
           <div
             className="flex-1 min-h-0 flex flex-col justify-center px-10 py-8 relative z-10"
             style={{
-              alignItems: stepId === "welcome" ? (isRTL ? "flex-end" : "flex-start") : "center",
-              paddingLeft: stepId === "welcome" && !isRTL ? "8%" : "2.5rem",
-              paddingRight: stepId === "welcome" && isRTL ? "8%" : "2.5rem",
+              alignItems: stepId === "welcome" ? "flex-start" : "center",
+              paddingLeft: stepId === "welcome" ? "8%" : "2.5rem",
+              paddingRight: "2.5rem",
+              direction: stepId === "welcome" ? "ltr" : undefined,
             }}
           >
-            <div key={stepId} className="flex flex-col items-center w-full" style={{ maxWidth: "620px", animation: "obStepIn 0.25s ease-out" }}>
+            <div 
+              key={stepId} 
+              className="flex flex-col items-center w-full" 
+              style={{ 
+                maxWidth: "620px", 
+                animation: "obStepIn 0.25s ease-out",
+                direction: stepId === "welcome" && isRTL ? "rtl" : undefined,
+              }}
+            >
               <div
                 className="flex items-center justify-center"
                 style={{ width: "80px", height: "80px", borderRadius: t.radiusFull, backgroundColor: t.primarySubtle, marginBottom: "22px" }}
