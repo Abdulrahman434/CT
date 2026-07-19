@@ -666,6 +666,24 @@ export function OnboardingWizard({
             </p>
           </div>
         </div>
+        {stepId !== "consent" && (
+          <button
+            onClick={() => setStepId("consent")}
+            className="shrink-0 cursor-pointer active:scale-95 transition-transform"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.15)",
+              border: "1px solid rgba(255,255,255,0.16)",
+              borderRadius: "14px",
+              padding: "10px 18px",
+              color: "#fff",
+              outline: "none",
+            }}
+          >
+            <span style={{ fontFamily, fontSize: "15px", fontWeight: 600, color: "#fff" }}>
+              {tr("onboarding.skipAll")}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* ─── Content — large white rounded card ─── */}

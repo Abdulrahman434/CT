@@ -1043,6 +1043,7 @@ const translations: Record<string, TranslationEntry> = {
   "onboarding.progress": { en: "Step {0} of {1}", ar: "الخطوة {0} من {1}", ur: "مرحلہ {0} از {1}" },
   "onboarding.next": { en: "Next", ar: "التالي", ur: "اگلا" },
   "onboarding.skip": { en: "Skip", ar: "تخطي", ur: "چھوڑیں" },
+  "onboarding.skipAll": { en: "Skip all", ar: "تخطي الكل", ur: "سب چھوڑ دیں" },
   "onboarding.yes": { en: "Yes", ar: "نعم", ur: "ہاں" },
   "onboarding.no": { en: "No", ar: "لا", ur: "نہیں" },
 
