@@ -2,10 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { setAccount, getAccount, updateNfcCard, clearAccount, verifyPin } from "../lib/accountAuth";
-import { clearUserData, clearEverything } from "../lib/onboardingStore";
-import { toast } from "sonner";
 import { useNfcTap } from "../utils/nfc";
-import { X, CheckCircle, Shield, AlertCircle, Trash2, ChevronRight, Globe, Layout, Settings, Image, Check, Eraser } from "lucide-react";
+import { X, CheckCircle, Shield, AlertCircle, Trash2, ChevronRight, Globe, Layout, Settings, Image, Check, SlidersHorizontal } from "lucide-react";
 import { ApiImage } from "./ApiImage";
 import { getApiConfig, saveApiConfig, isCustomConfig, resetApiConfig, SECONDARY_OPTION } from "../lib/apiConfig";
 import { fetchAllWallpapers, WallpaperGroup } from "../lib/hospitalApi";
@@ -32,8 +30,7 @@ type Step =
   | 'admin-login'
   | 'admin-controls'
   | 'backgrounds'
-  | 'layout-mode'
-  | 'clear-data';
+  | 'layout-mode';
 
 type PendingAction = 'reset-pin' | 'reset-nfc' | 'remove-account' | 'admin-login' | null;
 
@@ -451,25 +448,40 @@ export function MyPreferencesDialog({
                 <ChevronRight size={20} style={{ color: t.textMuted, transform: isRTL ? 'rotate(180deg)' : '' }} />
               </button>
 
-              {/* SECTION 5: Clear my data */}
-              <button
-                onClick={() => setStep('clear-data')}
-                className="flex items-center gap-3 w-full text-left cursor-pointer active:scale-[0.98] transition-transform"
-                style={{ padding: "16px", borderRadius: t.radiusLg, backgroundColor: t.tileInactiveBg, border: "none" }}
-              >
-                <div style={{ padding: "8px", borderRadius: t.radiusMd, backgroundColor: "#FEE2E2" }}>
-                  <Eraser size={20} style={{ color: "#EF4444" }} />
-                </div>
-                <div className="flex flex-col flex-1">
-                  <span style={{ fontFamily: t.fontFamily, fontSize: "15px", fontWeight: 700, color: t.textHeading }}>
-                    {tr("prefs.clearData")}
-                  </span>
-                  <span style={{ fontFamily: t.fontFamily, fontSize: "13px", color: t.textMuted }}>
-                    {tr("prefs.clearData.subtitle")}
-                  </span>
-                </div>
-                <ChevronRight size={20} style={{ color: t.textMuted, transform: isRTL ? 'rotate(180deg)' : '' }} />
-              </button>
+              {/* SECTION 5: Setup your Preferences (re-opens the onboarding wizard) */}
+              {(() => {
+                const setupIncomplete = localStorage.getItem("careinn-onboarding-complete") !== "true";
+                return (
+                  <button
+                    onClick={() => {
+                      onClose();
+                      // App root listens: closes Settings and opens the wizard
+                      window.dispatchEvent(new CustomEvent("careinn-open-onboarding"));
+                    }}
+                    className="flex items-center gap-3 w-full text-left cursor-pointer active:scale-[0.98] transition-transform"
+                    style={{
+                      padding: "16px", borderRadius: t.radiusLg,
+                      backgroundColor: setupIncomplete ? t.warningSubtle : t.tileInactiveBg,
+                      border: setupIncomplete ? `1.5px solid ${t.warning}55` : "none",
+                    }}
+                  >
+                    <div style={{ padding: "8px", borderRadius: t.radiusMd, backgroundColor: setupIncomplete ? "#FFFFFF" : t.primarySubtle }}>
+                      <SlidersHorizontal size={20} style={{ color: setupIncomplete ? t.warning : t.primary }} />
+                    </div>
+                    <div className="flex flex-col flex-1">
+                      <span style={{ fontFamily: t.fontFamily, fontSize: "15px", fontWeight: 700, color: t.textHeading }}>
+                        {tr("prefs.setup")}
+                      </span>
+                      <span style={{ fontFamily: t.fontFamily, fontSize: "13px", color: setupIncomplete ? t.warning : t.textMuted }}>
+                        {setupIncomplete ? tr("prefs.setup.incomplete") : tr("prefs.setup.review")}
+                      </span>
+                    </div>
+                    {setupIncomplete
+                      ? <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: t.warning }} />
+                      : <ChevronRight size={20} style={{ color: t.textMuted, transform: isRTL ? 'rotate(180deg)' : '' }} />}
+                  </button>
+                );
+              })()}
 
               {/* SECTION 6: Admin Settings */}
               <button
@@ -972,64 +984,6 @@ export function MyPreferencesDialog({
 
       case 'backgrounds':
         return <BackgroundsPanel />;
-
-      case 'clear-data':
-        return (
-          <div className="flex flex-col gap-3" style={{ padding: "16px 20px 24px" }}>
-            {/* Clear everything — full reset back to first login */}
-            <button
-              onClick={() => {
-                clearEverything();
-                onClose();
-                // App root listens: resets defaults + reopens onboarding
-                window.dispatchEvent(new CustomEvent("careinn-force-onboarding"));
-              }}
-              className="flex flex-col w-full text-left cursor-pointer active:scale-[0.98] transition-transform"
-              style={{ padding: "16px", borderRadius: t.radiusLg, backgroundColor: "#FEE2E2", border: "none", textAlign: isRTL ? "right" : "left" }}
-            >
-              <span style={{ fontFamily: t.fontFamily, fontSize: "15px", fontWeight: 700, color: "#B91C1C" }}>
-                {tr("prefs.clearData.everything")}
-              </span>
-              <span style={{ fontFamily: t.fontFamily, fontSize: "13px", color: "#B91C1C", opacity: 0.8 }}>
-                {tr("prefs.clearData.everything.sub")}
-              </span>
-            </button>
-
-            {/* Clear user data only — Setup (incl. PIN) survives */}
-            <button
-              onClick={() => {
-                clearUserData();
-                toast(tr("prefs.clearData.done"));
-                onClose();
-              }}
-              className="flex flex-col w-full text-left cursor-pointer active:scale-[0.98] transition-transform"
-              style={{ padding: "16px", borderRadius: t.radiusLg, backgroundColor: t.tileInactiveBg, border: "none", textAlign: isRTL ? "right" : "left" }}
-            >
-              <span style={{ fontFamily: t.fontFamily, fontSize: "15px", fontWeight: 700, color: t.textHeading }}>
-                {tr("prefs.clearData.userOnly")}
-              </span>
-              <span style={{ fontFamily: t.fontFamily, fontSize: "13px", color: t.textMuted }}>
-                {tr("prefs.clearData.userOnly.sub")}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setStep('menu')}
-              className="flex items-center justify-center w-full py-3.5 cursor-pointer active:scale-95 transition-transform"
-              style={{
-                backgroundColor: "transparent",
-                borderRadius: t.radiusLg,
-                border: `1.5px solid ${t.borderDefault}`,
-                color: t.textMuted,
-                fontFamily: t.fontFamily,
-                fontWeight: 600,
-                fontSize: "15px",
-              }}
-            >
-              {tr("general.cancel")}
-            </button>
-          </div>
-        );
     }
   };
 
@@ -1050,7 +1004,6 @@ export function MyPreferencesDialog({
       case 'remove-confirm':
         return "Password";
       case 'backgrounds': return tr("prefs.backgrounds");
-      case 'clear-data': return tr("prefs.clearData");
       default: return tr("settings.preferences");
     }
   };

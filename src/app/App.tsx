@@ -336,12 +336,23 @@ function BedsideScreen() {
     setShowOnboarding(true);
   }, [setLocale, setDarkMode, setPrayerAlarm]);
 
-  // Manual "Clear everything" from My Preferences dispatches this event.
+  // Manual "Clear everything" from Settings dispatches this event.
   useEffect(() => {
     const handler = () => forceOnboarding();
     window.addEventListener("careinn-force-onboarding", handler);
     return () => window.removeEventListener("careinn-force-onboarding", handler);
   }, [forceOnboarding]);
+
+  // "Setup your Preferences" from My Preferences re-opens the wizard WITHOUT
+  // clearing anything — the wizard pre-fills current choices from storage.
+  useEffect(() => {
+    const handler = () => {
+      setShowSettings(false);
+      setShowOnboarding(true);
+    };
+    window.addEventListener("careinn-open-onboarding", handler);
+    return () => window.removeEventListener("careinn-open-onboarding", handler);
+  }, []);
 
   // Admission-change watcher + daily/24h-idle clear policies (kiosk only).
   useEffect(() => {
