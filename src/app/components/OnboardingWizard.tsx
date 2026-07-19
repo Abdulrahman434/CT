@@ -465,10 +465,7 @@ export function OnboardingWizard({
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-3 w-full">
-              <div className="flex-1"><GhostButton label={tr("onboarding.skip")} onClick={() => saveDisplayName("skipped")} /></div>
-              <div className="flex-1"><PrimaryButton label={tr("onboarding.next")} onClick={() => saveDisplayName(useFileName ? "auto" : "custom")} /></div>
-            </div>
+            <PrimaryButton label={tr("onboarding.next")} onClick={() => saveDisplayName(useFileName ? "auto" : "custom")} />
           </>
         );
       }
@@ -481,27 +478,18 @@ export function OnboardingWizard({
                 {tr("onboarding.pin.alreadySet")}
               </p>
             )}
-            <div className="flex items-center gap-3 w-full">
-              <div className="flex-1"><GhostButton label={tr("onboarding.skip")} onClick={() => { toast(tr("onboarding.pin.skipToast")); goNext(); }} /></div>
-              <div className="flex-1"><PrimaryButton label={tr("onboarding.yes")} onClick={() => setOverlay("pin")} /></div>
-            </div>
+            <PrimaryButton label={tr("onboarding.yes")} onClick={() => setOverlay("pin")} />
           </>
         );
 
       case "prayer":
         return (
-          <div className="flex items-center gap-3 w-full">
-            <div className="flex-1"><GhostButton label={tr("onboarding.no")} onClick={() => savePrayer(false)} /></div>
-            <div className="flex-1"><PrimaryButton label={tr("onboarding.yes")} onClick={() => savePrayer(true)} /></div>
-          </div>
+          <PrimaryButton label={tr("onboarding.yes")} onClick={() => savePrayer(true)} />
         );
 
       case "decision":
         return (
-          <div className="flex items-center gap-3 w-full">
-            <div className="flex-1"><GhostButton label={tr("onboarding.decision.no")} onClick={() => { setExtended(false); goNext(STEP_SEQUENCE.filter(s => !s.extendedOnly)); }} /></div>
-            <div className="flex-1"><PrimaryButton label={tr("onboarding.yes")} onClick={() => { setExtended(true); goNext(STEP_SEQUENCE); }} /></div>
-          </div>
+          <PrimaryButton label={tr("onboarding.yes")} onClick={() => { setExtended(true); goNext(STEP_SEQUENCE); }} />
         );
 
       case "theme":
@@ -563,10 +551,7 @@ export function OnboardingWizard({
 
       case "bluetooth":
         return (
-          <div className="flex items-center gap-3 w-full">
-            <div className="flex-1"><GhostButton label={tr("onboarding.no")} onClick={() => goNext()} /></div>
-            <div className="flex-1"><PrimaryButton label={tr("onboarding.yes")} onClick={() => setOverlay("bluetooth")} /></div>
-          </div>
+          <PrimaryButton label={tr("onboarding.yes")} onClick={() => setOverlay("bluetooth")} />
         );
 
       case "screensaver":
@@ -577,10 +562,7 @@ export function OnboardingWizard({
               <OptionCard selected={selSaver === "1m"} onClick={() => saveSaver("1m")} label={tr("onboarding.screensaver.1m")} />
               <OptionCard selected={selSaver === "5m"} onClick={() => saveSaver("5m")} label={tr("onboarding.screensaver.5m")} />
             </div>
-            <div className="flex items-center gap-3 w-full">
-              <div className="flex-1"><GhostButton label={tr("onboarding.skip")} onClick={() => goNext()} /></div>
-              <div className="flex-1"><PrimaryButton label={tr("onboarding.next")} disabled={!selSaver} onClick={() => goNext()} /></div>
-            </div>
+            <PrimaryButton label={tr("onboarding.next")} disabled={!selSaver} onClick={() => goNext()} />
           </>
         );
 
@@ -612,6 +594,49 @@ export function OnboardingWizard({
         );
     }
   };
+
+  const skipConfig = useMemo(() => {
+    switch (stepId) {
+      case "displayName":
+        return {
+          label: tr("onboarding.skip"),
+          onClick: () => saveDisplayName("skipped"),
+        };
+      case "pin":
+        return {
+          label: tr("onboarding.skip"),
+          onClick: () => {
+            toast(tr("onboarding.pin.skipToast"));
+            goNext();
+          },
+        };
+      case "prayer":
+        return {
+          label: tr("onboarding.no"),
+          onClick: () => savePrayer(false),
+        };
+      case "decision":
+        return {
+          label: tr("onboarding.decision.no"),
+          onClick: () => {
+            setExtended(false);
+            goNext(STEP_SEQUENCE.filter((s) => !s.extendedOnly));
+          },
+        };
+      case "bluetooth":
+        return {
+          label: tr("onboarding.no"),
+          onClick: () => goNext(),
+        };
+      case "screensaver":
+        return {
+          label: tr("onboarding.skip"),
+          onClick: () => goNext(),
+        };
+      default:
+        return null;
+    }
+  }, [stepId, tr]);
 
   const Icon = STEP_ICONS[stepId];
   const stepIndexInFull = STEP_SEQUENCE.findIndex(s => s.id === stepId);
@@ -723,7 +748,7 @@ export function OnboardingWizard({
                 backgroundImage: `url(${STEP_BACKGROUNDS[stepId]})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
-                opacity: 0.05,
+                opacity: 0.1,
               }}
             />
           )}
@@ -810,6 +835,34 @@ export function OnboardingWizard({
               </h3>
               <div className="w-full flex flex-col gap-4">{renderStep()}</div>
             </div>
+
+            {skipConfig && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "24px",
+                  left: "40px",
+                }}
+              >
+                <button
+                  onClick={skipConfig.onClick}
+                  className="flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+                  style={{
+                    height: "44px",
+                    padding: "0 22px",
+                    backgroundColor: "transparent",
+                    borderRadius: t.radiusMd,
+                    border: `1.5px solid ${t.borderDefault}`,
+                    color: t.textMuted,
+                    fontFamily,
+                    fontWeight: 700,
+                    fontSize: "15px",
+                  }}
+                >
+                  {skipConfig.label}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
