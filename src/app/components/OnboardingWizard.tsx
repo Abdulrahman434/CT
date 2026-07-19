@@ -132,7 +132,7 @@ export function OnboardingWizard({
 
   /* per-step answers — pre-filled from storage so re-opening shows current choices */
   const [selLocale, setSelLocale] = useState<Locale>(() => (readLS("careinn-locale") as Locale) || locale || "en");
-  const [useFileName, setUseFileName] = useState(() => readLS("careinn-display-name-mode") !== "custom");
+  const [useFileName, setUseFileName] = useState(() => readLS("careinn-display-name-mode") === "auto");
   const [nameEn, setNameEn] = useState(() => readLS("careinn-display-name") || "");
   const [nameAr, setNameAr] = useState(() => readLS("careinn-display-name-ar") || "");
   const [selDark, setSelDark] = useState(() => {
@@ -423,19 +423,21 @@ export function OnboardingWizard({
         return (
           <>
             <div className="flex flex-col gap-4 w-full" style={{ marginBottom: "8px" }}>
-              <OptionCard
-                selected={useFileName}
-                onClick={() => setUseFileName(true)}
-                icon={<UserRound size={22} style={{ color: t.primary }} />}
-                label={tr("onboarding.displayName.useFile")}
-                sublabel={fileName || undefined}
-              />
-              <OptionCard
-                selected={!useFileName}
-                onClick={() => setUseFileName(false)}
-                icon={<UserRound size={22} style={{ color: t.primary }} />}
-                label={tr("onboarding.displayName.custom")}
-              />
+              <div className="grid grid-cols-2 gap-4 w-full">
+                <OptionCard
+                  selected={useFileName}
+                  onClick={() => setUseFileName(true)}
+                  icon={<UserRound size={22} style={{ color: t.primary }} />}
+                  label={tr("onboarding.displayName.useFile")}
+                  sublabel={fileName || undefined}
+                />
+                <OptionCard
+                  selected={!useFileName}
+                  onClick={() => setUseFileName(false)}
+                  icon={<UserRound size={22} style={{ color: t.primary }} />}
+                  label={tr("onboarding.displayName.custom")}
+                />
+              </div>
               {!useFileName && (
                 <div className="flex flex-col gap-3 w-full">
                   <input
@@ -478,18 +480,27 @@ export function OnboardingWizard({
                 {tr("onboarding.pin.alreadySet")}
               </p>
             )}
-            <PrimaryButton label={tr("onboarding.yes")} onClick={() => setOverlay("pin")} />
+            <div className="flex items-center gap-3 w-full">
+              <div className="flex-1"><GhostButton label={tr("onboarding.skip")} onClick={() => { toast(tr("onboarding.pin.skipToast")); goNext(); }} /></div>
+              <div className="flex-1"><PrimaryButton label={tr("onboarding.yes")} onClick={() => setOverlay("pin")} /></div>
+            </div>
           </>
         );
 
       case "prayer":
         return (
-          <PrimaryButton label={tr("onboarding.yes")} onClick={() => savePrayer(true)} />
+          <div className="flex items-center gap-3 w-full">
+            <div className="flex-1"><GhostButton label={tr("onboarding.no")} onClick={() => savePrayer(false)} /></div>
+            <div className="flex-1"><PrimaryButton label={tr("onboarding.yes")} onClick={() => savePrayer(true)} /></div>
+          </div>
         );
 
       case "decision":
         return (
-          <PrimaryButton label={tr("onboarding.yes")} onClick={() => { setExtended(true); goNext(STEP_SEQUENCE); }} />
+          <div className="flex items-center gap-3 w-full">
+            <div className="flex-1"><GhostButton label={tr("onboarding.decision.no")} onClick={() => { setExtended(false); goNext(STEP_SEQUENCE.filter(s => !s.extendedOnly)); }} /></div>
+            <div className="flex-1"><PrimaryButton label={tr("onboarding.yes")} onClick={() => { setExtended(true); goNext(STEP_SEQUENCE); }} /></div>
+          </div>
         );
 
       case "theme":
@@ -516,7 +527,7 @@ export function OnboardingWizard({
       case "dataClear":
         return (
           <>
-            <div className="flex flex-col gap-4 w-full" style={{ marginBottom: "4px" }}>
+            <div className="grid grid-cols-3 gap-4 w-full" style={{ marginBottom: "8px" }}>
               <OptionCard selected={selPolicy === "daily"} onClick={() => savePolicy("daily")} icon={<DatabaseZap size={22} style={{ color: t.primary }} />} label={tr("onboarding.dataClear.daily")} />
               <OptionCard selected={selPolicy === "24h-idle"} onClick={() => savePolicy("24h-idle")} icon={<DatabaseZap size={22} style={{ color: t.primary }} />} label={tr("onboarding.dataClear.idle")} />
               <OptionCard selected={selPolicy === "discharge"} onClick={() => savePolicy("discharge")} icon={<DatabaseZap size={22} style={{ color: t.primary }} />} label={tr("onboarding.dataClear.discharge")} />
@@ -551,7 +562,10 @@ export function OnboardingWizard({
 
       case "bluetooth":
         return (
-          <PrimaryButton label={tr("onboarding.yes")} onClick={() => setOverlay("bluetooth")} />
+          <div className="flex items-center gap-3 w-full">
+            <div className="flex-1"><GhostButton label={tr("onboarding.no")} onClick={() => goNext()} /></div>
+            <div className="flex-1"><PrimaryButton label={tr("onboarding.yes")} onClick={() => setOverlay("bluetooth")} /></div>
+          </div>
         );
 
       case "screensaver":
@@ -601,32 +615,6 @@ export function OnboardingWizard({
         return {
           label: tr("onboarding.skip"),
           onClick: () => saveDisplayName("skipped"),
-        };
-      case "pin":
-        return {
-          label: tr("onboarding.skip"),
-          onClick: () => {
-            toast(tr("onboarding.pin.skipToast"));
-            goNext();
-          },
-        };
-      case "prayer":
-        return {
-          label: tr("onboarding.no"),
-          onClick: () => savePrayer(false),
-        };
-      case "decision":
-        return {
-          label: tr("onboarding.decision.no"),
-          onClick: () => {
-            setExtended(false);
-            goNext(STEP_SEQUENCE.filter((s) => !s.extendedOnly));
-          },
-        };
-      case "bluetooth":
-        return {
-          label: tr("onboarding.no"),
-          onClick: () => goNext(),
         };
       case "screensaver":
         return {
