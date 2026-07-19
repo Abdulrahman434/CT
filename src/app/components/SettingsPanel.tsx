@@ -1118,7 +1118,24 @@ function ClearDataDialog({
   const DANGER_BORDER = "rgba(209,0,68,0.12)";
 
   return (
-    <CenteredDialog onClose={onClose} width={380}>
+    <CenteredDialog onClose={onClose} width={560}>
+      {/* Absolute close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+        style={{
+          width: "36px",
+          height: "36px",
+          borderRadius: "50%",
+          backgroundColor: t.tileInactiveBg,
+          border: "none",
+          zIndex: 10,
+        }}
+        title={tr("general.close") || "Close"}
+      >
+        <X size={18} style={{ color: t.textHeading }} />
+      </button>
+
       <div
         className="flex flex-col items-center"
         style={{ padding: "28px 24px 8px 24px" }}
@@ -1161,74 +1178,76 @@ function ClearDataDialog({
         </span>
       </div>
 
-      {/* Description Cards of Options */}
-      <div className="flex flex-col gap-3" style={{ padding: "8px 24px" }}>
-        <div style={{ padding: "10px 12px", borderRadius: t.radiusMd, border: `1.5px solid ${t.borderDefault}`, backgroundColor: t.surfaceElevated }}>
-          <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 700, color: t.textHeading, display: "block" }}>
-            {tr("settings.clearData.clearMyData.title") || "Clear My Data"}
-          </span>
-          <span style={{ fontFamily: t.fontFamily, fontSize: "12px", color: t.textMuted, marginTop: "2px", display: "block", lineHeight: "16px" }}>
-            {tr("settings.clearData.clearMyData.desc") || "Clears third-party apps, browser cache, and website logins. Your preferences and PIN remain safe."}
-          </span>
-        </div>
-        <div style={{ padding: "10px 12px", borderRadius: t.radiusMd, border: `1.5px solid ${DANGER_BORDER}`, backgroundColor: DANGER_SUBTLE }}>
-          <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 700, color: DANGER, display: "block" }}>
-            {tr("settings.clearData.clearEverything.title") || "Clear Everything"}
-          </span>
-          <span style={{ fontFamily: t.fontFamily, fontSize: "12px", color: t.textMuted, marginTop: "2px", display: "block", lineHeight: "16px" }}>
-            {tr("settings.clearData.clearEverything.desc") || "Resets the device fully to factory defaults. Wipes all preferences, language setup, and PIN."}
-          </span>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div
-        className="flex flex-col gap-2.5"
-        style={{ padding: "8px 24px 24px 24px" }}
-      >
-        <button
-          onClick={onClearEverything}
-          className="w-full flex items-center justify-center cursor-pointer active:scale-[0.98] transition-transform"
-          style={{
-            height: "44px",
-            borderRadius: t.radiusMd,
-            backgroundColor: DANGER,
-            border: "none",
-            boxShadow: `0 4px 16px ${DANGER_SUBTLE}`,
-          }}
-        >
-          <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 700, color: "#FFFFFF" }}>
-            {tr("settings.clearData.btn.clearEverything") || "Clear Everything"}
-          </span>
-        </button>
-        <button
+      {/* Description Cards of Options - Side by Side */}
+      <div className="flex gap-4 px-6 pb-6 pt-2">
+        <div
           onClick={onClearMyData}
-          className="w-full flex items-center justify-center cursor-pointer active:scale-[0.98] transition-transform"
+          className="flex-1 flex flex-col justify-between p-4 cursor-pointer active:scale-[0.98] transition-all hover:brightness-95"
           style={{
-            height: "44px",
-            borderRadius: t.radiusMd,
-            backgroundColor: t.tileInactiveBg,
-            border: `1px solid ${t.borderDefault}`,
+            borderRadius: t.radiusLg,
+            border: `1.5px solid ${t.borderDefault}`,
+            backgroundColor: t.surfaceElevated,
+            minHeight: "170px",
           }}
         >
-          <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 700, color: t.textHeading }}>
-            {tr("settings.clearData.btn.clearMyData") || "Clear My Data"}
-          </span>
-        </button>
-        <button
-          onClick={onClose}
-          className="w-full flex items-center justify-center cursor-pointer active:scale-[0.98] transition-transform"
+          <div>
+            <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 700, color: t.textHeading, display: "block" }}>
+              {tr("settings.clearData.clearMyData.title") || "Clear My Data"}
+            </span>
+            <span style={{ fontFamily: t.fontFamily, fontSize: "11px", color: t.textMuted, marginTop: "6px", display: "block", lineHeight: "15px" }}>
+              {tr("settings.clearData.clearMyData.desc") || "Clears third-party apps, browser cache, and website logins. Your preferences and PIN remain safe."}
+            </span>
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); onClearMyData(); }}
+            className="w-full flex items-center justify-center mt-4 cursor-pointer active:scale-95 transition-transform"
+            style={{
+              height: "36px",
+              borderRadius: t.radiusMd,
+              backgroundColor: t.tileInactiveBg,
+              border: `1px solid ${t.borderDefault}`,
+            }}
+          >
+            <span style={{ fontFamily: t.fontFamily, fontSize: "13px", fontWeight: 700, color: t.textHeading }}>
+              {tr("settings.clearData.btn.clearMyData") || "Clear My Data"}
+            </span>
+          </button>
+        </div>
+
+        <div
+          onClick={onClearEverything}
+          className="flex-1 flex flex-col justify-between p-4 cursor-pointer active:scale-[0.98] transition-all hover:brightness-95"
           style={{
-            height: "40px",
-            borderRadius: t.radiusMd,
-            backgroundColor: "transparent",
-            border: "none",
+            borderRadius: t.radiusLg,
+            border: `1.5px solid ${DANGER_BORDER}`,
+            backgroundColor: DANGER_SUBTLE,
+            minHeight: "170px",
           }}
         >
-          <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 600, color: t.textMuted }}>
-            {tr("general.cancel")}
-          </span>
-        </button>
+          <div>
+            <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 700, color: DANGER, display: "block" }}>
+              {tr("settings.clearData.clearEverything.title") || "Clear Everything"}
+            </span>
+            <span style={{ fontFamily: t.fontFamily, fontSize: "11px", color: t.textMuted, marginTop: "6px", display: "block", lineHeight: "15px" }}>
+              {tr("settings.clearData.clearEverything.desc") || "Resets the device fully to factory defaults. Wipes all preferences, language setup, and PIN."}
+            </span>
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); onClearEverything(); }}
+            className="w-full flex items-center justify-center mt-4 cursor-pointer active:scale-95 transition-transform"
+            style={{
+              height: "36px",
+              borderRadius: t.radiusMd,
+              backgroundColor: DANGER,
+              border: "none",
+              boxShadow: `0 4px 12px ${DANGER_SUBTLE}`,
+            }}
+          >
+            <span style={{ fontFamily: t.fontFamily, fontSize: "13px", fontWeight: 700, color: "#FFFFFF" }}>
+              {tr("settings.clearData.btn.clearEverything") || "Clear Everything"}
+            </span>
+          </button>
+        </div>
       </div>
     </CenteredDialog>
   );
