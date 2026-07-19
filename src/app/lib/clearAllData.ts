@@ -1,5 +1,60 @@
 import { isAndroidApp } from "../utils/androidBridge";
 import { nurseActions } from "../components/NurseDataStore";
+import { clearUserData } from "./onboardingStore";
+
+/**
+ * Performs a partial data wipe, clearing cookies, sessionStorage, caches,
+ * indexedDB, and non-setup local storage keys (preserving user PIN and preferences).
+ * Reloads the page afterwards.
+ */
+export async function clearUserDataAndReload(): Promise<void> {
+  // 1. Clear non-setup localStorage keys (keep device config and onboarding answers)
+  clearUserData();
+
+  // 2. Clear sessionStorage
+  sessionStorage.clear();
+
+  // 3. Clear IndexedDB databases
+  try {
+    const dbs = await indexedDB.databases();
+    await Promise.all(
+      dbs.map(db => {
+        return new Promise<void>((resolve) => {
+          if (!db.name) { resolve(); return; }
+          const req = indexedDB.deleteDatabase(db.name);
+          req.onsuccess = () => resolve();
+          req.onerror = () => resolve();  // ignore errors
+          req.onblocked = () => resolve();
+        });
+      })
+    );
+  } catch (e) {
+    console.warn("IndexedDB clear skipped:", e);
+  }
+
+  // 4. Clear Cache Storage (service worker caches)
+  try {
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+  } catch (e) {
+    console.warn("Cache Storage clear skipped:", e);
+  }
+
+  // 5. Clear cookies (website domain)
+  try {
+    document.cookie.split(";").forEach(cookie => {
+      const name = cookie.split("=")[0].trim();
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+    });
+  } catch (e) {
+    console.warn("Cookie clear skipped:", e);
+  }
+
+  // 6. Reload the page (browser fallback)
+  window.location.replace(window.location.href);
+}
 
 /**
  * Performs a full data wipe of all stored kiosk data, then 

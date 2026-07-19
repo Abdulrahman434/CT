@@ -3,7 +3,7 @@ import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { setAccount, getAccount, updateNfcCard, clearAccount, verifyPin } from "../lib/accountAuth";
 import { useNfcTap } from "../utils/nfc";
-import { X, CheckCircle, Shield, AlertCircle, Trash2, ChevronRight, Globe, Layout, Settings, Image, Check } from "lucide-react";
+import { X, CheckCircle, Shield, AlertCircle, Trash2, ChevronRight, Globe, Layout, Settings, Image, Check, SlidersHorizontal } from "lucide-react";
 import { ApiImage } from "./ApiImage";
 import { getApiConfig, saveApiConfig, isCustomConfig, resetApiConfig, SECONDARY_OPTION } from "../lib/apiConfig";
 import { fetchAllWallpapers, WallpaperGroup } from "../lib/hospitalApi";
@@ -233,13 +233,17 @@ export function PinKeypad({
 export function MyPreferencesDialog({
   open,
   onClose,
+  mode = "full",
 }: {
   open: boolean;
   onClose: () => void;
+  /** "pin-setup" jumps straight into the existing PIN setup flow and closes
+   *  when it finishes — used by the onboarding wizard. */
+  mode?: "full" | "pin-setup";
 }) {
   const { theme: t } = useTheme();
   const { t: tr, isRTL } = useLocale();
-  const [step, setStep] = useState<Step>('menu');
+  const [step, setStep] = useState<Step>(mode === "pin-setup" ? 'setup-pin1' : 'menu');
   const [pin1, setPin1] = useState("");
   const [pin2, setPin2] = useState("");
   const [error, setError] = useState(false);
@@ -265,7 +269,7 @@ export function MyPreferencesDialog({
 
   useEffect(() => {
     if (open) {
-      setStep('menu');
+      setStep(mode === "pin-setup" ? 'setup-pin1' : 'menu');
       setPin1("");
       setPin2("");
       setError(false);
@@ -305,11 +309,15 @@ export function MyPreferencesDialog({
   useEffect(() => {
     if (step === 'success') {
       const timer = setTimeout(() => {
-        setStep('menu');
+        if (mode === "pin-setup") {
+          onClose();
+        } else {
+          setStep('menu');
+        }
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [step]);
+  }, [step, mode, onClose]);
 
   function isValidServerUrl(s: string): boolean {
     // Allows IP, DNS, and optional http/https prefix. Also rejects empty spaces.
@@ -440,7 +448,42 @@ export function MyPreferencesDialog({
                 <ChevronRight size={20} style={{ color: t.textMuted, transform: isRTL ? 'rotate(180deg)' : '' }} />
               </button>
 
-              {/* SECTION 5: Admin Settings */}
+              {/* SECTION 5: Setup your Preferences (re-opens the onboarding wizard) */}
+              {(() => {
+                const setupIncomplete = localStorage.getItem("careinn-onboarding-complete") !== "true";
+                return (
+                  <button
+                    onClick={() => {
+                      onClose();
+                      // App root listens: closes Settings and opens the wizard
+                      window.dispatchEvent(new CustomEvent("careinn-open-onboarding"));
+                    }}
+                    className="flex items-center gap-3 w-full text-left cursor-pointer active:scale-[0.98] transition-transform"
+                    style={{
+                      padding: "16px", borderRadius: t.radiusLg,
+                      backgroundColor: setupIncomplete ? t.warningSubtle : t.tileInactiveBg,
+                      border: setupIncomplete ? `1.5px solid ${t.warning}55` : "none",
+                    }}
+                  >
+                    <div style={{ padding: "8px", borderRadius: t.radiusMd, backgroundColor: setupIncomplete ? "#FFFFFF" : t.primarySubtle }}>
+                      <SlidersHorizontal size={20} style={{ color: setupIncomplete ? t.warning : t.primary }} />
+                    </div>
+                    <div className="flex flex-col flex-1">
+                      <span style={{ fontFamily: t.fontFamily, fontSize: "15px", fontWeight: 700, color: t.textHeading }}>
+                        {tr("prefs.setup")}
+                      </span>
+                      <span style={{ fontFamily: t.fontFamily, fontSize: "13px", color: setupIncomplete ? t.warning : t.textMuted }}>
+                        {setupIncomplete ? tr("prefs.setup.incomplete") : tr("prefs.setup.review")}
+                      </span>
+                    </div>
+                    {setupIncomplete
+                      ? <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: t.warning }} />
+                      : <ChevronRight size={20} style={{ color: t.textMuted, transform: isRTL ? 'rotate(180deg)' : '' }} />}
+                  </button>
+                );
+              })()}
+
+              {/* SECTION 6: Admin Settings */}
               <button
                 onClick={() => {
                   if (isAdminUnlocked) {
@@ -658,10 +701,10 @@ export function MyPreferencesDialog({
             <div className="flex flex-col items-center" style={{ padding: "28px 24px 0 24px" }}>
               <Shield size={28} style={{ color: t.primary, marginBottom: "16px" }} />
               <span style={{ fontFamily: t.fontFamily, fontSize: "18px", fontWeight: 700, color: t.textHeading, textAlign: "center" }}>
-                Set up a PIN
+                {tr("pinSetup.title")}
               </span>
               <span style={{ fontFamily: t.fontFamily, fontSize: "13px", fontWeight: 500, color: t.textMuted, textAlign: "center", marginTop: "8px" }}>
-                Enter a 4-digit PIN for your settings
+                {tr("pinSetup.subtitle")}
               </span>
             </div>
             <PinKeypad pin={pin1} setPin={setPin1} error={false} onComplete={() => setStep('setup-pin2')} />
@@ -674,7 +717,7 @@ export function MyPreferencesDialog({
             <div className="flex flex-col items-center" style={{ padding: "28px 24px 0 24px" }}>
               <Shield size={28} style={{ color: t.primary, marginBottom: "16px" }} />
               <span style={{ fontFamily: t.fontFamily, fontSize: "18px", fontWeight: 700, color: t.textHeading, textAlign: "center" }}>
-                Confirm your PIN
+                {tr("pinSetup.confirm")}
               </span>
             </div>
             <PinKeypad
@@ -704,7 +747,7 @@ export function MyPreferencesDialog({
           <div className="flex flex-col items-center justify-center" style={{ padding: "40px 24px" }}>
             <AlertCircle size={40} style={{ color: "#D10044", marginBottom: "16px" }} />
             <span style={{ fontFamily: t.fontFamily, fontSize: "16px", fontWeight: 600, color: t.textHeading, textAlign: "center" }}>
-              PINs do not match
+              {tr("pinSetup.mismatch")}
             </span>
           </div>
         );
@@ -716,10 +759,10 @@ export function MyPreferencesDialog({
               <Shield size={32} style={{ color: t.primary }} />
             </div>
             <span style={{ fontFamily: t.fontFamily, fontSize: "18px", fontWeight: 700, color: t.textHeading, textAlign: "center" }}>
-              Add NFC Card (Optional)
+              {tr("nfcSetup.title")}
             </span>
             <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 500, color: t.textMuted, textAlign: "center", marginTop: "12px", marginBottom: "24px" }}>
-              You can pair an NFC card to easily unlock your screen later.
+              {tr("nfcSetup.subtitle")}
             </span>
             <div className="flex gap-3 w-full">
               <button
@@ -730,7 +773,7 @@ export function MyPreferencesDialog({
                 style={{ height: "48px", borderRadius: t.radiusLg, backgroundColor: t.tileInactiveBg, border: "none" }}
               >
                 <span style={{ fontFamily: t.fontFamily, fontSize: "15px", fontWeight: 600, color: t.textHeading }}>
-                  Skip
+                  {tr("nfcSetup.skip")}
                 </span>
               </button>
               <button
@@ -739,7 +782,7 @@ export function MyPreferencesDialog({
                 style={{ height: "48px", borderRadius: t.radiusLg, backgroundColor: t.primary, border: "none" }}
               >
                 <span style={{ fontFamily: t.fontFamily, fontSize: "15px", fontWeight: 600, color: "#fff" }}>
-                  Pair NFC
+                  {tr("nfcSetup.pair")}
                 </span>
               </button>
             </div>
@@ -758,19 +801,19 @@ export function MyPreferencesDialog({
               </div>
             </div>
             <span style={{ fontFamily: t.fontFamily, fontSize: "18px", fontWeight: 700, color: t.textHeading, textAlign: "center" }}>
-              {step === 'nfc-tap1' ? "Tap your NFC card" : "Tap it again to confirm"}
+              {step === 'nfc-tap1' ? tr("nfcSetup.tap1") : tr("nfcSetup.tap2")}
             </span>
             <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 500, color: t.textMuted, textAlign: "center", marginTop: "12px", marginBottom: "24px" }}>
-              Hold the card near the reader
+              {tr("nfcSetup.hold")}
             </span>
             <button
               onClick={() => {
                 if (getAccount()) setStep('menu');
                 else setStep('nfc-prompt');
               }}
-              style={{ padding: "10px 20px", color: t.textMuted, background: 'transparent', border: 'none', cursor: 'pointer' }}
+              style={{ padding: "10px 20px", color: t.textMuted, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: t.fontFamily }}
             >
-              Cancel
+              {tr("general.cancel")}
             </button>
           </div>
         );
@@ -780,7 +823,7 @@ export function MyPreferencesDialog({
           <div className="flex flex-col items-center justify-center" style={{ padding: "40px 24px" }}>
             <AlertCircle size={40} style={{ color: "#D10044", marginBottom: "16px" }} />
             <span style={{ fontFamily: t.fontFamily, fontSize: "16px", fontWeight: 600, color: t.textHeading, textAlign: "center" }}>
-              NFC cards do not match
+              {tr("nfcSetup.mismatch")}
             </span>
           </div>
         );
@@ -902,7 +945,7 @@ export function MyPreferencesDialog({
           <div className="flex flex-col items-center justify-center" style={{ padding: "40px 24px" }}>
             <CheckCircle size={48} style={{ color: "#10B981", marginBottom: "16px" }} />
             <span style={{ fontFamily: t.fontFamily, fontSize: "18px", fontWeight: 700, color: t.textHeading, textAlign: "center" }}>
-              {pendingAction === 'remove-account' ? "Removed" : "Saved successfully"}
+              {pendingAction === 'remove-account' ? tr("pinSetup.removed") : tr("pinSetup.saved")}
             </span>
           </div>
         );
@@ -966,7 +1009,7 @@ export function MyPreferencesDialog({
   };
 
   const showHeader = step !== 'success' && step !== 'setup-pin-mismatch' && step !== 'nfc-mismatch';
-  const canGoBack = step !== 'menu' && step !== 'success';
+  const canGoBack = step !== 'menu' && step !== 'success' && mode !== 'pin-setup';
   const dialogWidth = step === 'backgrounds' ? 420 : 340;
 
   return (

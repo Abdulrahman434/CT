@@ -46,6 +46,13 @@ export const lockedAppsStore = {
     }
   },
 
+  /** Unlocks every app and removes the persisted set. */
+  reset: () => {
+    lockedIds = new Set();
+    localStorage.removeItem(STORAGE_KEY);
+    notify();
+  },
+
   subscribe: (l: Listener) => {
     listeners.add(l);
     return () => { listeners.delete(l); };
