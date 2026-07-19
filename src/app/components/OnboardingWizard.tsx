@@ -18,12 +18,18 @@ import imgDataStorage from "../../assets/data storage.png";
 import imgDarkLightMode from "../../assets/Dark and light mode.png";
 import imgLockAppPages from "../../assets/lock app pages..png";
 import imgPrayerTimesPage from "../../assets/prayer times page.png";
+import imgWelcomeImage from "../../assets/Welcome Image.png";
+import imgLanguage from "../../assets/language.png";
+import imgNotificationSet from "../../assets/notificationset.png";
 
 const STEP_BACKGROUNDS: Record<string, string> = {
+  language: imgLanguage,
+  displayName: imgWelcomeImage,
   pin: imgLockAppPages,
   prayer: imgPrayerTimesPage,
   theme: imgDarkLightMode,
   dataClear: imgDataStorage,
+  notifications: imgNotificationSet,
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
