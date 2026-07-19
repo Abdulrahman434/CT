@@ -682,7 +682,7 @@ export function OnboardingWizard({
       {/* ─── Content — large white rounded card ─── */}
       <div className="flex-1 min-h-0 px-10 pb-8 relative z-10 flex flex-col">
         <div
-          className="ob-scroll flex-1 min-h-0 flex flex-col overflow-y-auto"
+          className="ob-scroll flex-1 min-h-0 flex flex-col overflow-y-auto relative"
           style={{
             backgroundColor: t.surface,
             borderRadius: t.radiusXl,
@@ -690,8 +690,38 @@ export function OnboardingWizard({
             border: t.cardBorder,
           }}
         >
+          {stepId === "welcome" && (
+            <div
+              className="absolute inset-y-0 w-1/2 overflow-hidden pointer-events-none z-0"
+              style={{
+                right: isRTL ? "auto" : 0,
+                left: isRTL ? 0 : "auto",
+              }}
+            >
+              <img
+                src={t.heroImageUrl}
+                alt="Hospital Hero"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: t.heroCropPosition || "50% 50%",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: isRTL
+                    ? `linear-gradient(to right, transparent 0%, ${t.surface} 100%)`
+                    : `linear-gradient(to left, transparent 0%, ${t.surface} 100%)`,
+                }}
+              />
+            </div>
+          )}
+
           {/* progress strip */}
-          <div className="shrink-0 flex items-center gap-4 px-10 pt-7">
+          <div className="shrink-0 flex items-center gap-4 px-10 pt-7 relative z-10">
             {stepIndex > 0 ? (
               <button
                 onClick={goBack}
@@ -713,7 +743,14 @@ export function OnboardingWizard({
           </div>
 
           {/* centered step body */}
-          <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-10 py-8">
+          <div
+            className="flex-1 min-h-0 flex flex-col justify-center px-10 py-8 relative z-10"
+            style={{
+              alignItems: stepId === "welcome" ? (isRTL ? "flex-end" : "flex-start") : "center",
+              paddingLeft: stepId === "welcome" && !isRTL ? "8%" : "2.5rem",
+              paddingRight: stepId === "welcome" && isRTL ? "8%" : "2.5rem",
+            }}
+          >
             <div key={stepId} className="flex flex-col items-center w-full" style={{ maxWidth: "620px", animation: "obStepIn 0.25s ease-out" }}>
               <div
                 className="flex items-center justify-center"
