@@ -14,6 +14,18 @@ import { MyPreferencesDialog } from "./MyAccountDialog";
 import { BluetoothDialog } from "./SettingsPanel";
 import { bluetooth as bluetoothBridge, isAndroidApp } from "../utils/androidBridge";
 
+import imgDataStorage from "../../assets/data storage.png";
+import imgDarkLightMode from "../../assets/Dark and light mode.png";
+import imgLockAppPages from "../../assets/lock app pages..png";
+import imgPrayerTimesPage from "../../assets/prayer times page.png";
+
+const STEP_BACKGROUNDS: Record<string, string> = {
+  pin: imgLockAppPages,
+  prayer: imgPrayerTimesPage,
+  theme: imgDarkLightMode,
+  dataClear: imgDataStorage,
+};
+
 /* ═══════════════════════════════════════════════════════════════════════════
  * First-run onboarding — "Setup your Preferences"
  *
@@ -697,6 +709,19 @@ export function OnboardingWizard({
             border: t.cardBorder,
           }}
         >
+          {/* Background image for questions (5% opacity) */}
+          {STEP_BACKGROUNDS[stepId] && (
+            <div
+              className="absolute inset-0 pointer-events-none z-0"
+              style={{
+                backgroundImage: `url(${STEP_BACKGROUNDS[stepId]})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                opacity: 0.05,
+              }}
+            />
+          )}
+
           {stepId === "welcome" && (
             <div
               className="absolute inset-y-0 w-1/2 overflow-hidden pointer-events-none z-0"
