@@ -53,6 +53,13 @@ export function NewsTicker({ items }: NewsTickerProps = {}) {
         `❤️  ${t("news.prime.2")}`,
         `🤝  ${t("news.prime.3")}`,
       ]
+    : theme.id === "kauh"
+    ? [
+        `🏥  ${t("news.kauh.1")}`,
+        `📱  ${t("news.kauh.2")}`,
+        `🔬  ${t("news.kauh.3")}`,
+        `🚀  ${t("news.kauh.4")}`,
+      ]
     : theme.id === "careinn"
     ? [
         `🏆  ${t("news.careinn.1")}`,

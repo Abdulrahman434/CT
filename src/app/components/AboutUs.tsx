@@ -36,6 +36,8 @@ import burjeelServices from "../../assets/BurjeelServices.png";
 import burjeelAccreds from "../../assets/burjeelaccreds.png";
 
 import primeAccreds from "../../assets/prime-accreditations.png";
+import kauhHeroImg from "../../assets/kauh-hero.jpg";
+import shifaaAccreds from "../../assets/shifaa-accreds.jpg";
 
 interface AboutSection {
   id: string;
@@ -150,27 +152,168 @@ const primeDigital = `Digital Care at Your Fingertips
 • Mobile App — manage appointments and health on the go
 • Digital Check-In — faster, paperless registration`;
 
+/* ── KAUH (Shifa Portal) — About Us content ── */
+const kauhDnaEn = `Shifaa — Our Identity
+
+King Abdulaziz University Hospital is a fully integrated academic teaching hospital affiliated with King Abdulaziz University in Jeddah, operating under the Shifaa health system. The hospital brings together outstanding healthcare, medical education, and scientific research to serve the community.
+
+Our Visual Identity
+• Brand Name — Shifaa
+• Primary Colour — Green (#2BAD8A), a symbol of healing and giving
+• Secondary Colour — Dark Green, a symbol of authenticity and trust
+• Brand Typeface — Almarai / Mulish
+
+Our Values
+• Academic Excellence — care grounded in the latest medical research and science
+• Patient First — comprehensive, integrated care centred on the patient's needs
+• Innovation — a medical environment that fosters scientific research and development
+• Community Partnership — serving the university community and patients from across the Kingdom`;
+
+const kauhDnaAr = `شفاء — هوية المستشفى
+
+مستشفى جامعة الملك عبدالعزيز هو مستشفى أكاديمي جامعي متكامل يرتبط بجامعة الملك عبدالعزيز في جدة، ويعمل تحت مظلة نظام الشفاء الصحي. يجمع المستشفى بين الرعاية الصحية المتميزة والتعليم الطبي والبحث العلمي لخدمة المجتمع.
+
+هويتنا البصرية
+• الاسم التجاري — شفاء
+• اللون الرئيسي — الأخضر (#2BAD8A)، رمز الشفاء والعطاء
+• اللون الثانوي — الأخضر الداكن، رمز الأصالة والثقة
+• خط الهوية — Almarai / Mulish
+
+قيمنا
+• التميز الأكاديمي — رعاية قائمة على أحدث الأبحاث والعلوم الطبية
+• المريض أولاً — رعاية شاملة ومتكاملة تتمحور حول احتياجات المريض
+• الابتكار — بيئة طبية محفّزة للبحث العلمي والتطوير
+• الشراكة المجتمعية — خدمة المجتمع الجامعي والمرضى من مختلف أنحاء المملكة`;
+
+const kauhNumbersEn = `King Abdulaziz University Hospital — Numbers & Achievements
+
+• 900+ Beds — comprehensive inpatient capacity
+• 50+ Medical Specialties — from the finest subspecialties to general care
+• 1,000+ Doctors & Academics — an elite team of medical and teaching staff
+• 200,000+ Visitors Annually — a growing number of patients who trust our care
+• 40+ Years of Excellence — a long-standing legacy in academic healthcare
+• An Active Research Environment — distinguished international scientific output and medical research
+
+* Indicative figures.`;
+
+const kauhNumbersAr = `مستشفى جامعة الملك عبدالعزيز — أرقام وإنجازات
+
+• +900 سرير — طاقة استيعابية شاملة للمرضى الداخليين
+• +50 تخصصاً طبياً — من أرقى التخصصات الدقيقة والعامة
+• +1,000 طبيب وأكاديمي — نخبة من الكوادر الطبية والتعليمية
+• +200,000 مراجع سنوياً — أعداد متزايدة من المرضى موثوق بخدمتهم
+• +40 عاماً من التميز — تاريخ راسخ في الرعاية الصحية الأكاديمية
+• بيئة بحثية نشطة — إنتاج علمي وأبحاث طبية دولية مميزة
+
+* أرقام تقريبية.`;
+
+const kauhServicesEn = `Specialties & Medical Centres
+
+Key Medical Specialties
+• Emergency Medicine & Critical Care — 24/7
+• Cardiology & Vascular Diseases
+• Oncology, Chemotherapy & Radiotherapy
+• Neurology, Neurosurgery, Brain & Spine
+• Orthopaedics, Joint Surgery & Sports Medicine
+• Paediatrics & Neonatology
+• Women's Health, Obstetrics & Gynaecology
+• Dentistry & Oral Surgery
+• Internal Medicine & Subspecialties
+
+Support Services
+• Advanced Diagnostic Imaging (MRI, CT, PET-CT)
+• Laboratories & Medical Analysis
+• Clinical Pharmacy
+• Rehabilitation & Physical Therapy
+• Therapeutic Nutrition & Health Counselling
+• Home Healthcare & Follow-up`;
+
+const kauhServicesAr = `التخصصات والمراكز الطبية
+
+تخصصات طبية رئيسية
+• طب الطوارئ والعناية المركزة — 24/7
+• أمراض القلب والأوعية الدموية
+• الأورام والعلاج الكيميائي والإشعاعي
+• طب وجراحة الأعصاب والمخ والعمود الفقري
+• جراحة العظام والمفاصل وطب الرياضة
+• طب الأطفال وحديثي الولادة
+• صحة المرأة والتوليد والنساء
+• طب الأسنان والجراحة الفموية
+• طب الباطنة والتخصصات الدقيقة
+
+خدمات داعمة
+• الأشعة التشخيصية المتقدمة (MRI، CT، PET-CT)
+• المختبرات والتحاليل الطبية
+• الصيدلانية السريرية
+• إعادة التأهيل والعلاج الطبيعي
+• التغذية العلاجية والإرشاد الصحي
+• الرعاية المنزلية والمتابعة`;
+
+const kauhDigitalEn = `Shifaa Digital Portal — Smart Services for a Comfortable Patient
+
+Patient Portal (Shifaa Portal)
+• Book appointments online anytime
+• View test results and medical reports
+• Follow your treatment plan and prescriptions
+• Communicate directly with your care team
+• View your visit history and medical record
+
+In-Hospital Digital Services
+• Interactive CareInn15 bedside screen
+• Order meals and hotel services electronically
+• Entertainment and smart room services
+• Communicate digitally with the nursing team
+
+Remote Care
+• Video medical consultations (Telemedicine)
+• Home monitoring for chronic patients
+• King Abdulaziz University health app`;
+
+const kauhDigitalAr = `بوابة شفاء الرقمية — خدمات ذكية لمريض مريح
+
+بوابة المريض الإلكترونية (Shifaa Portal)
+• حجز المواعيد عبر الإنترنت في أي وقت
+• الاطلاع على نتائج الفحوصات والتقارير الطبية
+• متابعة خطة العلاج والوصفات الدوائية
+• التواصل المباشر مع فريق الرعاية
+• عرض سجل الزيارات والتاريخ الطبي
+
+الخدمات الرقمية داخل المستشفى
+• شاشة CareInn15 التفاعلية بجانب السرير
+• طلب الوجبات والخدمات الفندقية إلكترونياً
+• الترفيه وخدمات الغرفة الذكية
+• التواصل مع فريق التمريض رقمياً
+
+الرعاية عن بُعد
+• الاستشارات الطبية عبر الفيديو (Telemedicine)
+• متابعة المرضى المزمنين من المنزل
+• تطبيق جامعة الملك عبدالعزيز الصحي`;
+
 const getSections = (themeId: string, isRTL: boolean, locale: string): AboutSection[] => [
   {
     id: "hospital",
     title: themeId === "dallah" ? "About Dallah" : "Our Hospital",
     titleKey: themeId === "dallah" ? "about.aboutDallah" : "about.ourHospital",
-    video: themeId === "burjeel" ? "OH71A4YxCG4" : themeId === "imc" ? imcVideo : themeId === "careinn" ? (locale === "ar" ? "5ZQofr0sVn4" : "pbnYEIewk6Q") : themeId === "caremed" ? "HW7Od_8C3_I" : themeId === "dallah" ? "JPgxKaOQf3s" : themeId === "prime" ? "qM3E7ALQ4TM" : "4VXy7_qn608",
+    video: themeId === "burjeel" ? "OH71A4YxCG4" : themeId === "imc" ? imcVideo : themeId === "careinn" ? (locale === "ar" ? "5ZQofr0sVn4" : "pbnYEIewk6Q") : themeId === "caremed" ? "HW7Od_8C3_I" : themeId === "dallah" ? "JPgxKaOQf3s" : themeId === "prime" ? "qM3E7ALQ4TM" : themeId === "kauh" ? "DlQlpgq8Z0s" : "4VXy7_qn608",
   },
   {
     id: "dna",
-    title: themeId === "caremed" ? "CareMed InBrief" : themeId === "dallah" ? "Dallah DNA" : themeId === "prime" ? "Prime DNA" : "Fakeeh Care DNA",
+    title: themeId === "caremed" ? "CareMed InBrief" : themeId === "dallah" ? "Dallah DNA" : themeId === "prime" ? "Prime DNA" : themeId === "kauh" ? "شفاء — هويتنا" : "Fakeeh Care DNA",
     titleKey: themeId === "caremed" ? "about.caremedInBrief" : themeId === "dallah" ? "about.dallahDna" : "about.dna",
     ...(themeId === "prime"
       ? { content: primeDna }
+      : themeId === "kauh"
+      ? { content: locale === "ar" ? kauhDnaAr : kauhDnaEn }
       : { image: themeId === "burjeel" ? burjeelDna : themeId === "careinn" ? (isRTL ? careinnDnaAr : careinnDna) : themeId === "imc" ? imcDna : themeId === "dallah" ? dallahDna : themeId === "caremed" ? (isRTL ? careMedInBriefAr : careMedInBriefEn) : dnaImg }),
   },
   ...(themeId === "careinn" ? [] : [{
     id: "numbers",
-    title: themeId === "imc" ? "IMC History" : themeId === "caremed" ? "CareMed In Numbers" : themeId === "dallah" ? "Accreditations" : themeId === "prime" ? "Prime In Numbers" : "Fakeeh In Numbers",
+    title: themeId === "imc" ? "IMC History" : themeId === "caremed" ? "CareMed In Numbers" : themeId === "dallah" ? "Accreditations" : themeId === "prime" ? "Prime In Numbers" : themeId === "kauh" ? "شفاء — أرقام وإنجازات" : "Fakeeh In Numbers",
     titleKey: themeId === "imc" ? "about.imcHistory" : themeId === "dallah" ? "about.accreditations" : "about.numbers",
     ...(themeId === "prime"
       ? { content: primeNumbers }
+      : themeId === "kauh"
+      ? { content: locale === "ar" ? kauhNumbersAr : kauhNumbersEn }
       : { image: themeId === "burjeel" ? burjeelNumbers : themeId === "imc" ? imcHistory : themeId === "dallah" ? (isRTL ? dallahAccredsAr : dallahAccredsEn) : themeId === "caremed" ? (isRTL ? numbersAr : numbersEn) : numbersImg }),
   }]),
   {
@@ -178,7 +321,7 @@ const getSections = (themeId: string, isRTL: boolean, locale: string): AboutSect
     title: "Services",
     titleKey: "about.services",
     image: themeId === "burjeel" ? burjeelServices : undefined,
-    content: themeId === "burjeel" ? undefined : themeId === "prime" ? primeServices : themeId === "careinn"
+    content: themeId === "burjeel" ? undefined : themeId === "kauh" ? (locale === "ar" ? kauhServicesAr : kauhServicesEn) : themeId === "prime" ? primeServices : themeId === "careinn"
       ? (locale === "ar" ? `• CareInn15
 شاشة تفاعلية بجانب السرير تتيح للمرضى سهولة الوصول إلى خدمات المستشفى والترفيه والطلبات والمعلومات الأساسية أثناء إقامتهم. توفر تجربة أكثر تواصلاً وراحة داخل الغرفة.
 
@@ -234,17 +377,17 @@ Support Services
   },
   {
     id: "accreditations",
-    title: themeId === "careinn" ? "Certifications" : themeId === "dallah" ? "Awards" : "Accreditations",
+    title: themeId === "careinn" ? "Certifications" : themeId === "dallah" ? "Awards" : themeId === "kauh" ? "الاعتمادات والجوائز" : "Accreditations",
     titleKey: themeId === "careinn" ? "about.certifications" : themeId === "dallah" ? "about.awards" : "about.accreditations",
-    image: themeId === "burjeel" ? burjeelAccreds : themeId === "careinn" ? careinnCertifications : themeId === "imc" ? imcAccreds : themeId === "dallah" ? (isRTL ? dallahAwardsAr : dallahAwardsEn) : themeId === "caremed" ? accredsImg : themeId === "prime" ? primeAccreds : accreditationsImg,
+    image: themeId === "burjeel" ? burjeelAccreds : themeId === "careinn" ? careinnCertifications : themeId === "imc" ? imcAccreds : themeId === "dallah" ? (isRTL ? dallahAwardsAr : dallahAwardsEn) : themeId === "caremed" ? accredsImg : themeId === "prime" ? primeAccreds : themeId === "kauh" ? shifaaAccreds : accreditationsImg,
   },
   {
     id: "digital",
-    title: themeId === "careinn" ? "Participations" : themeId === "dallah" ? "Patient Rights" : "Digital Services",
+    title: themeId === "careinn" ? "Participations" : themeId === "dallah" ? "Patient Rights" : themeId === "kauh" ? "بوابة شفاء الرقمية" : "Digital Services",
     titleKey: themeId === "careinn" ? "about.participations" : themeId === "dallah" ? "about.patientRights" : "about.digital",
     ...(themeId === "careinn"
       ? { image: careinnParticipations }
-      : { content: themeId === "dallah" ? (isRTL ? dallahPatientRightsAr : dallahPatientRightsEn) : themeId === "prime" ? primeDigital : `Connected Care at Your Fingertips
+      : { content: themeId === "kauh" ? (locale === "ar" ? kauhDigitalAr : kauhDigitalEn) : themeId === "dallah" ? (isRTL ? dallahPatientRightsAr : dallahPatientRightsEn) : themeId === "prime" ? primeDigital : `Connected Care at Your Fingertips
 
 Patient Portal
 • View lab results & medical records
@@ -270,11 +413,11 @@ Smart Hospital Features
 • Robotic surgery capabilities
 • Advanced patient monitoring systems` }),
   },
-  ...(themeId === "dsfh"
+  ...(themeId === "dsfh" || themeId === "kauh"
     ? [
         {
           id: "achievements",
-          title: "Achievements",
+          title: themeId === "kauh" ? "إنجازات شفاء" : "Achievements",
           titleKey: "about.achievements",
         },
       ]
@@ -594,29 +737,80 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
             )}
 
             {/* Section Content */}
-            {currentSection.id === "achievements" && theme.id === "dsfh" ? (
+            {currentSection.id === "achievements" && (theme.id === "dsfh" || theme.id === "kauh") ? (
               <div className="flex-1 overflow-y-auto about-scrollable-content flex flex-col gap-6 pt-2">
-                {/* Achievement Banner */}
+                {/* Achievement Banner — DSFH uses banner image, KAUH uses hero photo */}
                 <div className="shrink-0 rounded-3xl overflow-hidden shadow-sm border border-gray-100" style={{ height: "240px" }}>
-                  <ApiImage 
-                    src={dsfhAchievementBanner} 
+                  <ApiImage
+                    src={theme.id === "kauh" ? kauhHeroImg : dsfhAchievementBanner}
                     alt="Latest achievements"
                     className="w-full h-full object-cover"
+                    style={theme.id === "kauh" ? { objectPosition: "50% 35%" } : undefined}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
-                  {[1, 2, 3, 4].map((num) => (
-                    <div 
+                  {theme.id === "kauh" ? (
+                    [
+                      { icon: <Trophy size={28} color={theme.primary} />, title: locale === "ar" ? "اعتماد JCI الدولي" : "International JCI Accreditation", desc: locale === "ar" ? "اعتماد مستشفى جامعة الملك عبدالعزيز من قِبل المنظمة الدولية لاعتماد المستشفيات (JCI)، تأكيداً لأعلى معايير الجودة والسلامة." : "Accreditation of King Abdulaziz University Hospital by Joint Commission International (JCI), affirming the highest standards of quality and safety." },
+                      { icon: <Star size={28} color={theme.primary} />, title: locale === "ar" ? "مركز للتميز الأكاديمي" : "A Centre of Academic Excellence", desc: locale === "ar" ? "الحصول على تصنيف متقدم ضمن مراكز التميز الأكاديمي والطبي على مستوى المملكة العربية السعودية." : "Achieving an advanced ranking among centres of academic and medical excellence across the Kingdom of Saudi Arabia." },
+                      { icon: <Zap size={28} color={theme.primary} />, title: locale === "ar" ? "إنتاج بحثي دولي متميز" : "Distinguished International Research Output", desc: locale === "ar" ? "نشر مئات الأبحاث الطبية المحكّمة في مجلات دولية مرموقة سنوياً، ترسّخاً لمكانة المستشفى كمرجع علمي." : "Publishing hundreds of peer-reviewed medical papers in prestigious international journals each year, cementing the hospital's standing as a scientific reference." },
+                      { icon: <Medal size={28} color={theme.primary} />, title: locale === "ar" ? "ريادة الصحة الرقمية" : "Digital Health Leadership", desc: locale === "ar" ? "تطوير وتطبيق بوابة شفاء الرقمية لخدمة المرضى، ضمن مبادرات رؤية المملكة 2030 للتحول الرقمي في القطاع الصحي." : "Developing and deploying the Shifaa digital portal to serve patients, as part of Saudi Vision 2030 initiatives for digital transformation in the health sector." },
+                    ].map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="p-8 rounded-3xl flex flex-col gap-4 transition-transform hover:scale-[1.02]"
+                        style={{
+                          backgroundColor: "#fff",
+                          border: `1px solid ${theme.primarySubtle}`,
+                          boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
+                          direction: isRTL ? "rtl" : "ltr",
+                        }}
+                      >
+                        <div
+                          className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                          style={{ backgroundColor: theme.primaryLight }}
+                        >
+                          {item.icon}
+                        </div>
+                        <div>
+                          <h4
+                            style={{
+                              fontFamily: isRTL ? theme.fontFamilyAr : theme.fontFamily,
+                              fontSize: TYPE_SCALE.lg,
+                              fontWeight: 700,
+                              color: theme.primary,
+                              marginBottom: "8px",
+                            }}
+                          >
+                            {item.title}
+                          </h4>
+                          <p
+                            style={{
+                              fontFamily: isRTL ? theme.fontFamilyAr : theme.fontFamily,
+                              fontSize: "14px",
+                              fontWeight: 500,
+                              color: "#4A5568",
+                              lineHeight: 1.7,
+                            }}
+                          >
+                            {item.desc}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    [1, 2, 3, 4].map((num) => (
+                    <div
                       key={num}
                       className="p-8 rounded-3xl flex flex-col gap-4 transition-transform hover:scale-[1.02]"
-                      style={{ 
-                        backgroundColor: "#fff", 
+                      style={{
+                        backgroundColor: "#fff",
                         border: `1px solid ${theme.primarySubtle}`,
                         boxShadow: "0 4px 20px rgba(0,0,0,0.04)"
                       }}
                     >
-                    <div 
+                    <div
                       className="w-14 h-14 rounded-2xl flex items-center justify-center"
                       style={{ backgroundColor: theme.primaryLight }}
                     >
@@ -626,8 +820,8 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                       {num === 4 && <Medal size={28} color={theme.primary} />}
                     </div>
                     <div>
-                      <h4 
-                        style={{ 
+                      <h4
+                        style={{
                           fontFamily: theme.fontFamily,
                           fontSize: TYPE_SCALE.lg,
                           fontWeight: 700,
@@ -637,8 +831,8 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                       >
                         {t(`about.dsfh.achievement${num}.title`)}
                       </h4>
-                      <p 
-                        style={{ 
+                      <p
+                        style={{
                           fontFamily: theme.fontFamily,
                           fontSize: "14px",
                           fontWeight: 500,
@@ -650,7 +844,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                       </p>
                     </div>
                   </div>
-                ))}
+                )))}
               </div>
               </div>
             ) : currentSection.content ? (

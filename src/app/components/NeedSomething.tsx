@@ -461,18 +461,24 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                 {tab !== "report" && (
                   <button
                     onClick={() => setTab("report")}
-                    className="inline-flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
+                    className="inline-flex items-center gap-1.5 cursor-pointer active:scale-95 transition-[transform,background-color]"
                     style={{
                       padding: "5px 12px",
                       borderRadius: theme.radiusFull,
-                      backgroundColor: theme.primarySubtle,
-                      border: `1px solid color-mix(in srgb, ${theme.primary} 35%, transparent)`,
-                      color: theme.primary,
+                      backgroundColor: theme.errorSubtle,
+                      border: `1px solid color-mix(in srgb, ${theme.error} 35%, transparent)`,
+                      color: theme.error,
                       outline: "none",
                     }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = `color-mix(in srgb, ${theme.error} 14%, transparent)`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = theme.errorSubtle;
+                    }}
                   >
-                    <Wrench size={15} color={theme.primary} strokeWidth={2.4} />
-                    <span style={{ ...TEXT_STYLE.buttonSm, fontFamily, color: theme.primary }}>
+                    <Wrench size={15} color={theme.error} strokeWidth={2.4} />
+                    <span style={{ ...TEXT_STYLE.buttonSm, fontFamily, color: theme.error }}>
                       {t("need.tab.report")}
                     </span>
                   </button>
@@ -574,7 +580,7 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                           <div className="flex items-center gap-1.5 mt-1.5">
                             <Clock size={14} color={theme.textDisabled} />
                             <span style={{ ...TEXT_STYLE.caption, fontFamily, color: theme.textMuted }}>
-                              {formatDateTime(r.createdAt)}
+                              {t("need.requestedOn")} {formatDateTime(r.createdAt)}
                             </span>
                           </div>
                           <span
