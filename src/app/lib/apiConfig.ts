@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 const STORAGE_KEY = "careinn-api-config";
 
 const CLOUD_HOST = "control.careinn.com";
-const CLOUD_KEY  = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
-const LOCAL_KEY  = "20b91694-7ea1-4a44-91a6-2878664428b3";
+const CLOUD_KEY = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
+const LOCAL_KEY = "20b91694-7ea1-4a44-91a6-2878664428b3";
 
 export function apiKeyForUrl(u: string): string {
   return u.includes(CLOUD_HOST) ? CLOUD_KEY : LOCAL_KEY;
