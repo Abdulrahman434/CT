@@ -77,11 +77,13 @@ export function OnboardingWizard({
   admitRef,
   onComplete,
   onStartTour,
+  onStartSlideshow,
   hidden = false,
 }: {
   admitRef: string | null;
   onComplete: () => void;
   onStartTour: () => void;
+  onStartSlideshow: () => void;
   /** Keeps the wizard mounted (state intact) but invisible — used while
    *  the welcome tour plays on top of it. */
   hidden?: boolean;
@@ -574,7 +576,7 @@ export function OnboardingWizard({
                 before={tr("onboarding.consent.tour.before")}
                 link={tr("onboarding.consent.tour.link")}
                 after={tr("onboarding.consent.tour.after")}
-                onLinkClick={onStartTour}
+                onLinkClick={onStartSlideshow}
               />
               <ConsentCheckbox
                 checked={termsAgreed}
@@ -594,7 +596,9 @@ export function OnboardingWizard({
   };
 
   const Icon = STEP_ICONS[stepId];
-  const progress = visibleSteps.length > 1 ? (stepIndex + 1) / visibleSteps.length : 1;
+  const stepIndexInFull = STEP_SEQUENCE.findIndex(s => s.id === stepId);
+  const totalSteps = STEP_SEQUENCE.length;
+  const progress = totalSteps > 1 ? (stepIndexInFull + 1) / totalSteps : 1;
 
   const HeaderButton = ({ onClick, children, ariaLabel }: { onClick: () => void; children: React.ReactNode; ariaLabel: string }) => (
     <button
@@ -704,7 +708,7 @@ export function OnboardingWizard({
               </div>
             </div>
             <span className="shrink-0" style={{ fontFamily, fontSize: "14px", fontWeight: 700, color: t.textMuted, minWidth: "72px", textAlign: isRTL ? "left" : "right" }}>
-              {tr("onboarding.progress", stepIndex + 1, visibleSteps.length)}
+              {tr("onboarding.progress", stepIndexInFull + 1, totalSteps)}
             </span>
           </div>
 

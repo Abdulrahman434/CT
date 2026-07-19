@@ -303,6 +303,7 @@ function BedsideScreen() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifTrigger, setNotifTrigger] = useState(0);
   const [showTour, setShowTour] = useState(false);
+  const [showWelcomeSlideshow, setShowWelcomeSlideshow] = useState(false);
   const [showTasbih, setShowTasbih] = useState(false);
   const [tourDismissed, setTourDismissed] = useState(() => {
     try {
@@ -1844,6 +1845,63 @@ function BedsideScreen() {
           <AppTour onClose={handleCloseTour} />
         )}
 
+        {/* Welcome Slideshow Overlay */}
+        {showWelcomeSlideshow && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 100000,
+              background: "#000",
+              animation: "slideshowIn 0.35s ease-out both",
+            }}
+          >
+            <button
+              onClick={() => {
+                setShowWelcomeSlideshow(false);
+                setTourDismissed(true);
+                localStorage.setItem("hbs-tour-seen", "1");
+              }}
+              style={{
+                position: "absolute",
+                top: "24px",
+                right: "24px",
+                zIndex: 100001,
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                border: "none",
+                background: "rgba(255,255,255,0.12)",
+                color: "#FFF",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "background 0.2s ease",
+                backdropFilter: "blur(8px)",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.25)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; }}
+              title="Close Slideshow"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <iframe
+              src="/CareInn%20Welcome%20Slideshow.html"
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+              }}
+              allow="fullscreen"
+              title="CareInn Welcome Slideshow"
+            />
+          </div>
+        )}
+
         {/* Hospital Configurator */}
         {showConfigurator && (
           <HospitalConfigurator onClose={() => setShowConfigurator(false)} />
@@ -2085,6 +2143,10 @@ function BedsideScreen() {
       )}
 
       <style>{`
+          @keyframes slideshowIn {
+            from { opacity: 0; transform: scale(1.03); }
+            to { opacity: 1; transform: scale(1); }
+          }
           @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -2117,9 +2179,10 @@ function BedsideScreen() {
       {showOnboarding && (
         <OnboardingWizard
           admitRef={currentAdmitRef}
-          hidden={showTour}
+          hidden={showTour || showWelcomeSlideshow}
           onComplete={() => setShowOnboarding(false)}
           onStartTour={() => setShowTour(true)}
+          onStartSlideshow={() => setShowWelcomeSlideshow(true)}
         />
       )}
 

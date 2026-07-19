@@ -1065,13 +1065,13 @@ const translations: Record<string, TranslationEntry> = {
   "onboarding.theme.light": { en: "Light mode", ar: "الوضع الفاتح", ur: "لائٹ موڈ" },
   "onboarding.theme.dark": { en: "Dark mode", ar: "الوضع الداكن", ur: "ڈارک موڈ" },
 
-  "onboarding.dataClear.title": { en: "How should we manage your data during your stay?", ar: "كيف تريد أن ندير بياناتك خلال إقامتك؟", ur: "قیام کے دوران ہم آپ کا ڈیٹا کیسے منظم کریں؟" },
-  "onboarding.dataClear.daily": { en: "Daily", ar: "يومياً", ur: "روزانہ" },
-  "onboarding.dataClear.idle": { en: "After 24 hours of inactivity", ar: "بعد ٢٤ ساعة من عدم الاستخدام", ur: "24 گھنٹے غیر فعالیت کے بعد" },
-  "onboarding.dataClear.discharge": { en: "Only when I am discharged", ar: "فقط عند خروجي من المستشفى", ur: "صرف جب آپ کو فارغ کیا جائے" },
+  "onboarding.dataClear.title": { en: "How to manage your data", ar: "كيفية إدارة بياناتك", ur: "اپنے ڈیٹا کا انتظام کیسے کریں" },
+  "onboarding.dataClear.daily": { en: "Reset my app data daily.", ar: "إعادة تعيين بياناتي تلقائياً يومياً.", ur: "روزانہ میرا ایپ ڈیٹا صاف کریں۔" },
+  "onboarding.dataClear.idle": { en: "After 24 hours of inactivity.", ar: "بعد ٢٤ ساعة من عدم النشاط.", ur: "24 گھنٹے غیر فعالیت کے بعد۔" },
+  "onboarding.dataClear.discharge": { en: "Only when I am discharged.", ar: "فقط عند خروجي من المستشفى.", ur: "صرف تب جب میں ہسپتال سے فارغ ہو جاؤں۔" },
   "onboarding.dataClear.note": { en: "You can change this anytime from Settings, or clear your data manually right now.", ar: "يمكنك تغيير هذا في أي وقت من الإعدادات، أو مسح بياناتك يدوياً الآن.", ur: "آپ اسے کسی بھی وقت سیٹنگز سے بدل سکتے ہیں، یا ابھی اپنا ڈیٹا خود صاف کر سکتے ہیں۔" },
 
-  "onboarding.notifications.title": { en: "How would you like to receive notifications?", ar: "كيف تحب أن تصلك الإشعارات؟", ur: "آپ اطلاعات کیسے وصول کرنا چاہیں گے؟" },
+  "onboarding.notifications.title": { en: "How would you like to receive notifications?", ar: "كيف تحب أن تصلك الإشعارات؟", ur: "آپ اطلاعات کیسے وصول کرنا چاہیں گے?" },
   "onboarding.notifications.sound": { en: "Sound", ar: "مع صوت", ur: "آواز کے ساتھ" },
   "onboarding.notifications.silent": { en: "Silent", ar: "صامت", ur: "خاموش" },
 
@@ -1083,13 +1083,13 @@ const translations: Record<string, TranslationEntry> = {
   "onboarding.screensaver.5m": { en: "5 minutes", ar: "٥ دقائق", ur: "5 منٹ" },
 
   "onboarding.consent.title": { en: "One last step", ar: "خطوة أخيرة", ur: "آخری مرحلہ" },
-  "onboarding.consent.tour.before": { en: "I've watched the welcome ", ar: "لقد شاهدت ", ur: "میں نے خوش آمدیدی " },
-  "onboarding.consent.tour.link": { en: "tour", ar: "الجولة الترحيبية", ur: "ٹور" },
+  "onboarding.consent.tour.before": { en: "I've watched the ", ar: "لقد شاهدت ", ur: "میں نے " },
+  "onboarding.consent.tour.link": { en: "welcome slideshow", ar: "عرض الشرائح الترحيبي", ur: "خوش آمدید سلائیڈ شو" },
   "onboarding.consent.tour.after": { en: "", ar: "", ur: " دیکھ لیا ہے" },
   "onboarding.consent.terms.before": { en: "I agree to the ", ar: "أوافق على ", ur: "میں " },
   "onboarding.consent.terms.link": { en: "Terms & Conditions", ar: "الشروط والأحكام", ur: "شرائط و ضوابط" },
   "onboarding.consent.terms.after": { en: "", ar: "", ur: " سے متفق ہوں" },
-  "onboarding.consent.startWithTour": { en: "Start with tour", ar: "ابدأ مع الجولة", ur: "ٹور کے ساتھ شروع کریں" },
+  "onboarding.consent.startWithTour": { en: "Start with a tour", ar: "ابدأ مع الجولة", ur: "ٹور کے ساتھ شروع کریں" },
   "onboarding.consent.startNow": { en: "Start now", ar: "ابدأ الآن", ur: "ابھی شروع کریں" },
 
   /* ─── My Preferences: Setup your Preferences ─── */
