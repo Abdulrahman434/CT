@@ -740,7 +740,7 @@ const mockBtDevices = [
   { id: "bt-phone2", name: "iPhone 15", type: "Phone", icon: Smartphone, paired: false },
 ];
 
-function BluetoothDialog({
+export function BluetoothDialog({
   onClose,
   connectedId,
   onConnect,

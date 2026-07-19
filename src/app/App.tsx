@@ -84,6 +84,9 @@ import {
 } from "./lib/hospitalApi";
 import { nurseActions } from "./components/NurseDataStore";
 import { getDeviceInfo } from "./utils/androidBridge";
+import { OnboardingWizard } from "./components/OnboardingWizard";
+import { isOnboardingComplete } from "./lib/onboardingStore";
+import { startDataLifecycleWatchers } from "./lib/dataLifecycle";
 import { matchBinding } from "./lib/handsetConfig";
 import { sip, iptv, _getIptvChannels, _getIptvPlayingId, isAndroidApp, IptvChannel } from "./utils/androidBridge";
 
@@ -165,6 +168,22 @@ const isBeforeToday = (dateStr: string | null | undefined): boolean => {
   return d.getTime() < today.getTime();
 };
 
+/** Screensaver idle delay — reads the onboarding preference, falls back to
+ *  the historical 1-minute default when no choice was made. */
+const SCREENSAVER_TIMEOUT_MS: Record<string, number> = {
+  "30s": 30_000,
+  "1m": 60_000,
+  "5m": 300_000,
+};
+const getScreensaverTimeoutMs = (): number => {
+  try {
+    const v = localStorage.getItem("careinn-screensaver-timeout");
+    return (v && SCREENSAVER_TIMEOUT_MS[v]) || 60_000;
+  } catch {
+    return 60_000;
+  }
+};
+
 const getSavedLayoutMode = (): 1 | 2 | 3 => {
   try {
     const v = localStorage.getItem('careinn-layout-mode');
@@ -175,7 +194,7 @@ const getSavedLayoutMode = (): 1 | 2 | 3 => {
 };
 
 function BedsideScreen() {
-  const { patientAdmitted, setPatientAdmitted, theme, darkMode, switchConfig, prayerAlarm, layout2Theme } = useTheme();
+  const { patientAdmitted, setPatientAdmitted, theme, darkMode, switchConfig, prayerAlarm, layout2Theme, setLocale, setDarkMode, setPrayerAlarm } = useTheme();
   const { isFullAccess, lockedHospitalId } = useAuth();
   const { t, locale, isRTL, dir, fontFamily } = useLocale();
   const scale = useScreenScale();
@@ -234,6 +253,10 @@ function BedsideScreen() {
           if (result) {
             const p = result.patient;
 
+            // Current admission reference — the onboarding wizard binds
+            // its completion record to this value
+            setCurrentAdmitRef(result.location.admit_data || null);
+
             // Store device group for alert filtering
             deviceGroupRef.current = result.location.group?.id || null;
             fetchAlerts();
@@ -291,6 +314,42 @@ function BedsideScreen() {
   const [layoutMode, setLayoutMode] = useState<1 | 2 | 3>(getSavedLayoutMode);
   const [showConfigurator, setShowConfigurator] = useState(false);
   const [showThemeAppearance, setShowThemeAppearance] = useState(false);
+
+  /* ── First-run onboarding + data lifecycle ── */
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => localStorage.getItem("careinn-onboarding-complete") !== "true"
+  );
+  const [currentAdmitRef, setCurrentAdmitRef] = useState<string | null>(
+    () => localStorage.getItem("careinn-onboarding-admit-ref")
+  );
+
+  // Full reset back to a factory-fresh session: revert in-memory settings
+  // to their defaults (storage was already wiped by clearEverything) and
+  // reopen the wizard at Welcome. When the admission watcher triggers this
+  // it passes the NEW admission ref so the fresh session binds to it.
+  const forceOnboarding = useCallback((newAdmitRef?: string | null) => {
+    if (newAdmitRef !== undefined) setCurrentAdmitRef(newAdmitRef);
+    setLocale("en");
+    setDarkMode(false);
+    setPrayerAlarm(true);
+    setShowSettings(false);
+    setShowOnboarding(true);
+  }, [setLocale, setDarkMode, setPrayerAlarm]);
+
+  // Manual "Clear everything" from My Preferences dispatches this event.
+  useEffect(() => {
+    const handler = () => forceOnboarding();
+    window.addEventListener("careinn-force-onboarding", handler);
+    return () => window.removeEventListener("careinn-force-onboarding", handler);
+  }, [forceOnboarding]);
+
+  // Admission-change watcher + daily/24h-idle clear policies (kiosk only).
+  useEffect(() => {
+    if (!isAndroidApp()) return;
+    const serial = getDeviceInfo()?.serial;
+    if (!serial) return;
+    return startDataLifecycleWatchers(serial, forceOnboarding);
+  }, [forceOnboarding]);
 
   useEffect(() => {
     const handleLayoutModeChange = () => setLayoutMode(getSavedLayoutMode());
@@ -648,7 +707,7 @@ function BedsideScreen() {
         if (!anyOtherOverlayOpen) {
           setShowTasbih(true);
         }
-      }, 60000); // 1 minute
+      }, getScreensaverTimeoutMs()); // onboarding preference, default 1 min
     };
 
     const handleUserActivity = () => {
@@ -660,11 +719,16 @@ function BedsideScreen() {
 
     events.forEach(evt => window.addEventListener(evt, handleUserActivity));
 
+    // Re-arm with the new delay when the onboarding wizard / settings
+    // change the screensaver timeout preference
+    window.addEventListener("screensaver-timeout-changed", handleUserActivity);
+
     // Initial start
     startTimer();
 
     return () => {
       events.forEach(evt => window.removeEventListener(evt, handleUserActivity));
+      window.removeEventListener("screensaver-timeout-changed", handleUserActivity);
       clearTimeout(idleTimer);
     };
   }, [anyOtherOverlayOpen]);
@@ -1090,14 +1154,16 @@ function BedsideScreen() {
     }
   };
 
-  // Auto-show tour on first visit once patient is admitted
+  // Auto-show tour on first visit once patient is admitted.
+  // Suppressed while the onboarding wizard is open — its Consent step
+  // offers the tour explicitly.
   useEffect(() => {
-    if (patientAdmitted && !tourDismissed && !showTour) {
+    if (patientAdmitted && !tourDismissed && !showTour && !showOnboarding) {
       // Small delay so the main UI renders first
       const timer = setTimeout(() => setShowTour(true), 600);
       return () => clearTimeout(timer);
     }
-  }, [patientAdmitted, tourDismissed]);
+  }, [patientAdmitted, tourDismissed, showOnboarding]);
 
   const handleCloseTour = useCallback(() => {
     setShowTour(false);
@@ -2034,6 +2100,19 @@ function BedsideScreen() {
           }
         `}</style>
       <RippleStyles />
+
+      {/* First-run onboarding wizard — hidden (not unmounted) while the
+          welcome tour plays on top of it */}
+      {showOnboarding && (
+        <OnboardingWizard
+          admitRef={currentAdmitRef}
+          hidden={showTour}
+          onComplete={() => setShowOnboarding(false)}
+          onStartTour={() => setShowTour(true)}
+        />
+      )}
+
+      <Toaster position="bottom-center" />
     </div>
   );
 }

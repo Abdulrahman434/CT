@@ -59,10 +59,29 @@ export function PatientGreeting({
   // Data now comes from NurseDataStore (synchronized at App level)
   const p = nurseStore.patient;
 
+  // Onboarding display-name preference: "auto" (file name), "custom"
+  // (patient-entered), "skipped" (greet with no name).
+  const [nameMode, setNameMode] = useState(() =>
+    localStorage.getItem("careinn-display-name-mode"));
+  useEffect(() => {
+    const handler = () =>
+      setNameMode(localStorage.getItem("careinn-display-name-mode"));
+    window.addEventListener("display-name-changed", handler);
+    return () => window.removeEventListener("display-name-changed", handler);
+  }, []);
+
   // Name: i18n demo key → manual/API name (with RTL/Arabic support)
-  const displayName = isRTL && p.nameAr
+  const fileName = isRTL && p.nameAr
     ? p.nameAr
     : (p.nameKey ? t(p.nameKey) : p.name);
+  const customName = isRTL
+    ? (localStorage.getItem("careinn-display-name-ar") ||
+       localStorage.getItem("careinn-display-name") || "")
+    : (localStorage.getItem("careinn-display-name") || "");
+  const displayName =
+    nameMode === "skipped" ? "" :
+    nameMode === "custom" ? (customName || fileName) :
+    fileName;
 
   // Other fields
   const displayMrn    = p.mrn;

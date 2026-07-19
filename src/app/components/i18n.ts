@@ -1024,7 +1024,88 @@ const translations: Record<string, TranslationEntry> = {
 
   /* ─── Updates ─── */
   "update.available": { en: "An update is available", ar: "يتوفر تحديث", ur: "ایک اپ ڈیٹ دستیاب ہے" },
-  "update.reload":    { en: "Reload now", ar: "إعادة التحميل الآن", ur: "ابھی ری لوڈ کریں" }
+  "update.reload":    { en: "Reload now", ar: "إعادة التحميل الآن", ur: "ابھی ری لوڈ کریں" },
+
+  /* ─── First-run Onboarding Wizard ─── */
+  "onboarding.next": { en: "Next", ar: "التالي", ur: "اگلا" },
+  "onboarding.skip": { en: "Skip", ar: "تخطي", ur: "چھوڑیں" },
+  "onboarding.yes":  { en: "Yes", ar: "نعم", ur: "ہاں" },
+  "onboarding.no":   { en: "No", ar: "لا", ur: "نہیں" },
+
+  "onboarding.welcome.title": { en: "Welcome — we're glad you're here", ar: "مرحباً — يسعدنا وجودك هنا", ur: "خوش آمدید — آپ کی موجودگی ہمارے لیے خوشی کی بات ہے" },
+  "onboarding.welcome.body":  { en: "This is your personal screen for the stay: entertainment, hospital services, and a way to stay connected, all in one place. Let's take a minute to set it up just for you.", ar: "هذه شاشتك الشخصية طوال فترة إقامتك: ترفيه وخدمات المستشفى ووسيلة للبقاء على تواصل، كل ذلك في مكان واحد. لنستغرق دقيقة لإعدادها خصيصاً لك.", ur: "یہ آپ کے قیام کے لیے آپ کی ذاتی اسکرین ہے: تفریح، ہسپتال کی خدمات، اور رابطے میں رہنے کا ذریعہ، سب ایک جگہ۔ آئیے ایک منٹ میں اسے صرف آپ کے لیے ترتیب دیں۔" },
+  "onboarding.welcome.start": { en: "Get started", ar: "ابدأ", ur: "شروع کریں" },
+
+  "onboarding.language.title": { en: "Which language do you prefer?", ar: "ما اللغة التي تفضلها؟", ur: "آپ کون سی زبان پسند کرتے ہیں؟" },
+
+  "onboarding.displayName.title":  { en: "How would you like us to call you?", ar: "كيف تحب أن نناديك؟", ur: "آپ چاہتے ہیں ہم آپ کو کیسے پکاریں؟" },
+  "onboarding.displayName.useFile": { en: "Use my file name", ar: "استخدم اسمي في الملف الطبي", ur: "میری فائل کا نام استعمال کریں" },
+  "onboarding.displayName.nameEn": { en: "Name (English)", ar: "الاسم (بالإنجليزية)", ur: "نام (انگریزی)" },
+  "onboarding.displayName.nameAr": { en: "Name (Arabic)", ar: "الاسم (بالعربية)", ur: "نام (عربی)" },
+
+  "onboarding.pin.title":      { en: "Would you like to set a PIN for your safety?", ar: "هل ترغب في تعيين رمز PIN لحمايتك؟", ur: "کیا آپ اپنی حفاظت کے لیے PIN سیٹ کرنا چاہیں گے؟" },
+  "onboarding.pin.alreadySet": { en: "A PIN is already set on this screen.", ar: "تم تعيين رمز PIN بالفعل على هذه الشاشة.", ur: "اس اسکرین پر پہلے سے PIN سیٹ ہے۔" },
+  "onboarding.pin.skipToast":  { en: "You can set this anytime from My Preferences.", ar: "يمكنك تعيينه في أي وقت من تفضيلاتي.", ur: "آپ اسے کسی بھی وقت میری ترجیحات سے سیٹ کر سکتے ہیں۔" },
+
+  "onboarding.prayer.title": { en: "Would you like us to remind you at prayer times?", ar: "هل ترغب أن نذكّرك بأوقات الصلاة؟", ur: "کیا آپ چاہیں گے کہ ہم آپ کو نماز کے اوقات پر یاد دلائیں؟" },
+
+  "onboarding.decision.title": { en: "Would you like to continue setting up your preferences?", ar: "هل ترغب في متابعة إعداد تفضيلاتك؟", ur: "کیا آپ اپنی ترجیحات کی ترتیب جاری رکھنا چاہیں گے؟" },
+
+  "onboarding.theme.title": { en: "Dark or light mode?", ar: "الوضع الداكن أم الفاتح؟", ur: "ڈارک یا لائٹ موڈ؟" },
+  "onboarding.theme.light": { en: "Light mode", ar: "الوضع الفاتح", ur: "لائٹ موڈ" },
+  "onboarding.theme.dark":  { en: "Dark mode", ar: "الوضع الداكن", ur: "ڈارک موڈ" },
+
+  "onboarding.dataClear.title":     { en: "How should we manage your data during your stay?", ar: "كيف تريد أن ندير بياناتك خلال إقامتك؟", ur: "قیام کے دوران ہم آپ کا ڈیٹا کیسے منظم کریں؟" },
+  "onboarding.dataClear.daily":     { en: "Daily", ar: "يومياً", ur: "روزانہ" },
+  "onboarding.dataClear.idle":      { en: "After 24 hours of inactivity", ar: "بعد ٢٤ ساعة من عدم الاستخدام", ur: "24 گھنٹے غیر فعالیت کے بعد" },
+  "onboarding.dataClear.discharge": { en: "Only when you are discharged", ar: "فقط عند خروجك من المستشفى", ur: "صرف جب آپ کو فارغ کیا جائے" },
+  "onboarding.dataClear.note":      { en: "You can change this anytime from Settings, or clear your data manually right now.", ar: "يمكنك تغيير هذا في أي وقت من الإعدادات، أو مسح بياناتك يدوياً الآن.", ur: "آپ اسے کسی بھی وقت سیٹنگز سے بدل سکتے ہیں، یا ابھی اپنا ڈیٹا خود صاف کر سکتے ہیں۔" },
+
+  "onboarding.notifications.title":  { en: "How would you like to receive notifications?", ar: "كيف تحب أن تصلك الإشعارات؟", ur: "آپ اطلاعات کیسے وصول کرنا چاہیں گے؟" },
+  "onboarding.notifications.sound":  { en: "Sound", ar: "مع صوت", ur: "آواز کے ساتھ" },
+  "onboarding.notifications.silent": { en: "Silent", ar: "صامت", ur: "خاموش" },
+
+  "onboarding.bluetooth.title": { en: "Would you like to connect a Bluetooth device now?", ar: "هل ترغب في توصيل جهاز بلوتوث الآن؟", ur: "کیا آپ ابھی بلوٹوتھ ڈیوائس منسلک کرنا چاہیں گے؟" },
+
+  "onboarding.screensaver.title": { en: "How long before the screen dims to a screensaver?", ar: "بعد كم من الوقت تنتقل الشاشة إلى شاشة التوقف؟", ur: "اسکرین کتنی دیر بعد اسکرین سیور پر جائے؟" },
+  "onboarding.screensaver.30s":   { en: "30 seconds", ar: "٣٠ ثانية", ur: "30 سیکنڈ" },
+  "onboarding.screensaver.1m":    { en: "1 minute", ar: "دقيقة واحدة", ur: "1 منٹ" },
+  "onboarding.screensaver.5m":    { en: "5 minutes", ar: "٥ دقائق", ur: "5 منٹ" },
+
+  "onboarding.consent.title":         { en: "One last step", ar: "خطوة أخيرة", ur: "آخری مرحلہ" },
+  "onboarding.consent.tour.before":   { en: "I've watched the welcome ", ar: "لقد شاهدت ", ur: "میں نے خوش آمدیدی " },
+  "onboarding.consent.tour.link":     { en: "tour", ar: "الجولة الترحيبية", ur: "ٹور" },
+  "onboarding.consent.tour.after":    { en: "", ar: "", ur: " دیکھ لیا ہے" },
+  "onboarding.consent.terms.before":  { en: "I agree to the ", ar: "أوافق على ", ur: "میں " },
+  "onboarding.consent.terms.link":    { en: "Terms & Conditions", ar: "الشروط والأحكام", ur: "شرائط و ضوابط" },
+  "onboarding.consent.terms.after":   { en: "", ar: "", ur: " سے متفق ہوں" },
+  "onboarding.consent.startWithTour": { en: "Start with tour", ar: "ابدأ مع الجولة", ur: "ٹور کے ساتھ شروع کریں" },
+  "onboarding.consent.startNow":      { en: "Start now", ar: "ابدأ الآن", ur: "ابھی شروع کریں" },
+
+  /* ─── My Preferences: Clear my data ─── */
+  "prefs.clearData":                { en: "Clear my data", ar: "مسح بياناتي", ur: "میرا ڈیٹا صاف کریں" },
+  "prefs.clearData.subtitle":       { en: "Manage your stored data", ar: "إدارة بياناتك المخزنة", ur: "اپنا محفوظ ڈیٹا منظم کریں" },
+  "prefs.clearData.everything":     { en: "Clear everything", ar: "مسح كل شيء", ur: "سب کچھ صاف کریں" },
+  "prefs.clearData.everything.sub": { en: "Erases everything, including your PIN, and starts setup again from the beginning.", ar: "يمسح كل شيء، بما في ذلك رمز PIN، ويبدأ الإعداد من جديد.", ur: "PIN سمیت سب کچھ مٹا دیتا ہے، اور سیٹ اپ شروع سے دوبارہ شروع ہوتا ہے۔" },
+  "prefs.clearData.userOnly":       { en: "Clear my data", ar: "مسح بياناتي", ur: "میرا ڈیٹا صاف کریں" },
+  "prefs.clearData.userOnly.sub":   { en: "Clears your activity but keeps your setup, including your PIN.", ar: "يمسح نشاطك مع الاحتفاظ بإعداداتك، بما في ذلك رمز PIN.", ur: "آپ کی سرگرمی صاف کرتا ہے لیکن PIN سمیت آپ کا سیٹ اپ برقرار رکھتا ہے۔" },
+  "prefs.clearData.done":           { en: "Your data has been cleared.", ar: "تم مسح بياناتك.", ur: "آپ کا ڈیٹا صاف کر دیا گیا ہے۔" },
+
+  /* ─── PIN / NFC setup (shared with onboarding) ─── */
+  "pinSetup.title":    { en: "Set up a PIN", ar: "إعداد رمز PIN", ur: "PIN سیٹ کریں" },
+  "pinSetup.subtitle": { en: "Enter a 4-digit PIN for your settings", ar: "أدخل رمز PIN من ٤ أرقام لإعداداتك", ur: "اپنی سیٹنگز کے لیے 4 ہندسوں کا PIN درج کریں" },
+  "pinSetup.confirm":  { en: "Confirm your PIN", ar: "أكّد رمز PIN", ur: "اپنے PIN کی تصدیق کریں" },
+  "pinSetup.mismatch": { en: "PINs do not match", ar: "الرمزان غير متطابقين", ur: "PIN مماثل نہیں ہیں" },
+  "pinSetup.saved":    { en: "Saved successfully", ar: "تم الحفظ بنجاح", ur: "کامیابی سے محفوظ ہو گیا" },
+  "pinSetup.removed":  { en: "Removed", ar: "تمت الإزالة", ur: "ہٹا دیا گیا" },
+  "nfcSetup.title":    { en: "Add NFC Card (Optional)", ar: "إضافة بطاقة NFC (اختياري)", ur: "NFC کارڈ شامل کریں (اختیاری)" },
+  "nfcSetup.subtitle": { en: "You can pair an NFC card to easily unlock your screen later.", ar: "يمكنك ربط بطاقة NFC لفتح شاشتك بسهولة لاحقاً.", ur: "بعد میں اسکرین آسانی سے کھولنے کے لیے NFC کارڈ جوڑ سکتے ہیں۔" },
+  "nfcSetup.skip":     { en: "Skip", ar: "تخطي", ur: "چھوڑیں" },
+  "nfcSetup.pair":     { en: "Pair NFC", ar: "ربط البطاقة", ur: "NFC جوڑیں" },
+  "nfcSetup.tap1":     { en: "Tap your NFC card", ar: "مرّر بطاقة NFC", ur: "اپنا NFC کارڈ ٹیپ کریں" },
+  "nfcSetup.tap2":     { en: "Tap it again to confirm", ar: "مرّرها مرة أخرى للتأكيد", ur: "تصدیق کے لیے دوبارہ ٹیپ کریں" },
+  "nfcSetup.hold":     { en: "Hold the card near the reader", ar: "قرّب البطاقة من القارئ", ur: "کارڈ کو ریڈر کے قریب رکھیں" },
+  "nfcSetup.mismatch": { en: "NFC cards do not match", ar: "البطاقتان غير متطابقتين", ur: "NFC کارڈ مماثل نہیں ہیں" }
 };
 
 /* ── Number Localization ── */
