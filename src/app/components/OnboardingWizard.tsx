@@ -642,7 +642,14 @@ export function OnboardingWizard({
 
       {/* ─── Page header (white on brand gradient) ─── */}
       <div className="shrink-0 flex items-center gap-5 px-10 pt-8 pb-5 relative z-10">
-        <HeaderButton onClick={onComplete} ariaLabel={tr("general.close")}>
+        <HeaderButton
+          onClick={() => {
+            if (stepId !== "consent") {
+              setStepId("consent");
+            }
+          }}
+          ariaLabel={tr("general.close")}
+        >
           <Home size={22} style={{ color: "#fff" }} />
         </HeaderButton>
         <div style={{ width: "1.5px", height: "32px", backgroundColor: "rgba(255,255,255,0.18)", borderRadius: "1px" }} />
@@ -659,24 +666,6 @@ export function OnboardingWizard({
             </p>
           </div>
         </div>
-        <button
-          onClick={toggleLanguage}
-          aria-label={tr("settings.language")}
-          className="shrink-0 flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"
-          style={{
-            backgroundColor: "rgba(255,255,255,0.15)",
-            border: "1px solid rgba(255,255,255,0.16)",
-            borderRadius: "14px",
-            padding: "12px 18px",
-            color: "#fff",
-            outline: "none",
-          }}
-        >
-          <Globe size={20} />
-          <span style={{ fontFamily: locale === "en" ? t.fontFamilyAr : fontFamily, fontSize: "16px", fontWeight: 600, color: "#fff" }}>
-            {locale === "en" ? "العربية" : "English"}
-          </span>
-        </button>
       </div>
 
       {/* ─── Content — large white rounded card ─── */}
