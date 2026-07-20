@@ -60,6 +60,12 @@ export function NewsTicker({ items }: NewsTickerProps = {}) {
         `🔬  ${t("news.kauh.3")}`,
         `🚀  ${t("news.kauh.4")}`,
       ]
+    : theme.id === "andalusia"
+    ? [
+        `🌍  Andalusia Health expands its network of hospitals across Saudi Arabia.`,
+        `🔬  Andalusia Health launches new specialized oncology center.`,
+        `🏆  Andalusia Health recognized for excellence in patient care and experience.`,
+      ]
     : theme.id === "careinn"
     ? [
         `🏆  ${t("news.careinn.1")}`,

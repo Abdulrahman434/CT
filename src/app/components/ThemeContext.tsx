@@ -338,9 +338,9 @@ function buildTheme(core: {
     fontFamilyAr: c.fontFamilyAr,
     fontFamilyMono: `${c.fontFamily.split(",")[0]}, monospace`,
 
-    logoUrl: c.logoUrl || (c.id === "dsfh" ? DSFH_LOGO : c.id === "burjeel" ? burjeelLogo : c.id === "slh" ? slhLogo : c.id === "dallah" ? dallahLogo : c.id === "caremed" ? caremedLogo : c.id === "imc" ? imcLogo : c.id === "careinn" ? careinnLogo : c.id === "prime" ? primeLogo : ""),
-    heroImageUrl: c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : c.id === "imc" ? imcHero : c.id === "careinn" ? careinnHero : c.id === "prime" ? primeHero : ""),
-    heroImageUrls: c.heroImageUrls && c.heroImageUrls.length > 0 ? c.heroImageUrls : [c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : c.id === "imc" ? imcHero : c.id === "careinn" ? careinnHero : c.id === "prime" ? primeHero : "")],
+    logoUrl: c.logoUrl || (c.id === "dsfh" ? DSFH_LOGO : c.id === "burjeel" ? burjeelLogo : c.id === "slh" ? slhLogo : c.id === "dallah" ? dallahLogo : c.id === "caremed" ? caremedLogo : c.id === "imc" ? imcLogo : c.id === "careinn" ? careinnLogo : c.id === "prime" ? primeLogo : c.id === "kauh" ? kauhLogo : c.id === "andalusia" ? andalusiaLogo : ""),
+    heroImageUrl: c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : c.id === "imc" ? imcHero : c.id === "careinn" ? careinnHero : c.id === "prime" ? primeHero : c.id === "kauh" ? kauhHero : c.id === "andalusia" ? kauhHero : ""),
+    heroImageUrls: c.heroImageUrls && c.heroImageUrls.length > 0 ? c.heroImageUrls : [c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : c.id === "imc" ? imcHero : c.id === "careinn" ? careinnHero : c.id === "prime" ? primeHero : c.id === "kauh" ? kauhHero : c.id === "andalusia" ? kauhHero : "")],
     heroCropPosition: c.heroCropPosition || "50% 15%",
     slideshowInterval: c.slideshowInterval || 5,
     heroOpacity: c.heroOpacity ?? 40,
@@ -555,6 +555,8 @@ import primeHero from "../../assets/prime-hospital-hero.jpg";
 import kauhLogo from "../../assets/kauh-logo.png";
 import kauhHero from "../../assets/kauh-hero.jpg";
 
+import andalusiaLogo from "../../assets/Andalusia.jpg";
+
 /* Canonical built-in asset URLs — used as fallbacks for DSFH */
 export const DSFH_LOGO = logoImage;
 export const DSFH_HERO = hospitalImg;
@@ -732,6 +734,24 @@ export const KAUH_CORE: HospitalCoreConfig = {
   location: "Jeddah, Saudi Arabia",
 };
 
+export const ANDALUSIA_CORE: HospitalCoreConfig = {
+  id: "andalusia",
+  hospitalName: "Andalusia Health",
+  hospitalShortName: "Andalusia",
+  fontFamily: "'Mulish', sans-serif",
+  fontFamilyAr: "'Almarai', sans-serif",
+  logoUrl: andalusiaLogo,
+  hospitalWebsiteUrl: "",
+  heroImageUrl: kauhHero, // Defaulting to an existing one since none provided
+  primary: "#C9A96E",
+  primaryDark: "#8B6530",
+  primaryLight: "#E8D5B0",
+  accent: "#A07840",
+  accentDark: "#8B6530", // Fallback for accentDark
+  accentLight: "#E8D5B0", // Fallback for accentLight
+  location: "Saudi Arabia",
+};
+
 /** All built-in hospital presets (always available, never deleted) */
 export const BUILTIN_PRESETS: HospitalCoreConfig[] = [
   DSFH_CORE,
@@ -743,6 +763,7 @@ export const BUILTIN_PRESETS: HospitalCoreConfig[] = [
   CAREINN_CORE,
   PRIME_CORE,
   KAUH_CORE,
+  ANDALUSIA_CORE,
 ];
 
 
@@ -1113,7 +1134,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const saveConfigFn = useCallback((config: HospitalCoreConfig) => {
-    const hasBuiltinAssets = ["dsfh", "burjeel", "slh", "dallah", "caremed", "careinn", "prime"].includes(config.id);
+    const hasBuiltinAssets = ["dsfh", "burjeel", "slh", "dallah", "caremed", "careinn", "prime", "kauh", "andalusia"].includes(config.id);
     const toSave = hasBuiltinAssets
       ? {
         ...config,

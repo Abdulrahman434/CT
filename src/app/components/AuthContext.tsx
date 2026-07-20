@@ -25,6 +25,7 @@ export const HASHED_PASSWORD_MAP: Record<string, string> = {
   "7e453343b3477a0d9538df8e905ecb160aea04b9215528ffc21056ddb6d2cd09": "careinn", // full access
   "c598203581040f62b32d0d9c64555333e5ae42dc82878ed73644bc2abf3dbdde": "imc",
   "dccc5d01dabcd1c0b9fa89c91e7f4bde603121ee0172b4ff394e6bb30d295e41": "prime",
+  "b1aa85f8364456911b9824f37dd4de913a3108074f620c1c1011161798c57bda": "andalusia",
 };
 
 /** The SHA-256 hash for the careinn full-access password */
