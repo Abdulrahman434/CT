@@ -339,8 +339,8 @@ function buildTheme(core: {
     fontFamilyMono: `${c.fontFamily.split(",")[0]}, monospace`,
 
     logoUrl: c.logoUrl || (c.id === "dsfh" ? DSFH_LOGO : c.id === "burjeel" ? burjeelLogo : c.id === "slh" ? slhLogo : c.id === "dallah" ? dallahLogo : c.id === "caremed" ? caremedLogo : c.id === "imc" ? imcLogo : c.id === "careinn" ? careinnLogo : c.id === "prime" ? primeLogo : c.id === "kauh" ? kauhLogo : c.id === "andalusia" ? andalusiaLogo : ""),
-    heroImageUrl: c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : c.id === "imc" ? imcHero : c.id === "careinn" ? careinnHero : c.id === "prime" ? primeHero : c.id === "kauh" ? kauhHero : c.id === "andalusia" ? kauhHero : ""),
-    heroImageUrls: c.heroImageUrls && c.heroImageUrls.length > 0 ? c.heroImageUrls : [c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : c.id === "imc" ? imcHero : c.id === "careinn" ? careinnHero : c.id === "prime" ? primeHero : c.id === "kauh" ? kauhHero : c.id === "andalusia" ? kauhHero : "")],
+    heroImageUrl: c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : c.id === "imc" ? imcHero : c.id === "careinn" ? careinnHero : c.id === "prime" ? primeHero : c.id === "kauh" ? kauhHero : c.id === "andalusia" ? andalusiaHero : ""),
+    heroImageUrls: c.heroImageUrls && c.heroImageUrls.length > 0 ? c.heroImageUrls : [c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : c.id === "imc" ? imcHero : c.id === "careinn" ? careinnHero : c.id === "prime" ? primeHero : c.id === "kauh" ? kauhHero : c.id === "andalusia" ? andalusiaHero : "")],
     heroCropPosition: c.heroCropPosition || "50% 15%",
     slideshowInterval: c.slideshowInterval || 5,
     heroOpacity: c.heroOpacity ?? 40,
@@ -556,6 +556,7 @@ import kauhLogo from "../../assets/kauh-logo.png";
 import kauhHero from "../../assets/kauh-hero.jpg";
 
 import andalusiaLogo from "../../assets/Andalusia.jpg";
+import andalusiaHero from "../../assets/andalusia-hero.jpg";
 
 /* Canonical built-in asset URLs — used as fallbacks for DSFH */
 export const DSFH_LOGO = logoImage;
@@ -742,7 +743,8 @@ export const ANDALUSIA_CORE: HospitalCoreConfig = {
   fontFamilyAr: "'Almarai', sans-serif",
   logoUrl: andalusiaLogo,
   hospitalWebsiteUrl: "",
-  heroImageUrl: kauhHero, // Defaulting to an existing one since none provided
+  heroImageUrl: andalusiaHero,
+  heroCropPosition: "50% 50%",
   primary: "#C9A96E",
   primaryDark: "#8B6530",
   primaryLight: "#E8D5B0",

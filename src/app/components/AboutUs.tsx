@@ -515,6 +515,8 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
   const [videoPlaying, setVideoPlaying] = useState(false);
 
   const currentSection = sections.find((s) => s.id === activeSection) || sections[0];
+  // Bundled video file (path/extension) vs. a bare YouTube video ID
+  const isFileVideo = !!currentSection.video && /[/.]/.test(currentSection.video);
 
   // Reset video playing state when switching sections
   const handleSectionChange = (id: string) => {
@@ -740,12 +742,32 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                     style={{ border: "none", padding: 0, background: "none" }}
                     aria-label="Play video"
                   >
-                    <ApiImage
-                      src={theme.heroImageUrl}
-                      alt={currentSection.title}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      style={{ filter: "brightness(0.7)" }}
-                    />
+                    {/* Cover image taken from the video itself — YouTube poster frame,
+                        or the first frame for bundled video files. */}
+                    {isFileVideo ? (
+                      <video
+                        src={currentSection.video}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        style={{ filter: "brightness(0.7)" }}
+                        preload="metadata"
+                        muted
+                        playsInline
+                      />
+                    ) : (
+                      <img
+                        src={`https://img.youtube.com/vi/${currentSection.video}/maxresdefault.jpg`}
+                        alt={currentSection.title}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        style={{ filter: "brightness(0.7)" }}
+                        onError={(e) => {
+                          // maxresdefault is missing for some uploads — fall back to hqdefault
+                          const img = e.currentTarget;
+                          if (!img.src.endsWith("hqdefault.jpg")) {
+                            img.src = `https://img.youtube.com/vi/${currentSection.video}/hqdefault.jpg`;
+                          }
+                        }}
+                      />
+                    )}
                     {/* Dark gradient overlay */}
                     <div
                       className="absolute inset-0"
@@ -788,7 +810,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                     </div>
                   </button>
                 ) : (
-                  currentSection.video?.includes("/") || currentSection.video?.includes(".") ? (
+                  isFileVideo ? (
                     <video
                       className="absolute inset-0 w-full h-full object-contain bg-black"
                       src={currentSection.video}
