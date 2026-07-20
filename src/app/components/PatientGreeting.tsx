@@ -189,8 +189,9 @@ export function PatientGreeting({
         {!isGuest && (
           <div className="flex items-center flex-wrap gap-2" style={{ paddingTop: SPACE[2] }}>
             <div
-              className="flex items-center px-3 py-1.5"
+              className="flex items-center px-3 py-1.5 cursor-pointer active:scale-95 transition-transform"
               style={{ backgroundColor: theme.primarySubtle, borderRadius: theme.radiusFull }}
+              onClick={() => (window as any).__demoHkToast?.()}
             >
               <span
                 style={{
@@ -203,8 +204,9 @@ export function PatientGreeting({
               </span>
             </div>
             <div
-              className="flex items-center px-3 py-1.5"
+              className="flex items-center px-3 py-1.5 cursor-pointer active:scale-95 transition-transform"
               style={{ backgroundColor: theme.primarySubtle, borderRadius: theme.radiusFull }}
+              onClick={() => (window as any).__demoMealToast?.()}
             >
               <span
                 style={{

@@ -14,6 +14,16 @@ import { useLocale } from "./i18n";
 import { InternalPageHeader } from "./InternalPageHeader";
 import { ApiImage } from "./ApiImage";
 
+/* ── Housekeeping product photos ── */
+import imgBlanket from "../../assets/Housekeeping/blanket.png";
+import imgWater from "../../assets/Housekeeping/water.png";
+import imgPillow from "../../assets/Housekeeping/pillow.png";
+import imgTowel from "../../assets/Housekeeping/towels.png";
+import imgToiletries from "../../assets/Housekeeping/toiletries.png";
+import imgTissues from "../../assets/Housekeeping/tissues.png";
+import imgSheets from "../../assets/Housekeeping/bedsheets.png";
+import imgSlippers from "../../assets/Housekeeping/slippers.png";
+
 /**
  * Patient Services — "I Need Something" flow.
  *
@@ -57,17 +67,18 @@ interface CardDef {
   key: string; // i18n label key
   emoji: string; // retained for back-compat with requests persisted before the redesign
   Icon: LucideIcon; // unified vector icon shown in the light-blue container
+  image?: string; // optional product photo — replaces the icon box in the grid
 }
 
 const REQUEST_ITEMS: CardDef[] = [
-  { key: "need.item.blanket", emoji: "🛏️", Icon: BedDouble },
-  { key: "need.item.water", emoji: "💧", Icon: GlassWater },
-  { key: "need.item.pillow", emoji: "🧸", Icon: BedSingle },
-  { key: "need.item.towel", emoji: "🧺", Icon: Shirt },
-  { key: "need.item.toiletries", emoji: "🧼", Icon: SprayCan },
-  { key: "need.item.tissues", emoji: "🧻", Icon: TissueBox },
-  { key: "need.item.sheets", emoji: "🛌", Icon: Layers },
-  { key: "need.item.slippers", emoji: "🩴", Icon: Footprints },
+  { key: "need.item.blanket", emoji: "🛏️", Icon: BedDouble, image: imgBlanket },
+  { key: "need.item.water", emoji: "💧", Icon: GlassWater, image: imgWater },
+  { key: "need.item.pillow", emoji: "🧸", Icon: BedSingle, image: imgPillow },
+  { key: "need.item.towel", emoji: "🧺", Icon: Shirt, image: imgTowel },
+  { key: "need.item.toiletries", emoji: "🧼", Icon: SprayCan, image: imgToiletries },
+  { key: "need.item.tissues", emoji: "🧻", Icon: TissueBox, image: imgTissues },
+  { key: "need.item.sheets", emoji: "🛌", Icon: Layers, image: imgSheets },
+  { key: "need.item.slippers", emoji: "🩴", Icon: Footprints, image: imgSlippers },
 ];
 
 const REPORT_ITEMS: CardDef[] = [
@@ -275,6 +286,8 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
         .ns-card { transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
         .ns-card:hover { border-color: var(--ns-primary); box-shadow: ${SHADOW.md}; transform: translateY(-4px); }
         .ns-card:active { transform: scale(0.985); }
+        .ns-card img { transition: transform .4s cubic-bezier(.25,.46,.45,.94); }
+        .ns-card:hover img { transform: scale(1.06); }
         .ns-iconbox { transition: background-color .2s ease; }
         .ns-card:hover .ns-iconbox { background-color: color-mix(in srgb, var(--ns-primary) 18%, #fff); }
         .ns-textarea::placeholder { color: ${theme.textDisabled}; }
@@ -449,9 +462,9 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
           </div>
 
           {/* Body */}
-          <div className="ns-scroll flex-1 min-h-0 overflow-y-auto px-8 py-7">
+          <div className="ns-scroll flex-1 min-h-0 overflow-y-auto px-8 py-7 flex flex-col">
             {/* Section heading */}
-            <div className="mb-6">
+            <div className="shrink-0 mb-4">
               <div className="flex items-center gap-3 flex-wrap">
                 <h3 style={{ ...TEXT_STYLE.pageTitle, fontFamily, color: theme.textHeading }}>
                   {t(titleKey)}
@@ -626,43 +639,88 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                 </div>
               )
             ) : (
-              <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+              <div className="flex-1 min-h-0 flex items-center justify-center">
+                <div
+                  className="grid w-full"
+                  style={{
+                    gridTemplateColumns: "repeat(4, 1fr)",
+                    gridTemplateRows: "repeat(2, 1fr)",
+                    columnGap: "24px",
+                    rowGap: "28px",
+                    maxHeight: "82%",
+                    height: "100%",
+                    maxWidth: "100%",
+                  }}
+                >
                 {gridItems.map((card) => {
                   const CardIcon = card.Icon;
                   return (
                     <button
                       key={card.key}
                       onClick={() => openSheet(card, gridKind)}
-                      className="ns-card flex flex-col items-center justify-center gap-4 cursor-pointer"
+                      className="ns-card flex flex-col items-stretch cursor-pointer"
                       style={{
                         backgroundColor: theme.surface,
                         borderRadius: theme.radiusCard,
                         border: `1.5px solid ${theme.borderDefault}`,
                         boxShadow: SHADOW.sm,
-                        padding: "28px 18px",
+                        padding: 0,
                         outline: "none",
+                        overflow: "hidden",
+                        minHeight: 0,
                       }}
                     >
-                      <div
-                        className="ns-iconbox shrink-0 flex items-center justify-center"
-                        style={{
-                          width: 92,
-                          height: 92,
-                          borderRadius: theme.radiusLg,
-                          backgroundColor: theme.primaryLight,
-                        }}
-                      >
-                        <CardIcon size={42} color={theme.primary} strokeWidth={1.8} />
-                      </div>
+                      {card.image ? (
+                        /* Product photo — fills the top of the card, flexes to available height */
+                        <div
+                          style={{
+                            flex: 1,
+                            minHeight: 0,
+                            overflow: "hidden",
+                            backgroundColor: "#f5f5f5",
+                          }}
+                        >
+                          <img
+                            src={card.image}
+                            alt={t(card.key)}
+                            loading="lazy"
+                            draggable={false}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        /* Fallback icon box (Report an Issue items) */
+                        <div
+                          className="ns-iconbox flex items-center justify-center"
+                          style={{
+                            flex: 1,
+                            minHeight: 0,
+                            backgroundColor: theme.primaryLight,
+                          }}
+                        >
+                          <CardIcon size={48} color={theme.primary} strokeWidth={1.8} />
+                        </div>
+                      )}
                       <span
-                        className="text-center"
-                        style={{ ...TEXT_STYLE.cardTitle, fontFamily, color: theme.textHeading }}
+                        className="shrink-0 text-center"
+                        style={{
+                          ...TEXT_STYLE.cardTitle,
+                          fontFamily,
+                          color: theme.textHeading,
+                          padding: "14px 8px 16px",
+                        }}
                       >
                         {t(card.key)}
                       </span>
                     </button>
                   );
                 })}
+                </div>
               </div>
             )}
           </div>

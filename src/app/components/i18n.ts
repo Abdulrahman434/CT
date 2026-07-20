@@ -180,6 +180,9 @@ const translations: Record<string, TranslationEntry> = {
   "need.rel.daysAgo": { en: "{0} days ago", ar: "قبل {0} أيام", ur: "{0} دن پہلے" },
   "need.close": { en: "Close", ar: "إغلاق", ur: "بند کریں" },
 
+  /* ─── Toast Notifications ─── */
+  "toast.justNow": { en: "Just now", ar: "الآن", ur: "ابھی" },
+
   /* ─── Idle Screen ─── */
   "idle.welcome": { en: "Welcome to {0}", ar: "مرحباً بك في {0}", ur: "{0} میں خوش آمدید" },
   "idle.ready": { en: "This bedside terminal is ready for use.", ar: "هذه الشاشة جاهزة للاستخدام.", ur: "یہ بیڈ سائیڈ ٹرمینل استعمال کے لیے تیار ہے۔" },

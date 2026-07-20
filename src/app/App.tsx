@@ -35,6 +35,7 @@ import { TasbihScreenSaver } from "./components/TasbihScreenSaver";
 import { FoodOrdering } from "./components/FoodOrdering";
 import { NeedSomething } from "./components/NeedSomething";
 import { OrderProvider } from "./components/OrderStore";
+import { ToastProvider } from "./components/ToastNotifications";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { PasswordGate } from "./components/PasswordGate";
 import { HospitalBroadcast, SAMPLE_BROADCAST } from "./components/HospitalBroadcast";
@@ -1456,6 +1457,7 @@ function BedsideScreen() {
         }}
         className={`flex flex-col overflow-hidden relative shrink-0 ${isTV ? "careinn-tv" : "careinn-kiosk"}`}
       >
+        <ToastProvider>
         {layoutMode === 2 ? (
           /* Layout 2 (CareInn) — inherits Layout 1's active hospital brand
              colors (and logo) by feeding the active theme into the CSS vars
@@ -1996,6 +1998,7 @@ function BedsideScreen() {
             </div>
           </div>
         )}
+        </ToastProvider>
       </div>
 
 
