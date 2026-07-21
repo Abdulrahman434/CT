@@ -182,6 +182,9 @@ const translations: Record<string, TranslationEntry> = {
 
   /* ─── Toast Notifications ─── */
   "toast.justNow": { en: "Just now", ar: "الآن", ur: "ابھی" },
+  "toast.rtls.category": { en: "Alert: Staff Entry", ar: "تنبيه: دخول موظف", ur: "الرٹ: عملے کا داخلہ" },
+  "toast.rtls.authorized": { en: "Authorized", ar: "مصرّح", ur: "مجاز" },
+  "toast.rtls.unauthorized": { en: "Unauthorized", ar: "غير مصرّح", ur: "غیر مجاز" },
 
   /* ─── Idle Screen ─── */
   "idle.welcome": { en: "Welcome to {0}", ar: "مرحباً بك في {0}", ur: "{0} میں خوش آمدید" },

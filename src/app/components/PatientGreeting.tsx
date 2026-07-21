@@ -164,11 +164,21 @@ export function PatientGreeting({
         </p>
         {!isGuest && (
           <p
+            className="cursor-pointer active:scale-[0.98] transition-transform"
             style={{
               fontFamily: fontFamily,
               ...TEXT_STYLE.display,
               fontWeight: WEIGHT.extrabold,
               color: theme.textHeading,
+            }}
+            onClick={() => {
+              const careTeam = nurseStore.careTeam.filter(m => m.visible);
+              const staffList = careTeam.map(m => ({
+                name: t(m.nameKey),
+                role: t(m.roleKey),
+                img: m.img,
+              }));
+              (window as any).__demoRtlsToast?.(staffList.length ? staffList : undefined);
             }}
           >
             {displayName}

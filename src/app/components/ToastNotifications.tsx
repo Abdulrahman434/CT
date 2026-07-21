@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useRef, useState, ReactNode, useEffect } from "react";
-import { Utensils, X } from "lucide-react";
+import { Utensils, X, TriangleAlert, ShieldCheck, ShieldOff } from "lucide-react";
 import { useTheme, TEXT_STYLE, WEIGHT, TYPE_SCALE, SHADOW, SPACE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 
@@ -9,9 +9,10 @@ import { useLocale } from "./i18n";
  *
  * Lightweight, self-contained toast system that renders INSIDE the scaled
  * 1920×1080 bedside container (so it inherits the same scale + RTL direction).
- * Two service-themed variants:
- *   - "meal"         → utensils,            accent (red) icon disc  → Meal Ordering
- *   - "housekeeping" → sparkle-star (SVG),  primary (teal) icon disc → Housekeeping
+ * Three service-themed variants:
+ *   - "meal"         → utensils,            accent icon disc  → Meal Ordering
+ *   - "housekeeping" → sparkle-star (SVG),  primary icon disc → Housekeeping
+ *   - "rtls"         → staff photo,         alert header      → RTLS Staff Entry
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Housekeeping sparkle-star SVG paths — same ones used in ServicesGrid.tsx */
@@ -23,7 +24,7 @@ const HK_SPARKLE_PATHS = [
   "M4.16667 15H2.5",
 ];
 
-export type ToastVariant = "meal" | "housekeeping";
+export type ToastVariant = "meal" | "housekeeping" | "rtls";
 
 export interface ToastInput {
   variant: ToastVariant;
@@ -34,6 +35,15 @@ export interface ToastInput {
   /** Optional coloured action tag on the trailing edge, e.g. "On the Way" */
   actionText?: string;
   actionColor?: string;
+  /** Callback when the toast body is tapped (not the close button) */
+  onTap?: () => void;
+  /* ── RTLS-specific fields ── */
+  /** Staff photo URL (for rtls variant) */
+  staffPhoto?: string;
+  /** Staff role / subtitle, e.g. "Cardiology, MD" */
+  staffRole?: string;
+  /** true = Authorized (green), false = Unauthorized (red) */
+  authorized?: boolean;
 }
 
 interface ToastItem extends ToastInput {
@@ -50,7 +60,7 @@ export function useToast() {
   return useContext(ToastContext);
 }
 
-const AUTO_DISMISS_MS = 6000;
+const AUTO_DISMISS_MS = 7000;
 const MAX_VISIBLE = 4;
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -85,23 +95,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   /* ── Demo helpers: triggered from PatientGreeting badges ── */
   const hkDemoIdx = useRef(0);
   const mealDemoIdx = useRef(0);
+  const rtlsDemoIdx = useRef(0);
   useEffect(() => {
     (window as any).__demoHkToast = () => {
+      const nav = () => window.dispatchEvent(new CustomEvent("toast-navigate", { detail: "housekeeping" }));
       const demos: ToastInput[] = [
-        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Water has been delivered", actionText: "Delivered", actionColor: "#16A34A" },
-        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Blanket is on the way", actionText: "On the Way", actionColor: "#2563EB" },
-        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Pillow is being prepared", actionText: "Preparing", actionColor: "#D97706" },
-        { variant: "housekeeping", category: "HOUSEKEEPING ISSUE", title: "Air Conditioner issue has been fixed", actionText: "Fixed", actionColor: "#16A34A" },
+        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Water has been delivered", actionText: "Delivered", actionColor: "#16A34A", onTap: nav },
+        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Blanket is on the way", actionText: "On the Way", actionColor: "#2563EB", onTap: nav },
+        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Pillow is being prepared", actionText: "Preparing", actionColor: "#D97706", onTap: nav },
+        { variant: "housekeeping", category: "HOUSEKEEPING ISSUE", title: "Air Conditioner issue has been fixed", actionText: "Fixed", actionColor: "#16A34A", onTap: nav },
       ];
       showToast(demos[hkDemoIdx.current % demos.length]);
       hkDemoIdx.current++;
     };
     (window as any).__demoMealToast = () => {
+      const nav = () => window.dispatchEvent(new CustomEvent("toast-navigate", { detail: "meal" }));
       const demos: ToastInput[] = [
-        { variant: "meal", category: "MEAL ORDERING", title: "Dinner ordering is now open!", actionText: "Order Now", actionColor: "#2563EB" },
-        { variant: "meal", category: "MEAL ORDERING", title: "Only 30 min left to order Lunch!", actionText: "Hurry!", actionColor: "#D97706" },
-        { variant: "meal", category: "MEAL ORDERING", title: "Your Breakfast is being served now 🍽️", actionText: "Bon Appétit!", actionColor: "#16A34A" },
-        { variant: "meal", category: "MEAL ORDERING", title: "Lunch #4827 — On the Way", actionText: "On the Way", actionColor: "#2563EB" },
+        { variant: "meal", category: "MEAL ORDERING", title: "Dinner ordering is now open!", actionText: "Order Now", actionColor: "#2563EB", onTap: nav },
+        { variant: "meal", category: "MEAL ORDERING", title: "Only 30 min left to order Lunch!", actionText: "Hurry!", actionColor: "#D97706", onTap: nav },
+        { variant: "meal", category: "MEAL ORDERING", title: "Your Breakfast is being served now 🍽️", actionText: "Bon Appétit!", actionColor: "#16A34A", onTap: nav },
+        { variant: "meal", category: "MEAL ORDERING", title: "Lunch #4827 — On the Way", actionText: "On the Way", actionColor: "#2563EB", onTap: nav },
       ];
       showToast(demos[mealDemoIdx.current % demos.length]);
       mealDemoIdx.current++;
@@ -111,6 +124,35 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       delete (window as any).__demoHkToast;
       delete (window as any).__demoMealToast;
       delete (window as any).__demoToast;
+    };
+  }, [showToast]);
+
+  /* ── RTLS demo — uses actual care team images from NurseDataStore ── */
+  useEffect(() => {
+    (window as any).__demoRtlsToast = (staffList?: { name: string; role: string; img: string }[]) => {
+      /* Default demo data if no staff list is passed */
+      const defaults = [
+        { name: "Fahad Mahmoud", role: "Cardiology, MD", img: "" },
+        { name: "Nawal Ali", role: "Nurse", img: "" },
+        { name: "Dr. Khalid", role: "Internal Medicine", img: "" },
+        { name: "Unknown Visitor", role: "Unregistered", img: "" },
+      ];
+      const list = staffList ?? defaults;
+      const person = list[rtlsDemoIdx.current % list.length];
+      /* Alternate authorized/unauthorized on each click */
+      const isAuthorized = rtlsDemoIdx.current % 2 === 0;
+      showToast({
+        variant: "rtls",
+        category: "toast.rtls.category",
+        title: person.name,
+        staffPhoto: person.img || "",
+        staffRole: person.role,
+        authorized: isAuthorized,
+      });
+      rtlsDemoIdx.current++;
+    };
+    return () => {
+      delete (window as any).__demoRtlsToast;
     };
   }, [showToast]);
 
@@ -134,7 +176,7 @@ function ToastViewport({ toasts, onDismiss }: { toasts: ToastItem[]; onDismiss: 
       aria-live="polite"
       className="absolute flex flex-col pointer-events-none"
       style={{
-        top: "104px",
+        top: SPACE[3],
         [isRTL ? "left" : "right"]: SPACE[3],
         gap: SPACE[2],
         zIndex: 80,
@@ -150,19 +192,155 @@ function ToastViewport({ toasts, onDismiss }: { toasts: ToastItem[]; onDismiss: 
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
- * TOAST CARD
+ * TOAST CARD — renders either the standard (meal/hk) or RTLS variant
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => void }) {
   const { theme } = useTheme();
   const { t, isRTL, fontFamily } = useLocale();
 
+  /* ── RTLS variant: staff photo card ── */
+  if (toast.variant === "rtls") {
+    return (
+      <div
+        className="pointer-events-auto relative"
+        onClick={() => { toast.onTap?.(); }}
+        style={{
+          backgroundColor: theme.surface,
+          borderRadius: theme.radiusLg,
+          boxShadow: SHADOW.xl,
+          border: theme.cardBorder,
+          animation: `${isRTL ? "hbsToastInRTL" : "hbsToastIn"} 0.35s cubic-bezier(0.16,1,0.3,1)`,
+          textAlign: isRTL ? "right" : "left",
+          cursor: toast.onTap ? "pointer" : "default",
+          overflow: "hidden",
+        }}
+      >
+        {/* Alert header bar */}
+        <div
+          className="flex items-center gap-2"
+          style={{
+            padding: `${SPACE[2]} ${SPACE[3]}`,
+            borderBottom: `1px solid ${theme.borderSubtle}`,
+          }}
+        >
+          <TriangleAlert size={18} strokeWidth={2.2} style={{ color: "#F59E0B", flexShrink: 0 }} />
+          <span style={{
+            fontFamily,
+            fontSize: TYPE_SCALE.base,
+            fontWeight: WEIGHT.semibold,
+            color: theme.textHeading,
+          }}>
+            {t("toast.rtls.category")}
+          </span>
+
+          {/* Close */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onDismiss(); }}
+            aria-label={t("general.close")}
+            className="flex items-center justify-center rounded-full cursor-pointer active:scale-90 transition-transform"
+            style={{
+              marginInlineStart: "auto",
+              width: "28px",
+              height: "28px",
+              backgroundColor: "transparent",
+              border: "none",
+              outline: "none",
+            }}
+          >
+            <X size={16} strokeWidth={2.5} style={{ color: theme.textMuted }} />
+          </button>
+        </div>
+
+        {/* Staff body */}
+        <div className="flex items-center gap-4" style={{ padding: `${SPACE[3]} ${SPACE[3]}` }}>
+          {/* Photo */}
+          {toast.staffPhoto ? (
+            <img
+              src={toast.staffPhoto}
+              alt={toast.title}
+              className="shrink-0 rounded-xl object-cover"
+              style={{ width: "80px", height: "90px" }}
+            />
+          ) : (
+            <div
+              className="shrink-0 rounded-xl flex items-center justify-center"
+              style={{ width: "80px", height: "90px", backgroundColor: theme.primaryLight }}
+            >
+              <span style={{ fontSize: "32px", fontWeight: WEIGHT.bold, color: theme.primary }}>
+                {toast.title.charAt(0)}
+              </span>
+            </div>
+          )}
+
+          {/* Text + badge */}
+          <div className="flex-1 min-w-0">
+            <p style={{
+              fontFamily,
+              ...TEXT_STYLE.pageTitle,
+              fontWeight: WEIGHT.bold,
+              color: theme.textHeading,
+              margin: 0,
+              fontSize: "22px",
+            }}>
+              {toast.title}
+            </p>
+            {toast.staffRole && (
+              <p style={{
+                fontFamily,
+                ...TEXT_STYLE.body,
+                color: theme.textMuted,
+                margin: "2px 0 10px",
+              }}>
+                {toast.staffRole}
+              </p>
+            )}
+            {/* Authorized / Unauthorized badge */}
+            <div
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+              style={{
+                backgroundColor: toast.authorized ? "#DCFCE7" : "#FEE2E2",
+              }}
+            >
+              {toast.authorized ? (
+                <ShieldCheck size={18} strokeWidth={2.2} style={{ color: "#16A34A" }} />
+              ) : (
+                <ShieldOff size={18} strokeWidth={2.2} style={{ color: "#EF4444" }} />
+              )}
+              <span style={{
+                fontFamily,
+                fontSize: TYPE_SCALE.base,
+                fontWeight: WEIGHT.bold,
+                color: toast.authorized ? "#16A34A" : "#EF4444",
+              }}>
+                {toast.authorized ? t("toast.rtls.authorized") : t("toast.rtls.unauthorized")}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes hbsToastIn {
+            from { opacity: 0; transform: translateX(24px) scale(0.96); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+          }
+          @keyframes hbsToastInRTL {
+            from { opacity: 0; transform: translateX(-24px) scale(0.96); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  /* ── Standard variant (meal / housekeeping) ── */
   const isMeal = toast.variant === "meal";
   const discColor = isMeal ? theme.accent : theme.primary;
 
   return (
     <div
       className="pointer-events-auto relative flex items-center"
+      onClick={() => { toast.onTap?.(); }}
       style={{
         backgroundColor: theme.surface,
         borderRadius: theme.radiusLg,
@@ -172,6 +350,7 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
         gap: SPACE[2],
         animation: `${isRTL ? "hbsToastInRTL" : "hbsToastIn"} 0.35s cubic-bezier(0.16,1,0.3,1)`,
         textAlign: isRTL ? "right" : "left",
+        cursor: toast.onTap ? "pointer" : "default",
       }}
     >
       {/* Icon disc */}
@@ -255,7 +434,7 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
 
       {/* Close */}
       <button
-        onClick={onDismiss}
+        onClick={(e) => { e.stopPropagation(); onDismiss(); }}
         aria-label={t("general.close")}
         className="absolute flex items-center justify-center rounded-full cursor-pointer active:scale-90 transition-transform"
         style={{

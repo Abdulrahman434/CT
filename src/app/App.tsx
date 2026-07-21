@@ -1209,6 +1209,17 @@ function BedsideScreen() {
     };
   }, []);
 
+  /* Toast tap → navigate to the relevant service panel */
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      if (detail === "housekeeping") setShowNeedSomething(true);
+      if (detail === "meal") setShowFoodOrder(true);
+    };
+    window.addEventListener("toast-navigate", handler);
+    return () => window.removeEventListener("toast-navigate", handler);
+  }, []);
+
   useEffect(() => {
     // Open call page and focus the dialer input
     (window as any).__handsetOpenDialer = () => {
