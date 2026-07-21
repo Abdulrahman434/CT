@@ -186,7 +186,7 @@ const translations: Record<string, TranslationEntry> = {
   "toast.rtls.authorized": { en: "Authorized", ar: "مصرّح", ur: "مجاز" },
   "toast.rtls.unauthorized": { en: "Unauthorized", ar: "غير مصرّح", ur: "غیر مجاز" },
   /* Housekeeping toast messages */
-  "toast.hk.category.request": { en: "HOUSEKEEPING REQUEST", ar: "طلب تدبير منزلي", ur: "ہاؤس کیپنگ کی درخواست" },
+  "toast.hk.category.request": { en: "HOUSEKEEPING REQUEST", ar: "طلب خدمة الغرف", ur: "ہاؤس کیپنگ کی درخواست" },
   "toast.hk.category.issue": { en: "HOUSEKEEPING ISSUE", ar: "بلاغ صيانة", ur: "ہاؤس کیپنگ مسئلہ" },
   "toast.hk.waterDelivered": { en: "Water has been delivered", ar: "تم توصيل المياه", ur: "پانی پہنچا دیا گیا" },
   "toast.hk.blanketOnWay": { en: "Blanket is on the way", ar: "البطانية في الطريق", ur: "کمبل راستے میں ہے" },
