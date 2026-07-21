@@ -2067,7 +2067,7 @@ function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL, meals, onEdi
   };
 
   return (
-    <div className="flex-1 min-h-0 rounded-[30px] flex flex-col" style={{ backgroundColor: "#fff", boxShadow: "0 8px 32px rgba(0,0,0,0.15)", overflow: "hidden" }}>
+    <div className="flex-1 min-h-0 flex flex-col" style={{ overflow: "hidden" }}>
       {/* Tabs row */}
       <div className="shrink-0 flex items-center justify-between px-[30px] pt-[28px] pb-[20px]">
         <div className="flex items-center gap-3 flex-wrap">

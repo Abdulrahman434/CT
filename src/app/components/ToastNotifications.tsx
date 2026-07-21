@@ -67,6 +67,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const idRef = useRef(0);
   const timers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+  const { t } = useLocale();
 
   const remove = useCallback((id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -101,10 +102,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       /* Status updates → My Requests page */
       const navRequests = () => window.dispatchEvent(new CustomEvent("toast-navigate", { detail: "housekeeping-requests" }));
       const demos: ToastInput[] = [
-        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Water has been delivered", actionText: "Delivered", actionColor: "#16A34A", onTap: navRequests },
-        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Blanket is on the way", actionText: "On the Way", actionColor: "#2563EB", onTap: navRequests },
-        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Pillow is being prepared", actionText: "Preparing", actionColor: "#D97706", onTap: navRequests },
-        { variant: "housekeeping", category: "HOUSEKEEPING ISSUE", title: "Air Conditioner issue has been fixed", actionText: "Fixed", actionColor: "#16A34A", onTap: navRequests },
+        { variant: "housekeeping", category: t("toast.hk.category.request"), title: t("toast.hk.waterDelivered"), actionText: t("toast.hk.delivered"), actionColor: "#16A34A", onTap: navRequests },
+        { variant: "housekeeping", category: t("toast.hk.category.request"), title: t("toast.hk.blanketOnWay"), actionText: t("toast.hk.onTheWay"), actionColor: "#2563EB", onTap: navRequests },
+        { variant: "housekeeping", category: t("toast.hk.category.request"), title: t("toast.hk.pillowPreparing"), actionText: t("toast.hk.preparing"), actionColor: "#D97706", onTap: navRequests },
+        { variant: "housekeeping", category: t("toast.hk.category.issue"), title: t("toast.hk.acFixed"), actionText: t("toast.hk.fixed"), actionColor: "#16A34A", onTap: navRequests },
       ];
       showToast(demos[hkDemoIdx.current % demos.length]);
       hkDemoIdx.current++;
@@ -114,10 +115,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       const navOrder = () => window.dispatchEvent(new CustomEvent("toast-navigate", { detail: "meal" }));
       const navMyOrders = () => window.dispatchEvent(new CustomEvent("toast-navigate", { detail: "meal-orders" }));
       const demos: ToastInput[] = [
-        { variant: "meal", category: "MEAL ORDERING", title: "Dinner ordering is now open!", actionText: "Order Now", actionColor: "#2563EB", onTap: navOrder },
-        { variant: "meal", category: "MEAL ORDERING", title: "Only 30 min left to order Lunch!", actionText: "Hurry!", actionColor: "#D97706", onTap: navOrder },
-        { variant: "meal", category: "MEAL ORDERING", title: "Your Breakfast is being served now 🍽️", actionText: "Bon Appétit!", actionColor: "#16A34A", onTap: navMyOrders },
-        { variant: "meal", category: "MEAL ORDERING", title: "Lunch #4827 — On the Way", actionText: "On the Way", actionColor: "#2563EB", onTap: navMyOrders },
+        { variant: "meal", category: t("toast.meal.category"), title: t("toast.meal.dinnerOpen"), actionText: t("toast.meal.orderNow"), actionColor: "#2563EB", onTap: navOrder },
+        { variant: "meal", category: t("toast.meal.category"), title: t("toast.meal.hurryLunch"), actionText: t("toast.meal.hurry"), actionColor: "#D97706", onTap: navOrder },
+        { variant: "meal", category: t("toast.meal.category"), title: t("toast.meal.breakfastServed"), actionText: t("toast.meal.bonAppetit"), actionColor: "#16A34A", onTap: navMyOrders },
+        { variant: "meal", category: t("toast.meal.category"), title: t("toast.meal.lunchOnWay"), actionText: t("toast.hk.onTheWay"), actionColor: "#2563EB", onTap: navMyOrders },
       ];
       showToast(demos[mealDemoIdx.current % demos.length]);
       mealDemoIdx.current++;
@@ -128,7 +129,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       delete (window as any).__demoMealToast;
       delete (window as any).__demoToast;
     };
-  }, [showToast]);
+  }, [showToast, t]);
 
   /* ── RTLS demo — uses actual care team images from NurseDataStore ── */
   useEffect(() => {

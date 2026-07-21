@@ -185,6 +185,26 @@ const translations: Record<string, TranslationEntry> = {
   "toast.rtls.category": { en: "Alert: Staff Entry", ar: "تنبيه: دخول موظف", ur: "الرٹ: عملے کا داخلہ" },
   "toast.rtls.authorized": { en: "Authorized", ar: "مصرّح", ur: "مجاز" },
   "toast.rtls.unauthorized": { en: "Unauthorized", ar: "غير مصرّح", ur: "غیر مجاز" },
+  /* Housekeeping toast messages */
+  "toast.hk.category.request": { en: "HOUSEKEEPING REQUEST", ar: "طلب تدبير منزلي", ur: "ہاؤس کیپنگ کی درخواست" },
+  "toast.hk.category.issue": { en: "HOUSEKEEPING ISSUE", ar: "بلاغ صيانة", ur: "ہاؤس کیپنگ مسئلہ" },
+  "toast.hk.waterDelivered": { en: "Water has been delivered", ar: "تم توصيل المياه", ur: "پانی پہنچا دیا گیا" },
+  "toast.hk.blanketOnWay": { en: "Blanket is on the way", ar: "البطانية في الطريق", ur: "کمبل راستے میں ہے" },
+  "toast.hk.pillowPreparing": { en: "Pillow is being prepared", ar: "يتم تحضير الوسادة", ur: "تکیا تیار ہو رہا ہے" },
+  "toast.hk.acFixed": { en: "Air Conditioner issue has been fixed", ar: "تم إصلاح مشكلة المكيّف", ur: "ایئر کنڈیشنر کا مسئلہ حل ہو گیا" },
+  "toast.hk.delivered": { en: "Delivered", ar: "تم التوصيل", ur: "پہنچا دیا گیا" },
+  "toast.hk.onTheWay": { en: "On the Way", ar: "في الطريق", ur: "راستے میں" },
+  "toast.hk.preparing": { en: "Preparing", ar: "جاري التحضير", ur: "تیاری جاری" },
+  "toast.hk.fixed": { en: "Fixed", ar: "تم الإصلاح", ur: "ٹھیک ہو گیا" },
+  /* Meal ordering toast messages */
+  "toast.meal.category": { en: "MEAL ORDERING", ar: "طلب الوجبات", ur: "کھانے کا آرڈر" },
+  "toast.meal.dinnerOpen": { en: "Dinner ordering is now open!", ar: "طلب العشاء متاح الآن!", ur: "رات کے کھانے کا آرڈر اب کھلا ہے!" },
+  "toast.meal.hurryLunch": { en: "Only 30 min left to order Lunch!", ar: "باقي 30 دقيقة فقط لطلب الغداء!", ur: "دوپہر کے کھانے کا آرڈر دینے کے لیے صرف 30 منٹ باقی!" },
+  "toast.meal.breakfastServed": { en: "Your Breakfast is being served now 🍽️", ar: "يتم تقديم فطورك الآن 🍽️", ur: "آپ کا ناشتہ اب پیش کیا جا رہا ہے 🍽️" },
+  "toast.meal.lunchOnWay": { en: "Lunch #4827 — On the Way", ar: "الغداء #4827 — في الطريق", ur: "دوپہر کا کھانا #4827 — راستے میں" },
+  "toast.meal.orderNow": { en: "Order Now", ar: "اطلب الآن", ur: "ابھی آرڈر کریں" },
+  "toast.meal.hurry": { en: "Hurry!", ar: "أسرع!", ur: "جلدی کریں!" },
+  "toast.meal.bonAppetit": { en: "Bon Appétit!", ar: "بالهناء والشفاء!", ur: "بالعافیہ!" },
 
   /* ─── Idle Screen ─── */
   "idle.welcome": { en: "Welcome to {0}", ar: "مرحباً بك في {0}", ur: "{0} میں خوش آمدید" },
