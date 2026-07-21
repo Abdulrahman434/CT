@@ -21,6 +21,7 @@ import imgPrayerTimesPage from "../../assets/prayer times page.jpg";
 import imgWelcomeImage from "../../assets/Welcome Image.jpg";
 import imgLanguage from "../../assets/language.jpg";
 import imgNotificationSet from "../../assets/notificationset.jpg";
+import imgMosque from "../../assets/b51acb5e2ec4a2c930572c53103b020b12e76ee2.png";
 
 const STEP_BACKGROUNDS: Record<string, string> = {
   language: imgLanguage,
@@ -72,12 +73,12 @@ const STEP_SEQUENCE: StepDef[] = [
   { id: "consent" },
 ];
 
-const STEP_ICONS: Record<StepId, React.ComponentType<{ size?: number | string; style?: React.CSSProperties }>> = {
+const STEP_ICONS: Record<StepId, any> = {
   welcome: Hand,
   language: Globe,
   displayName: UserRound,
   pin: Shield,
-  prayer: BellRing,
+  prayer: imgMosque,
   decision: SlidersHorizontal,
   theme: Moon,
   dataClear: DatabaseZap,
@@ -728,46 +729,52 @@ export function OnboardingWizard({
             border: t.cardBorder,
           }}
         >
-          {/* Background image for questions (5% opacity) */}
-          {STEP_BACKGROUNDS[stepId] && (
-            <div
-              className="absolute inset-0 pointer-events-none z-0"
+          {/* Welcome step split hero image (fades out smoothly) */}
+          <div
+            className="absolute inset-y-0 w-1/2 overflow-hidden pointer-events-none z-0"
+            style={{
+              right: 0,
+              left: "auto",
+              opacity: stepId === "welcome" ? 1 : 0,
+              transition: "opacity 0.4s ease-in-out",
+            }}
+          >
+            <img
+              src={t.heroImageUrl}
+              alt="Hospital Hero"
               style={{
-                backgroundImage: `url(${STEP_BACKGROUNDS[stepId]})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                opacity: 0.1,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: t.heroCropPosition || "50% 50%",
               }}
             />
-          )}
-
-          {stepId === "welcome" && (
             <div
-              className="absolute inset-y-0 w-1/2 overflow-hidden pointer-events-none z-0"
               style={{
-                right: 0,
-                left: "auto",
+                position: "absolute",
+                inset: 0,
+                background: `linear-gradient(to left, transparent 0%, ${t.surface} 100%)`,
               }}
-            >
-              <img
-                src={t.heroImageUrl}
-                alt="Hospital Hero"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  objectPosition: t.heroCropPosition || "50% 50%",
-                }}
-              />
+            />
+          </div>
+
+          {/* Stacked background images for smooth cross-fade transition */}
+          {Object.entries(STEP_BACKGROUNDS).map(([id, src]) => {
+            const isActive = stepId === id;
+            return (
               <div
+                key={id}
+                className="absolute inset-0 pointer-events-none z-0"
                 style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: `linear-gradient(to left, transparent 0%, ${t.surface} 100%)`,
+                  backgroundImage: `url(${src})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  opacity: isActive ? 0.07 : 0,
+                  transition: "opacity 0.4s ease-in-out",
                 }}
               />
-            </div>
-          )}
+            );
+          })}
 
           {/* progress strip */}
           <div className="shrink-0 flex items-center gap-4 px-10 pt-7 relative z-10">
@@ -814,7 +821,25 @@ export function OnboardingWizard({
                 className="flex items-center justify-center"
                 style={{ width: "80px", height: "80px", borderRadius: t.radiusFull, backgroundColor: t.primarySubtle, marginBottom: "22px" }}
               >
-                <Icon size={38} style={{ color: t.primary }} />
+                {typeof Icon === "string" ? (
+                  <div
+                    style={{
+                      width: "38px",
+                      height: "38px",
+                      backgroundColor: t.primary,
+                      WebkitMaskImage: `url(${Icon})`,
+                      maskImage: `url(${Icon})`,
+                      WebkitMaskSize: "contain",
+                      maskSize: "contain",
+                      WebkitMaskPosition: "center",
+                      maskPosition: "center",
+                      WebkitMaskRepeat: "no-repeat",
+                      maskRepeat: "no-repeat",
+                    }}
+                  />
+                ) : (
+                  <Icon size={38} style={{ color: t.primary }} />
+                )}
               </div>
               <h3
                 style={{ fontFamily, fontSize: "28px", fontWeight: 800, color: t.textHeading, textAlign: "center", lineHeight: "34px", marginBottom: "24px" }}
