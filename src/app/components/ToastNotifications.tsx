@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useRef, useState, ReactNode, useEffect } from "react";
-import { Utensils, X, TriangleAlert, ShieldCheck, ShieldOff } from "lucide-react";
+import { Utensils, X, ShieldCheck, ShieldOff } from "lucide-react";
 import { useTheme, TEXT_STYLE, WEIGHT, TYPE_SCALE, SHADOW, SPACE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 
@@ -203,8 +203,10 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
   const { theme } = useTheme();
   const { t, isRTL, fontFamily } = useLocale();
 
-  /* ── RTLS variant: staff photo card ── */
+  /* ── RTLS variant: staff entry card ── */
   if (toast.variant === "rtls") {
+    const authColor = toast.authorized ? "#16A34A" : "#EF4444";
+    const authBg = toast.authorized ? "#DCFCE7" : "#FEE2E2";
     return (
       <div
         className="pointer-events-auto relative"
@@ -214,70 +216,77 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
           borderRadius: theme.radiusLg,
           boxShadow: SHADOW.xl,
           border: theme.cardBorder,
+          padding: `14px ${SPACE[3]} 16px`,
           animation: `${isRTL ? "hbsToastInRTL" : "hbsToastIn"} 0.35s cubic-bezier(0.16,1,0.3,1)`,
           textAlign: isRTL ? "right" : "left",
           cursor: toast.onTap ? "pointer" : "default",
-          overflow: "hidden",
         }}
       >
-        {/* Alert header bar */}
+        {/* Green dot indicator */}
         <div
-          className="flex items-center gap-1.5"
           style={{
-            padding: `6px ${SPACE[2]}`,
-            borderBottom: `1px solid ${theme.borderSubtle}`,
+            position: "absolute",
+            top: 14,
+            [isRTL ? "right" : "left"]: 14,
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            backgroundColor: "#22C55E",
+          }}
+        />
+
+        {/* Close button */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onDismiss(); }}
+          aria-label={t("general.close")}
+          className="absolute flex items-center justify-center rounded-full cursor-pointer active:scale-90 transition-transform"
+          style={{
+            top: 10,
+            [isRTL ? "left" : "right"]: 10,
+            width: "26px",
+            height: "26px",
+            backgroundColor: "transparent",
+            border: "none",
+            outline: "none",
           }}
         >
-          <TriangleAlert size={15} strokeWidth={2.2} style={{ color: "#F59E0B", flexShrink: 0 }} />
-          <span style={{
-            fontFamily,
-            fontSize: TYPE_SCALE.sm,
-            fontWeight: WEIGHT.semibold,
-            color: theme.textHeading,
-          }}>
-            {t("toast.rtls.category")}
-          </span>
+          <X size={15} strokeWidth={2.5} style={{ color: theme.textMuted }} />
+        </button>
 
-          {/* Close */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onDismiss(); }}
-            aria-label={t("general.close")}
-            className="flex items-center justify-center rounded-full cursor-pointer active:scale-90 transition-transform"
-            style={{
-              marginInlineStart: "auto",
-              width: "24px",
-              height: "24px",
-              backgroundColor: "transparent",
-              border: "none",
-              outline: "none",
-            }}
-          >
-            <X size={14} strokeWidth={2.5} style={{ color: theme.textMuted }} />
-          </button>
-        </div>
+        {/* Eyebrow: Staff entered the room */}
+        <p style={{
+          fontFamily,
+          fontSize: TYPE_SCALE.sm,
+          fontWeight: WEIGHT.medium,
+          color: theme.textMuted,
+          margin: `0 0 10px ${isRTL ? "0" : "20px"}`,
+          marginInlineStart: "20px",
+        }}>
+          {t("toast.rtls.subtitle")}
+        </p>
 
-        {/* Staff body */}
-        <div className="flex items-center gap-3" style={{ padding: `${SPACE[2]} ${SPACE[2]}` }}>
-          {/* Photo */}
+        {/* Avatar + Info row */}
+        <div className="flex items-center gap-3" style={{ paddingInlineStart: "4px" }}>
+          {/* Circular avatar — actual staff photo */}
           {toast.staffPhoto ? (
             <img
               src={toast.staffPhoto}
               alt={toast.title}
-              className="shrink-0 rounded-lg object-cover"
-              style={{ width: "56px", height: "64px" }}
+              className="shrink-0 rounded-full object-cover"
+              style={{ width: 48, height: 48 }}
             />
           ) : (
             <div
-              className="shrink-0 rounded-lg flex items-center justify-center"
-              style={{ width: "56px", height: "64px", backgroundColor: theme.primaryLight }}
+              className="shrink-0 rounded-full flex items-center justify-center"
+              style={{ width: 48, height: 48, backgroundColor: theme.primaryLight }}
             >
-              <span style={{ fontSize: "24px", fontWeight: WEIGHT.bold, color: theme.primary }}>
+              <span style={{ fontSize: "20px", fontWeight: WEIGHT.bold, color: theme.primary }}>
                 {toast.title.charAt(0)}
               </span>
             </div>
           )}
 
-          {/* Text + badge */}
+          {/* Name + Role row */}
           <div className="flex-1 min-w-0">
             <p style={{
               fontFamily,
@@ -285,41 +294,41 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
               color: theme.textHeading,
               margin: 0,
               fontSize: TYPE_SCALE.lg,
-              lineHeight: 1.2,
+              lineHeight: 1.25,
             }}>
               {toast.title}
             </p>
-            {toast.staffRole && (
-              <p style={{
-                fontFamily,
-                fontSize: TYPE_SCALE.sm,
-                color: theme.textMuted,
-                margin: "1px 0 6px",
-                lineHeight: 1.2,
-              }}>
-                {toast.staffRole}
-              </p>
-            )}
-            {/* Authorized / Unauthorized badge */}
-            <div
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full"
-              style={{
-                backgroundColor: toast.authorized ? "#DCFCE7" : "#FEE2E2",
-              }}
-            >
-              {toast.authorized ? (
-                <ShieldCheck size={14} strokeWidth={2.2} style={{ color: "#16A34A" }} />
-              ) : (
-                <ShieldOff size={14} strokeWidth={2.2} style={{ color: "#EF4444" }} />
+            <div className="flex items-center justify-between gap-2" style={{ marginTop: 3 }}>
+              {toast.staffRole && (
+                <p style={{
+                  fontFamily,
+                  fontSize: TYPE_SCALE.sm,
+                  color: theme.textMuted,
+                  margin: 0,
+                  lineHeight: 1.2,
+                }}>
+                  {toast.staffRole}
+                </p>
               )}
-              <span style={{
-                fontFamily,
-                fontSize: TYPE_SCALE.sm,
-                fontWeight: WEIGHT.bold,
-                color: toast.authorized ? "#16A34A" : "#EF4444",
-              }}>
-                {toast.authorized ? t("toast.rtls.authorized") : t("toast.rtls.unauthorized")}
-              </span>
+              {/* Auth badge */}
+              <div
+                className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full"
+                style={{ backgroundColor: authBg }}
+              >
+                {toast.authorized ? (
+                  <ShieldCheck size={14} strokeWidth={2.2} style={{ color: authColor }} />
+                ) : (
+                  <ShieldOff size={14} strokeWidth={2.2} style={{ color: authColor }} />
+                )}
+                <span style={{
+                  fontFamily,
+                  fontSize: TYPE_SCALE.sm,
+                  fontWeight: WEIGHT.semibold,
+                  color: authColor,
+                }}>
+                  {toast.authorized ? t("toast.rtls.authorized") : t("toast.rtls.unauthorized")}
+                </span>
+              </div>
             </div>
           </div>
         </div>
