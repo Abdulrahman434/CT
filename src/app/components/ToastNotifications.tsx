@@ -98,23 +98,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const rtlsDemoIdx = useRef(0);
   useEffect(() => {
     (window as any).__demoHkToast = () => {
-      const nav = () => window.dispatchEvent(new CustomEvent("toast-navigate", { detail: "housekeeping" }));
+      /* Status updates → My Requests page */
+      const navRequests = () => window.dispatchEvent(new CustomEvent("toast-navigate", { detail: "housekeeping-requests" }));
       const demos: ToastInput[] = [
-        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Water has been delivered", actionText: "Delivered", actionColor: "#16A34A", onTap: nav },
-        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Blanket is on the way", actionText: "On the Way", actionColor: "#2563EB", onTap: nav },
-        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Pillow is being prepared", actionText: "Preparing", actionColor: "#D97706", onTap: nav },
-        { variant: "housekeeping", category: "HOUSEKEEPING ISSUE", title: "Air Conditioner issue has been fixed", actionText: "Fixed", actionColor: "#16A34A", onTap: nav },
+        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Water has been delivered", actionText: "Delivered", actionColor: "#16A34A", onTap: navRequests },
+        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Blanket is on the way", actionText: "On the Way", actionColor: "#2563EB", onTap: navRequests },
+        { variant: "housekeeping", category: "HOUSEKEEPING REQUEST", title: "Pillow is being prepared", actionText: "Preparing", actionColor: "#D97706", onTap: navRequests },
+        { variant: "housekeeping", category: "HOUSEKEEPING ISSUE", title: "Air Conditioner issue has been fixed", actionText: "Fixed", actionColor: "#16A34A", onTap: navRequests },
       ];
       showToast(demos[hkDemoIdx.current % demos.length]);
       hkDemoIdx.current++;
     };
     (window as any).__demoMealToast = () => {
-      const nav = () => window.dispatchEvent(new CustomEvent("toast-navigate", { detail: "meal" }));
+      /* Reminders → ordering page | Status updates → My Orders */
+      const navOrder = () => window.dispatchEvent(new CustomEvent("toast-navigate", { detail: "meal" }));
+      const navMyOrders = () => window.dispatchEvent(new CustomEvent("toast-navigate", { detail: "meal-orders" }));
       const demos: ToastInput[] = [
-        { variant: "meal", category: "MEAL ORDERING", title: "Dinner ordering is now open!", actionText: "Order Now", actionColor: "#2563EB", onTap: nav },
-        { variant: "meal", category: "MEAL ORDERING", title: "Only 30 min left to order Lunch!", actionText: "Hurry!", actionColor: "#D97706", onTap: nav },
-        { variant: "meal", category: "MEAL ORDERING", title: "Your Breakfast is being served now 🍽️", actionText: "Bon Appétit!", actionColor: "#16A34A", onTap: nav },
-        { variant: "meal", category: "MEAL ORDERING", title: "Lunch #4827 — On the Way", actionText: "On the Way", actionColor: "#2563EB", onTap: nav },
+        { variant: "meal", category: "MEAL ORDERING", title: "Dinner ordering is now open!", actionText: "Order Now", actionColor: "#2563EB", onTap: navOrder },
+        { variant: "meal", category: "MEAL ORDERING", title: "Only 30 min left to order Lunch!", actionText: "Hurry!", actionColor: "#D97706", onTap: navOrder },
+        { variant: "meal", category: "MEAL ORDERING", title: "Your Breakfast is being served now 🍽️", actionText: "Bon Appétit!", actionColor: "#16A34A", onTap: navMyOrders },
+        { variant: "meal", category: "MEAL ORDERING", title: "Lunch #4827 — On the Way", actionText: "On the Way", actionColor: "#2563EB", onTap: navMyOrders },
       ];
       showToast(demos[mealDemoIdx.current % demos.length]);
       mealDemoIdx.current++;
@@ -218,16 +221,16 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
       >
         {/* Alert header bar */}
         <div
-          className="flex items-center gap-2"
+          className="flex items-center gap-1.5"
           style={{
-            padding: `${SPACE[2]} ${SPACE[3]}`,
+            padding: `6px ${SPACE[2]}`,
             borderBottom: `1px solid ${theme.borderSubtle}`,
           }}
         >
-          <TriangleAlert size={18} strokeWidth={2.2} style={{ color: "#F59E0B", flexShrink: 0 }} />
+          <TriangleAlert size={15} strokeWidth={2.2} style={{ color: "#F59E0B", flexShrink: 0 }} />
           <span style={{
             fontFamily,
-            fontSize: TYPE_SCALE.base,
+            fontSize: TYPE_SCALE.sm,
             fontWeight: WEIGHT.semibold,
             color: theme.textHeading,
           }}>
@@ -241,33 +244,33 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
             className="flex items-center justify-center rounded-full cursor-pointer active:scale-90 transition-transform"
             style={{
               marginInlineStart: "auto",
-              width: "28px",
-              height: "28px",
+              width: "24px",
+              height: "24px",
               backgroundColor: "transparent",
               border: "none",
               outline: "none",
             }}
           >
-            <X size={16} strokeWidth={2.5} style={{ color: theme.textMuted }} />
+            <X size={14} strokeWidth={2.5} style={{ color: theme.textMuted }} />
           </button>
         </div>
 
         {/* Staff body */}
-        <div className="flex items-center gap-4" style={{ padding: `${SPACE[3]} ${SPACE[3]}` }}>
+        <div className="flex items-center gap-3" style={{ padding: `${SPACE[2]} ${SPACE[2]}` }}>
           {/* Photo */}
           {toast.staffPhoto ? (
             <img
               src={toast.staffPhoto}
               alt={toast.title}
-              className="shrink-0 rounded-xl object-cover"
-              style={{ width: "80px", height: "90px" }}
+              className="shrink-0 rounded-lg object-cover"
+              style={{ width: "56px", height: "64px" }}
             />
           ) : (
             <div
-              className="shrink-0 rounded-xl flex items-center justify-center"
-              style={{ width: "80px", height: "90px", backgroundColor: theme.primaryLight }}
+              className="shrink-0 rounded-lg flex items-center justify-center"
+              style={{ width: "56px", height: "64px", backgroundColor: theme.primaryLight }}
             >
-              <span style={{ fontSize: "32px", fontWeight: WEIGHT.bold, color: theme.primary }}>
+              <span style={{ fontSize: "24px", fontWeight: WEIGHT.bold, color: theme.primary }}>
                 {toast.title.charAt(0)}
               </span>
             </div>
@@ -277,39 +280,40 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
           <div className="flex-1 min-w-0">
             <p style={{
               fontFamily,
-              ...TEXT_STYLE.pageTitle,
               fontWeight: WEIGHT.bold,
               color: theme.textHeading,
               margin: 0,
-              fontSize: "22px",
+              fontSize: TYPE_SCALE.lg,
+              lineHeight: 1.2,
             }}>
               {toast.title}
             </p>
             {toast.staffRole && (
               <p style={{
                 fontFamily,
-                ...TEXT_STYLE.body,
+                fontSize: TYPE_SCALE.sm,
                 color: theme.textMuted,
-                margin: "2px 0 10px",
+                margin: "1px 0 6px",
+                lineHeight: 1.2,
               }}>
                 {toast.staffRole}
               </p>
             )}
             {/* Authorized / Unauthorized badge */}
             <div
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-full"
               style={{
                 backgroundColor: toast.authorized ? "#DCFCE7" : "#FEE2E2",
               }}
             >
               {toast.authorized ? (
-                <ShieldCheck size={18} strokeWidth={2.2} style={{ color: "#16A34A" }} />
+                <ShieldCheck size={14} strokeWidth={2.2} style={{ color: "#16A34A" }} />
               ) : (
-                <ShieldOff size={18} strokeWidth={2.2} style={{ color: "#EF4444" }} />
+                <ShieldOff size={14} strokeWidth={2.2} style={{ color: "#EF4444" }} />
               )}
               <span style={{
                 fontFamily,
-                fontSize: TYPE_SCALE.base,
+                fontSize: TYPE_SCALE.sm,
                 fontWeight: WEIGHT.bold,
                 color: toast.authorized ? "#16A34A" : "#EF4444",
               }}>

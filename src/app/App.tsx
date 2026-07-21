@@ -388,6 +388,8 @@ function BedsideScreen() {
   const [showCall, setShowCall] = useState(false);
   const [showFoodOrder, setShowFoodOrder] = useState(false);
   const [showNeedSomething, setShowNeedSomething] = useState(false);
+  const [needSomethingInitialTab, setNeedSomethingInitialTab] = useState<"request" | "report" | "mine" | undefined>(undefined);
+  const [foodOrderInitialView, setFoodOrderInitialView] = useState<"order" | "my-orders" | undefined>(undefined);
   const [activeCareRole, setActiveCareRole] = useState<"nurse" | "doctor" | null>(null);
   const [layoutVersion, setLayoutVersion] = useState<1 | 2 | 3>(1);
   const [activeBroadcast, setActiveBroadcast] = useState<BroadcastNotification | null>(null);
@@ -1213,8 +1215,19 @@ function BedsideScreen() {
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<string>).detail;
-      if (detail === "housekeeping") setShowNeedSomething(true);
-      if (detail === "meal") setShowFoodOrder(true);
+      if (detail === "housekeeping-requests") {
+        setNeedSomethingInitialTab("mine");
+        setShowNeedSomething(true);
+      } else if (detail === "housekeeping") {
+        setNeedSomethingInitialTab(undefined);
+        setShowNeedSomething(true);
+      } else if (detail === "meal-orders") {
+        setFoodOrderInitialView("my-orders");
+        setShowFoodOrder(true);
+      } else if (detail === "meal") {
+        setFoodOrderInitialView(undefined);
+        setShowFoodOrder(true);
+      }
     };
     window.addEventListener("toast-navigate", handler);
     return () => window.removeEventListener("toast-navigate", handler);
@@ -1937,12 +1950,12 @@ function BedsideScreen() {
 
         {/* Food Ordering Overlay */}
         {showFoodOrder && (
-          <FoodOrdering onClose={() => setShowFoodOrder(false)} />
+          <FoodOrdering onClose={() => { setShowFoodOrder(false); setFoodOrderInitialView(undefined); }} initialView={foodOrderInitialView} />
         )}
 
         {/* "I Need Something" flow (service requests + report an issue) */}
         {showNeedSomething && (
-          <NeedSomething onClose={() => setShowNeedSomething(false)} />
+          <NeedSomething onClose={() => { setShowNeedSomething(false); setNeedSomethingInitialTab(undefined); }} initialTab={needSomethingInitialTab} />
         )}
 
         {/* Tasbih Screen Saver */}

@@ -109,11 +109,13 @@ function deriveStatus(createdAt: number, now: number): StatusKey {
 
 interface NeedSomethingProps {
   onClose: () => void;
+  /** When provided, opens directly to this tab (e.g. "mine" for My Requests) */
+  initialTab?: Tab;
 }
 
 type Tab = "request" | "report" | "mine";
 
-export function NeedSomething({ onClose }: NeedSomethingProps) {
+export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
   const { theme, setLocale } = useTheme();
   const { t, isRTL, fontFamily, locale } = useLocale();
 
@@ -135,7 +137,7 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
   };
 
   /* ── View state ── */
-  const [tab, setTab] = useState<Tab>("request");
+  const [tab, setTab] = useState<Tab>(initialTab || "request");
   const [selected, setSelected] = useState<{ card: CardDef; kind: "request" | "report" } | null>(null);
   const [note, setNote] = useState("");
   const [success, setSuccess] = useState<null | "request" | "report">(null);
