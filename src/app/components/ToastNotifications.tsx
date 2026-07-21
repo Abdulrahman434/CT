@@ -290,11 +290,10 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
           <div className="flex-1 min-w-0">
             <p style={{
               fontFamily,
+              ...TEXT_STYLE.subtitle,
               fontWeight: WEIGHT.bold,
               color: theme.textHeading,
               margin: 0,
-              fontSize: TYPE_SCALE.lg,
-              lineHeight: 1.25,
             }}>
               {toast.title}
             </p>
@@ -430,21 +429,6 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
         </p>
       </div>
 
-      {/* Action tag */}
-      {toast.actionText && (
-        <span
-          className="shrink-0 self-center whitespace-nowrap"
-          style={{
-            fontFamily,
-            ...TEXT_STYLE.bodyEmphasis,
-            fontWeight: WEIGHT.bold,
-            color: toast.actionColor || discColor,
-            paddingInlineEnd: SPACE[2],
-          }}
-        >
-          {toast.actionText}
-        </span>
-      )}
 
       {/* Close */}
       <button
