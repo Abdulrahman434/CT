@@ -135,6 +135,26 @@ export function PatientProfileTab({ role }: { role: "nurse" | "doctor" }) {
                 style={{ backgroundColor: store.nurseViewShortcutVisible ? t.primary : "#E5E7EB" }} />
             </label>
           </div>
+          <div className="flex items-center justify-between p-4 rounded-xl border mt-4" style={{ backgroundColor: t.surfaceElevated, borderColor: t.borderDefault }}>
+            <div>
+              <span style={{ fontSize: "14px", fontWeight: 700, color: t.textHeading }}>
+                HIS Integration Mode
+              </span>
+              <span style={{ fontSize: "12px", color: t.textMuted }} className="block">
+                Simulate HIS connection (shows HIS empty states for missing sections with "Check demo look" option)
+              </span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={store.isHisConnected}
+                onChange={(e) => nurseActions.setHisConnected(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"
+                style={{ backgroundColor: store.isHisConnected ? t.primary : "#E5E7EB" }} />
+            </label>
+          </div>
         </div>
       )}
 

@@ -223,6 +223,10 @@ export interface NurseStoreState {
   /** Care Plan Shared State */
   carePlanMode: "daily" | "overall";
   carePlanSelectedDate: string; // YYYY-MM-DD
+
+  /** HIS integration status & per-section HIS data flags */
+  isHisConnected: boolean;
+  hisSections: Record<string, boolean>;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -236,6 +240,19 @@ import imgBabyCam from "@/assets/68ba9ba13c5aa1cc7d2af5bee7bc955298b612dd.png";
 
 function createDefaultState(): NurseStoreState {
   return {
+    isHisConnected: false,
+    hisSections: {
+      profile: false,
+      emergency: false,
+      careOverview: false,
+      carePlan: false,
+      financial: false,
+      labs: false,
+      imaging: false,
+      baby: false,
+      discharge: false,
+      observations: false,
+    },
     sectionVisibility: {
       profile: true,
       careOverview: true,
@@ -463,7 +480,30 @@ const nurseStore = (() => {
       if (applied.name && applied.name !== state.patient.name) {
         nextPatient.nameKey = "";
       }
-      state = { ...state, patient: nextPatient };
+      const hasEmergency = !!(applied.emergencyContact || applied.emergencyName);
+      state = {
+        ...state,
+        patient: nextPatient,
+        isHisConnected: true,
+        hisSections: {
+          ...state.hisSections,
+          profile: true,
+          ...(hasEmergency ? { emergency: true } : {}),
+        },
+      };
+      notify();
+    },
+
+    setHisConnected: (connected: boolean) => {
+      state = { ...state, isHisConnected: connected };
+      notify();
+    },
+
+    setHisSectionData: (section: string, hasData: boolean) => {
+      state = {
+        ...state,
+        hisSections: { ...state.hisSections, [section]: hasData },
+      };
       notify();
     },
 
