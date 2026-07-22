@@ -102,10 +102,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       /* Status updates → My Requests page */
       const navRequests = () => window.dispatchEvent(new CustomEvent("toast-navigate", { detail: "housekeeping-requests" }));
       const demos: ToastInput[] = [
-        { variant: "housekeeping", category: t("toast.hk.category.request"), title: t("toast.hk.waterDelivered"), actionText: t("toast.hk.delivered"), actionColor: "#16A34A", onTap: navRequests },
-        { variant: "housekeeping", category: t("toast.hk.category.request"), title: t("toast.hk.blanketOnWay"), actionText: t("toast.hk.onTheWay"), actionColor: "#2563EB", onTap: navRequests },
-        { variant: "housekeeping", category: t("toast.hk.category.request"), title: t("toast.hk.pillowPreparing"), actionText: t("toast.hk.preparing"), actionColor: "#D97706", onTap: navRequests },
-        { variant: "housekeeping", category: t("toast.hk.category.issue"), title: t("toast.hk.acFixed"), actionText: t("toast.hk.fixed"), actionColor: "#16A34A", onTap: navRequests },
+        { variant: "housekeeping", category: t("toast.hk.category.request"), title: t("need.item.water"), actionText: t("toast.hk.delivered"), actionColor: "#16A34A", onTap: navRequests },
+        { variant: "housekeeping", category: t("toast.hk.category.request"), title: t("need.item.blanket"), actionText: t("toast.hk.onTheWay"), actionColor: "#2563EB", onTap: navRequests },
+        { variant: "housekeeping", category: t("toast.hk.category.request"), title: t("need.item.pillow"), actionText: t("toast.hk.preparing"), actionColor: "#D97706", onTap: navRequests },
+        { variant: "housekeeping", category: t("toast.hk.category.issue"), title: t("need.issue.ac"), actionText: t("toast.hk.fixed"), actionColor: "#16A34A", onTap: navRequests },
       ];
       showToast(demos[hkDemoIdx.current % demos.length]);
       hkDemoIdx.current++;
@@ -117,8 +117,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       const demos: ToastInput[] = [
         { variant: "meal", category: t("toast.meal.category"), title: t("toast.meal.dinnerOpen"), actionText: t("toast.meal.orderNow"), actionColor: "#2563EB", onTap: navOrder },
         { variant: "meal", category: t("toast.meal.category"), title: t("toast.meal.hurryLunch"), actionText: t("toast.meal.hurry"), actionColor: "#D97706", onTap: navOrder },
-        { variant: "meal", category: t("toast.meal.category"), title: t("toast.meal.breakfastServed"), actionText: t("toast.meal.bonAppetit"), actionColor: "#16A34A", onTap: navMyOrders },
-        { variant: "meal", category: t("toast.meal.category"), title: t("toast.meal.lunchOnWay"), actionText: t("toast.hk.onTheWay"), actionColor: "#2563EB", onTap: navMyOrders },
+        { variant: "meal", category: t("toast.meal.category"), title: t("toast.meal.breakfast"), actionText: t("toast.meal.bonAppetit"), actionColor: "#16A34A", onTap: navMyOrders },
+        { variant: "meal", category: t("toast.meal.category"), title: t("toast.meal.lunch"), actionText: t("toast.hk.onTheWay"), actionColor: "#2563EB", onTap: navMyOrders },
       ];
       showToast(demos[mealDemoIdx.current % demos.length]);
       mealDemoIdx.current++;
@@ -349,104 +349,127 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
   /* ── Standard variant (meal / housekeeping) ── */
   const isMeal = toast.variant === "meal";
   const discColor = isMeal ? theme.accent : theme.primary;
+  const badgeColor = toast.actionColor || discColor;
+  const badgeBg = `color-mix(in srgb, ${badgeColor} 14%, transparent)`;
 
   return (
     <div
-      className="pointer-events-auto relative flex items-center"
+      className="pointer-events-auto relative"
       onClick={() => { toast.onTap?.(); }}
       style={{
         backgroundColor: theme.surface,
         borderRadius: theme.radiusLg,
         boxShadow: SHADOW.xl,
         border: theme.cardBorder,
-        padding: `${SPACE[2]} ${SPACE[3]}`,
-        gap: SPACE[2],
+        padding: `14px ${SPACE[3]} 16px`,
         animation: `${isRTL ? "hbsToastInRTL" : "hbsToastIn"} 0.35s cubic-bezier(0.16,1,0.3,1)`,
         textAlign: isRTL ? "right" : "left",
         cursor: toast.onTap ? "pointer" : "default",
       }}
     >
-      {/* Icon disc */}
-      <div
-        className="shrink-0 flex items-center justify-center rounded-full"
-        style={{ width: "52px", height: "52px", backgroundColor: discColor }}
-      >
-        {isMeal ? (
-          <Utensils size={26} strokeWidth={2} style={{ color: theme.textInverse }} />
-        ) : (
-          <svg width={26} height={26} viewBox="0 0 20 20" fill="none">
-            <g clipPath="url(#hk_toast_clip)">
-              {HK_SPARKLE_PATHS.map((d, i) => (
-                <path key={i} d={d} stroke={theme.textInverse} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.66667" />
-              ))}
-            </g>
-            <defs>
-              <clipPath id="hk_toast_clip">
-                <rect fill="white" height="20" width="20" />
-              </clipPath>
-            </defs>
-          </svg>
-        )}
-      </div>
-
-      {/* Text column */}
-      <div className="flex-1 min-w-0" style={{ paddingInlineEnd: SPACE[1] }}>
-        <p
-          className="truncate"
-          style={{
-            fontFamily,
-            fontSize: TYPE_SCALE.sm,
-            fontWeight: WEIGHT.bold,
-            letterSpacing: "0.6px",
-            lineHeight: 1,
-            color: discColor,
-            textTransform: "uppercase",
-            margin: 0,
-          }}
-        >
-          {toast.category}
-        </p>
-        <p
-          style={{
-            fontFamily,
-            ...TEXT_STYLE.subtitle,
-            fontWeight: WEIGHT.bold,
-            color: theme.textHeading,
-            margin: "4px 0 2px",
-          }}
-        >
-          {toast.title}
-        </p>
-        <p
-          style={{
-            fontFamily,
-            ...TEXT_STYLE.caption,
-            color: theme.textMuted,
-            margin: 0,
-          }}
-        >
-          {t("toast.justNow")}
-        </p>
-      </div>
-
-
       {/* Close */}
       <button
         onClick={(e) => { e.stopPropagation(); onDismiss(); }}
         aria-label={t("general.close")}
         className="absolute flex items-center justify-center rounded-full cursor-pointer active:scale-90 transition-transform"
         style={{
-          top: SPACE[1],
-          [isRTL ? "left" : "right"]: SPACE[1],
-          width: "28px",
-          height: "28px",
+          top: 10,
+          [isRTL ? "left" : "right"]: 10,
+          width: "26px",
+          height: "26px",
           backgroundColor: "transparent",
           border: "none",
           outline: "none",
         }}
       >
-        <X size={16} strokeWidth={2.5} style={{ color: theme.textMuted }} />
+        <X size={15} strokeWidth={2.5} style={{ color: theme.textMuted }} />
       </button>
+
+      {/* Eyebrow category */}
+      <p
+        className="truncate"
+        style={{
+          fontFamily,
+          fontSize: TYPE_SCALE.sm,
+          fontWeight: WEIGHT.bold,
+          letterSpacing: "0.6px",
+          lineHeight: 1,
+          color: discColor,
+          textTransform: "uppercase",
+          margin: `0 0 10px 0`,
+        }}
+      >
+        {toast.category}
+      </p>
+
+      {/* Icon + title row with status badge on trailing edge */}
+      <div className="flex items-center gap-3" style={{ paddingInlineEnd: "4px" }}>
+        {/* Icon disc */}
+        <div
+          className="shrink-0 flex items-center justify-center rounded-full"
+          style={{ width: 48, height: 48, backgroundColor: discColor }}
+        >
+          {isMeal ? (
+            <Utensils size={24} strokeWidth={2} style={{ color: theme.textInverse }} />
+          ) : (
+            <svg width={24} height={24} viewBox="0 0 20 20" fill="none">
+              <g clipPath="url(#hk_toast_clip)">
+                {HK_SPARKLE_PATHS.map((d, i) => (
+                  <path key={i} d={d} stroke={theme.textInverse} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.66667" />
+                ))}
+              </g>
+              <defs>
+                <clipPath id="hk_toast_clip">
+                  <rect fill="white" height="20" width="20" />
+                </clipPath>
+              </defs>
+            </svg>
+          )}
+        </div>
+
+        {/* Title + subtitle */}
+        <div className="flex-1 min-w-0">
+          <p
+            style={{
+              fontFamily,
+              ...TEXT_STYLE.subtitle,
+              fontWeight: WEIGHT.bold,
+              color: theme.textHeading,
+              margin: 0,
+            }}
+          >
+            {toast.title}
+          </p>
+          <p
+            style={{
+              fontFamily,
+              fontSize: TYPE_SCALE.sm,
+              color: theme.textMuted,
+              margin: "3px 0 0",
+              lineHeight: 1.2,
+            }}
+          >
+            {t("toast.justNow")}
+          </p>
+        </div>
+
+        {/* Status badge — same pill style as RTLS auth badge */}
+        {toast.actionText && (
+          <div
+            className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full"
+            style={{ backgroundColor: badgeBg }}
+          >
+            <span style={{
+              fontFamily,
+              fontSize: TYPE_SCALE.sm,
+              fontWeight: WEIGHT.semibold,
+              color: badgeColor,
+            }}>
+              {toast.actionText}
+            </span>
+          </div>
+        )}
+      </div>
 
       <style>{`
         @keyframes hbsToastIn {
