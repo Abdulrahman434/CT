@@ -8,7 +8,7 @@ const LOCAL_KEY  = "20b91694-7ea1-4a44-91a6-2878664428b3";
 
 export const BURJEEL_SECONDARY_OPTION: ApiConfigData = {
   serverIp: "http://10.11.16.15/api",
-  apiKey: "caa27083-3472-4aa3-876a-a572fbfb557e",
+  apiKey: "3a68339d-e45f-478e-85a0-811f6b54b457",
 };
 
 export function getSecondaryOption(hospitalId?: string): ApiConfigData {
