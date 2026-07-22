@@ -296,6 +296,131 @@ export async function fetchPatientForDevice(serial: string): Promise<{
   return { location, patient };
 }
 
+export async function fetchDeviceLocationWithConfig(
+  serial: string,
+  serverIp: string,
+  apiKey: string
+): Promise<DeviceLocation | null> {
+  try {
+    const base = serverIp.startsWith("http")
+      ? serverIp.replace(/\/$/, "")
+      : `http://${serverIp}/api`;
+    const url = `${base}/user/organization/devices/?apikey=${apiKey}`;
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+
+    if (!res.ok) return null;
+    const devices: any[] = await res.json();
+    const device = devices.find(d => d.device_id?.toLowerCase() === serial.toLowerCase());
+    if (!device?.device_location) return null;
+
+    const loc = device.device_location;
+    return {
+      room_no: loc.room_no ?? "",
+      bed_no: loc.bed_no ?? "",
+      patient_id: loc.patient_id ?? "",
+      admit_data: loc.admit_data ?? "",
+      group: loc.group ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchPatientByRefIdWithConfig(
+  referenceId: string | number,
+  serverIp: string,
+  apiKey: string
+): Promise<Hl7Patient | null> {
+  try {
+    const base = serverIp.startsWith("http")
+      ? serverIp.replace(/\/$/, "")
+      : `http://${serverIp}/api`;
+    const url = `${base}/hl7/httpreceiver/?reference_id=${referenceId}&apikey=${apiKey}`;
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+
+    if (!res.ok) return null;
+    const d = await res.json();
+
+    const pid = d.patient_identification ?? {};
+    const pv = d.patient_visit ?? {};
+
+    const firstName = pid.pid_patient_name?.given_name ?? "";
+    const lastName = pid.pid_patient_name?.family_name ?? "";
+    const name = `${firstName} ${lastName}`.trim();
+    if (!name) return null;
+
+    return {
+      name,
+      mrn: pid.pid_patient_identifier_list?.id_number ?? "",
+      room: pv.pv_assigned_patient_location?.room ?? "",
+      bed: pv.pv_assigned_patient_location?.bed ?? "",
+      sex: pid.pid_administrative_sex ?? "",
+      dob: parseHl7Date(pid.pid_date_time_of_birth?.time ?? ""),
+      admissionDate: parseHl7Date(pv.pv_admit_date_time?.time ?? ""),
+      dischargeDate: parseHl7Date(pv.pv_discharge_date_time?.time ?? ""),
+      admitRefId: Number(referenceId),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export interface MrnMatchResult {
+  hospitalId: string;
+  serverIp: string;
+  apiKey: string;
+  location: DeviceLocation;
+  patient: Hl7Patient;
+}
+
+export async function findDeviceAndPatientByMrn(
+  enteredMrn: string,
+  serialNumber: string
+): Promise<MrnMatchResult | null> {
+  const normMrn = enteredMrn.trim().toLowerCase();
+  if (!normMrn || !serialNumber) return null;
+
+  const burjeelKey = "3a68339d-e45f-478e-85a0-811f6b54b457";
+  const cloudKey = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
+
+  const candidateServers = [
+    { hospitalId: "careinn", serverIp: "https://control.careinn.com/api", apiKey: cloudKey },
+    { hospitalId: "burjeel", serverIp: "http://10.11.16.15/api", apiKey: burjeelKey },
+    { hospitalId: "burjeel", serverIp: "http://careinn.bh.com/api", apiKey: burjeelKey },
+    { hospitalId: "burjeel", serverIp: "https://careinn.bh.com/api", apiKey: burjeelKey },
+  ];
+
+  for (const srv of candidateServers) {
+    try {
+      const location = await fetchDeviceLocationWithConfig(serialNumber, srv.serverIp, srv.apiKey);
+      if (location?.admit_data) {
+        const patient = await fetchPatientByRefIdWithConfig(location.admit_data, srv.serverIp, srv.apiKey);
+        if (patient && patient.mrn?.trim().toLowerCase() === normMrn) {
+          patient.room = location.room_no || patient.room;
+          patient.bed = location.bed_no || patient.bed;
+          return {
+            hospitalId: srv.hospitalId,
+            serverIp: srv.serverIp,
+            apiKey: srv.apiKey,
+            location,
+            patient,
+          };
+        }
+      }
+    } catch {}
+  }
+
+  return null;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // NEWS
 // ═══════════════════════════════════════════════════════════════════════════

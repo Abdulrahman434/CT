@@ -416,6 +416,11 @@ const translations: Record<string, TranslationEntry> = {
   "care.mobility.bedRest": { en: "Complete Bed Rest", ar: "راحة تامة في السرير", ur: "مکمل بیڈ ریسٹ" },
   "care.assistance.bed": { en: "Do not leave bed without nursing assistance", ar: "يرجى عدم مغادرة السرير بدون مساعدة التمريض", ur: "نرسنگ امداد کے بغیر بستر نہ چھوڑیں" },
 
+  /* ─── Connection Monitoring ─── */
+  "connection.failed": { en: "Failed to connect to hospital server", ar: "تعذّر الاتصال بخادم المستشفى", ur: "ہسپتال سرور سے رابطہ قائم کرنے میں ناکامی" },
+  "connection.showingDemo": { en: "Showing demo data (retrying every 30s)", ar: "عرض البيانات التوضيحية (إعادة المحاولة كل ٣٠ ثانية)", ur: "ڈیمو ڈیٹا دکھا رہا ہے (ہر 30 سیکنڈ میں دوبارہ کوشش)" },
+  "connection.retry": { en: "Reconnect", ar: "إعادة الاتصال", ur: "دوبارہ منسلک ہوں" },
+
   /* ─── HIS Data Fallback & Demo Preview ─── */
   "care.his.noInfo": { en: "No information provided from HIS", ar: "لا تتوفر معلومات من نظام المستشفى (HIS)", ur: "HIS سے کوئی معلومات فراہم نہیں کی گئیں" },
   "care.his.noInfoSub": { en: "This section currently has no active data linked to your medical record.", ar: "هذا القسم لا يحتوي على بيانات نشطة مرتبطة بملفك الطبي حالياً.", ur: "اس سیکشن میں فی الحال آپ کے میڈیکل ریکارڈ سے مربوط کوئی فعال ڈیٹا نہیں ہے۔" },
