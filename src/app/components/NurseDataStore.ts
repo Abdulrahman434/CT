@@ -399,9 +399,19 @@ function loadCachedState(): Partial<NurseStoreState> {
 }
 
 const nurseStore = (() => {
+  const defaultState = createDefaultState();
+  const cachedState = loadCachedState();
   let state = {
-    ...createDefaultState(),
-    ...loadCachedState(),
+    ...defaultState,
+    ...cachedState,
+    hisSections: {
+      ...defaultState.hisSections,
+      ...(cachedState.hisSections || {}),
+    },
+    sectionVisibility: {
+      ...defaultState.sectionVisibility,
+      ...(cachedState.sectionVisibility || {}),
+    },
   };
   const listeners = new Set<StoreListener>();
 
