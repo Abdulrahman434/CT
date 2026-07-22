@@ -104,37 +104,80 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const mapping = HASHED_PASSWORD_MAP[hashHex];
-    if (!mapping) return false;
+    if (mapping) {
+      // CMS Opt-in handling
+      if (isCmsMode) {
+        localStorage.setItem('cms-mode', 'true');
+      } else {
+        localStorage.removeItem('cms-mode');
+      }
 
-    // CMS Opt-in handling
-    if (isCmsMode) {
-      localStorage.setItem('cms-mode', 'true');
-    } else {
-      localStorage.removeItem('cms-mode');
+      const isFullAccess = hashHex === CAREINN_HASH;
+      const hospitalId = isFullAccess ? null : mapping;
+
+      // For careinn (full access), default to the CareInn hospital config
+      if (isFullAccess) {
+        localStorage.setItem('active-hospital-id', 'careinn');
+      } else if (hospitalId) {
+        localStorage.setItem('active-hospital-id', hospitalId);
+      }
+
+      setAuthState({
+        isAuthenticated: true,
+        password: null, // Avoid storing plaintext password in state anymore
+        lockedHospitalId: hospitalId,
+        isFullAccess,
+      });
+
+      // Notify other contexts and hooks
+      window.dispatchEvent(new Event('hospital-changed'));
+      window.dispatchEvent(new Event('cms-mode-changed'));
+      
+      return true;
     }
 
-    const isFullAccess = hashHex === CAREINN_HASH;
-    const hospitalId = isFullAccess ? null : mapping;
+    // MRN Matching fallback across candidate servers
+    try {
+      const { getDeviceInfo } = await import("../utils/androidBridge");
+      const { findDeviceAndPatientByMrn } = await import("../lib/hospitalApi");
+      const { saveApiConfig } = await import("../lib/apiConfig");
+      const { nurseActions } = await import("./NurseDataStore");
 
-    // For careinn (full access), default to the CareInn hospital config
-    if (isFullAccess) {
-      localStorage.setItem('active-hospital-id', 'careinn');
-    } else if (hospitalId) {
-      localStorage.setItem('active-hospital-id', hospitalId);
+      const serial = getDeviceInfo()?.serial || "";
+      if (serial) {
+        const mrnMatch = await findDeviceAndPatientByMrn(basePassword, serial);
+        if (mrnMatch) {
+          saveApiConfig({ serverIp: mrnMatch.serverIp, apiKey: mrnMatch.apiKey });
+          localStorage.setItem('active-hospital-id', mrnMatch.hospitalId);
+          nurseActions.updatePatientFromApi({
+            name: mrnMatch.patient.name,
+            nameAr: mrnMatch.patient.nameAr,
+            mrn: mrnMatch.patient.mrn,
+            room: mrnMatch.patient.room,
+            bed: mrnMatch.patient.bed,
+            sex: mrnMatch.patient.sex,
+            dob: mrnMatch.patient.dob,
+            admissionDate: mrnMatch.patient.admissionDate,
+            dischargeDate: mrnMatch.patient.dischargeDate,
+          });
+
+          setAuthState({
+            isAuthenticated: true,
+            password: null,
+            lockedHospitalId: mrnMatch.hospitalId === "careinn" ? null : mrnMatch.hospitalId,
+            isFullAccess: mrnMatch.hospitalId === "careinn",
+          });
+
+          window.dispatchEvent(new Event('hospital-changed'));
+          window.dispatchEvent(new Event('api-config-changed'));
+          return true;
+        }
+      }
+    } catch (e) {
+      console.warn("[AuthContext] MRN login failed:", e);
     }
 
-    setAuthState({
-      isAuthenticated: true,
-      password: null, // Avoid storing plaintext password in state anymore
-      lockedHospitalId: hospitalId,
-      isFullAccess,
-    });
-
-    // Notify other contexts and hooks
-    window.dispatchEvent(new Event('hospital-changed'));
-    window.dispatchEvent(new Event('cms-mode-changed'));
-    
-    return true;
+    return false;
   }, []);
 
   const logout = useCallback(() => {

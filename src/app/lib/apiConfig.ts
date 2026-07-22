@@ -6,17 +6,39 @@ const CLOUD_HOST = "control.careinn.com";
 const CLOUD_KEY = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
 const LOCAL_KEY = "20b91694-7ea1-4a44-91a6-2878664428b3";
 
-export function apiKeyForUrl(u: string): string {
-  return u.includes(CLOUD_HOST) ? CLOUD_KEY : LOCAL_KEY;
+export const BURJEEL_SECONDARY_OPTION: ApiConfigData = {
+  serverIp: "http://10.11.16.15/api",
+  apiKey: "3a68339d-e45f-478e-85a0-811f6b54b457",
+};
+
+export function getSecondaryOption(hospitalId?: string): ApiConfigData {
+  let hid = hospitalId;
+  if (!hid) {
+    try {
+      const savedTheme = localStorage.getItem("careinn-layout2-theme");
+      if (savedTheme) {
+        const parsed = JSON.parse(savedTheme);
+        hid = typeof parsed === "string" ? parsed : parsed.id;
+      }
+    } catch {}
+  }
+  if (hid === "burjeel") {
+    return BURJEEL_SECONDARY_OPTION;
+  }
+  return {
+    serverIp: "10.32.0.86",
+    apiKey: "20b91694-7ea1-4a44-91a6-2878664428b3",
+  };
 }
 
-/** Append the host-correct apikey. No-op if one is already present. */
-export function withApiKey(u: string): string {
-  if (!u) return u;
-  if (u.includes("apikey=")) return u;
-  const sep = u.includes("?") ? "&" : "?";
-  return `${u}${sep}apikey=${apiKeyForUrl(u)}`;
-}
+export const SECONDARY_OPTION: ApiConfigData = {
+  get serverIp() {
+    return getSecondaryOption().serverIp;
+  },
+  get apiKey() {
+    return getSecondaryOption().apiKey;
+  },
+} as ApiConfigData;
 
 export interface ApiConfigData {
   serverIp: string;   // can be IP, domain, or full URL with protocol
@@ -28,10 +50,19 @@ const DEFAULTS: ApiConfigData = {
   apiKey: '2345fcba-1633-46c9-a27e-ed0ca9ee17e9',
 };
 
-export const SECONDARY_OPTION: ApiConfigData = {
-  serverIp: '10.32.0.86',
-  apiKey: '20b91694-7ea1-4a44-91a6-2878664428b3',
-};
+export function apiKeyForUrl(u: string): string {
+  if (!u) return CLOUD_KEY;
+  if (u.includes("10.11.16.15")) return BURJEEL_SECONDARY_OPTION.apiKey;
+  return u.includes(CLOUD_HOST) ? CLOUD_KEY : LOCAL_KEY;
+}
+
+/** Append the host-correct apikey. No-op if one is already present. */
+export function withApiKey(u: string): string {
+  if (!u) return u;
+  if (u.includes("apikey=")) return u;
+  const sep = u.includes("?") ? "&" : "?";
+  return `${u}${sep}apikey=${apiKeyForUrl(u)}`;
+}
 
 export function getApiConfig(): ApiConfigData {
   try {

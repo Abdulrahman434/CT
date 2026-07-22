@@ -21,6 +21,7 @@ import imgPrayerTimesPage from "../../assets/prayer times page.jpg";
 import imgWelcomeImage from "../../assets/Welcome Image.jpg";
 import imgLanguage from "../../assets/language.jpg";
 import imgNotificationSet from "../../assets/notificationset.jpg";
+import imgMosque from "../../assets/b51acb5e2ec4a2c930572c53103b020b12e76ee2.png";
 
 const STEP_BACKGROUNDS: Record<string, string> = {
   language: imgLanguage,
@@ -72,12 +73,12 @@ const STEP_SEQUENCE: StepDef[] = [
   { id: "consent" },
 ];
 
-const STEP_ICONS: Record<StepId, React.ComponentType<{ size?: number | string; style?: React.CSSProperties }>> = {
+const STEP_ICONS: Record<StepId, any> = {
   welcome: Hand,
   language: Globe,
   displayName: UserRound,
   pin: Shield,
-  prayer: BellRing,
+  prayer: imgMosque,
   decision: SlidersHorizontal,
   theme: Moon,
   dataClear: DatabaseZap,
@@ -132,7 +133,7 @@ export function OnboardingWizard({
 
   /* per-step answers — pre-filled from storage so re-opening shows current choices */
   const [selLocale, setSelLocale] = useState<Locale>(() => (readLS("careinn-locale") as Locale) || locale || "en");
-  const [useFileName, setUseFileName] = useState(() => readLS("careinn-display-name-mode") !== "custom");
+  const [useFileName, setUseFileName] = useState(() => readLS("careinn-display-name-mode") === "auto");
   const [nameEn, setNameEn] = useState(() => readLS("careinn-display-name") || "");
   const [nameAr, setNameAr] = useState(() => readLS("careinn-display-name-ar") || "");
   const [selDark, setSelDark] = useState(() => {
@@ -423,19 +424,21 @@ export function OnboardingWizard({
         return (
           <>
             <div className="flex flex-col gap-4 w-full" style={{ marginBottom: "8px" }}>
-              <OptionCard
-                selected={useFileName}
-                onClick={() => setUseFileName(true)}
-                icon={<UserRound size={22} style={{ color: t.primary }} />}
-                label={tr("onboarding.displayName.useFile")}
-                sublabel={fileName || undefined}
-              />
-              <OptionCard
-                selected={!useFileName}
-                onClick={() => setUseFileName(false)}
-                icon={<UserRound size={22} style={{ color: t.primary }} />}
-                label={tr("onboarding.displayName.custom")}
-              />
+              <div className="grid grid-cols-2 gap-4 w-full">
+                <OptionCard
+                  selected={useFileName}
+                  onClick={() => setUseFileName(true)}
+                  icon={<UserRound size={22} style={{ color: t.primary }} />}
+                  label={tr("onboarding.displayName.useFile")}
+                  sublabel={fileName || undefined}
+                />
+                <OptionCard
+                  selected={!useFileName}
+                  onClick={() => setUseFileName(false)}
+                  icon={<UserRound size={22} style={{ color: t.primary }} />}
+                  label={tr("onboarding.displayName.custom")}
+                />
+              </div>
               {!useFileName && (
                 <div className="flex flex-col gap-3 w-full">
                   <input
@@ -465,10 +468,7 @@ export function OnboardingWizard({
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-3 w-full">
-              <div className="flex-1"><GhostButton label={tr("onboarding.skip")} onClick={() => saveDisplayName("skipped")} /></div>
-              <div className="flex-1"><PrimaryButton label={tr("onboarding.next")} onClick={() => saveDisplayName(useFileName ? "auto" : "custom")} /></div>
-            </div>
+            <PrimaryButton label={tr("onboarding.next")} onClick={() => saveDisplayName(useFileName ? "auto" : "custom")} />
           </>
         );
       }
@@ -528,7 +528,7 @@ export function OnboardingWizard({
       case "dataClear":
         return (
           <>
-            <div className="flex flex-col gap-4 w-full" style={{ marginBottom: "4px" }}>
+            <div className="grid grid-cols-3 gap-4 w-full" style={{ marginBottom: "8px" }}>
               <OptionCard selected={selPolicy === "daily"} onClick={() => savePolicy("daily")} icon={<DatabaseZap size={22} style={{ color: t.primary }} />} label={tr("onboarding.dataClear.daily")} />
               <OptionCard selected={selPolicy === "24h-idle"} onClick={() => savePolicy("24h-idle")} icon={<DatabaseZap size={22} style={{ color: t.primary }} />} label={tr("onboarding.dataClear.idle")} />
               <OptionCard selected={selPolicy === "discharge"} onClick={() => savePolicy("discharge")} icon={<DatabaseZap size={22} style={{ color: t.primary }} />} label={tr("onboarding.dataClear.discharge")} />
@@ -577,10 +577,7 @@ export function OnboardingWizard({
               <OptionCard selected={selSaver === "1m"} onClick={() => saveSaver("1m")} label={tr("onboarding.screensaver.1m")} />
               <OptionCard selected={selSaver === "5m"} onClick={() => saveSaver("5m")} label={tr("onboarding.screensaver.5m")} />
             </div>
-            <div className="flex items-center gap-3 w-full">
-              <div className="flex-1"><GhostButton label={tr("onboarding.skip")} onClick={() => goNext()} /></div>
-              <div className="flex-1"><PrimaryButton label={tr("onboarding.next")} disabled={!selSaver} onClick={() => goNext()} /></div>
-            </div>
+            <PrimaryButton label={tr("onboarding.next")} disabled={!selSaver} onClick={() => goNext()} />
           </>
         );
 
@@ -612,6 +609,23 @@ export function OnboardingWizard({
         );
     }
   };
+
+  const skipConfig = useMemo(() => {
+    switch (stepId) {
+      case "displayName":
+        return {
+          label: tr("onboarding.skip"),
+          onClick: () => saveDisplayName("skipped"),
+        };
+      case "screensaver":
+        return {
+          label: tr("onboarding.skip"),
+          onClick: () => goNext(),
+        };
+      default:
+        return null;
+    }
+  }, [stepId, tr]);
 
   const Icon = STEP_ICONS[stepId];
   const stepIndexInFull = STEP_SEQUENCE.findIndex(s => s.id === stepId);
@@ -715,46 +729,52 @@ export function OnboardingWizard({
             border: t.cardBorder,
           }}
         >
-          {/* Background image for questions (5% opacity) */}
-          {STEP_BACKGROUNDS[stepId] && (
-            <div
-              className="absolute inset-0 pointer-events-none z-0"
+          {/* Welcome step split hero image (fades out smoothly) */}
+          <div
+            className="absolute inset-y-0 w-1/2 overflow-hidden pointer-events-none z-0"
+            style={{
+              right: 0,
+              left: "auto",
+              opacity: stepId === "welcome" ? 1 : 0,
+              transition: "opacity 0.4s ease-in-out",
+            }}
+          >
+            <img
+              src={t.heroImageUrl}
+              alt="Hospital Hero"
               style={{
-                backgroundImage: `url(${STEP_BACKGROUNDS[stepId]})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                opacity: 0.05,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: t.heroCropPosition || "50% 50%",
               }}
             />
-          )}
-
-          {stepId === "welcome" && (
             <div
-              className="absolute inset-y-0 w-1/2 overflow-hidden pointer-events-none z-0"
               style={{
-                right: 0,
-                left: "auto",
+                position: "absolute",
+                inset: 0,
+                background: `linear-gradient(to left, transparent 0%, ${t.surface} 100%)`,
               }}
-            >
-              <img
-                src={t.heroImageUrl}
-                alt="Hospital Hero"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  objectPosition: t.heroCropPosition || "50% 50%",
-                }}
-              />
+            />
+          </div>
+
+          {/* Stacked background images for smooth cross-fade transition */}
+          {Object.entries(STEP_BACKGROUNDS).map(([id, src]) => {
+            const isActive = stepId === id;
+            return (
               <div
+                key={id}
+                className="absolute inset-0 pointer-events-none z-0"
                 style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: `linear-gradient(to left, transparent 0%, ${t.surface} 100%)`,
+                  backgroundImage: `url(${src})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  opacity: isActive ? 0.07 : 0,
+                  transition: "opacity 0.4s ease-in-out",
                 }}
               />
-            </div>
-          )}
+            );
+          })}
 
           {/* progress strip */}
           <div className="shrink-0 flex items-center gap-4 px-10 pt-7 relative z-10">
@@ -801,7 +821,25 @@ export function OnboardingWizard({
                 className="flex items-center justify-center"
                 style={{ width: "80px", height: "80px", borderRadius: t.radiusFull, backgroundColor: t.primarySubtle, marginBottom: "22px" }}
               >
-                <Icon size={38} style={{ color: t.primary }} />
+                {typeof Icon === "string" ? (
+                  <div
+                    style={{
+                      width: "38px",
+                      height: "38px",
+                      backgroundColor: t.primary,
+                      WebkitMaskImage: `url(${Icon})`,
+                      maskImage: `url(${Icon})`,
+                      WebkitMaskSize: "contain",
+                      maskSize: "contain",
+                      WebkitMaskPosition: "center",
+                      maskPosition: "center",
+                      WebkitMaskRepeat: "no-repeat",
+                      maskRepeat: "no-repeat",
+                    }}
+                  />
+                ) : (
+                  <Icon size={38} style={{ color: t.primary }} />
+                )}
               </div>
               <h3
                 style={{ fontFamily, fontSize: "28px", fontWeight: 800, color: t.textHeading, textAlign: "center", lineHeight: "34px", marginBottom: "24px" }}
@@ -810,6 +848,34 @@ export function OnboardingWizard({
               </h3>
               <div className="w-full flex flex-col gap-4">{renderStep()}</div>
             </div>
+
+            {skipConfig && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "24px",
+                  left: "40px",
+                }}
+              >
+                <button
+                  onClick={skipConfig.onClick}
+                  className="flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+                  style={{
+                    height: "44px",
+                    padding: "0 22px",
+                    backgroundColor: "transparent",
+                    borderRadius: t.radiusMd,
+                    border: `1.5px solid ${t.borderDefault}`,
+                    color: t.textMuted,
+                    fontFamily,
+                    fontWeight: 700,
+                    fontSize: "15px",
+                  }}
+                >
+                  {skipConfig.label}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

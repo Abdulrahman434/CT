@@ -223,6 +223,10 @@ export interface NurseStoreState {
   /** Care Plan Shared State */
   carePlanMode: "daily" | "overall";
   carePlanSelectedDate: string; // YYYY-MM-DD
+
+  /** HIS integration status & per-section HIS data flags */
+  isHisConnected: boolean;
+  hisSections: Record<string, boolean>;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -235,7 +239,33 @@ import imgOmar from "@/assets/2318867853acb678569427c88b9e543e22bd46b6.png";
 import imgBabyCam from "@/assets/68ba9ba13c5aa1cc7d2af5bee7bc955298b612dd.png";
 
 function createDefaultState(): NurseStoreState {
+  const now = new Date();
+  const getISO = (d: Date) => d.toISOString().split("T")[0];
+  const shift = (d: Date, days: number) => {
+    const res = new Date(d);
+    res.setDate(res.getDate() + days);
+    return res;
+  };
+
+  const todayStr = getISO(now);
+  const tomorrowStr = getISO(shift(now, 1));
+  const day2Str = getISO(shift(now, 2));
+  const day3Str = getISO(shift(now, 3));
+
   return {
+    isHisConnected: false,
+    hisSections: {
+      profile: false,
+      emergency: false,
+      careOverview: false,
+      carePlan: false,
+      financial: false,
+      labs: false,
+      imaging: false,
+      baby: false,
+      discharge: false,
+      observations: false,
+    },
     sectionVisibility: {
       profile: true,
       careOverview: true,
@@ -279,15 +309,15 @@ function createDefaultState(): NurseStoreState {
     painScore: 5,
 
     carePlan: [
-      { id: "cp-1", labelKey: "care.plan.initialAssessment", done: true, timeKey: "care.plan.done", day: 1, date: "2026-03-10" },
-      { id: "cp-2", labelKey: "care.plan.bloodWork", done: true, timeKey: "care.plan.done", day: 1, date: "2026-03-10" },
-      { id: "cp-3", labelKey: "care.plan.medicationRound", done: false, active: true, minutes: 45, day: 1, date: "2026-03-10" },
-      { id: "cp-4", labelKey: "care.plan.checkup", done: false, minutes: 15, day: 2, date: "2026-03-11" },
-      { id: "cp-5", labelKey: "care.plan.physicalTherapy", done: false, minutes: 30, day: 3, date: "2026-03-12" },
-      { id: "cp-6", labelKey: "care.plan.doctorReview", done: false, minutes: 10, day: 4, date: "2026-03-13" },
+      { id: "cp-1", labelKey: "care.plan.initialAssessment", done: true, timeKey: "care.plan.done", day: 1, date: todayStr },
+      { id: "cp-2", labelKey: "care.plan.bloodWork", done: true, timeKey: "care.plan.done", day: 1, date: todayStr },
+      { id: "cp-3", labelKey: "care.plan.medicationRound", done: false, active: true, minutes: 45, day: 1, date: todayStr },
+      { id: "cp-4", labelKey: "care.plan.checkup", done: false, minutes: 15, day: 2, date: tomorrowStr },
+      { id: "cp-5", labelKey: "care.plan.physicalTherapy", done: false, minutes: 30, day: 3, date: day2Str },
+      { id: "cp-6", labelKey: "care.plan.doctorReview", done: false, minutes: 10, day: 4, date: day3Str },
     ],
     carePlanMode: "daily",
-    carePlanSelectedDate: "2026-03-10",
+    carePlanSelectedDate: todayStr,
 
     financial: [
       { id: "fin-1", category: "Room & Board", description: "Private Room — 7 nights", amount: 35000, covered: 31500, date: "5–12 Mar" },
@@ -463,7 +493,30 @@ const nurseStore = (() => {
       if (applied.name && applied.name !== state.patient.name) {
         nextPatient.nameKey = "";
       }
-      state = { ...state, patient: nextPatient };
+      const hasEmergency = !!(applied.emergencyContact || applied.emergencyName);
+      state = {
+        ...state,
+        patient: nextPatient,
+        isHisConnected: true,
+        hisSections: {
+          ...state.hisSections,
+          profile: true,
+          ...(hasEmergency ? { emergency: true } : {}),
+        },
+      };
+      notify();
+    },
+
+    setHisConnected: (connected: boolean) => {
+      state = { ...state, isHisConnected: connected };
+      notify();
+    },
+
+    setHisSectionData: (section: string, hasData: boolean) => {
+      state = {
+        ...state,
+        hisSections: { ...state.hisSections, [section]: hasData },
+      };
       notify();
     },
 

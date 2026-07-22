@@ -238,17 +238,18 @@ function BedsideScreen() {
     }
   }, [lockedHospitalId, switchConfig]);
 
+  const [connectionError, setConnectionError] = useState(false);
+
   useEffect(() => {
     // Pre-fetch packages on startup so AppLauncher loads instantly
     fetchAppPackages();
 
     const syncPatient = () => {
-      if (!isAndroidApp()) return;
       const info = getDeviceInfo();
-      if (!info?.serial) return;
+      const serial = info?.serial || "";
+      if (!serial) return;
 
-
-      fetchPatientForDevice(info.serial)
+      fetchPatientForDevice(serial)
         .then(result => {
           if (result) {
             const p = result.patient;
@@ -272,11 +273,23 @@ function BedsideScreen() {
               admissionDate: p.admissionDate || undefined,
               dischargeDate: p.dischargeDate || undefined,
             });
+            nurseActions.setHisConnected(true);
+            setConnectionError(false);
+          } else {
+            nurseActions.setHisConnected(false);
+            setConnectionError(true);
           }
         })
-        .catch(() => { });
+        .catch(() => {
+          nurseActions.setHisConnected(false);
+          setConnectionError(true);
+        });
     };
+
     syncPatient();
+
+    // Re-check connection and patient data every 30 seconds (back and forth)
+    const intervalId = setInterval(syncPatient, 30000);
 
     // Re-fetch when server changes
     const handler = () => {
@@ -285,7 +298,10 @@ function BedsideScreen() {
       syncPatient();
     };
     window.addEventListener("api-config-changed", handler);
-    return () => window.removeEventListener("api-config-changed", handler);
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("api-config-changed", handler);
+    };
   }, []);
 
   // Close AppLauncher when kiosk app returns to foreground
@@ -2295,7 +2311,71 @@ function AuthenticatedApp() {
         </ErrorBoundary>
       </OrderProvider>
       <UpdateBanner />
+      <ConnectionStatusToast />
     </ThemeProvider>
+  );
+}
+
+function ConnectionStatusToast() {
+  const { t } = useLocale();
+  const nurseStore = useNurseStore();
+  const [retryLoading, setRetryLoading] = useState(false);
+
+  if (nurseStore.isHisConnected || !nurseStore.sectionVisibility) return null;
+
+  const handleRetry = () => {
+    setRetryLoading(true);
+    const info = getDeviceInfo();
+    const serial = info?.serial || "";
+    if (serial) {
+      fetchPatientForDevice(serial)
+        .then((result) => {
+          if (result) {
+            const p = result.patient;
+            nurseActions.updatePatientFromApi({
+              name: p.name || undefined,
+              nameAr: p.nameAr || undefined,
+              mrn: p.mrn || undefined,
+              room: p.room || undefined,
+              bed: p.bed || undefined,
+              sex: p.sex || undefined,
+              dob: p.dob || undefined,
+              admissionDate: p.admissionDate || undefined,
+              dischargeDate: p.dischargeDate || undefined,
+            });
+            nurseActions.setHisConnected(true);
+          }
+        })
+        .finally(() => setRetryLoading(false));
+    } else {
+      setRetryLoading(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed top-4 right-4 z-[9999] flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border"
+      style={{
+        backgroundColor: "rgba(239, 68, 68, 0.95)",
+        color: "#fff",
+        borderColor: "rgba(255, 255, 255, 0.2)",
+        backdropFilter: "blur(12px)",
+        animation: "fadeIn 0.3s ease-out",
+      }}
+    >
+      <AlertTriangle size={20} className="shrink-0 animate-pulse" />
+      <div className="flex flex-col text-xs" style={{ minWidth: "180px" }}>
+        <span className="font-bold">{t("connection.failed")}</span>
+        <span className="opacity-90">{t("connection.showingDemo")}</span>
+      </div>
+      <button
+        onClick={handleRetry}
+        disabled={retryLoading}
+        className="ml-2 px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-xs font-bold transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+      >
+        {retryLoading ? "..." : t("connection.retry")}
+      </button>
+    </div>
   );
 }
 

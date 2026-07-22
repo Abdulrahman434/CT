@@ -524,9 +524,39 @@ export function useIptvChannels() {
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(() => {
+    try {
+      const { getSecondaryOption } = require("../lib/apiConfig");
+      const savedTheme = localStorage.getItem("careinn-layout2-theme");
+      let hid = "";
+      if (savedTheme) {
+        try {
+          const parsed = JSON.parse(savedTheme);
+          hid = typeof parsed === "string" ? parsed : parsed.id;
+        } catch {}
+      }
+      if (hid === "burjeel") {
+        const sec = getSecondaryOption("burjeel");
+        sys()?.updateApiConfig?.(sec.serverIp, sec.apiKey);
+      }
+    } catch {}
+
     if (!isAndroidApp()) {
-      setError('TV is only available on the kiosk');
-      setLoading(false);
+      setLoading(true);
+      setError(null);
+      fetchWebIptvChannels().then((ch) => {
+        if (ch && ch.length) {
+          setChannels(ch);
+          _setIptvChannels(ch);
+          setLoading(false);
+          setError(null);
+        } else {
+          setError("TV is only available on the kiosk");
+          setLoading(false);
+        }
+      }).catch(() => {
+        setError("TV is only available on the kiosk");
+        setLoading(false);
+      });
       return;
     }
     setLoading(true);
@@ -588,6 +618,51 @@ export function useIptvChannels() {
   return { channels, loading, error, reload };
 }
 
+async function fetchWebIptvChannels(): Promise<IptvChannel[]> {
+  try {
+    const { getApiConfig, getSecondaryOption } = await import("../lib/apiConfig");
+    const cfg = getApiConfig();
+    const savedTheme = localStorage.getItem("careinn-layout2-theme");
+    let hid = "";
+    if (savedTheme) {
+      try {
+        const parsed = JSON.parse(savedTheme);
+        hid = typeof parsed === "string" ? parsed : parsed.id;
+      } catch {}
+    }
+    const sec = getSecondaryOption(hid);
+    const targetIp = hid === "burjeel" ? sec.serverIp : cfg.serverIp;
+    const targetKey = hid === "burjeel" ? sec.apiKey : cfg.apiKey;
+    const base = targetIp.startsWith("http") ? targetIp.replace(/\/$/, "") : `http://${targetIp}/api`;
+
+    const endpoints = [
+      `${base}/iptv/channels/?apikey=${targetKey}`,
+      `${base}/resource/iptv/?apikey=${targetKey}`,
+      `${base}/iptv/?apikey=${targetKey}`,
+    ];
+
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep);
+        if (res.ok) {
+          const data = await res.json();
+          const arr = Array.isArray(data) ? data : data.channels || data.results || [];
+          if (arr.length) {
+            return arr.map((ch: any, idx: number) => ({
+              id: ch.id ?? idx,
+              name: ch.name ?? ch.title ?? `Channel ${idx + 1}`,
+              nameAr: ch.name_ar ?? ch.title_ar ?? ch.name,
+              url: ch.channel_url ?? ch.url ?? "",
+              logo: ch.channel_image ?? ch.logo ?? "",
+            })).filter((c: any) => c.url);
+          }
+        }
+      } catch {}
+    }
+  } catch {}
+  return [];
+}
+
 // ─── SIP Types ────────────────────────────────────────────────────────
 
 export type SipContact = {
@@ -612,8 +687,7 @@ export const sip = {
 
   /**
    * Get the current contact directory. The Android app fetches this 
-   * from http://10.32.0.86/api/sip/directory/devices/ on startup.
-   * Always returns at least the hardcoded fallback (Sara, ext 629).
+   * from http://10.11.16.15/api/sip/directory/devices/ (Burjeel) or 10.32.0.86 on startup.
    */
   getContacts(): SipContact[] {
     try {
