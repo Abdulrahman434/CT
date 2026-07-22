@@ -74,7 +74,7 @@ import { AccountLockScreen } from "./components/AccountLockScreen";
 import { OfflineBanner } from "./components/OfflineBanner";
 import { useGuestMode, guestModeStore } from "./lib/guestMode";
 import { CareMePinDialog } from "./components/CareMePinDialog";
-import { Lock, Megaphone } from "lucide-react";
+import { Lock, Megaphone, AlertTriangle } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
 import {
@@ -82,7 +82,7 @@ import {
   fetchDeviceAlerts, getSeenAlertIds, markAlertSeen,
   markAllAlertsSeen, DeviceAlert
 } from "./lib/hospitalApi";
-import { nurseActions } from "./components/NurseDataStore";
+import { nurseActions, useNurseStore } from "./components/NurseDataStore";
 import { getDeviceInfo } from "./utils/androidBridge";
 import { OnboardingWizard } from "./components/OnboardingWizard";
 import { isOnboardingComplete } from "./lib/onboardingStore";

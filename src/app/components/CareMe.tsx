@@ -391,7 +391,7 @@ function PatientProfileSlide({ theme, isExpanded = false }: { theme: any, isExpa
     return calculateAge(p.dob, p.age);
   }, [p.dob, p.age]);
 
-  const hasHisEmergency = nurseStore.isHisConnected ? !!nurseStore.hisSections.emergency : true;
+  const hasHisEmergency = nurseStore.isHisConnected ? !!nurseStore.hisSections?.emergency : true;
 
   const infoRow = (icon: React.ComponentType<any>, label: string, val: React.ReactNode, customColor?: string) => {
     const Icon = icon;
@@ -516,7 +516,7 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
   const storePainScore = nurseStore.painScore;
   const labelSize = isExpanded ? "16px" : "13px";
 
-  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections.careOverview : true;
+  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections?.careOverview : true;
 
   if (nurseStore.isHisConnected && !hasHisData && !showDemo) {
     return (
@@ -720,7 +720,7 @@ function TimelineSlide({
   const valueSize = isExpanded ? "16px" : "15.5px";
 
   const sectionKey = type === "care" ? "carePlan" : "discharge";
-  const hasHisData = store.isHisConnected ? !!store.hisSections[sectionKey] : true;
+  const hasHisData = store.isHisConnected ? !!store.hisSections?.[sectionKey] : true;
 
   const toISO = (d: Date) => d.toISOString().split("T")[0];
   const mode = store.carePlanMode;
@@ -965,7 +965,7 @@ function LabResultsSlide({ theme, isExpanded = false }: { theme: any, isExpanded
   const valueSize = isExpanded ? "16px" : "15.5px";
   const labelSize = isExpanded ? "16px" : "13.5px";
 
-  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections.labs : true;
+  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections?.labs : true;
 
   if (nurseStore.isHisConnected && !hasHisData && !showDemo) {
     return (
@@ -1112,7 +1112,7 @@ function ImagingSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
   const valueSize = isExpanded ? "16px" : "15.5px";
   const labelSize = isExpanded ? "16px" : "13.5px";
 
-  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections.imaging : true;
+  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections?.imaging : true;
 
   if (nurseStore.isHisConnected && !hasHisData && !showDemo) {
     return (
@@ -1197,7 +1197,7 @@ function ClinicalObservationsSlide({ theme, isExpanded = false }: { theme: any, 
 
   const labelSize = isExpanded ? "16px" : "13px";
 
-  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections.observations : true;
+  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections?.observations : true;
 
   if (nurseStore.isHisConnected && !hasHisData && !showDemo) {
     return (
@@ -1296,7 +1296,7 @@ function BabyCameraSlide({ isExpanded = false }: { isExpanded?: boolean }) {
   const [fullscreen, setFullscreen] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
 
-  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections.baby : true;
+  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections?.baby : true;
 
   if (nurseStore.isHisConnected && !hasHisData && !showDemo) {
     return (
@@ -1479,7 +1479,7 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
   const valueSize = isExpanded ? "16px" : "14px";
   const labelSize = isExpanded ? "16px" : "13px";
 
-  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections.financial : true;
+  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections?.financial : true;
 
   if (nurseStore.isHisConnected && !hasHisData && !showDemo) {
     return (
