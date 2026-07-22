@@ -750,11 +750,18 @@ function TimelineSlide({
   const yesterday = shiftDay(today, -1);
   const tomorrow = shiftDay(today, 1);
 
-  let dateLabel = "";
-  if (isSameDay(selectedDate, today)) dateLabel = t("careplan.today") || "Today";
-  else if (isSameDay(selectedDate, yesterday)) dateLabel = t("careplan.yesterday") || "Yesterday";
-  else if (isSameDay(selectedDate, tomorrow)) dateLabel = t("careplan.tomorrow") || "Tomorrow";
-  else dateLabel = selectedDate.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+  const dateFormatted = selectedDate.toLocaleDateString(isRTL ? "ar-SA" : "en-US", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+
+  let prefix = "";
+  if (isSameDay(selectedDate, today)) prefix = t("careplan.today") || "Today";
+  else if (isSameDay(selectedDate, yesterday)) prefix = t("careplan.yesterday") || "Yesterday";
+  else if (isSameDay(selectedDate, tomorrow)) prefix = t("careplan.tomorrow") || "Tomorrow";
+
+  const dateLabel = prefix ? `${prefix} · ${dateFormatted}` : dateFormatted;
 
   const items = rawItems.filter(item => {
     if (type === "discharge") return true; // Show all discharge items regardless of date
