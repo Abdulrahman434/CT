@@ -729,6 +729,13 @@ function TimelineSlide({
   const [patientDate, setPatientDate] = useState<string>(store.carePlanSelectedDate || toISO(new Date()));
   const selectedDate = new Date(patientDate);
 
+  // Sync with nurse view changes
+  useEffect(() => {
+    if (store.carePlanSelectedDate) {
+      setPatientDate(store.carePlanSelectedDate);
+    }
+  }, [store.carePlanSelectedDate]);
+
   if (store.isHisConnected && !hasHisData && !showDemo) {
     return (
       <HisEmptyStateSection
@@ -738,13 +745,6 @@ function TimelineSlide({
       />
     );
   }
-
-  // Sync with nurse view changes
-  useEffect(() => {
-    if (store.carePlanSelectedDate) {
-      setPatientDate(store.carePlanSelectedDate);
-    }
-  }, [store.carePlanSelectedDate]);
 
   const today = new Date();
   const yesterday = shiftDay(today, -1);
