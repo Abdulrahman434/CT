@@ -418,7 +418,7 @@ const translations: Record<string, TranslationEntry> = {
 
   /* ─── Connection Monitoring ─── */
   "connection.failed": { en: "Failed to connect to hospital server", ar: "تعذّر الاتصال بخادم المستشفى", ur: "ہسپتال سرور سے رابطہ قائم کرنے میں ناکامی" },
-  "connection.showingDemo": { en: "Showing demo data (retrying every 30s)", ar: "عرض البيانات التوضيحية (إعادة المحاولة كل ٣٠ ثانية)", ur: "ڈیمو ڈیٹا دکھا رہا ہے (ہر 30 سیکنڈ میں دوبارہ کوشش)" },
+  "connection.showingDemo": { en: "Showing demo data", ar: "عرض البيانات التوضيحية", ur: "ڈیمو ڈیٹا دکھا رہا ہے" },
   "connection.retry": { en: "Reconnect", ar: "إعادة الاتصال", ur: "دوبارہ منسلک ہوں" },
 
   /* ─── HIS Data Fallback & Demo Preview ─── */
