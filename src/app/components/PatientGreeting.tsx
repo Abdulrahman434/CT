@@ -12,6 +12,7 @@ import { useGuestMode } from "../lib/guestMode";
 import { useAuth } from "./AuthContext";
 import svgPaths from "../../imports/svg-ca68x68c4i";
 import { getSavedHeroImage, isSlideshowEnabled } from "../lib/backgroundPrefs";
+import { usePatientInfo } from "../lib/usePatientInfo";
 
 function AboutUsIcon({ color }: { color?: string }) {
   const { theme } = useTheme();
@@ -52,42 +53,17 @@ export function PatientGreeting({
   const { theme } = useTheme();
   const { t, isRTL, fontFamily } = useLocale();
   const rippleElements = useRipple(theme.primarySubtle).rippleElements;
-  const nurseStore = useNurseStore();
   const { isGuest } = useGuestMode();
   const { logout } = useAuth();
 
-  // Data now comes from NurseDataStore (synchronized at App level)
-  const p = nurseStore.patient;
-
-  // Onboarding display-name preference: "auto" (file name), "custom"
-  // (patient-entered), "skipped" (greet with no name).
-  const [nameMode, setNameMode] = useState(() =>
-    localStorage.getItem("careinn-display-name-mode"));
-  useEffect(() => {
-    const handler = () =>
-      setNameMode(localStorage.getItem("careinn-display-name-mode"));
-    window.addEventListener("display-name-changed", handler);
-    return () => window.removeEventListener("display-name-changed", handler);
-  }, []);
-
-  // Name: i18n demo key → manual/API name (with RTL/Arabic support)
-  const fileName = isRTL && p.nameAr
-    ? p.nameAr
-    : (p.nameKey ? t(p.nameKey) : p.name);
-  const customName = isRTL
-    ? (localStorage.getItem("careinn-display-name-ar") ||
-       localStorage.getItem("careinn-display-name") || "")
-    : (localStorage.getItem("careinn-display-name") || "");
-  const displayName =
-    nameMode === "skipped" ? "" :
-    nameMode === "custom" ? (customName || fileName) :
-    fileName;
-
-  // Other fields
-  const displayMrn    = p.mrn;
-  const displayRoom   = p.room;
-  const displayBed    = p.bed;
-  const displayAdmit  = p.admissionDate;
+  const {
+    patient: p,
+    displayName,
+    displayMrn,
+    displayRoom,
+    displayBed,
+    displayAdmit,
+  } = usePatientInfo();
 
   // Hero image fallback chain:
   // 1. User-saved image from Backgrounds preferences

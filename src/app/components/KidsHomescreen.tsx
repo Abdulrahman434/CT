@@ -4,6 +4,7 @@ import { NewsTicker } from "./NewsTicker";
 import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { useNurseStore } from "./NurseDataStore";
+import { usePatientInfo } from "../lib/usePatientInfo";
 
 /**
  * Layout 3 — Kids Mode ("Magical Adventure Dashboard").
@@ -175,8 +176,7 @@ export default function KidsHomescreen({
   };
 
   /* ── Live clinical data (presentation-only transform) ── */
-  const p = nurseStore.patient;
-  const displayName = isRTL && p.nameAr ? p.nameAr : (p.nameKey ? t(p.nameKey) : p.name);
+  const { displayName, displayMrn } = usePatientInfo();
   const firstName = (displayName || "").trim().split(/\s+/)[0] || displayName;
 
   const nurse = nurseStore.careTeam.find((m) => m.visible && m.roleKey === "care.team.primaryNurse")
@@ -437,6 +437,11 @@ export default function KidsHomescreen({
               <p style={{ fontFamily: headFont, fontSize: 26, fontWeight: 800, color: brandInk, textAlign: "center", lineHeight: 1.05 }}>
                 {t("kids.name", firstName)}
               </p>
+              {displayMrn && (
+                <p style={{ fontSize: 11.5, fontWeight: 700, color: theme.primary, textAlign: "center", lineHeight: 1.25, opacity: 0.85 }}>
+                  MRN: {displayMrn}
+                </p>
+              )}
               <p style={{ fontSize: 12, fontWeight: 700, color: theme.primary, textAlign: "center", lineHeight: 1.25 }}>
                 {t("kids.happyHere")}
               </p>

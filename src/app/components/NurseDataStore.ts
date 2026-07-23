@@ -247,10 +247,19 @@ function createDefaultState(): NurseStoreState {
     return res;
   };
 
+  const formatPatientDate = (d: Date) => {
+    const day = String(d.getDate()).padStart(2, "0");
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  };
+
   const todayStr = getISO(now);
   const tomorrowStr = getISO(shift(now, 1));
   const day2Str = getISO(shift(now, 2));
   const day3Str = getISO(shift(now, 3));
+
+  const defaultAdmitDate = formatPatientDate(shift(now, -2));
+  const defaultDischargeDate = formatPatientDate(shift(now, 2));
 
   return {
     isHisConnected: false,
@@ -289,8 +298,8 @@ function createDefaultState(): NurseStoreState {
       bed:           "",
       sex:           "",
       dob:           "",
-      admissionDate: "10 Mar 2026",
-      dischargeDate: "12 Mar 2026",
+      admissionDate: defaultAdmitDate,
+      dischargeDate: defaultDischargeDate,
       contact: "050 123 4567",
       emergencyContact: "055 987 6543",
       emergencyName: "Ahmed Saleh",
@@ -394,6 +403,11 @@ function loadCachedState(): Partial<NurseStoreState> {
     // Legacy migration: old abbreviations → new DietType values
     if (parsed.patientDiet === "soft") parsed.patientDiet = "soft-diet";
     if (parsed.patientDiet === "chemo") parsed.patientDiet = "chemotherapy";
+    // Legacy migration: remove hardcoded dates so dynamic default dates take effect
+    if (parsed.patient) {
+      if (parsed.patient.dischargeDate === "12 Mar 2026") delete parsed.patient.dischargeDate;
+      if (parsed.patient.admissionDate === "10 Mar 2026") delete parsed.patient.admissionDate;
+    }
     return parsed;
   } catch { return {}; }
 }
