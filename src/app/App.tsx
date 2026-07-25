@@ -518,16 +518,17 @@ function BedsideScreen() {
     });
 
     if (dueSoon.length > 0) {
-      dueSoon.forEach(a => {
-        const title = locale === "ar" ? a.titleAr : a.titleEn;
-        const body = locale === "ar" ? a.bodyAr : a.bodyEn;
-
-        toast(title, {
-          description: body,
-          duration: 10000,
-          icon: <Megaphone size={18} />,
-        });
-      });
+      const broadcasts: BroadcastNotification[] = dueSoon.map(a => ({
+        id: `alert-${a.id}`,
+        type: "announcement" as const,
+        priority: "warning" as const,
+        title: { en: a.titleEn, ar: a.titleAr },
+        body: { en: a.bodyEn, ar: a.bodyAr },
+        icon: "megaphone",
+        timestamp: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
+        createdAt: Date.now(),
+      }));
+      setBroadcastQueue(prev => [...prev, ...broadcasts]);
       markAllAlertsSeen(dueSoon.map(a => a.id));
     }
   }, [locale, showTour]);
@@ -1046,23 +1047,30 @@ function BedsideScreen() {
       markAlertSeen(alertId);
       setNotifTrigger(prev => prev + 1);
 
-      // Show as broadcast popup
-      setBroadcastQueue(prev => [...prev, {
+      // Find original alert in apiNotifications to preserve correct localized values
+      const originalAlert = apiNotifications.find(a => a.id === alertId);
+      const titleEn = originalAlert?.titleEn ?? notif.titleText ?? "";
+      const titleAr = originalAlert?.titleAr ?? notif.titleText ?? "";
+      const bodyEn = originalAlert?.bodyEn ?? notif.bodyText ?? "";
+      const bodyAr = originalAlert?.bodyAr ?? notif.bodyText ?? "";
+
+      // Show as active broadcast popup immediately by bypassing the queue
+      setActiveBroadcast({
         id: notif.id,
         type: "announcement",
-        priority: "info",
+        priority: "warning",
         title: {
-          en: notif.titleText ?? "",
-          ar: notif.titleText ?? ""
+          en: titleEn,
+          ar: titleAr
         },
         body: {
-          en: notif.bodyText ?? "",
-          ar: notif.bodyText ?? ""
+          en: bodyEn,
+          ar: bodyAr
         },
         icon: "megaphone",
         timestamp: notif.time || new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
         createdAt: Date.now(),
-      }]);
+      });
       setShowNotifications(false);
       return;
     }
