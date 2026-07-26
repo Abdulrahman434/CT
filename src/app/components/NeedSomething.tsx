@@ -1101,7 +1101,7 @@ export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
                                 className="truncate"
                                 style={{ ...TEXT_STYLE.caption, fontFamily, color: theme.textMuted, marginTop: 3 }}
                               >
-                                \u201c{r.note}\u201d
+                                "{r.note}"
                               </p>
                             ) : null}
                             <div className="flex items-center gap-1.5 mt-1.5">
