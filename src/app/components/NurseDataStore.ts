@@ -407,6 +407,12 @@ function loadCachedState(): Partial<NurseStoreState> {
     if (parsed.patient) {
       if (parsed.patient.dischargeDate === "12 Mar 2026") delete parsed.patient.dischargeDate;
       if (parsed.patient.admissionDate === "10 Mar 2026") delete parsed.patient.admissionDate;
+      if (parsed.patient.mrn === "00-284619") delete parsed.patient.mrn;
+    }
+    const activeMrn = localStorage.getItem('careinn-active-mrn-passcode') || localStorage.getItem('careinn-last-mrn');
+    if (activeMrn) {
+      if (!parsed.patient) parsed.patient = {};
+      parsed.patient.mrn = activeMrn;
     }
     return parsed;
   } catch { return {}; }
@@ -506,6 +512,15 @@ const nurseStore = (() => {
         applied[field as keyof PatientProfile] = apiValue as any;
       }
 
+      if (updates.mrn) {
+        applied.mrn = updates.mrn;
+        _nurseOverrides.delete("mrn");
+        try {
+          localStorage.setItem('careinn-active-mrn-passcode', updates.mrn.trim().toLowerCase());
+          localStorage.setItem('careinn-last-mrn', updates.mrn.trim());
+        } catch {}
+      }
+
       if (Object.keys(applied).length === 0) return;
 
       // Save API snapshot of what we just applied
@@ -514,7 +529,7 @@ const nurseStore = (() => {
 
       // Apply to store
       let nextPatient = { ...state.patient, ...applied };
-      if (applied.name && applied.name !== state.patient.name) {
+      if (applied.name) {
         nextPatient.nameKey = "";
       }
       const hasEmergency = !!(applied.emergencyContact || applied.emergencyName);
@@ -529,6 +544,53 @@ const nurseStore = (() => {
         },
       };
       notify();
+    },
+
+    /** Completely wipe all previous patient data, overrides, and local preferences for a new A01 admission */
+    resetStoreForNewPatient: (newPatient?: Partial<PatientProfile>) => {
+      clearOverrides();
+      try {
+        localStorage.removeItem('careinn-display-name');
+        localStorage.removeItem('careinn-display-name-ar');
+        localStorage.removeItem('careinn-display-name-mode');
+        localStorage.removeItem('careinn-nurse-store');
+        localStorage.removeItem('careinn-orders');
+        localStorage.removeItem('careinn-feedback');
+        localStorage.removeItem('careinn-cart');
+        localStorage.removeItem('careinn-onboarding-complete');
+      } catch {}
+
+      const cleanState = createDefaultState();
+      let nextPatient = cleanState.patient;
+      if (newPatient) {
+        const fields = Object.keys(newPatient) as OverridableField[];
+        const applied: Partial<PatientProfile> = {};
+        for (const f of fields) {
+          const val = newPatient[f as keyof PatientProfile];
+          if (val) applied[f as keyof PatientProfile] = val as any;
+        }
+        nextPatient = { ...nextPatient, ...applied };
+        if (applied.name) nextPatient.nameKey = "";
+      }
+
+      state = {
+        ...cleanState,
+        patient: nextPatient,
+        isHisConnected: true,
+        hisSections: {
+          ...cleanState.hisSections,
+          profile: true,
+        },
+      };
+
+      if (nextPatient.mrn) {
+        const normMrn = nextPatient.mrn.trim().toLowerCase();
+        localStorage.setItem('careinn-active-mrn-passcode', normMrn);
+        localStorage.setItem('careinn-last-mrn', nextPatient.mrn.trim());
+      }
+
+      notify();
+      window.dispatchEvent(new Event('display-name-changed'));
     },
 
     setHisConnected: (connected: boolean) => {

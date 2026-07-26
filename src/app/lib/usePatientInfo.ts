@@ -44,7 +44,7 @@ export function usePatientInfo(): PatientInfoResult {
 
   const fileName = isRTL && p.nameAr
     ? p.nameAr
-    : (p.nameKey ? t(p.nameKey) : p.name);
+    : (p.name || (p.nameKey ? t(p.nameKey) : ""));
 
   const customName = isRTL
     ? (customNameAr || customNameEn || fileName)

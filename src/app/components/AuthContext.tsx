@@ -136,6 +136,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return true;
     }
 
+    // Local MRN Passcode Matching Check
+    try {
+      const { isMrnPasscodeMatch } = await import("../lib/hospitalApi");
+      const { nurseStore } = await import("./NurseDataStore");
+
+      const activeMrnPasscode = localStorage.getItem('careinn-active-mrn-passcode') || '';
+      const lastMrnPasscode = localStorage.getItem('careinn-last-mrn') || '';
+      const storeMrn = nurseStore.get()?.patient?.mrn || '';
+
+      const isMatch =
+        isMrnPasscodeMatch(basePassword, activeMrnPasscode) ||
+        isMrnPasscodeMatch(basePassword, lastMrnPasscode) ||
+        isMrnPasscodeMatch(basePassword, storeMrn);
+
+      if (isMatch) {
+        const activeHospitalId = localStorage.getItem('active-hospital-id') || 'careinn';
+        setAuthState({
+          isAuthenticated: true,
+          password: null,
+          lockedHospitalId: activeHospitalId === "careinn" ? null : activeHospitalId,
+          isFullAccess: activeHospitalId === "careinn",
+        });
+        return true;
+      }
+    } catch (e) {
+      console.warn("[AuthContext] MRN local check error:", e);
+    }
+
     // MRN Matching fallback across candidate servers
     try {
       const { getDeviceInfo } = await import("../utils/androidBridge");
@@ -149,7 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mrnMatch) {
           saveApiConfig({ serverIp: mrnMatch.serverIp, apiKey: mrnMatch.apiKey });
           localStorage.setItem('active-hospital-id', mrnMatch.hospitalId);
-          nurseActions.updatePatientFromApi({
+          nurseActions.resetStoreForNewPatient({
             name: mrnMatch.patient.name,
             nameAr: mrnMatch.patient.nameAr,
             mrn: mrnMatch.patient.mrn,

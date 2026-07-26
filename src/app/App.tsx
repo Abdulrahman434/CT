@@ -247,32 +247,61 @@ function BedsideScreen() {
     const syncPatient = () => {
       const info = getDeviceInfo();
       const serial = info?.serial || "";
-      if (!serial) return;
+      if (!serial) {
+        nurseActions.setHisConnected(false);
+        setConnectionError(true);
+        return;
+      }
 
       fetchPatientForDevice(serial)
         .then(result => {
           if (result) {
             const p = result.patient;
+            const newAdmitRef = result.location.admit_data || "";
+            const newMrn = (p.mrn || result.location.patient_id || "").trim();
 
             // Current admission reference — the onboarding wizard binds
             // its completion record to this value
-            setCurrentAdmitRef(result.location.admit_data || null);
+            setCurrentAdmitRef(newAdmitRef || null);
 
             // Store device group for alert filtering
             deviceGroupRef.current = result.location.group?.id || null;
             fetchAlerts();
 
-            nurseActions.updatePatientFromApi({
+            const lastAdmitRef = localStorage.getItem("careinn-last-admit-ref") || "";
+            const lastMrn = localStorage.getItem("careinn-last-mrn") || "";
+
+            const isNewA01 =
+              Boolean(newMrn || newAdmitRef) &&
+              Boolean(lastMrn || lastAdmitRef) &&
+              (newMrn.toLowerCase() !== lastMrn.toLowerCase() || newAdmitRef !== lastAdmitRef);
+
+            const patientPayload = {
               name: p.name || undefined,
               nameAr: p.nameAr || undefined,
-              mrn: p.mrn || undefined,
+              mrn: newMrn || undefined,
               room: p.room || undefined,
               bed: p.bed || undefined,
               sex: p.sex || undefined,
               dob: p.dob || undefined,
               admissionDate: p.admissionDate || undefined,
               dischargeDate: p.dischargeDate || undefined,
-            });
+            };
+
+            if (isNewA01) {
+              nurseActions.resetStoreForNewPatient(patientPayload);
+            } else {
+              nurseActions.updatePatientFromApi(patientPayload);
+            }
+
+            if (newMrn) {
+              localStorage.setItem("careinn-active-mrn-passcode", newMrn.toLowerCase());
+              localStorage.setItem("careinn-last-mrn", newMrn);
+            }
+            if (newAdmitRef) {
+              localStorage.setItem("careinn-last-admit-ref", newAdmitRef);
+            }
+
             nurseActions.setHisConnected(true);
             setConnectionError(false);
           } else {

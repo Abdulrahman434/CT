@@ -210,15 +210,137 @@ export async function fetchAllWallpapers(): Promise<WallpaperGroup[]> {
  * GET /user/organization/devices/
  * Find this device by serial number → get room, bed, patient reference_id.
  */
+/**
+ * Robustly extract patient full name (English and Arabic) from HL7 message.
+ */
+export function extractNameFromHl7(d: any): { nameEn: string; nameAr: string } {
+  if (!d) return { nameEn: "", nameAr: "" };
+  const pid = d.patient_identification ?? {};
+  const nameObj = pid.pid_patient_name;
+
+  let given = "";
+  let family = "";
+  let textName = "";
+
+  if (Array.isArray(nameObj) && nameObj.length > 0) {
+    const item = nameObj[0];
+    if (typeof item === "string") textName = item;
+    else if (item && typeof item === "object") {
+      given = item.given_name || item.given || item.first_name || "";
+      family = item.family_name || item.family || item.last_name || "";
+      textName = item.text || item.name || item.full_name || "";
+    }
+  } else if (nameObj && typeof nameObj === "object") {
+    given = nameObj.given_name || nameObj.given || nameObj.first_name || "";
+    family = nameObj.family_name || nameObj.family || nameObj.last_name || "";
+    textName = nameObj.text || nameObj.name || nameObj.full_name || "";
+  } else if (typeof nameObj === "string") {
+    textName = nameObj;
+  }
+
+  const nameEn = `${given} ${family}`.trim() || textName.trim();
+
+  let nameAr = "";
+  if (pid.pid_patient_name_ar) {
+    nameAr = String(pid.pid_patient_name_ar).trim();
+  } else if (Array.isArray(nameObj) && nameObj.length > 1) {
+    const arItem = nameObj[1];
+    if (typeof arItem === "string") nameAr = arItem.trim();
+    else if (arItem && typeof arItem === "object") {
+      const g = arItem.given_name || arItem.given || "";
+      const f = arItem.family_name || arItem.family || "";
+      nameAr = `${g} ${f}`.trim() || (arItem.text || arItem.name || "").trim();
+    }
+  }
+
+  return { nameEn, nameAr };
+}
+
+/**
+ * Robustly extract patient MRN / ID from HL7 message response.
+ */
+export function extractMrnFromHl7(d: any): string {
+  if (!d) return "";
+  const pid = d.patient_identification ?? {};
+
+  const idList = pid.pid_patient_identifier_list;
+  if (Array.isArray(idList) && idList.length > 0) {
+    for (const item of idList) {
+      if (typeof item === "string" && item.trim()) return item.trim();
+      if (item?.id_number) return String(item.id_number).trim();
+      if (item?.id) return String(item.id).trim();
+      if (item?.cx_1) return String(item.cx_1).trim();
+    }
+  } else if (idList && typeof idList === "object") {
+    if (idList.id_number) return String(idList.id_number).trim();
+    if (idList.id) return String(idList.id).trim();
+    if (idList.cx_1) return String(idList.cx_1).trim();
+  } else if (typeof idList === "string" && idList.trim()) {
+    return idList.trim();
+  }
+
+  const idInternal = pid.pid_patient_id_internal;
+  if (Array.isArray(idInternal) && idInternal.length > 0) {
+    for (const item of idInternal) {
+      if (typeof item === "string" && item.trim()) return item.trim();
+      if (item?.id_number) return String(item.id_number).trim();
+      if (item?.id) return String(item.id).trim();
+      if (item?.cx_1) return String(item.cx_1).trim();
+    }
+  } else if (idInternal && typeof idInternal === "object") {
+    if (idInternal.id_number) return String(idInternal.id_number).trim();
+    if (idInternal.id) return String(idInternal.id).trim();
+    if (idInternal.cx_1) return String(idInternal.cx_1).trim();
+  } else if (typeof idInternal === "string" && idInternal.trim()) {
+    return idInternal.trim();
+  }
+
+  if (pid.mrn) return String(pid.mrn).trim();
+  if (pid.id_number) return String(pid.id_number).trim();
+  if (pid.patient_id) return String(pid.patient_id).trim();
+  if (d.mrn) return String(d.mrn).trim();
+  if (d.patient_id) return String(d.patient_id).trim();
+
+  return "";
+}
+
+export function isMrnPasscodeMatch(input: string, target: string): boolean {
+  if (!input || !target) return false;
+  const cleanIn = input.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const cleanTar = target.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  if (!cleanIn || !cleanTar) return false;
+
+  if (cleanIn === cleanTar) return true;
+
+  const noZeroIn = cleanIn.replace(/^0+/, '');
+  const noZeroTar = cleanTar.replace(/^0+/, '');
+  if (noZeroIn && noZeroTar && noZeroIn === noZeroTar) return true;
+
+  if (noZeroTar && noZeroIn && (noZeroTar.endsWith(noZeroIn) || noZeroIn.endsWith(noZeroTar))) return true;
+
+  return false;
+}
+
+/**
+ * GET /user/organization/devices/
+ * Find this device by serial number → get room, bed, patient reference_id.
+ * STRICT MATCH: Only returns device location if device_id matches serial number.
+ */
 export async function fetchDeviceLocation(
   serial: string
 ): Promise<DeviceLocation | null> {
+  const normSerial = (serial || "").trim().toLowerCase();
+  if (!normSerial) return null;
+
   try {
     const res = await fetch(apiUrl("/user/organization/devices/"));
     if (!res.ok) return null;
     const devices: any[] = await res.json();
+    if (!Array.isArray(devices)) return null;
 
-    const device = devices.find(d => d.device_id.toLowerCase() === serial.toLowerCase());
+    const device = devices.find(
+      d => String(d.device_id || "").trim().toLowerCase() === normSerial
+    );
     if (!device?.device_location) return null;
 
     const loc = device.device_location;
@@ -243,6 +365,7 @@ export async function fetchDeviceLocation(
 export async function fetchPatientByRefId(
   referenceId: string | number
 ): Promise<Hl7Patient | null> {
+  if (!referenceId) return null;
   try {
     const res = await fetch(
       apiUrl(`/hl7/httpreceiver/?reference_id=${referenceId}`)
@@ -253,14 +376,13 @@ export async function fetchPatientByRefId(
     const pid = d.patient_identification ?? {};
     const pv = d.patient_visit ?? {};
 
-    const firstName = pid.pid_patient_name?.given_name ?? "";
-    const lastName = pid.pid_patient_name?.family_name ?? "";
-    const name = `${firstName} ${lastName}`.trim();
-    if (!name) return null;
+    const { nameEn, nameAr } = extractNameFromHl7(d);
+    const mrn = extractMrnFromHl7(d);
 
     return {
-      name,
-      mrn: pid.pid_patient_identifier_list?.id_number ?? "",
+      name: nameEn,
+      nameAr: nameAr || undefined,
+      mrn,
       room: pv.pv_assigned_patient_location?.room ?? "",
       bed: pv.pv_assigned_patient_location?.bed ?? "",
       sex: pid.pid_administrative_sex ?? "",
@@ -277,21 +399,43 @@ export async function fetchPatientByRefId(
 
 /**
  * Convenience: device serial → patient data in one call.
- * Returns { location, patient } or null if either step fails.
+ * Returns { location, patient } or null if device/patient not found.
  */
 export async function fetchPatientForDevice(serial: string): Promise<{
   location: DeviceLocation;
   patient: Hl7Patient;
 } | null> {
+  if (!serial) return null;
+
   const location = await fetchDeviceLocation(serial);
-  if (!location?.admit_data) return null;
+  if (!location) return null;
 
-  const patient = await fetchPatientByRefId(location.admit_data);
-  if (!patient) return null;
+  let patient: Hl7Patient | null = null;
+  if (location.admit_data) {
+    patient = await fetchPatientByRefId(location.admit_data);
+  }
 
-  // Prefer room/bed from device_location (more up-to-date than HL7)
-  patient.room = location.room_no || patient.room;
-  patient.bed = location.bed_no || patient.bed;
+  const mrn = (patient?.mrn || location.patient_id || "").trim();
+
+  if (patient) {
+    patient.room = location.room_no || patient.room;
+    patient.bed = location.bed_no || patient.bed;
+    patient.mrn = mrn;
+  } else if (location.patient_id) {
+    patient = {
+      name: "",
+      mrn: location.patient_id,
+      room: location.room_no || "",
+      bed: location.bed_no || "",
+      sex: "",
+      dob: "",
+      admissionDate: "",
+      dischargeDate: "",
+      admitRefId: Number(location.admit_data || 0),
+    };
+  } else {
+    return null;
+  }
 
   return { location, patient };
 }
@@ -301,6 +445,9 @@ export async function fetchDeviceLocationWithConfig(
   serverIp: string,
   apiKey: string
 ): Promise<DeviceLocation | null> {
+  const normSerial = (serial || "").trim().toLowerCase();
+  if (!normSerial) return null;
+
   try {
     const base = serverIp.startsWith("http")
       ? serverIp.replace(/\/$/, "")
@@ -314,7 +461,11 @@ export async function fetchDeviceLocationWithConfig(
 
     if (!res.ok) return null;
     const devices: any[] = await res.json();
-    const device = devices.find(d => d.device_id?.toLowerCase() === serial.toLowerCase());
+    if (!Array.isArray(devices)) return null;
+
+    const device = devices.find(
+      d => String(d.device_id || "").trim().toLowerCase() === normSerial
+    );
     if (!device?.device_location) return null;
 
     const loc = device.device_location;
@@ -352,14 +503,13 @@ export async function fetchPatientByRefIdWithConfig(
     const pid = d.patient_identification ?? {};
     const pv = d.patient_visit ?? {};
 
-    const firstName = pid.pid_patient_name?.given_name ?? "";
-    const lastName = pid.pid_patient_name?.family_name ?? "";
-    const name = `${firstName} ${lastName}`.trim();
-    if (!name) return null;
+    const { nameEn, nameAr } = extractNameFromHl7(d);
+    const mrn = extractMrnFromHl7(d);
 
     return {
-      name,
-      mrn: pid.pid_patient_identifier_list?.id_number ?? "",
+      name: nameEn,
+      nameAr: nameAr || undefined,
+      mrn,
       room: pv.pv_assigned_patient_location?.room ?? "",
       bed: pv.pv_assigned_patient_location?.bed ?? "",
       sex: pid.pid_administrative_sex ?? "",
@@ -401,11 +551,36 @@ export async function findDeviceAndPatientByMrn(
   for (const srv of candidateServers) {
     try {
       const location = await fetchDeviceLocationWithConfig(serialNumber, srv.serverIp, srv.apiKey);
-      if (location?.admit_data) {
-        const patient = await fetchPatientByRefIdWithConfig(location.admit_data, srv.serverIp, srv.apiKey);
-        if (patient && patient.mrn?.trim().toLowerCase() === normMrn) {
-          patient.room = location.room_no || patient.room;
-          patient.bed = location.bed_no || patient.bed;
+      if (location) {
+        let patient: Hl7Patient | null = null;
+        if (location.admit_data) {
+          patient = await fetchPatientByRefIdWithConfig(location.admit_data, srv.serverIp, srv.apiKey);
+        }
+
+        const patMrn = (patient?.mrn || location.patient_id || "").trim();
+        const isMatched =
+          isMrnPasscodeMatch(enteredMrn, patMrn) ||
+          isMrnPasscodeMatch(enteredMrn, location.patient_id);
+
+        if (isMatched) {
+          if (!patient) {
+            patient = {
+              name: "",
+              mrn: patMrn,
+              room: location.room_no || "",
+              bed: location.bed_no || "",
+              sex: "",
+              dob: "",
+              admissionDate: "",
+              dischargeDate: "",
+              admitRefId: Number(location.admit_data || 0),
+            };
+          } else {
+            patient.room = location.room_no || patient.room;
+            patient.bed = location.bed_no || patient.bed;
+            patient.mrn = patMrn;
+          }
+
           return {
             hospitalId: srv.hospitalId,
             serverIp: srv.serverIp,
