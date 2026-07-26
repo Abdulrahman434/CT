@@ -27,7 +27,8 @@ export function getSecondaryOption(hospitalId?: string): ApiConfigData {
       }
     } catch {}
   }
-  if (hid === "fakeeh") {
+  const norm = (hid || "").trim().toLowerCase();
+  if (norm === "dsfh" || norm === "fakeeh" || norm.includes("dsfh") || norm.includes("fakeeh")) {
     return FAKEEH_SECONDARY_OPTION;
   }
   if (hid === "burjeel") {

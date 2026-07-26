@@ -408,9 +408,20 @@ export async function fetchPatientForDevice(serial: string): Promise<{
 } | null> {
   if (!serial) return null;
 
-  const activeHospitalId = localStorage.getItem("active-hospital-id") || "";
-  
-  if (activeHospitalId === "fakeeh") {
+  let activeHospitalId = localStorage.getItem("active-hospital-id") || "";
+  if (!activeHospitalId) {
+    try {
+      const savedTheme = localStorage.getItem("careinn-layout2-theme");
+      if (savedTheme) {
+        const parsed = JSON.parse(savedTheme);
+        activeHospitalId = typeof parsed === "string" ? parsed : (parsed.id || "");
+      }
+    } catch {}
+  }
+  const normHid = activeHospitalId.trim().toLowerCase();
+  const isFakeeh = normHid === "dsfh" || normHid === "fakeeh" || normHid.includes("dsfh") || normHid.includes("fakeeh");
+
+  if (isFakeeh) {
     const fakeehLocalIp = "http://10.1.189.77/api";
     const fakeehLocalKey = "dc870ea4-d5d0-4f91-a4a4-502724603ec0";
 
