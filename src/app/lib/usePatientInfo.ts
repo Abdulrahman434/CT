@@ -42,8 +42,8 @@ export function usePatientInfo(): PatientInfoResult {
     return () => window.removeEventListener("display-name-changed", handler);
   }, []);
 
-  const fileName = isRTL && p.nameAr
-    ? p.nameAr
+  const fileName = isRTL
+    ? (p.nameAr || p.name || (p.nameKey ? t(p.nameKey) : ""))
     : (p.name || (p.nameKey ? t(p.nameKey) : ""));
 
   const customName = isRTL

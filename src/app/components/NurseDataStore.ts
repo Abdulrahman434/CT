@@ -531,6 +531,9 @@ const nurseStore = (() => {
       let nextPatient = { ...state.patient, ...applied };
       if (applied.name) {
         nextPatient.nameKey = "";
+        if (!applied.nameAr || applied.nameAr === "سارة صالح") {
+          nextPatient.nameAr = applied.name;
+        }
       }
       const hasEmergency = !!(applied.emergencyContact || applied.emergencyName);
       state = {
@@ -570,7 +573,12 @@ const nurseStore = (() => {
           if (val) applied[f as keyof PatientProfile] = val as any;
         }
         nextPatient = { ...nextPatient, ...applied };
-        if (applied.name) nextPatient.nameKey = "";
+        if (applied.name) {
+          nextPatient.nameKey = "";
+          if (!applied.nameAr || applied.nameAr === "سارة صالح") {
+            nextPatient.nameAr = applied.name;
+          }
+        }
       }
 
       state = {
