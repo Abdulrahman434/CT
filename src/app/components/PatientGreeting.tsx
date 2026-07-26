@@ -140,11 +140,21 @@ export function PatientGreeting({
         </p>
         {!isGuest && (
           <p
+            className="cursor-pointer active:scale-[0.98] transition-transform"
             style={{
               fontFamily: fontFamily,
               ...TEXT_STYLE.display,
               fontWeight: WEIGHT.extrabold,
               color: theme.textHeading,
+            }}
+            onClick={() => {
+              const careTeam = nurseStore.careTeam.filter(m => m.visible);
+              const staffList = careTeam.map(m => ({
+                name: t(m.nameKey),
+                role: t(m.roleKey),
+                img: m.img,
+              }));
+              (window as any).__demoRtlsToast?.(staffList.length ? staffList : undefined);
             }}
           >
             {displayName}
@@ -165,8 +175,9 @@ export function PatientGreeting({
         {!isGuest && (
           <div className="flex items-center flex-wrap gap-2" style={{ paddingTop: SPACE[2] }}>
             <div
-              className="flex items-center px-3 py-1.5"
+              className="flex items-center px-3 py-1.5 cursor-pointer active:scale-95 transition-transform"
               style={{ backgroundColor: theme.primarySubtle, borderRadius: theme.radiusFull }}
+              onClick={() => (window as any).__demoHkToast?.()}
             >
               <span
                 style={{
@@ -179,8 +190,9 @@ export function PatientGreeting({
               </span>
             </div>
             <div
-              className="flex items-center px-3 py-1.5"
+              className="flex items-center px-3 py-1.5 cursor-pointer active:scale-95 transition-transform"
               style={{ backgroundColor: theme.primarySubtle, borderRadius: theme.radiusFull }}
+              onClick={() => (window as any).__demoMealToast?.()}
             >
               <span
                 style={{

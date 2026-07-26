@@ -35,6 +35,7 @@ import { TasbihScreenSaver } from "./components/TasbihScreenSaver";
 import { FoodOrdering } from "./components/FoodOrdering";
 import { NeedSomething } from "./components/NeedSomething";
 import { OrderProvider } from "./components/OrderStore";
+import { ToastProvider } from "./components/ToastNotifications";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { PasswordGate } from "./components/PasswordGate";
 import { HospitalBroadcast, SAMPLE_BROADCAST } from "./components/HospitalBroadcast";
@@ -432,6 +433,8 @@ function BedsideScreen() {
   const [showCall, setShowCall] = useState(false);
   const [showFoodOrder, setShowFoodOrder] = useState(false);
   const [showNeedSomething, setShowNeedSomething] = useState(false);
+  const [needSomethingInitialTab, setNeedSomethingInitialTab] = useState<"request" | "report" | "mine" | undefined>(undefined);
+  const [foodOrderInitialView, setFoodOrderInitialView] = useState<"order" | "my-orders" | undefined>(undefined);
   const [activeCareRole, setActiveCareRole] = useState<"nurse" | "doctor" | null>(null);
   const [layoutVersion, setLayoutVersion] = useState<1 | 2 | 3>(1);
   const [activeBroadcast, setActiveBroadcast] = useState<BroadcastNotification | null>(null);
@@ -1261,6 +1264,28 @@ function BedsideScreen() {
     };
   }, []);
 
+  /* Toast tap → navigate to the relevant service panel */
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      if (detail === "housekeeping-requests") {
+        setNeedSomethingInitialTab("mine");
+        setShowNeedSomething(true);
+      } else if (detail === "housekeeping") {
+        setNeedSomethingInitialTab(undefined);
+        setShowNeedSomething(true);
+      } else if (detail === "meal-orders") {
+        setFoodOrderInitialView("my-orders");
+        setShowFoodOrder(true);
+      } else if (detail === "meal") {
+        setFoodOrderInitialView(undefined);
+        setShowFoodOrder(true);
+      }
+    };
+    window.addEventListener("toast-navigate", handler);
+    return () => window.removeEventListener("toast-navigate", handler);
+  }, []);
+
   useEffect(() => {
     // Open call page and focus the dialer input
     (window as any).__handsetOpenDialer = () => {
@@ -1509,6 +1534,7 @@ function BedsideScreen() {
         }}
         className={`flex flex-col overflow-hidden relative shrink-0 ${isTV ? "careinn-tv" : "careinn-kiosk"}`}
       >
+        <ToastProvider>
         {layoutMode === 2 ? (
           /* Layout 2 (CareInn) — inherits Layout 1's active hospital brand
              colors (and logo) by feeding the active theme into the CSS vars
@@ -1977,12 +2003,12 @@ function BedsideScreen() {
 
         {/* Food Ordering Overlay */}
         {showFoodOrder && (
-          <FoodOrdering onClose={() => setShowFoodOrder(false)} />
+          <FoodOrdering onClose={() => { setShowFoodOrder(false); setFoodOrderInitialView(undefined); }} initialView={foodOrderInitialView} />
         )}
 
         {/* "I Need Something" flow (service requests + report an issue) */}
         {showNeedSomething && (
-          <NeedSomething onClose={() => setShowNeedSomething(false)} />
+          <NeedSomething onClose={() => { setShowNeedSomething(false); setNeedSomethingInitialTab(undefined); }} initialTab={needSomethingInitialTab} />
         )}
 
         {/* Tasbih Screen Saver */}
@@ -2049,6 +2075,7 @@ function BedsideScreen() {
             </div>
           </div>
         )}
+        </ToastProvider>
       </div>
 
 
