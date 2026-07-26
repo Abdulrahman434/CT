@@ -72,7 +72,7 @@ export function PasswordGate() {
   const [success, setSuccess] = useState(false);
   const [showSlideshow, setShowSlideshow] = useState(false);
   const [hospital] = useState<ActiveHospital>(() => getActiveHospital());
-  const { image, primary, hospitalName, location } = hospital;
+  const { image } = hospital;
   const [parallax, setParallax] = useState<{ x: number; y: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -167,65 +167,41 @@ export function PasswordGate() {
           </div>
         </div>
 
-        {/* Bottom gradient — fixed, keeps the headline legible over any image. */}
+        {/* Dark gradient at the bottom — text reads directly against the image. */}
         <div
           style={{
             position: "absolute",
             inset: 0,
-            background: "linear-gradient(transparent, rgba(0,0,0,0.65))",
+            background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%)",
             pointerEvents: "none",
             zIndex: 2,
           }}
         />
 
-        {/* Headline block — bottom-left, fixed (outside the animated layers). */}
+        {/* Headline sitting straight on the image — no card, no box, just padding. */}
         <div
           style={{
             position: "absolute",
-            left: "48px",
-            bottom: "48px",
+            left: 0,
+            bottom: 0,
+            padding: "1.5rem",
             zIndex: 3,
             pointerEvents: "none",
           }}
         >
-          {/* Thin brand-colored accent line */}
-          <div
-            style={{
-              width: "36px",
-              height: "3px",
-              borderRadius: "2px",
-              background: primary,
-              marginBottom: "18px",
-            }}
-          />
           <h2
             style={{
               color: "#FFFFFF",
-              fontSize: "46px",
+              fontSize: "44px",
               fontWeight: 800,
-              lineHeight: 1.1,
+              lineHeight: 1.08,
               margin: 0,
-              letterSpacing: "-0.5px",
-              textShadow: "0 2px 24px rgba(0,0,0,0.45)",
+              letterSpacing: "-0.6px",
+              textShadow: "0 2px 18px rgba(0,0,0,0.4)",
             }}
           >
             Healthcare Redefined
           </h2>
-          {(hospitalName || location) && (
-            <p
-              style={{
-                color: "rgba(255,255,255,0.7)",
-                fontSize: "16px",
-                fontWeight: 500,
-                margin: "12px 0 0",
-                letterSpacing: "0.2px",
-              }}
-            >
-              {hospitalName}
-              {hospitalName && location ? " · " : ""}
-              {location}
-            </p>
-          )}
         </div>
 
       </div>
