@@ -562,7 +562,10 @@ export function MyPreferencesDialog({
                 className="px-3 py-1.5 rounded-full font-bold cursor-pointer transition-all active:scale-95 shrink-0"
                 style={{ backgroundColor: t.tileInactiveBg, color: t.textMuted, fontSize: "12px", border: `1px solid ${t.borderDefault}` }}
               >
-                Secondary Local ({SECONDARY_OPTION.serverIp.includes("10.11.16.15") ? "10.11.16.15" : "10.32.x"})
+                Secondary Local ({
+                  SECONDARY_OPTION.serverIp.includes("10.1.189.77") ? "10.1.189.77" :
+                  SECONDARY_OPTION.serverIp.includes("10.11.16.15") ? "10.11.16.15" : "10.32.x"
+                })
               </button>
             </div>
 
