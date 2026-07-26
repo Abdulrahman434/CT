@@ -72,6 +72,11 @@ export function isFakeehHospital(hid?: string): boolean {
   return norm === "dsfh" || norm === "fakeeh" || norm.includes("dsfh") || norm.includes("fakeeh");
 }
 
+export const DEFAULTS: ApiConfigData = {
+  serverIp: 'https://control.careinn.com/api',
+  apiKey: '2345fcba-1633-46c9-a27e-ed0ca9ee17e9',
+};
+
 export function getDefaultApiConfig(): ApiConfigData {
   if (isFakeehHospital()) {
     return FAKEEH_SECONDARY_OPTION;
