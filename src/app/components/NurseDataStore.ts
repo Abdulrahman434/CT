@@ -226,6 +226,7 @@ export interface NurseStoreState {
 
   /** HIS integration status & per-section HIS data flags */
   isHisConnected: boolean;
+  isLocalFallback: boolean;
   hisSections: Record<string, boolean>;
 }
 
@@ -380,6 +381,8 @@ function createDefaultState(): NurseStoreState {
       },
     ],
     nurseViewShortcutVisible: false,
+    isHisConnected: true,
+    isLocalFallback: false,
   };
 }
 
@@ -601,8 +604,8 @@ const nurseStore = (() => {
       window.dispatchEvent(new Event('display-name-changed'));
     },
 
-    setHisConnected: (connected: boolean) => {
-      state = { ...state, isHisConnected: connected };
+    setHisConnected: (connected: boolean, isLocalFallback?: boolean) => {
+      state = { ...state, isHisConnected: connected, isLocalFallback: !!isLocalFallback };
       notify();
     },
 

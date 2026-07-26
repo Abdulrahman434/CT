@@ -235,7 +235,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
 
         {/* Clock + Date stacked (with connection warning icon beside clock) */}
         <div className="relative flex items-center gap-2.5">
-          {!nurseStore.isHisConnected && (
+          {(!nurseStore.isHisConnected || nurseStore.isLocalFallback) && (
             <div className="relative">
               <button
                 onClick={() => setShowConnDetails(!showConnDetails)}
@@ -243,12 +243,24 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
                 style={{
                   width: 32,
                   height: 32,
-                  backgroundColor: "rgba(239, 68, 68, 0.12)",
-                  border: "1px solid rgba(239, 68, 68, 0.3)",
-                  color: "#EF4444",
+                  backgroundColor: nurseStore.isLocalFallback
+                    ? "rgba(245, 158, 11, 0.12)"
+                    : "rgba(239, 68, 68, 0.12)",
+                  border: nurseStore.isLocalFallback
+                    ? "1px solid rgba(245, 158, 11, 0.3)"
+                    : "1px solid rgba(239, 68, 68, 0.3)",
+                  color: nurseStore.isLocalFallback ? "#F59E0B" : "#EF4444",
                 }}
-                title={t("connection.failed")}
-                aria-label={t("connection.failed")}
+                title={
+                  nurseStore.isLocalFallback
+                    ? t("connection.localNotReachable")
+                    : t("connection.failed")
+                }
+                aria-label={
+                  nurseStore.isLocalFallback
+                    ? t("connection.localNotReachable")
+                    : t("connection.failed")
+                }
               >
                 <AlertTriangle size={17} className="animate-pulse" />
               </button>
@@ -257,18 +269,26 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
                 <div
                   className="absolute right-0 top-full mt-2 z-[9999] flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-left"
                   style={{
-                    backgroundColor: "rgba(239, 68, 68, 0.95)",
+                    backgroundColor: nurseStore.isLocalFallback
+                      ? "rgba(217, 119, 6, 0.95)"
+                      : "rgba(239, 68, 68, 0.95)",
                     color: "#fff",
                     borderColor: "rgba(255, 255, 255, 0.25)",
                     backdropFilter: "blur(12px)",
-                    minWidth: "260px",
+                    minWidth: "280px",
                     whiteSpace: "nowrap",
                   }}
                 >
                   <AlertTriangle size={18} className="shrink-0 animate-pulse" />
                   <div className="flex flex-col text-xs flex-1">
-                    <span className="font-bold">{t("connection.failed")}</span>
-                    <span className="opacity-90">{t("connection.showingDemo")}</span>
+                    <span className="font-bold">
+                      {nurseStore.isLocalFallback
+                        ? t("connection.localNotReachable")
+                        : t("connection.failed")}
+                    </span>
+                    {!nurseStore.isLocalFallback && (
+                      <span className="opacity-90">{t("connection.showingDemo")}</span>
+                    )}
                   </div>
                   <button
                     onClick={handleRetryConnection}

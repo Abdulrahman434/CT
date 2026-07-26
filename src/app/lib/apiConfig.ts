@@ -11,6 +11,11 @@ export const BURJEEL_SECONDARY_OPTION: ApiConfigData = {
   apiKey: "3a68339d-e45f-478e-85a0-811f6b54b457",
 };
 
+export const FAKEEH_SECONDARY_OPTION: ApiConfigData = {
+  serverIp: "http://10.1.189.77/api",
+  apiKey: "dc870ea4-d5d0-4f91-a4a4-502724603ec0",
+};
+
 export function getSecondaryOption(hospitalId?: string): ApiConfigData {
   let hid = hospitalId;
   if (!hid) {
@@ -21,6 +26,9 @@ export function getSecondaryOption(hospitalId?: string): ApiConfigData {
         hid = typeof parsed === "string" ? parsed : parsed.id;
       }
     } catch {}
+  }
+  if (hid === "fakeeh") {
+    return FAKEEH_SECONDARY_OPTION;
   }
   if (hid === "burjeel") {
     return BURJEEL_SECONDARY_OPTION;
@@ -52,6 +60,7 @@ const DEFAULTS: ApiConfigData = {
 
 export function apiKeyForUrl(u: string): string {
   if (!u) return CLOUD_KEY;
+  if (u.includes("10.1.189.77")) return FAKEEH_SECONDARY_OPTION.apiKey;
   if (u.includes("10.11.16.15")) return BURJEEL_SECONDARY_OPTION.apiKey;
   return u.includes(CLOUD_HOST) ? CLOUD_KEY : LOCAL_KEY;
 }

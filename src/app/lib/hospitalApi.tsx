@@ -399,14 +399,94 @@ export async function fetchPatientByRefId(
 
 /**
  * Convenience: device serial → patient data in one call.
- * Returns { location, patient } or null if device/patient not found.
+ * Returns { location, patient, isFallback } or null if device/patient not found.
  */
 export async function fetchPatientForDevice(serial: string): Promise<{
   location: DeviceLocation;
   patient: Hl7Patient;
+  isFallback?: boolean;
 } | null> {
   if (!serial) return null;
 
+  const activeHospitalId = localStorage.getItem("active-hospital-id") || "";
+  
+  if (activeHospitalId === "fakeeh") {
+    const fakeehLocalIp = "http://10.1.189.77/api";
+    const fakeehLocalKey = "dc870ea4-d5d0-4f91-a4a4-502724603ec0";
+
+    const cloudIp = "https://control.careinn.com/api";
+    const cloudKey = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
+
+    // 1. Try Fakeeh Local Server First (10.1.189.77)
+    try {
+      const locLocal = await fetchDeviceLocationWithConfig(serial, fakeehLocalIp, fakeehLocalKey);
+      if (locLocal) {
+        let patLocal: Hl7Patient | null = null;
+        if (locLocal.admit_data) {
+          patLocal = await fetchPatientByRefIdWithConfig(locLocal.admit_data, fakeehLocalIp, fakeehLocalKey);
+        }
+        const mrn = (patLocal?.mrn || locLocal.patient_id || "").trim();
+        if (patLocal) {
+          patLocal.room = locLocal.room_no || patLocal.room;
+          patLocal.bed = locLocal.bed_no || patLocal.bed;
+          patLocal.mrn = mrn;
+        } else if (locLocal.patient_id) {
+          patLocal = {
+            name: "",
+            mrn: locLocal.patient_id,
+            room: locLocal.room_no || "",
+            bed: locLocal.bed_no || "",
+            sex: "",
+            dob: "",
+            admissionDate: "",
+            dischargeDate: "",
+            admitRefId: Number(locLocal.admit_data || 0),
+          };
+        }
+        if (patLocal) {
+          saveApiConfig({ serverIp: fakeehLocalIp, apiKey: fakeehLocalKey });
+          return { location: locLocal, patient: patLocal, isFallback: false };
+        }
+      }
+    } catch {}
+
+    // 2. Local server unreachable -> Move to Cloud server (control.careinn.com)
+    try {
+      const locCloud = await fetchDeviceLocationWithConfig(serial, cloudIp, cloudKey);
+      if (locCloud) {
+        let patCloud: Hl7Patient | null = null;
+        if (locCloud.admit_data) {
+          patCloud = await fetchPatientByRefIdWithConfig(locCloud.admit_data, cloudIp, cloudKey);
+        }
+        const mrn = (patCloud?.mrn || locCloud.patient_id || "").trim();
+        if (patCloud) {
+          patCloud.room = locCloud.room_no || patCloud.room;
+          patCloud.bed = locCloud.bed_no || patCloud.bed;
+          patCloud.mrn = mrn;
+        } else if (locCloud.patient_id) {
+          patCloud = {
+            name: "",
+            mrn: locCloud.patient_id,
+            room: locCloud.room_no || "",
+            bed: locCloud.bed_no || "",
+            sex: "",
+            dob: "",
+            admissionDate: "",
+            dischargeDate: "",
+            admitRefId: Number(locCloud.admit_data || 0),
+          };
+        }
+        if (patCloud) {
+          saveApiConfig({ serverIp: cloudIp, apiKey: cloudKey });
+          return { location: locCloud, patient: patCloud, isFallback: true };
+        }
+      }
+    } catch {}
+
+    return null;
+  }
+
+  // General server fetch for other hospitals
   const location = await fetchDeviceLocation(serial);
   if (!location) return null;
 
@@ -437,7 +517,7 @@ export async function fetchPatientForDevice(serial: string): Promise<{
     return null;
   }
 
-  return { location, patient };
+  return { location, patient, isFallback: false };
 }
 
 export async function fetchDeviceLocationWithConfig(
@@ -538,10 +618,12 @@ export async function findDeviceAndPatientByMrn(
   const normMrn = enteredMrn.trim().toLowerCase();
   if (!normMrn || !serialNumber) return null;
 
+  const fakeehKey = "dc870ea4-d5d0-4f91-a4a4-502724603ec0";
   const burjeelKey = "3a68339d-e45f-478e-85a0-811f6b54b457";
   const cloudKey = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
 
   const candidateServers = [
+    { hospitalId: "fakeeh", serverIp: "http://10.1.189.77/api", apiKey: fakeehKey },
     { hospitalId: "careinn", serverIp: "https://control.careinn.com/api", apiKey: cloudKey },
     { hospitalId: "burjeel", serverIp: "http://10.11.16.15/api", apiKey: burjeelKey },
     { hospitalId: "burjeel", serverIp: "http://careinn.bh.com/api", apiKey: burjeelKey },

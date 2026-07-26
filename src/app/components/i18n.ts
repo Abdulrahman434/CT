@@ -43,6 +43,12 @@ const translations: Record<string, TranslationEntry> = {
   "general.go": { en: "Go", ar: "اذهب", ur: "جاؤ" },
   "general.loading": { en: "Loading...", ar: "جاري التحميل...", ur: "لوڈنگ ہو رہی ہے..." },
 
+  /* ─── Connection Status ─── */
+  "connection.localNotReachable": { en: "Local server is not reachable, connected to cloud", ar: "الخادم المحلي غير متصل، متصل بالسحابة", ur: "مقامی سرور تک رسائی ممکن نہیں، کلاؤڈ سے منسلک ہے" },
+  "connection.failed": { en: "Failed to connect to hospital server", ar: "تعذر الاتصال بخادم المستشفى", ur: "ہسپتال کے سرور سے رابطہ قائم کرنے میں ناکامی" },
+  "connection.showingDemo": { en: "Showing demo patient profile", ar: "عرض الملف التعريفي التجريبي للمريض", ur: "ڈیمو مریض کا پروفائل دکھایا جا رہا ہے" },
+  "connection.retry": { en: "Retry Connection", ar: "إعادة المحاولة", ur: "دوبارہ کوشش کریں" },
+
   /* ─── Kids Layout (Layout 3) ─── */
   "kids.greeting.morning": { en: "Good Morning", ar: "صباح الخير", ur: "صبح بخیر" },
   "kids.greeting.afternoon": { en: "Good Afternoon", ar: "مساء الخير", ur: "سہ پہر بخیر" },

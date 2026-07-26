@@ -303,7 +303,7 @@ function BedsideScreen() {
               localStorage.setItem("careinn-last-admit-ref", newAdmitRef);
             }
 
-            nurseActions.setHisConnected(true);
+            nurseActions.setHisConnected(true, !!result.isFallback);
             setConnectionError(false);
           } else {
             nurseActions.setHisConnected(false);
