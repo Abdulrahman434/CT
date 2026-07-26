@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { Eye, EyeOff, Play, X } from "lucide-react";
 import { ApiImage } from "./ApiImage";
+import { BUILTIN_PRESETS, type HospitalCoreConfig } from "./ThemeContext";
 import careinnLogo from "../../assets/careinn-logo.png";
-import heroImage from "../../assets/careinn-hero.jpg";
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * PASSWORD GATE — Clean split-layout login screen
@@ -15,6 +15,54 @@ import heroImage from "../../assets/careinn-hero.jpg";
 const NAVY = "#1B2A5B";
 const SKY  = "#6CC4E0";
 
+/* The left-panel background is driven by the ACTIVE hospital's own config — its
+ * hero/background image, brand color, name and city — so the login screen matches
+ * whichever brand is loaded (Burjeel shows Burjeel, Prime shows Prime, etc.).
+ * PasswordGate renders outside ThemeProvider, so we resolve the active config
+ * directly from the same localStorage keys ThemeContext uses. */
+const ACTIVE_KEY = "active-hospital-id";
+const CONFIGS_KEY = "hospital-configs";
+
+// Kept slightly >1 on the image itself so cursor parallax never exposes panel edges.
+const BASE_OVERSCAN = "scale(1.06)";
+
+interface ActiveHospital {
+  image: string;         // single static background image (Ken Burns animated)
+  primary: string;       // brand accent line above the headline
+  hospitalName: string;
+  location: string;      // city
+}
+
+function getActiveHospital(): ActiveHospital {
+  const activeId = localStorage.getItem(ACTIVE_KEY) || "careinn";
+
+  let saved: HospitalCoreConfig[] = [];
+  try {
+    const raw = localStorage.getItem(CONFIGS_KEY);
+    if (raw) saved = JSON.parse(raw);
+  } catch {
+    saved = [];
+  }
+
+  const builtin = BUILTIN_PRESETS.find((c) => c.id === activeId);
+  const savedCfg = saved.find((c) => c.id === activeId);
+
+  // A single real hospital image drives the panel — its configured hero/background.
+  const image =
+    savedCfg?.heroImageUrls?.[0] ||
+    builtin?.heroImageUrls?.[0] ||
+    savedCfg?.heroImageUrl ||
+    builtin?.heroImageUrl ||
+    "";
+
+  return {
+    image,
+    primary: savedCfg?.primary || builtin?.primary || SKY,
+    hospitalName: savedCfg?.hospitalName || builtin?.hospitalName || "",
+    location: savedCfg?.location || builtin?.location || "",
+  };
+}
+
 export function PasswordGate() {
   const { login } = useAuth();
   const [password, setPassword] = useState("");
@@ -23,12 +71,24 @@ export function PasswordGate() {
   const [shaking, setShaking] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showSlideshow, setShowSlideshow] = useState(false);
+  const [hospital] = useState<ActiveHospital>(() => getActiveHospital());
+  const { image, primary, hospitalName, location } = hospital;
+  const [parallax, setParallax] = useState<{ x: number; y: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => inputRef.current?.focus(), 500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Parallax: shift the image layer opposite the cursor; released on mouse leave.
+  const handlePanelMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;   // 0 → 1
+    const py = (e.clientY - rect.top) / rect.height;    // 0 → 1
+    setParallax({ x: (px - 0.5) * -15, y: (py - 0.5) * -12 });
+  };
+  const handlePanelMouseLeave = () => setParallax(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,25 +119,115 @@ export function PasswordGate() {
         opacity: success ? 0 : 1,
       }}
     >
-      {/* ─── Left Panel: Hero Image (text & decorations baked into image) ─── */}
+      {/* ─── Left Panel: Ken Burns + parallax background ─── */}
       <div
+        onMouseMove={handlePanelMouseMove}
+        onMouseLeave={handlePanelMouseLeave}
         style={{
           width: "45%",
           position: "relative",
           overflow: "hidden",
           flexShrink: 0,
+          background: NAVY,
         }}
       >
-        <ApiImage
-          src={heroImage}
-          alt="Healthcare Redefined"
+        {/* Parallax layer — translates the image opposite the cursor, composing
+            ON TOP of the Ken Burns transform nested inside. */}
+        <div
           style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            objectPosition: "left bottom",
+            position: "absolute",
+            inset: 0,
+            transform: parallax
+              ? `translate(${parallax.x}px, ${parallax.y}px)`
+              : undefined,
+            transition: "transform 0.15s ease-out",
+            willChange: "transform",
+          }}
+        >
+          {/* Ken Burns layer — one static image, slow continuous zoom-in + pan. */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              animation: "kenburns 12s ease-in-out infinite",
+              willChange: "transform",
+            }}
+          >
+            <ApiImage
+              src={image}
+              alt=""
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center",
+                transform: BASE_OVERSCAN,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Bottom gradient — fixed, keeps the headline legible over any image. */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(transparent, rgba(0,0,0,0.65))",
+            pointerEvents: "none",
+            zIndex: 2,
           }}
         />
+
+        {/* Headline block — bottom-left, fixed (outside the animated layers). */}
+        <div
+          style={{
+            position: "absolute",
+            left: "48px",
+            bottom: "48px",
+            zIndex: 3,
+            pointerEvents: "none",
+          }}
+        >
+          {/* Thin brand-colored accent line */}
+          <div
+            style={{
+              width: "36px",
+              height: "3px",
+              borderRadius: "2px",
+              background: primary,
+              marginBottom: "18px",
+            }}
+          />
+          <h2
+            style={{
+              color: "#FFFFFF",
+              fontSize: "46px",
+              fontWeight: 800,
+              lineHeight: 1.1,
+              margin: 0,
+              letterSpacing: "-0.5px",
+              textShadow: "0 2px 24px rgba(0,0,0,0.45)",
+            }}
+          >
+            Healthcare Redefined
+          </h2>
+          {(hospitalName || location) && (
+            <p
+              style={{
+                color: "rgba(255,255,255,0.7)",
+                fontSize: "16px",
+                fontWeight: 500,
+                margin: "12px 0 0",
+                letterSpacing: "0.2px",
+              }}
+            >
+              {hospitalName}
+              {hospitalName && location ? " · " : ""}
+              {location}
+            </p>
+          )}
+        </div>
+
       </div>
 
       {/* ─── Right Panel: Login Form ─── */}
@@ -420,6 +570,11 @@ export function PasswordGate() {
         @keyframes slideshowIn {
           from { opacity: 0; transform: scale(1.03); }
           to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes kenburns {
+          0%   { transform: scale(1) translate(0, 0); }
+          100% { transform: scale(1.15) translate(-2%, -1%); }
         }
       `}</style>
     </div>
