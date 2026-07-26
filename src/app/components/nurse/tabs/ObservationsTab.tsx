@@ -7,8 +7,11 @@ import { useTheme } from "../../ThemeContext";
 import { useLocale } from "../../i18n";
 import { useNurseStore, nurseActions, type ClinicalObservation, type DoctorNote } from "../../NurseDataStore";
 
-function fmtFull(d: Date) {
-  return `${d.toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" })} • ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+function fmtFull(d: any) {
+  if (!d) return "";
+  const dateObj = d instanceof Date ? d : new Date(d);
+  if (isNaN(dateObj.getTime())) return String(d);
+  return `${dateObj.toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" })} • ${dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
 }
 function painColor(n: number) {
   if (n <= 0) return "#94A3B8";
