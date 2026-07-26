@@ -54,10 +54,30 @@ export interface ApiConfigData {
   apiKey: string;
 }
 
-const DEFAULTS: ApiConfigData = {
-  serverIp: 'https://control.careinn.com/api',
-  apiKey: '2345fcba-1633-46c9-a27e-ed0ca9ee17e9',
-};
+export function isFakeehHospital(hid?: string): boolean {
+  let target = hid;
+  if (!target) {
+    try {
+      const savedTheme = localStorage.getItem("careinn-layout2-theme");
+      if (savedTheme) {
+        const parsed = JSON.parse(savedTheme);
+        target = typeof parsed === "string" ? parsed : (parsed.id || "");
+      }
+    } catch {}
+    if (!target) {
+      target = localStorage.getItem("active-hospital-id") || "";
+    }
+  }
+  const norm = (target || "").trim().toLowerCase();
+  return norm === "dsfh" || norm === "fakeeh" || norm.includes("dsfh") || norm.includes("fakeeh");
+}
+
+export function getDefaultApiConfig(): ApiConfigData {
+  if (isFakeehHospital()) {
+    return FAKEEH_SECONDARY_OPTION;
+  }
+  return DEFAULTS;
+}
 
 export function apiKeyForUrl(u: string): string {
   if (!u) return CLOUD_KEY;
@@ -75,24 +95,25 @@ export function withApiKey(u: string): string {
 }
 
 export function getApiConfig(): ApiConfigData {
+  const defaultConfig = getDefaultApiConfig();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULTS };
+    if (!raw) return { ...defaultConfig };
     const saved = JSON.parse(raw);
     let apiKey = saved.apiKey?.trim();
     if (apiKey === "efc9bcbf-6951-436a-8694-c13cc6f30913") {
-      apiKey = DEFAULTS.apiKey;
+      apiKey = defaultConfig.apiKey;
       // Write it back to localStorage so it stays updated
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        serverIp: saved.serverIp?.trim() || DEFAULTS.serverIp,
-        apiKey: DEFAULTS.apiKey,
+        serverIp: saved.serverIp?.trim() || defaultConfig.serverIp,
+        apiKey: defaultConfig.apiKey,
       }));
     }
     return {
-      serverIp: saved.serverIp?.trim() || DEFAULTS.serverIp,
-      apiKey: apiKey || DEFAULTS.apiKey,
+      serverIp: saved.serverIp?.trim() || defaultConfig.serverIp,
+      apiKey: apiKey || defaultConfig.apiKey,
     };
-  } catch { return { ...DEFAULTS }; }
+  } catch { return { ...defaultConfig }; }
 }
 
 export function isCustomConfig(): boolean {

@@ -120,6 +120,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('active-hospital-id', 'careinn');
       } else if (hospitalId) {
         localStorage.setItem('active-hospital-id', hospitalId);
+        if (hospitalId === "dsfh" || hospitalId === "fakeeh") {
+          try {
+            const { saveApiConfig, FAKEEH_SECONDARY_OPTION } = await import("../lib/apiConfig");
+            saveApiConfig(FAKEEH_SECONDARY_OPTION);
+          } catch {}
+        }
       }
 
       setAuthState({
