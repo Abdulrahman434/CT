@@ -463,6 +463,7 @@ export async function fetchPatientForDevice(serial: string): Promise<{
     } catch {}
 
     // 2. Local server unreachable -> Move to Cloud server (control.careinn.com)
+    saveApiConfig({ serverIp: cloudIp, apiKey: cloudKey });
     try {
       const locCloud = await fetchDeviceLocationWithConfig(serial, cloudIp, cloudKey);
       if (locCloud) {
@@ -489,13 +490,14 @@ export async function fetchPatientForDevice(serial: string): Promise<{
           };
         }
         if (patCloud) {
-          saveApiConfig({ serverIp: cloudIp, apiKey: cloudKey });
           return { location: locCloud, patient: patCloud, isFallback: true };
         }
       }
     } catch {}
 
-    return null;
+    const emptyLoc: DeviceLocation = { room_no: "", bed_no: "", patient_id: "", admit_data: "" };
+    const emptyPat: Hl7Patient = { name: "", mrn: "", room: "", bed: "", sex: "", dob: "", admissionDate: "", dischargeDate: "", admitRefId: 0 };
+    return { location: emptyLoc, patient: emptyPat, isFallback: true };
   }
 
   if (isFakeeh) {
@@ -539,6 +541,7 @@ export async function fetchPatientForDevice(serial: string): Promise<{
     } catch {}
 
     // 2. Local server unreachable -> Move to Cloud server (control.careinn.com)
+    saveApiConfig({ serverIp: cloudIp, apiKey: cloudKey });
     try {
       const locCloud = await fetchDeviceLocationWithConfig(serial, cloudIp, cloudKey);
       if (locCloud) {
@@ -565,13 +568,14 @@ export async function fetchPatientForDevice(serial: string): Promise<{
           };
         }
         if (patCloud) {
-          saveApiConfig({ serverIp: cloudIp, apiKey: cloudKey });
           return { location: locCloud, patient: patCloud, isFallback: true };
         }
       }
     } catch {}
 
-    return null;
+    const emptyLoc: DeviceLocation = { room_no: "", bed_no: "", patient_id: "", admit_data: "" };
+    const emptyPat: Hl7Patient = { name: "", mrn: "", room: "", bed: "", sex: "", dob: "", admissionDate: "", dischargeDate: "", admitRefId: 0 };
+    return { location: emptyLoc, patient: emptyPat, isFallback: true };
   }
 
   // General server fetch for other hospitals
