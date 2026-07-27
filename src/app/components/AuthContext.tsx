@@ -125,6 +125,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const { saveApiConfig, FAKEEH_SECONDARY_OPTION } = await import("../lib/apiConfig");
             saveApiConfig(FAKEEH_SECONDARY_OPTION);
           } catch {}
+        } else if (hospitalId === "burjeel") {
+          try {
+            const { saveApiConfig, BURJEEL_SECONDARY_OPTION } = await import("../lib/apiConfig");
+            saveApiConfig(BURJEEL_SECONDARY_OPTION);
+          } catch {}
         }
       }
 

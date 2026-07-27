@@ -420,6 +420,83 @@ export async function fetchPatientForDevice(serial: string): Promise<{
   }
   const normHid = activeHospitalId.trim().toLowerCase();
   const isFakeeh = normHid === "dsfh" || normHid === "fakeeh" || normHid.includes("dsfh") || normHid.includes("fakeeh");
+  const isBurjeel = normHid === "burjeel" || normHid.includes("burjeel") || normHid.includes("bh");
+
+  if (isBurjeel) {
+    const burjeelLocalIp = "http://10.11.16.15/api";
+    const burjeelLocalKey = "3a68339d-e45f-478e-85a0-811f6b54b457";
+
+    const cloudIp = "https://control.careinn.com/api";
+    const cloudKey = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
+
+    // 1. Try Burjeel Local Server First (10.11.16.15)
+    try {
+      const locLocal = await fetchDeviceLocationWithConfig(serial, burjeelLocalIp, burjeelLocalKey);
+      if (locLocal) {
+        let patLocal: Hl7Patient | null = null;
+        if (locLocal.admit_data) {
+          patLocal = await fetchPatientByRefIdWithConfig(locLocal.admit_data, burjeelLocalIp, burjeelLocalKey);
+        }
+        const mrn = (patLocal?.mrn || locLocal.patient_id || "").trim();
+        if (patLocal) {
+          patLocal.room = locLocal.room_no || patLocal.room;
+          patLocal.bed = locLocal.bed_no || patLocal.bed;
+          patLocal.mrn = mrn;
+        } else if (locLocal.patient_id) {
+          patLocal = {
+            name: "",
+            mrn: locLocal.patient_id,
+            room: locLocal.room_no || "",
+            bed: locLocal.bed_no || "",
+            sex: "",
+            dob: "",
+            admissionDate: "",
+            dischargeDate: "",
+            admitRefId: Number(locLocal.admit_data || 0),
+          };
+        }
+        if (patLocal) {
+          saveApiConfig({ serverIp: burjeelLocalIp, apiKey: burjeelLocalKey });
+          return { location: locLocal, patient: patLocal, isFallback: false };
+        }
+      }
+    } catch {}
+
+    // 2. Local server unreachable -> Move to Cloud server (control.careinn.com)
+    try {
+      const locCloud = await fetchDeviceLocationWithConfig(serial, cloudIp, cloudKey);
+      if (locCloud) {
+        let patCloud: Hl7Patient | null = null;
+        if (locCloud.admit_data) {
+          patCloud = await fetchPatientByRefIdWithConfig(locCloud.admit_data, cloudIp, cloudKey);
+        }
+        const mrn = (patCloud?.mrn || locCloud.patient_id || "").trim();
+        if (patCloud) {
+          patCloud.room = locCloud.room_no || patCloud.room;
+          patCloud.bed = locCloud.bed_no || patCloud.bed;
+          patCloud.mrn = mrn;
+        } else if (locCloud.patient_id) {
+          patCloud = {
+            name: "",
+            mrn: locCloud.patient_id,
+            room: locCloud.room_no || "",
+            bed: locCloud.bed_no || "",
+            sex: "",
+            dob: "",
+            admissionDate: "",
+            dischargeDate: "",
+            admitRefId: Number(locCloud.admit_data || 0),
+          };
+        }
+        if (patCloud) {
+          saveApiConfig({ serverIp: cloudIp, apiKey: cloudKey });
+          return { location: locCloud, patient: patCloud, isFallback: true };
+        }
+      }
+    } catch {}
+
+    return null;
+  }
 
   if (isFakeeh) {
     const fakeehLocalIp = "http://10.1.189.77/api";

@@ -16,44 +16,6 @@ export const FAKEEH_SECONDARY_OPTION: ApiConfigData = {
   apiKey: "dc870ea4-d5d0-4f91-a4a4-502724603ec0",
 };
 
-export function getSecondaryOption(hospitalId?: string): ApiConfigData {
-  let hid = hospitalId;
-  if (!hid) {
-    try {
-      const savedTheme = localStorage.getItem("careinn-layout2-theme");
-      if (savedTheme) {
-        const parsed = JSON.parse(savedTheme);
-        hid = typeof parsed === "string" ? parsed : parsed.id;
-      }
-    } catch {}
-  }
-  const norm = (hid || "").trim().toLowerCase();
-  if (norm === "dsfh" || norm === "fakeeh" || norm.includes("dsfh") || norm.includes("fakeeh")) {
-    return FAKEEH_SECONDARY_OPTION;
-  }
-  if (hid === "burjeel") {
-    return BURJEEL_SECONDARY_OPTION;
-  }
-  return {
-    serverIp: "10.32.0.86",
-    apiKey: "20b91694-7ea1-4a44-91a6-2878664428b3",
-  };
-}
-
-export const SECONDARY_OPTION: ApiConfigData = {
-  get serverIp() {
-    return getSecondaryOption().serverIp;
-  },
-  get apiKey() {
-    return getSecondaryOption().apiKey;
-  },
-} as ApiConfigData;
-
-export interface ApiConfigData {
-  serverIp: string;   // can be IP, domain, or full URL with protocol
-  apiKey: string;
-}
-
 export function isFakeehHospital(hid?: string): boolean {
   let target = hid;
   if (!target) {
@@ -72,6 +34,58 @@ export function isFakeehHospital(hid?: string): boolean {
   return norm === "dsfh" || norm === "fakeeh" || norm.includes("dsfh") || norm.includes("fakeeh");
 }
 
+export function isBurjeelHospital(hid?: string): boolean {
+  let target = hid;
+  if (!target) {
+    try {
+      const savedTheme = localStorage.getItem("careinn-layout2-theme");
+      if (savedTheme) {
+        const parsed = JSON.parse(savedTheme);
+        target = typeof parsed === "string" ? parsed : (parsed.id || "");
+      }
+    } catch {}
+    if (!target) {
+      target = localStorage.getItem("active-hospital-id") || "";
+    }
+  }
+  const norm = (target || "").trim().toLowerCase();
+  return norm === "burjeel" || norm.includes("burjeel") || norm.includes("bh");
+}
+
+export function getSecondaryOption(hospitalId?: string): ApiConfigData {
+  let hid = hospitalId;
+  if (!hid) {
+    try {
+      const savedTheme = localStorage.getItem("careinn-layout2-theme");
+      if (savedTheme) {
+        const parsed = JSON.parse(savedTheme);
+        hid = typeof parsed === "string" ? parsed : parsed.id;
+      }
+    } catch {}
+  }
+  if (isFakeehHospital(hid)) {
+    return FAKEEH_SECONDARY_OPTION;
+  }
+  if (isBurjeelHospital(hid)) {
+    return BURJEEL_SECONDARY_OPTION;
+  }
+  return BURJEEL_SECONDARY_OPTION;
+}
+
+export const SECONDARY_OPTION: ApiConfigData = {
+  get serverIp() {
+    return getSecondaryOption().serverIp;
+  },
+  get apiKey() {
+    return getSecondaryOption().apiKey;
+  },
+} as ApiConfigData;
+
+export interface ApiConfigData {
+  serverIp: string;   // can be IP, domain, or full URL with protocol
+  apiKey: string;
+}
+
 export const DEFAULTS: ApiConfigData = {
   serverIp: 'https://control.careinn.com/api',
   apiKey: '2345fcba-1633-46c9-a27e-ed0ca9ee17e9',
@@ -80,6 +94,9 @@ export const DEFAULTS: ApiConfigData = {
 export function getDefaultApiConfig(): ApiConfigData {
   if (isFakeehHospital()) {
     return FAKEEH_SECONDARY_OPTION;
+  }
+  if (isBurjeelHospital()) {
+    return BURJEEL_SECONDARY_OPTION;
   }
   return DEFAULTS;
 }
