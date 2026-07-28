@@ -564,6 +564,7 @@ export function MyPreferencesDialog({
               >
                 Secondary Local ({
                   SECONDARY_OPTION.serverIp.includes("10.1.189.77") ? "10.1.189.77" :
+                  SECONDARY_OPTION.serverIp.includes("careinn.bh.com") ? "careinn.bh.com" :
                   SECONDARY_OPTION.serverIp.includes("10.11.16.15") ? "10.11.16.15" : "10.32.x"
                 })
               </button>

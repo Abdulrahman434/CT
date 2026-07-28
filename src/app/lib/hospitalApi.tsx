@@ -423,44 +423,49 @@ export async function fetchPatientForDevice(serial: string): Promise<{
   const isBurjeel = normHid === "burjeel" || normHid.includes("burjeel") || normHid.includes("bh");
 
   if (isBurjeel) {
-    const burjeelLocalIp = "http://10.11.16.15/api";
+    const burjeelLocalIps = [
+      "http://careinn.bh.com/api",
+      "http://10.11.16.15/api"
+    ];
     const burjeelLocalKey = "3a68339d-e45f-478e-85a0-811f6b54b457";
 
     const cloudIp = "https://control.careinn.com/api";
     const cloudKey = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
 
-    // 1. Try Burjeel Local Server First (10.11.16.15)
-    try {
-      const locLocal = await fetchDeviceLocationWithConfig(serial, burjeelLocalIp, burjeelLocalKey);
-      if (locLocal) {
-        let patLocal: Hl7Patient | null = null;
-        if (locLocal.admit_data) {
-          patLocal = await fetchPatientByRefIdWithConfig(locLocal.admit_data, burjeelLocalIp, burjeelLocalKey);
+    // 1. Try Burjeel Local Servers First (careinn.bh.com & 10.11.16.15)
+    for (const burjeelLocalIp of burjeelLocalIps) {
+      try {
+        const locLocal = await fetchDeviceLocationWithConfig(serial, burjeelLocalIp, burjeelLocalKey);
+        if (locLocal) {
+          let patLocal: Hl7Patient | null = null;
+          if (locLocal.admit_data) {
+            patLocal = await fetchPatientByRefIdWithConfig(locLocal.admit_data, burjeelLocalIp, burjeelLocalKey);
+          }
+          const mrn = (patLocal?.mrn || locLocal.patient_id || "").trim();
+          if (patLocal) {
+            patLocal.room = locLocal.room_no || patLocal.room;
+            patLocal.bed = locLocal.bed_no || patLocal.bed;
+            patLocal.mrn = mrn;
+          } else if (locLocal.patient_id) {
+            patLocal = {
+              name: "",
+              mrn: locLocal.patient_id,
+              room: locLocal.room_no || "",
+              bed: locLocal.bed_no || "",
+              sex: "",
+              dob: "",
+              admissionDate: "",
+              dischargeDate: "",
+              admitRefId: Number(locLocal.admit_data || 0),
+            };
+          }
+          if (patLocal) {
+            saveApiConfig({ serverIp: burjeelLocalIp, apiKey: burjeelLocalKey });
+            return { location: locLocal, patient: patLocal, isFallback: false };
+          }
         }
-        const mrn = (patLocal?.mrn || locLocal.patient_id || "").trim();
-        if (patLocal) {
-          patLocal.room = locLocal.room_no || patLocal.room;
-          patLocal.bed = locLocal.bed_no || patLocal.bed;
-          patLocal.mrn = mrn;
-        } else if (locLocal.patient_id) {
-          patLocal = {
-            name: "",
-            mrn: locLocal.patient_id,
-            room: locLocal.room_no || "",
-            bed: locLocal.bed_no || "",
-            sex: "",
-            dob: "",
-            admissionDate: "",
-            dischargeDate: "",
-            admitRefId: Number(locLocal.admit_data || 0),
-          };
-        }
-        if (patLocal) {
-          saveApiConfig({ serverIp: burjeelLocalIp, apiKey: burjeelLocalKey });
-          return { location: locLocal, patient: patLocal, isFallback: false };
-        }
-      }
-    } catch {}
+      } catch {}
+    }
 
     // 2. Local server unreachable -> Move to Cloud server (control.careinn.com)
     saveApiConfig({ serverIp: cloudIp, apiKey: cloudKey });
