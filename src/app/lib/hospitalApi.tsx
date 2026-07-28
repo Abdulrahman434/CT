@@ -424,6 +424,7 @@ export async function fetchPatientForDevice(serial: string): Promise<{
 
   if (isBurjeel) {
     const burjeelLocalIps = [
+      "https://careinn.bh.com/api",
       "http://careinn.bh.com/api",
       "http://10.11.16.15/api"
     ];

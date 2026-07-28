@@ -7,7 +7,7 @@ const CLOUD_KEY = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
 const LOCAL_KEY = "20b91694-7ea1-4a44-91a6-2878664428b3";
 
 export const BURJEEL_SECONDARY_OPTION: ApiConfigData = {
-  serverIp: "http://careinn.bh.com/api",
+  serverIp: "https://careinn.bh.com/api",
   apiKey: "3a68339d-e45f-478e-85a0-811f6b54b457",
 };
 
