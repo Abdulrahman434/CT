@@ -1,67 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { Eye, EyeOff, Play, X } from "lucide-react";
-import { ApiImage } from "./ApiImage";
-import { BUILTIN_PRESETS, type HospitalCoreConfig } from "./ThemeContext";
 import careinnLogo from "../../assets/careinn-logo.png";
+import luxuryRoomBg from "../../assets/luxury-patient-room.png";
 
 /* ═══════════════════════════════════════════════════════════════════════════
- * PASSWORD GATE — Clean split-layout login screen
- * Brand colors from CareInn logo:
- *   Navy:     #1B2A5B
- *   Sky Blue: #6CC4E0 / #5BC0DE
+ * PASSWORD GATE — Redesigned immersive login screen
+ * Frosted-glass login card centered on a full-page luxury hospital room image
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-const NAVY = "#1B2A5B";
-const SKY  = "#6CC4E0";
-
-/* The left-panel background is driven by the ACTIVE hospital's own config — its
- * hero/background image, brand color, name and city — so the login screen matches
- * whichever brand is loaded (Burjeel shows Burjeel, Prime shows Prime, etc.).
- * PasswordGate renders outside ThemeProvider, so we resolve the active config
- * directly from the same localStorage keys ThemeContext uses. */
-const ACTIVE_KEY = "active-hospital-id";
-const CONFIGS_KEY = "hospital-configs";
-
-// Kept slightly >1 on the image itself so cursor parallax never exposes panel edges.
-const BASE_OVERSCAN = "scale(1.06)";
-
-interface ActiveHospital {
-  image: string;         // single static background image (Ken Burns animated)
-  primary: string;       // brand accent line above the headline
-  hospitalName: string;
-  location: string;      // city
-}
-
-function getActiveHospital(): ActiveHospital {
-  const activeId = localStorage.getItem(ACTIVE_KEY) || "careinn";
-
-  let saved: HospitalCoreConfig[] = [];
-  try {
-    const raw = localStorage.getItem(CONFIGS_KEY);
-    if (raw) saved = JSON.parse(raw);
-  } catch {
-    saved = [];
-  }
-
-  const builtin = BUILTIN_PRESETS.find((c) => c.id === activeId);
-  const savedCfg = saved.find((c) => c.id === activeId);
-
-  // A single real hospital image drives the panel — its configured hero/background.
-  const image =
-    savedCfg?.heroImageUrls?.[0] ||
-    builtin?.heroImageUrls?.[0] ||
-    savedCfg?.heroImageUrl ||
-    builtin?.heroImageUrl ||
-    "";
-
-  return {
-    image,
-    primary: savedCfg?.primary || builtin?.primary || SKY,
-    hospitalName: savedCfg?.hospitalName || builtin?.hospitalName || "",
-    location: savedCfg?.location || builtin?.location || "",
-  };
-}
+const SKY = "#6CC4E0";
 
 export function PasswordGate() {
   const { login } = useAuth();
@@ -71,24 +19,13 @@ export function PasswordGate() {
   const [shaking, setShaking] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showSlideshow, setShowSlideshow] = useState(false);
-  const [hospital] = useState<ActiveHospital>(() => getActiveHospital());
-  const { image } = hospital;
-  const [parallax, setParallax] = useState<{ x: number; y: number } | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => inputRef.current?.focus(), 500);
     return () => clearTimeout(timer);
   }, []);
-
-  // Parallax: shift the image layer opposite the cursor; released on mouse leave.
-  const handlePanelMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width;   // 0 → 1
-    const py = (e.clientY - rect.top) / rect.height;    // 0 → 1
-    setParallax({ x: (px - 0.5) * -15, y: (py - 0.5) * -12 });
-  };
-  const handlePanelMouseLeave = () => setParallax(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,166 +49,118 @@ export function PasswordGate() {
         inset: 0,
         zIndex: 99999,
         display: "flex",
-        background: "#FFFFFF",
+        alignItems: "center",
+        justifyContent: "center",
         fontFamily: "'Mulish', 'Inter', sans-serif",
         overflow: "hidden",
         transition: "opacity 0.5s ease",
         opacity: success ? 0 : 1,
+        background: "#0A0F1D", // Deep fallback background
       }}
     >
-      {/* ─── Left Panel: Ken Burns + parallax background ─── */}
+      {/* ─── Immersive background layer with Ken Burns animation ─── */}
       <div
-        onMouseMove={handlePanelMouseMove}
-        onMouseLeave={handlePanelMouseLeave}
         style={{
-          width: "45%",
-          position: "relative",
-          overflow: "hidden",
-          flexShrink: 0,
-          background: NAVY,
+          position: "absolute",
+          inset: 0,
+          zIndex: 1,
+          animation: "kenburns 24s ease-in-out infinite alternate",
+          willChange: "transform",
         }}
       >
-        {/* Parallax layer — translates the image opposite the cursor, composing
-            ON TOP of the Ken Burns transform nested inside. */}
-        <div
+        <img
+          src={luxuryRoomBg}
+          alt=""
           style={{
-            position: "absolute",
-            inset: 0,
-            transform: parallax
-              ? `translate(${parallax.x}px, ${parallax.y}px)`
-              : undefined,
-            transition: "transform 0.15s ease-out",
-            willChange: "transform",
-          }}
-        >
-          {/* Ken Burns layer — one static image, slow continuous zoom-in + pan. */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              animation: "kenburns 12s ease-in-out infinite",
-              willChange: "transform",
-            }}
-          >
-            <ApiImage
-              src={image}
-              alt=""
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                objectPosition: "center",
-                transform: BASE_OVERSCAN,
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Dark gradient at the bottom — text reads directly against the image. */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%)",
-            pointerEvents: "none",
-            zIndex: 2,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "center",
           }}
         />
-
-        {/* Headline sitting straight on the image — no card, no box, just padding. */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            bottom: 0,
-            padding: "1.5rem",
-            zIndex: 3,
-            pointerEvents: "none",
-          }}
-        >
-          <h2
-            style={{
-              color: "#FFFFFF",
-              fontSize: "44px",
-              fontWeight: 800,
-              lineHeight: 1.08,
-              margin: 0,
-              letterSpacing: "-0.6px",
-              textShadow: "0 2px 18px rgba(0,0,0,0.4)",
-            }}
-          >
-            Healthcare Redefined
-          </h2>
-        </div>
-
       </div>
 
-      {/* ─── Right Panel: Login Form ─── */}
+      {/* ─── Dark Overlay ─── */}
       <div
         style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
+          position: "absolute",
+          inset: 0,
+          zIndex: 2,
+          background: "rgba(0, 0, 0, 0.5)",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* ─── Centered Content Area ─── */}
+      <div
+        style={{
           position: "relative",
+          zIndex: 3,
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
         }}
       >
-        {/* Top-right: small CareInn logo */}
+        {/* ─── White/Frosted Glass Login Card ─── */}
         <div
           style={{
-            position: "absolute",
-            top: "28px",
-            right: "36px",
-          }}
-        >
-          <ApiImage
-            src={careinnLogo}
-            alt="CareInn"
-            style={{ height: "180px", width: "auto", objectFit: "contain" }}
-          />
-        </div>
-
-        {/* Form area centered vertically */}
-        <div
-          style={{
-            flex: 1,
+            width: "420px",
+            background: "rgba(255, 255, 255, 0.15)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            borderRadius: "20px",
+            border: "1px solid rgba(255, 255, 255, 0.25)",
+            boxShadow: "0 20px 50px rgba(0, 0, 0, 0.3)",
+            padding: "40px 32px",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
-            padding: "0 80px",
-            maxWidth: "560px",
+            alignItems: "center",
+            animation: shaking ? "shakeForm 0.5s ease-in-out" : "fadeSlideUp 0.6s ease-out both",
           }}
         >
+          {/* CareInn logo */}
+          <img
+            src={careinnLogo}
+            alt="CareInn"
+            style={{
+              height: "100px",
+              width: "auto",
+              objectFit: "contain",
+              marginBottom: "16px",
+            }}
+          />
+
           {/* Title group */}
           <h1
             style={{
-              color: NAVY,
-              fontSize: "32px",
+              color: "#FFFFFF",
+              fontSize: "30px",
               fontWeight: 800,
               margin: "0 0 4px",
               letterSpacing: "-0.5px",
+              textAlign: "center",
             }}
           >
             CareInn15
           </h1>
+          
           <p
             style={{
-              color: "#4A5568",
-              fontSize: "16px",
+              color: "rgba(255, 255, 255, 0.75)",
+              fontSize: "14px",
               fontWeight: 600,
-              margin: "0 0 36px",
+              margin: "0 0 32px",
+              textAlign: "center",
             }}
           >
             Interactive Patient Care Solution
           </p>
 
-          {/* Card container */}
-          <div
-            style={{
-              borderLeft: `3px solid ${SKY}`,
-              padding: "32px 0 32px 28px",
-              animation: shaking ? "shakeForm 0.5s ease-in-out" : "fadeSlideUp 0.6s ease-out both",
-            }}
-          >
+          {/* Form wrapper */}
+          <div style={{ width: "100%" }}>
             {/* Welcome text */}
             <p
               style={{
@@ -279,28 +168,30 @@ export function PasswordGate() {
                 fontSize: "18px",
                 fontWeight: 700,
                 margin: "0 0 6px",
+                textAlign: "center",
               }}
             >
               Welcome!
             </p>
             <p
               style={{
-                color: "#718096",
+                color: "rgba(255, 255, 255, 0.7)",
                 fontSize: "14px",
                 fontWeight: 400,
-                margin: "0 0 28px",
+                margin: "0 0 24px",
+                textAlign: "center",
               }}
             >
               Please enter your access code to continue.
             </p>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} style={{ width: "100%" }}>
               {/* Password field */}
               <div style={{ marginBottom: "20px" }}>
                 <label
                   style={{
                     display: "block",
-                    color: "#4A5568",
+                    color: "rgba(255, 255, 255, 0.8)",
                     fontSize: "13px",
                     fontWeight: 600,
                     marginBottom: "6px",
@@ -313,11 +204,11 @@ export function PasswordGate() {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    border: `1.5px solid ${error ? "#EF4444" : "#E2E8F0"}`,
+                    border: `1.5px solid ${error ? "#EF4444" : isFocused ? SKY : "rgba(255, 255, 255, 0.25)"}`,
                     borderRadius: "10px",
-                    background: error ? "rgba(239,68,68,0.03)" : "#F8FAFC",
+                    background: error ? "rgba(239, 68, 68, 0.15)" : "rgba(255, 255, 255, 0.08)",
                     transition: "border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease",
-                    boxShadow: error ? "0 0 0 3px rgba(239,68,68,0.08)" : "none",
+                    boxShadow: error ? "0 0 0 3px rgba(239, 68, 68, 0.25)" : isFocused ? `0 0 0 3px ${SKY}40` : "none",
                   }}
                 >
                   <input
@@ -328,6 +219,8 @@ export function PasswordGate() {
                       setPassword(e.target.value);
                       if (error) setError(false);
                     }}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
                     placeholder="Enter your password"
                     autoComplete="off"
                     style={{
@@ -335,7 +228,7 @@ export function PasswordGate() {
                       background: "transparent",
                       border: "none",
                       outline: "none",
-                      color: NAVY,
+                      color: "#FFFFFF",
                       fontSize: "15px",
                       fontWeight: 500,
                       padding: "14px 16px",
@@ -356,9 +249,9 @@ export function PasswordGate() {
                     }}
                   >
                     {showPassword ? (
-                      <EyeOff size={18} color="#A0AEC0" />
+                      <EyeOff size={18} color="rgba(255, 255, 255, 0.6)" />
                     ) : (
-                      <Eye size={18} color="#A0AEC0" />
+                      <Eye size={18} color="rgba(255, 255, 255, 0.6)" />
                     )}
                   </button>
                 </div>
@@ -373,6 +266,7 @@ export function PasswordGate() {
                       fontSize: "13px",
                       fontWeight: 500,
                       margin: 0,
+                      textAlign: "center",
                       animation: "fadeIn 0.3s ease",
                     }}
                   >
@@ -397,15 +291,15 @@ export function PasswordGate() {
                   fontFamily: "inherit",
                   letterSpacing: "0.5px",
                   transition: "transform 0.15s ease, box-shadow 0.2s ease",
-                  boxShadow: "0 2px 12px rgba(108,196,224,0.3)",
+                  boxShadow: "0 2px 12px rgba(108, 196, 224, 0.3)",
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget).style.transform = "translateY(-1px)";
-                  (e.currentTarget).style.boxShadow = "0 4px 20px rgba(108,196,224,0.4)";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.boxShadow = "0 4px 20px rgba(108, 196, 224, 0.5)";
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget).style.transform = "translateY(0)";
-                  (e.currentTarget).style.boxShadow = "0 2px 12px rgba(108,196,224,0.3)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 2px 12px rgba(108, 196, 224, 0.3)";
                 }}
               >
                 Sign in
@@ -436,12 +330,14 @@ export function PasswordGate() {
                 transition: "all 0.2s ease",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = `${SKY}12`;
+                e.currentTarget.style.background = `${SKY}1A`;
                 e.currentTarget.style.borderColor = "#5BB8D6";
+                e.currentTarget.style.color = "#FFFFFF";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = "transparent";
                 e.currentTarget.style.borderColor = SKY;
+                e.currentTarget.style.color = SKY;
               }}
             >
               <Play size={16} />
@@ -449,21 +345,24 @@ export function PasswordGate() {
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Bottom text */}
-        <div
-          style={{
-            padding: "20px 80px",
-            color: "#CBD5E0",
-            fontSize: "13px",
-            fontWeight: 400,
-            margin: 0,
-            maxWidth: "560px",
-            textAlign: "left",
-          }}
-        >
-          Hospital Bedside Companion by CareInn &copy; {new Date().getFullYear()}
-        </div>
+      {/* ─── Bottom Copyright Text ─── */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "20px",
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          color: "rgba(255, 255, 255, 0.4)",
+          fontSize: "13px",
+          fontWeight: 400,
+          zIndex: 3,
+          pointerEvents: "none",
+        }}
+      >
+        Hospital Bedside Companion by CareInn &copy; {new Date().getFullYear()}
       </div>
 
       {/* ─── Welcome Slideshow Overlay ─── */}
@@ -488,7 +387,7 @@ export function PasswordGate() {
               height: "48px",
               borderRadius: "50%",
               border: "none",
-              background: "rgba(255,255,255,0.12)",
+              background: "rgba(255, 255, 255, 0.12)",
               color: "#FFF",
               cursor: "pointer",
               display: "flex",
@@ -497,8 +396,8 @@ export function PasswordGate() {
               transition: "background 0.2s ease",
               backdropFilter: "blur(8px)",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.25)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.25)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)"; }}
             title="Close Slideshow"
           >
             <X size={22} />
@@ -521,7 +420,7 @@ export function PasswordGate() {
         @keyframes fadeSlideUp {
           from {
             opacity: 0;
-            transform: translateY(16px);
+            transform: translateY(24px);
           }
           to {
             opacity: 1;
@@ -550,7 +449,7 @@ export function PasswordGate() {
 
         @keyframes kenburns {
           0%   { transform: scale(1) translate(0, 0); }
-          100% { transform: scale(1.15) translate(-2%, -1%); }
+          100% { transform: scale(1.12) translate(-1.5%, -0.8%); }
         }
       `}</style>
     </div>
