@@ -285,6 +285,7 @@ function BedsideScreen() {
               bed: p.bed || undefined,
               sex: p.sex || undefined,
               dob: p.dob || undefined,
+              age: p.age || undefined,
               admissionDate: p.admissionDate || undefined,
               dischargeDate: p.dischargeDate || undefined,
             };

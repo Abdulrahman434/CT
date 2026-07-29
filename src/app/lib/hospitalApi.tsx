@@ -93,6 +93,7 @@ export interface Hl7Patient {
   bed: string;
   sex: string;
   dob: string;
+  age?: string;
   admissionDate: string;
   dischargeDate: string;
   admitRefId: number;
@@ -379,6 +380,20 @@ export async function fetchPatientByRefId(
     const { nameEn, nameAr } = extractNameFromHl7(d);
     const mrn = extractMrnFromHl7(d);
 
+    const dobRaw = pid.pid_date_time_of_birth?.time ?? pid.pid_date_time_of_birth ?? d.dob ?? "";
+    const dobParsed = parseHl7Date(dobRaw);
+    let ageStr = d.age || pid.age || pid.patient_age || "";
+    if (!ageStr && dobRaw) {
+      const match = String(dobRaw).match(/(\d{4})/);
+      if (match) {
+        const birthYear = parseInt(match[1], 10);
+        const currentYear = new Date().getFullYear();
+        if (birthYear > 1900 && birthYear <= currentYear) {
+          ageStr = String(currentYear - birthYear);
+        }
+      }
+    }
+
     return {
       name: nameEn,
       nameAr: nameAr || undefined,
@@ -386,7 +401,8 @@ export async function fetchPatientByRefId(
       room: pv.pv_assigned_patient_location?.room ?? "",
       bed: pv.pv_assigned_patient_location?.bed ?? "",
       sex: pid.pid_administrative_sex ?? "",
-      dob: parseHl7Date(pid.pid_date_time_of_birth?.time ?? ""),
+      dob: dobParsed,
+      age: ageStr ? String(ageStr) : undefined,
       admissionDate: parseHl7Date(pv.pv_admit_date_time?.time ?? ""),
       dischargeDate: parseHl7Date(pv.pv_discharge_date_time?.time ?? ""),
       admitRefId: Number(referenceId),

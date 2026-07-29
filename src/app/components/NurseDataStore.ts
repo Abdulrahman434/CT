@@ -20,7 +20,8 @@ import { useState, useEffect } from "react";
 // Fields that can be overridden by nurse
 export type OverridableField = 
   | "name" | "room" | "bed" | "mrn" 
-  | "admissionDate" | "dischargeDate" | "nameAr";
+  | "admissionDate" | "dischargeDate" | "nameAr" | "age" | "dob" | "sex"
+  | "contact" | "emergencyContact" | "emergencyName" | "extension";
 
 // localStorage key
 const OVERRIDE_KEY     = "careinn-nurse-overrides";
@@ -859,15 +860,15 @@ export const nurseActions = nurseStore;
  * ═══════════════════════════════════════════════════════════════ */
 
 export function calculateAgeFromPatient(patient: Partial<PatientProfile>): number | null {
-  const ageStr = patient.age;
-  const dobStr = patient.dob;
+  const ageStr = patient.age ? String(patient.age).trim() : "";
+  const dobStr = patient.dob ? String(patient.dob).trim() : "";
 
-  // 1. Try parsing numeric age string (e.g. "8", "8 yrs", "12 years old", "4")
+  // 1. Try parsing numeric age string (e.g. "11", "8", "8 yrs", "12 years old", "4")
   if (ageStr) {
-    const match = ageStr.match(/(\d+)\s*(yr|year|y)/i) || ageStr.match(/^\s*(\d+)\s*$/);
+    const match = ageStr.match(/(\d+)/);
     if (match) {
       const num = parseInt(match[1], 10);
-      if (!isNaN(num)) return num;
+      if (!isNaN(num) && num >= 0 && num < 120) return num;
     }
   }
 
@@ -893,15 +894,9 @@ export function calculateAgeFromPatient(patient: Partial<PatientProfile>): numbe
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
           years--;
         }
-        if (years >= 0) return years;
+        if (years >= 0 && years < 120) return years;
       }
     } catch {}
-  }
-
-  // 3. Fallback: try raw number parsing on ageStr if any digits exist
-  if (ageStr) {
-    const num = parseInt(ageStr.replace(/\D/g, ""), 10);
-    if (!isNaN(num) && num >= 0 && num < 120) return num;
   }
 
   return null;
