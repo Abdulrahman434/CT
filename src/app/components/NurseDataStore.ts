@@ -471,6 +471,7 @@ const nurseStore = (() => {
         nextPatient.nameKey = "";
       }
       state = { ...state, patient: nextPatient };
+      autoCheckKidsLayoutForPatient(nextPatient);
       notify();
     },
 
@@ -549,6 +550,7 @@ const nurseStore = (() => {
           ...(hasEmergency ? { emergency: true } : {}),
         },
       };
+      autoCheckKidsLayoutForPatient(nextPatient);
       notify();
     },
 
@@ -600,6 +602,7 @@ const nurseStore = (() => {
         localStorage.setItem('careinn-last-mrn', nextPatient.mrn.trim());
       }
 
+      autoCheckKidsLayoutForPatient(nextPatient);
       notify();
       window.dispatchEvent(new Event('display-name-changed'));
     },
@@ -645,6 +648,7 @@ const nurseStore = (() => {
         nextPatient.nameKey = "";
       }
       state = { ...state, patient: nextPatient };
+      autoCheckKidsLayoutForPatient(nextPatient);
       notify();
     },
 
@@ -849,3 +853,69 @@ export function useNurseStore() {
 
 /** Direct access to store actions (stable references — no re-render trigger) */
 export const nurseActions = nurseStore;
+
+/* ═══════════════════════════════════════════════════════════════
+ * AGE & KIDS LAYOUT (LAYOUT 3) AUTO-DETECTION
+ * ═══════════════════════════════════════════════════════════════ */
+
+export function calculateAgeFromPatient(patient: Partial<PatientProfile>): number | null {
+  const ageStr = patient.age;
+  const dobStr = patient.dob;
+
+  // 1. Try parsing numeric age string (e.g. "8", "8 yrs", "12 years old", "4")
+  if (ageStr) {
+    const match = ageStr.match(/(\d+)\s*(yr|year|y)/i) || ageStr.match(/^\s*(\d+)\s*$/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num)) return num;
+    }
+  }
+
+  // 2. Try parsing DOB string
+  if (dobStr) {
+    try {
+      let birthDate: Date | null = null;
+      const cleanDob = dobStr.trim();
+      if (/^\d{8}$/.test(cleanDob)) {
+        const y = parseInt(cleanDob.slice(0, 4), 10);
+        const m = parseInt(cleanDob.slice(4, 6), 10) - 1;
+        const d = parseInt(cleanDob.slice(6, 8), 10);
+        birthDate = new Date(y, m, d);
+      } else {
+        const d = new Date(cleanDob);
+        if (!isNaN(d.getTime())) birthDate = d;
+      }
+
+      if (birthDate) {
+        const today = new Date();
+        let years = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          years--;
+        }
+        if (years >= 0) return years;
+      }
+    } catch {}
+  }
+
+  // 3. Fallback: try raw number parsing on ageStr if any digits exist
+  if (ageStr) {
+    const num = parseInt(ageStr.replace(/\D/g, ""), 10);
+    if (!isNaN(num) && num >= 0 && num < 120) return num;
+  }
+
+  return null;
+}
+
+export function autoCheckKidsLayoutForPatient(patient: Partial<PatientProfile>): void {
+  const ageYears = calculateAgeFromPatient(patient);
+  if (ageYears !== null && ageYears < 13) {
+    try {
+      const currentMode = localStorage.getItem("careinn-layout-mode");
+      if (currentMode !== "3") {
+        localStorage.setItem("careinn-layout-mode", "3");
+        window.dispatchEvent(new Event("layout-mode-changed"));
+      }
+    } catch {}
+  }
+}
