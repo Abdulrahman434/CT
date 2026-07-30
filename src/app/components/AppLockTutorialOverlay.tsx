@@ -38,11 +38,11 @@ export function AppLockTutorialOverlay({
   useEffect(() => {
     let frameId: number;
     let startTime = performance.now();
-    const cycleMs = 2000;
+    const cycleMs = 1800;
 
     const loop = (now: number) => {
       const elapsed = (now - startTime) % cycleMs;
-      // 0ms - 1000ms: ring fills 0 to 100%. 1000ms - 2000ms: holds at 100% with lock icon
+      // 0ms - 1000ms: ring fills 0 to 100%. 1000ms - 1800ms: holds at 100% with lock icon
       const progress = Math.min(100, (elapsed / 1000) * 100);
       setDemoProgress(progress);
       frameId = requestAnimationFrame(loop);

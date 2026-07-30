@@ -350,7 +350,7 @@ function SurveyCardFilled({ onOpen, compact, onLongPress, isLocked }: { onOpen: 
   const iconSize = compact ? 28 : 40;
   const iconRadius = compact ? theme.radiusMd : theme.radiusLg;
 
-  const { handlers, handleClick } = useLongPress(onLongPress, 1000);
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
 
   return (
     <button
@@ -405,7 +405,7 @@ function SurveyCard({ square, contained, onOpen, onLongPress, isLocked }: { squa
   const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.12)");
   const [pressed, setPressed] = useState(false);
 
-  const { handlers, handleClick } = useLongPress(onLongPress, 1000);
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
 
   return (
     <button
@@ -465,7 +465,7 @@ function ShortcutTile({ item, contained, onTap, onLongPress, isLocked }: { item:
 
   // handleTap removed, using onTap from props
 
-  const { handlers, handleClick } = useLongPress(onLongPress, 1000);
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
 
   return (
     <button
@@ -550,7 +550,7 @@ function ShortcutTileCompact({ item, onTap, onLongPress, isLocked }: { item: Sho
 
   // handleTap removed, using onTap from props
 
-  const { handlers, handleClick } = useLongPress(onLongPress, 1000);
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
 
   return (
     <button
@@ -633,7 +633,7 @@ function ShortcutTileBare({ item, onTap, onLongPress, isLocked }: { item: Shortc
 
   // handleTap removed, using onTap from props
 
-  const { handlers, handleClick } = useLongPress(onLongPress, 1000);
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
 
   return (
     <button
@@ -715,7 +715,7 @@ function AboutUsButton({ onTap, onLongPress, isLocked }: { onTap: () => void; on
   const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.12)");
   const [pressed, setPressed] = useState(false);
 
-  const { handlers, handleClick } = useLongPress(onLongPress, 1000);
+  const { handlers, handleClick } = useLongPress(onLongPress, 600);
 
   return (
     <button

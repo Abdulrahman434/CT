@@ -57,6 +57,7 @@ import imgMosque from "../../assets/b51acb5e2ec4a2c930572c53103b020b12e76ee2.png
 import { getPrayerStatus, getCountdown, formatPrayerTime, PRAYER_NAMES } from "../utils/prayerUtils";
 import { MyPreferencesDialog } from "./MyAccountDialog";
 import { isAccountSet } from "../lib/accountAuth";
+import { resetAppLockTutorial } from "../lib/appLockTutorialStore";
 
 /* ═══════════════════════════════════════════════════════════════
  * All colors/fonts/radii in this file come from ThemeContext.
@@ -1846,6 +1847,7 @@ export function SettingsPanel({
   const [showLangDialog, setShowLangDialog] = useState(false);
   const [showCareTeamDialog, setShowCareTeamDialog] = useState(false);
   const [showAccountDialog, setShowAccountDialog] = useState(false);
+  const [replayToast, setReplayToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (openAccountDirectly) {
@@ -2290,7 +2292,12 @@ export function SettingsPanel({
         />
       )}
 
-
+      {replayToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[10010] bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-sm font-semibold animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <Check size={18} className="text-emerald-400" />
+          <span>{replayToast}</span>
+        </div>
+      )}
 
       <style>{`
         @keyframes settingsFadeIn {
