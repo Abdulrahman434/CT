@@ -26,6 +26,45 @@ export function PasswordGate() {
     return () => clearTimeout(timer);
   }, []);
 
+  /* ── Keyboard-aware viewport ──
+   * window.visualViewport reports the region actually visible to the user, and
+   * it does so under BOTH Android soft-input modes:
+   *   adjustResize — layout viewport shrinks too; height shrinks, offsetTop 0.
+   *   adjustPan    — layout viewport is unchanged, so only the visual viewport
+   *                  shrinks, and offsetTop moves as the window pans.
+   * Driving the content area from it therefore keeps the field and both buttons
+   * on screen without depending on how the native kiosk is configured.
+   * Falls back to 100%/vh when the API is missing (pre-Chrome-61 WebViews). */
+  const [viewport, setViewport] = useState<{ height: number; offsetTop: number } | null>(null);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    let frame = 0;
+    const update = () => {
+      cancelAnimationFrame(frame);
+      // Coalesce the resize+scroll bursts Android emits while the keyboard animates.
+      frame = requestAnimationFrame(() =>
+        setViewport({ height: vv.height, offsetTop: vv.offsetTop })
+      );
+    };
+
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      cancelAnimationFrame(frame);
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
+
+  const visibleH = viewport?.height ?? null;
+  /* The roomy spacing needs ~432px of card plus breathing room. Below that the
+   * card switches to a tighter rhythm rather than pushing controls off screen. */
+  const compact = visibleH !== null && visibleH < 560;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password.trim()) return;
@@ -102,16 +141,29 @@ export function PasswordGate() {
        * Asymmetric padding (bottom > top) biases the centered card slightly
        * upward — optically centered, and it reserves bottom margin so the
        * Sign in / Continue as Guest buttons stay clear of the soft keyboard.
-       * vh units keep the bias proportional across screen sizes. */}
+       * The bias is proportional to the visible height, so it holds across
+       * screen sizes and while the keyboard is open. */}
       <div
         style={{
-          position: "relative",
+          position: "absolute",
+          top: viewport ? `${viewport.offsetTop}px` : 0,
+          left: 0,
+          right: 0,
           zIndex: 3,
-          width: "100%",
-          height: "100%",
+          // Pinned to the visible band, so the card centers in what the user can
+          // actually see rather than in the full (possibly occluded) viewport.
+          height: visibleH !== null ? `${visibleH}px` : "100%",
           display: "flex",
           justifyContent: "center",
-          padding: "5vh 24px 7.5vh",
+          // Same 5% / 7.5% proportions as before, but measured against the
+          // visible height. Vertical percentage padding resolves against WIDTH
+          // in CSS, so this has to be computed rather than expressed as a %.
+          padding:
+            visibleH !== null
+              ? `${Math.round(visibleH * (compact ? 0.03 : 0.05))}px 24px ${Math.round(
+                  visibleH * (compact ? 0.04 : 0.075)
+                )}px`
+              : "5vh 24px 7.5vh",
           overflowY: "auto",
         }}
       >
@@ -130,7 +182,7 @@ export function PasswordGate() {
             // white top highlight so the glass edge reads crisp on any wallpaper.
             boxShadow:
               "0 24px 60px rgba(15, 30, 55, 0.20), 0 2px 8px rgba(15, 30, 55, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.40)",
-            padding: "48px 36px",
+            padding: compact ? "28px 32px" : "48px 36px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -143,7 +195,7 @@ export function PasswordGate() {
               color: NAVY,
               fontSize: "30px",
               fontWeight: 800,
-              margin: "0 0 12px",
+              margin: compact ? "0 0 8px" : "0 0 12px",
               letterSpacing: "-0.5px",
               textAlign: "center",
               textShadow: "0 1px 2px rgba(255, 255, 255, 0.35)",
@@ -157,7 +209,7 @@ export function PasswordGate() {
               color: "rgba(255, 255, 255, 0.85)",
               fontSize: "14px",
               fontWeight: 600,
-              margin: "0 0 44px",
+              margin: compact ? "0 0 22px" : "0 0 44px",
               textAlign: "center",
             }}
           >
@@ -168,7 +220,7 @@ export function PasswordGate() {
           <div style={{ width: "100%" }}>
             <form onSubmit={handleSubmit} style={{ width: "100%" }}>
               {/* Password field */}
-              <div style={{ marginBottom: "28px" }}>
+              <div style={{ marginBottom: compact ? "18px" : "28px" }}>
                 <div
                   style={{
                     display: "flex",
@@ -238,7 +290,7 @@ export function PasswordGate() {
               </div>
 
               {/* Error message */}
-              <div style={{ minHeight: "22px", marginBottom: "14px" }}>
+              <div style={{ minHeight: "22px", marginBottom: compact ? "10px" : "14px" }}>
                 {error && (
                   <p
                     style={{
@@ -293,7 +345,7 @@ export function PasswordGate() {
                 style={{
                   width: "100%",
                   height: "48px",
-                  marginTop: "16px",
+                  marginTop: compact ? "12px" : "16px",
                   borderRadius: "10px",
                   background: "transparent",
                   border: "1.5px solid rgba(255, 255, 255, 0.5)",
@@ -321,11 +373,17 @@ export function PasswordGate() {
         </div>
       </div>
 
-      {/* ─── Bottom Copyright Text ─── */}
+      {/* ─── Bottom Copyright Text ───
+       * Anchored to the bottom of the VISIBLE band, and dropped entirely in
+       * compact mode so it can never crowd the card when space is tight. */}
       <div
         style={{
           position: "absolute",
-          bottom: "20px",
+          top:
+            viewport && visibleH !== null
+              ? `${viewport.offsetTop + visibleH - 33}px`
+              : undefined,
+          bottom: viewport && visibleH !== null ? undefined : "20px",
           left: 0,
           right: 0,
           textAlign: "center",
@@ -334,6 +392,8 @@ export function PasswordGate() {
           fontWeight: 400,
           zIndex: 3,
           pointerEvents: "none",
+          opacity: compact ? 0 : 1,
+          transition: "opacity 0.2s ease",
         }}
       >
         Hospital Bedside Companion by CareInn &copy; {new Date().getFullYear()}
