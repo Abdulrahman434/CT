@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "./AuthContext";
-import { Eye, EyeOff, Play, X } from "lucide-react";
-import careinnLogo from "../../assets/careinn-logo.png";
-import luxuryRoomBg from "../../assets/luxury-patient-room.png";
+import { Eye, EyeOff, X } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * PASSWORD GATE — Redesigned immersive login screen
@@ -69,7 +67,7 @@ export function PasswordGate() {
         }}
       >
         <img
-          src={luxuryRoomBg}
+          src="/assets/bg/careinnbak.jpg"
           alt=""
           style={{
             width: "100%",
@@ -121,18 +119,6 @@ export function PasswordGate() {
             animation: shaking ? "shakeForm 0.5s ease-in-out" : "fadeSlideUp 0.6s ease-out both",
           }}
         >
-          {/* CareInn logo */}
-          <img
-            src={careinnLogo}
-            alt="CareInn"
-            style={{
-              height: "100px",
-              width: "auto",
-              objectFit: "contain",
-              marginBottom: "16px",
-            }}
-          />
-
           {/* Title group */}
           <h1
             style={{
@@ -144,7 +130,7 @@ export function PasswordGate() {
               textAlign: "center",
             }}
           >
-            CareInn15
+            Welcome!
           </h1>
           
           <p
@@ -156,7 +142,7 @@ export function PasswordGate() {
               textAlign: "center",
             }}
           >
-            Interactive Patient Care Solution
+            Please enter your access code to continue.
           </p>
 
           {/* Form wrapper */}
@@ -164,18 +150,6 @@ export function PasswordGate() {
             <form onSubmit={handleSubmit} style={{ width: "100%" }}>
               {/* Password field */}
               <div style={{ marginBottom: "20px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    color: "rgba(255, 255, 255, 0.8)",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    marginBottom: "6px",
-                    letterSpacing: "0.3px",
-                  }}
-                >
-                  Password
-                </label>
                 <div
                   style={{
                     display: "flex",
@@ -197,7 +171,7 @@ export function PasswordGate() {
                     }}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
-                    placeholder="Enter your password"
+                    placeholder="Enter MRN, Access Code"
                     autoComplete="off"
                     style={{
                       flex: 1,
@@ -281,44 +255,6 @@ export function PasswordGate() {
                 Sign in
               </button>
             </form>
-
-            {/* ─── Welcome Slideshow Button ─── */}
-            <button
-              type="button"
-              onClick={() => setShowSlideshow(true)}
-              style={{
-                width: "100%",
-                height: "44px",
-                marginTop: "14px",
-                border: `1.5px solid ${SKY}`,
-                borderRadius: "10px",
-                background: "transparent",
-                color: SKY,
-                fontSize: "14px",
-                fontWeight: 700,
-                cursor: "pointer",
-                fontFamily: "inherit",
-                letterSpacing: "0.3px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = `${SKY}1A`;
-                e.currentTarget.style.borderColor = "#5BB8D6";
-                e.currentTarget.style.color = "#FFFFFF";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = SKY;
-                e.currentTarget.style.color = SKY;
-              }}
-            >
-              <Play size={16} />
-              Welcome Slideshow
-            </button>
           </div>
         </div>
       </div>
