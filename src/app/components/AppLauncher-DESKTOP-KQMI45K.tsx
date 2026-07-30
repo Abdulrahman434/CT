@@ -224,20 +224,6 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
           ),
         },
         {
-          id: "the-subtle-art",
-          name: locale === "ar" ? "فن اللامبالاة (إنجليزي)" : "Subtle Art (EN)",
-          bg: "#fff",
-          mark: "SA",
-          textColor: "#333",
-          pdfSource: "/pdfs/the-subtle-art.pdf",
-          customRender: () => (
-            <div className="flex flex-col items-center justify-center p-4 bg-gray-800 rounded-xl w-full h-full text-white">
-              <Hash size={48} strokeWidth={1.5} />
-              <span className="font-bold text-xs mt-2 text-center text-white break-words w-full">The Subtle Art</span>
-            </div>
-          ),
-        },
-        {
           id: "why-we-sleep",
           name: locale === "ar" ? "لماذا ننام (إنجليزي)" : "Why We Sleep (EN)",
           bg: "#fff",
@@ -262,20 +248,6 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
             <div className="flex flex-col items-center justify-center p-4 bg-emerald-700 rounded-xl w-full h-full text-white">
               <BookOpen size={48} strokeWidth={1.5} />
               <span className="font-bold text-xs mt-2 text-center text-white break-words w-full">الأعمال الكبرى</span>
-            </div>
-          ),
-        },
-        {
-          id: "fan-all-la-mubalah",
-          name: locale === "ar" ? "فن اللامبالاة (عربي)" : "فن اللامبالاة (AR)",
-          bg: "#fff",
-          mark: "فن اللامبالاة",
-          textColor: "#333",
-          pdfSource: "/pdfs/fan-all-la-mubalah.pdf",
-          customRender: () => (
-            <div className="flex flex-col items-center justify-center p-4 bg-purple-700 rounded-xl w-full h-full text-white">
-              <BookOpenText size={48} strokeWidth={1.5} />
-              <span className="font-bold text-xs mt-2 text-center text-white break-words w-full">فن اللامبالاة</span>
             </div>
           ),
         },
