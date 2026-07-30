@@ -1552,7 +1552,10 @@ export function AppLauncher({
   onLockMenuChange?: (val: string | null) => void;
 }) {
   const { theme } = useTheme();
+  const { t, locale, isRTL } = useLocale();
+  const lockedIds = useLockedApps();
   const { isGuest } = useGuestMode();
+
   const [tutorialTarget, setTutorialTarget] = useState<TargetTileInfo | null>(null);
   const [setupTarget, setSetupTarget] = useState<{ id: string; name: string } | null>(null);
 
