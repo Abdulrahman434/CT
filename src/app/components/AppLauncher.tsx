@@ -1399,7 +1399,7 @@ function AppTile({ app, onTap, onLongPress, isLocked }: { app: AppItem; onTap: (
   const [pressed, setPressed] = useState(false);
   const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.15)");
 
-  const { handlers, handleClick } = useLongPress(onLongPress, 2000);
+  const { handlers, handleClick } = useLongPress(onLongPress, 1000);
   const displayName = app.nameKey
     ? t(app.nameKey)
     : (locale === "ar" && app.nameAr ? app.nameAr : app.name);

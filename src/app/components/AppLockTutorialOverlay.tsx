@@ -32,18 +32,18 @@ export function AppLockTutorialOverlay({
 
   const holdStartTimeRef = useRef<number | null>(null);
   const animFrameRef = useRef<number | null>(null);
-  const HOLD_DURATION_MS = 2000;
+  const HOLD_DURATION_MS = 1000;
 
   /* ─── Demo Animation Loop inside Coachmark Illustration ─── */
   useEffect(() => {
     let frameId: number;
     let startTime = performance.now();
-    const cycleMs = 3000;
+    const cycleMs = 2000;
 
     const loop = (now: number) => {
       const elapsed = (now - startTime) % cycleMs;
-      // 0ms - 2000ms: ring fills 0 to 100%. 2000ms - 3000ms: holds at 100% with lock icon
-      const progress = Math.min(100, (elapsed / 2000) * 100);
+      // 0ms - 1000ms: ring fills 0 to 100%. 1000ms - 2000ms: holds at 100% with lock icon
+      const progress = Math.min(100, (elapsed / 1000) * 100);
       setDemoProgress(progress);
       frameId = requestAnimationFrame(loop);
     };
