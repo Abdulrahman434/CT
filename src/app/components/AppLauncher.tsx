@@ -28,6 +28,10 @@ import { useLongPress } from "../lib/useLongPress";
 import { AppLockMenu } from "./AppLockMenu";
 import { LockBadge } from "./LockBadge";
 import { AppIconPlaceholder } from "./figma/AppIconPlaceholder";
+import { useGuestMode } from "../lib/guestMode";
+import { hasSeenAppLockTutorial } from "../lib/appLockTutorialStore";
+import { AppLockTutorialOverlay, TargetTileInfo } from "./AppLockTutorialOverlay";
+import { AppLockSetupModal } from "./AppLockSetupModal";
 
 // import { InternetBrowser } from "./InternetBrowser";
 import { useTheme } from "./ThemeContext";
@@ -1389,13 +1393,13 @@ function getCategories(theme: any, locale: string = "en", t: any): Record<string
 
 /* ── App Tile ──────────────────────────────────────────────── */
 
-function AppTile({ app, onTap, onLongPress, isLocked }: { app: AppItem; onTap: () => void; onLongPress: () => void; isLocked: boolean }) {
+function AppTile({ app, onTap, onLongPress, isLocked }: { app: AppItem; onTap: (e?: React.MouseEvent<HTMLElement>) => void; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t, locale } = useLocale();
   const [pressed, setPressed] = useState(false);
   const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.15)");
 
-  const { handlers, handleClick } = useLongPress(onLongPress, 600);
+  const { handlers, handleClick } = useLongPress(onLongPress, 2000);
   const displayName = app.nameKey
     ? t(app.nameKey)
     : (locale === "ar" && app.nameAr ? app.nameAr : app.name);
@@ -1406,7 +1410,7 @@ function AppTile({ app, onTap, onLongPress, isLocked }: { app: AppItem; onTap: (
       onPointerDown={(e) => { onPointerDown(e); handlers.onPointerDown(); setPressed(true); }}
       onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
       onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
-      onClick={() => handleClick(onTap)}
+      onClick={(e) => handleClick(() => onTap(e))}
       className="relative flex flex-col items-center gap-3 transition-transform duration-100 ease-out active:scale-95 cursor-pointer"
       style={{ 
         width: 160, 
@@ -1548,8 +1552,43 @@ export function AppLauncher({
   onLockMenuChange?: (val: string | null) => void;
 }) {
   const { theme } = useTheme();
-  const { t, locale, isRTL } = useLocale();
-  const lockedIds = useLockedApps();
+  const { isGuest } = useGuestMode();
+  const [tutorialTarget, setTutorialTarget] = useState<TargetTileInfo | null>(null);
+  const [setupTarget, setSetupTarget] = useState<{ id: string; name: string } | null>(null);
+
+  const handleTileTap = (
+    e: React.MouseEvent<HTMLElement> | undefined,
+    app: AppItem
+  ) => {
+    const isLocked = lockedIds.has(app.id);
+    const appName = app.nameKey ? t(app.nameKey) : (locale === "ar" && app.nameAr ? app.nameAr : app.name);
+
+    if (isLocked) {
+      setLockMenu(app.id + "__open");
+    } else if (!isGuest && !hasSeenAppLockTutorial()) {
+      const rect = e?.currentTarget ? e.currentTarget.getBoundingClientRect() : null;
+      setTutorialTarget({
+        id: app.id,
+        name: appName,
+        rect,
+        onOpenOriginalApp: () => handleAppTap(app),
+      });
+    } else {
+      handleAppTap(app);
+    }
+  };
+
+  const handleTileLongPress = (app: AppItem) => {
+    if (isGuest) return;
+    const isLocked = lockedIds.has(app.id);
+    const appName = app.nameKey ? t(app.nameKey) : (locale === "ar" && app.nameAr ? app.nameAr : app.name);
+
+    if (isLocked) {
+      setLockMenu(app.id);
+    } else {
+      setSetupTarget({ id: app.id, name: appName });
+    }
+  };
   const [activeKey, setActiveKey] = useState(categoryKey);
   const allCategories = getCategories(theme, locale, t);
   const apiPdfApps = useApiPdfApps(activeKey);
@@ -1909,14 +1948,8 @@ export function AppLauncher({
                     <AppTile
                       key={app.id}
                       app={app}
-                      onTap={() => {
-                        if (lockedIds.has(app.id)) {
-                          setLockMenu(app.id + "__open");
-                        } else {
-                          handleAppTap(app);
-                        }
-                      }}
-                      onLongPress={() => setLockMenu(app.id)}
+                      onTap={(e) => handleTileTap(e, app)}
+                      onLongPress={() => handleTileLongPress(app)}
                       isLocked={lockedIds.has(app.id)}
                     />
                   ))}
@@ -2215,6 +2248,25 @@ export function AppLauncher({
             </p>
           </div>
         </div>
+      )}
+
+      {tutorialTarget && (
+        <AppLockTutorialOverlay
+          target={tutorialTarget}
+          onClose={() => setTutorialTarget(null)}
+          onStartLockSetup={(id, name) => {
+            setTutorialTarget(null);
+            setSetupTarget({ id, name });
+          }}
+        />
+      )}
+
+      {setupTarget && (
+        <AppLockSetupModal
+          appId={setupTarget.id}
+          appName={setupTarget.name}
+          onClose={() => setSetupTarget(null)}
+        />
       )}
     </div>
   );

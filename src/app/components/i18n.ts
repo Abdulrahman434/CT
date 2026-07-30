@@ -497,10 +497,7 @@ const translations: Record<string, TranslationEntry> = {
   "care.mobility.bedRest": { en: "Complete Bed Rest", ar: "راحة تامة في السرير", ur: "مکمل بیڈ ریسٹ" },
   "care.assistance.bed": { en: "Do not leave bed without nursing assistance", ar: "يرجى عدم مغادرة السرير بدون مساعدة التمريض", ur: "نرسنگ امداد کے بغیر بستر نہ چھوڑیں" },
 
-  /* ─── Connection Monitoring ─── */
-  "connection.failed": { en: "Failed to connect to hospital server", ar: "تعذّر الاتصال بخادم المستشفى", ur: "ہسپتال سرور سے رابطہ قائم کرنے میں ناکامی" },
-  "connection.showingDemo": { en: "Showing demo data", ar: "عرض البيانات التوضيحية", ur: "ڈیمو ڈیٹا دکھا رہا ہے" },
-  "connection.retry": { en: "Reconnect", ar: "إعادة الاتصال", ur: "دوبارہ منسلک ہوں" },
+
 
   /* ─── HIS Data Fallback & Demo Preview ─── */
   "care.his.noInfo": { en: "No information provided from HIS", ar: "لا تتوفر معلومات من نظام المستشفى (HIS)", ur: "HIS سے کوئی معلومات فراہم نہیں کی گئیں" },
@@ -670,6 +667,26 @@ const translations: Record<string, TranslationEntry> = {
   "settings.clearData.clearEverything.desc": { en: "Resets the device fully to factory defaults. Wipes all preferences, language setup, and PIN.", ar: "إعادة ضبط الجهاز بالكامل إلى إعدادات المصنع. يمسح جميع التفضيلات وإعداد اللغة ورمز PIN.", ur: "ڈیوائس کو فیکٹری ڈیفالٹس پر مکمل طور پر ری سیٹ کرتا ہے۔ تمام ترجیحات، زبان کے سیٹ اپ اور PIN کو صاف کرتا ہے۔" },
   "settings.clearData.btn.clearEverything": { en: "Clear Everything", ar: "مسح كل شيء", ur: "سب کچھ صاف کریں" },
   "settings.clearData.btn.clearMyData": { en: "Clear My Data", ar: "مسح بياناتي", ur: "میرا ڈیٹا صاف کریں" },
+
+  /* ─── App Lock Tutorial & Setup ─── */
+  "appLock.tutorial.title": { en: "Keep an app private", ar: "حافظ على خصوصية التطبيقات", ur: "ایپ کو پرائیویٹ رکھیں" },
+  "appLock.tutorial.body": { en: "Touch and hold any app to lock it with your PIN.", ar: "اضغط مطولاً على أي تطبيق لإغلاقه برمز PIN الخاص بك.", ur: "کسی بھی ایپ کو PIN سے لاک کرنے کے لیے دبائے رکھیں۔" },
+  "appLock.tutorial.hint": { en: "Hold for 2 seconds", ar: "اضغط لمدة ثانيةين", ur: "2 سیکنڈ کے لیے دبائے رکھیں" },
+  "appLock.tutorial.pressAndHold": { en: "Press and hold", ar: "اضغط مطولاً", ur: "دبائے رکھیں" },
+  "appLock.tutorial.tryIt": { en: "Try it", ar: "جرب الآن", ur: "آزمائیں" },
+  "appLock.tutorial.gotIt": { en: "Got it", ar: "فهمت", ur: "سمجھ گیا" },
+  "appLock.tutorial.progress": { en: "1 of 1", ar: "1 من 1", ur: "1 of 1" },
+  "appLock.tutorial.replay": { en: "Replay App Lock Tutorial", ar: "إعادة تشغيل دليل قفل التطبيقات", ur: "ایپ لاک ٹیوٹوریل دوباره چلائیں" },
+  "appLock.tutorial.replayDesc": { en: "Show the long-press guide on your next app selection", ar: "عرض دليل الضغط المطوّل عند اختيار التطبيق التالي", ur: "اگلی ایپ کے انتخاب پر گائیڈ دکھائیں" },
+  "appLock.tutorial.replayToast": { en: "App Lock tutorial will show on your next app selection.", ar: "سيظهر دليل قفل التطبيقات عند اختيار التطبيق التالي.", ur: "ایپ لاک ٹیوٹوریل اگلی ایپ پر نظر آئے گا۔" },
+  "appLock.setup.title": { en: "Lock {name}?", ar: "قفل {name}؟", ur: "لاک کریں {name}؟" },
+  "appLock.setup.desc": { en: "A PIN will be required whenever someone opens this app.", ar: "سيتطلب إدخال رمز PIN في كل مرة يتم فيها فتح هذا التطبيق.", ur: "جب بھی کوئی اس ایپ کو کھولے گا تو PIN درکار ہوگا۔" },
+  "appLock.setup.confirm": { en: "Lock App", ar: "قفل التطبيق", ur: "ایپ لاک کریں" },
+  "appLock.lockedSuccessSuffix": { en: "is now locked.", ar: "مغلق الآن.", ur: "اب لاک ہے۔" },
+  "appLock.createPin.title": { en: "Create Privacy PIN", ar: "إنشاء رمز PIN الخصوصية", ur: "پرائیویسی PIN بنائیں" },
+  "appLock.createPin.sub1": { en: "Set a 4-digit PIN to protect your locked apps", ar: "أنشئ رمز PIN مكون من 4 أرقام لحماية تطبيقك", ur: "اپنی ایپس کو لاک کرنے کے لیے 4 ہندسوں کا PIN درج کریں" },
+  "appLock.createPin.confirmTitle": { en: "Confirm Privacy PIN", ar: "تأكيد رمز PIN الخصوصية", ur: "پرائیویسی PIN کی تصدیق کریں" },
+  "appLock.createPin.sub2": { en: "Re-enter your 4-digit PIN to confirm", ar: "أعد إدخال رمز PIN المكون من 4 أرقام للتأكيد", ur: "تصدیق کے لیے اپنا 4 ہندسوں کا PIN دوبارہ درج کریں" },
 
   /* ─── Care Team Access Dialog ─── */
   "careteam.title": { en: "Care Team Access", ar: "دخول فريق الرعاية", ur: "کیئر ٹیم رسائی" },

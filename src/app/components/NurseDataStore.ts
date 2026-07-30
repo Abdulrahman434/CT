@@ -382,7 +382,6 @@ function createDefaultState(): NurseStoreState {
       },
     ],
     nurseViewShortcutVisible: false,
-    isHisConnected: true,
     isLocalFallback: false,
   };
 }
