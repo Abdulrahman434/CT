@@ -91,7 +91,7 @@ export function PasswordGate() {
         }}
       />
 
-      {/* ─── Centered Content Area ─── */}
+      {/* ─── Content Area — card sits slightly above center (room for keyboard) ─── */}
       <div
         style={{
           position: "relative",
@@ -99,9 +99,9 @@ export function PasswordGate() {
           width: "100%",
           height: "100%",
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-start",
           justifyContent: "center",
-          padding: "24px",
+          padding: "5vh 24px 24px",
         }}
       >
         {/* ─── White/Frosted Glass Login Card ─── */}
@@ -161,30 +161,6 @@ export function PasswordGate() {
 
           {/* Form wrapper */}
           <div style={{ width: "100%" }}>
-            {/* Welcome text */}
-            <p
-              style={{
-                color: SKY,
-                fontSize: "18px",
-                fontWeight: 700,
-                margin: "0 0 6px",
-                textAlign: "center",
-              }}
-            >
-              Welcome!
-            </p>
-            <p
-              style={{
-                color: "rgba(255, 255, 255, 0.7)",
-                fontSize: "14px",
-                fontWeight: 400,
-                margin: "0 0 24px",
-                textAlign: "center",
-              }}
-            >
-              Please enter your access code to continue.
-            </p>
-
             <form onSubmit={handleSubmit} style={{ width: "100%" }}>
               {/* Password field */}
               <div style={{ marginBottom: "20px" }}>
