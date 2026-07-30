@@ -40,11 +40,15 @@ export interface AuthState {
   lockedHospitalId: string | null;
   /** Whether the user has full access (careinn password) */
   isFullAccess: boolean;
+  /** Whether this session was entered via "Continue as Guest" (no access code) */
+  isGuest: boolean;
 }
 
 interface AuthContextType extends AuthState {
   /** Attempt to log in with a password. Returns true if valid. */
   login: (password: string) => Promise<boolean>;
+  /** Enter without an access code. No locked hospital, no configurator access. */
+  loginAsGuest: () => void;
   /** Log out and return to the password screen */
   logout: () => void;
 }
@@ -54,7 +58,9 @@ const AuthContext = createContext<AuthContextType>({
   password: null,
   lockedHospitalId: null,
   isFullAccess: false,
+  isGuest: false,
   login: async () => false,
+  loginAsGuest: () => {},
   logout: () => {},
 });
 
@@ -71,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password: null,
       lockedHospitalId: null,
       isFullAccess: false,
+      isGuest: false,
     };
   });
 
@@ -129,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password: null, // Avoid storing plaintext password in state anymore
       lockedHospitalId: hospitalId,
       isFullAccess,
+      isGuest: false,
     });
 
     // Notify other contexts and hooks
@@ -138,17 +146,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return true;
   }, []);
 
+  /* Guest entry — no access code. lockedHospitalId stays null so App does not
+   * switchConfig, leaving the device on its existing brand (ThemeContext falls
+   * back to "careinn" when none is set). isFullAccess stays false, so the
+   * HospitalConfigurator lists nothing and its full-access section is hidden. */
+  const loginAsGuest = useCallback(() => {
+    setAuthState({
+      isAuthenticated: true,
+      password: null,
+      lockedHospitalId: null,
+      isFullAccess: false,
+      isGuest: true,
+    });
+
+    window.dispatchEvent(new Event('hospital-changed'));
+  }, []);
+
   const logout = useCallback(() => {
     setAuthState({
       isAuthenticated: false,
       password: null,
       lockedHospitalId: null,
       isFullAccess: false,
+      isGuest: false,
     });
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...authState, login, logout }}>
+    <AuthContext.Provider value={{ ...authState, login, loginAsGuest, logout }}>
       {children}
     </AuthContext.Provider>
   );

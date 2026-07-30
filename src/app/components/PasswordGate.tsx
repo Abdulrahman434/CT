@@ -11,7 +11,7 @@ const SKY = "#6CC4E0";
 const NAVY = "#1B2F5B";
 
 export function PasswordGate() {
-  const { login } = useAuth();
+  const { login, loginAsGuest } = useAuth();
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(false);
@@ -39,6 +39,11 @@ export function PasswordGate() {
     } else {
       setSuccess(true);
     }
+  };
+
+  const handleGuest = () => {
+    loginAsGuest();
+    setSuccess(true);
   };
 
   return (
@@ -85,12 +90,19 @@ export function PasswordGate() {
           position: "absolute",
           inset: 0,
           zIndex: 2,
-          background: "rgba(0, 0, 0, 0.21)",
+          background: "rgba(0, 0, 0, 0.25)",
           pointerEvents: "none",
         }}
       />
 
-      {/* ─── Content Area — card sits slightly above center (room for keyboard) ─── */}
+      {/* ─── Content Area ───
+       * The card is centered via `margin: auto` on the child rather than
+       * `alignItems: center`, so that when the viewport is too short the top of
+       * the card stays reachable instead of being clipped by the scroll box.
+       * Asymmetric padding (bottom > top) biases the centered card slightly
+       * upward — optically centered, and it reserves bottom margin so the
+       * Sign in / Continue as Guest buttons stay clear of the soft keyboard.
+       * vh units keep the bias proportional across screen sizes. */}
       <div
         style={{
           position: "relative",
@@ -98,25 +110,27 @@ export function PasswordGate() {
           width: "100%",
           height: "100%",
           display: "flex",
-          alignItems: "flex-start",
           justifyContent: "center",
-          padding: "5vh 24px 24px",
+          padding: "5vh 24px 7.5vh",
+          overflowY: "auto",
         }}
       >
         {/* ─── White/Frosted Glass Login Card ─── */}
         <div
           style={{
             width: "420px",
-            background: "rgba(255, 255, 255, 0.20)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
+            flexShrink: 0,
+            margin: "auto",
+            background: "rgba(255, 255, 255, 0.15)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
             borderRadius: "20px",
             border: "1px solid rgba(255, 255, 255, 0.3)",
             // Navy-tinted ambient shadow (calmer than pure black) + a soft
             // white top highlight so the glass edge reads crisp on any wallpaper.
             boxShadow:
               "0 24px 60px rgba(15, 30, 55, 0.20), 0 2px 8px rgba(15, 30, 55, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.40)",
-            padding: "40px 32px",
+            padding: "48px 36px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -129,7 +143,7 @@ export function PasswordGate() {
               color: NAVY,
               fontSize: "30px",
               fontWeight: 800,
-              margin: "0 0 4px",
+              margin: "0 0 12px",
               letterSpacing: "-0.5px",
               textAlign: "center",
               textShadow: "0 1px 2px rgba(255, 255, 255, 0.35)",
@@ -143,7 +157,7 @@ export function PasswordGate() {
               color: "rgba(255, 255, 255, 0.85)",
               fontSize: "14px",
               fontWeight: 600,
-              margin: "0 0 32px",
+              margin: "0 0 44px",
               textAlign: "center",
             }}
           >
@@ -154,7 +168,7 @@ export function PasswordGate() {
           <div style={{ width: "100%" }}>
             <form onSubmit={handleSubmit} style={{ width: "100%" }}>
               {/* Password field */}
-              <div style={{ marginBottom: "20px" }}>
+              <div style={{ marginBottom: "28px" }}>
                 <div
                   style={{
                     display: "flex",
@@ -224,7 +238,7 @@ export function PasswordGate() {
               </div>
 
               {/* Error message */}
-              <div style={{ minHeight: "22px", marginBottom: "8px" }}>
+              <div style={{ minHeight: "22px", marginBottom: "14px" }}>
                 {error && (
                   <p
                     style={{
@@ -269,6 +283,38 @@ export function PasswordGate() {
                 }}
               >
                 Sign in
+              </button>
+
+              {/* Secondary action — outline treatment, same width/alignment as
+                  the primary CTA but no fill, lighter weight, no shadow. */}
+              <button
+                type="button"
+                onClick={handleGuest}
+                style={{
+                  width: "100%",
+                  height: "48px",
+                  marginTop: "16px",
+                  borderRadius: "10px",
+                  background: "transparent",
+                  border: "1.5px solid rgba(255, 255, 255, 0.5)",
+                  color: "#FFFFFF",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  letterSpacing: "0.3px",
+                  transition: "background 0.2s ease, border-color 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.14)";
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.7)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.5)";
+                }}
+              >
+                Continue as Guest
               </button>
             </form>
           </div>
