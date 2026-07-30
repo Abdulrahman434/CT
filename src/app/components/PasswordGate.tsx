@@ -8,6 +8,7 @@ import { Eye, EyeOff, X } from "lucide-react";
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 const SKY = "#6CC4E0";
+const NAVY = "#1B2F5B";
 
 export function PasswordGate() {
   const { login } = useAuth();
@@ -78,13 +79,13 @@ export function PasswordGate() {
         />
       </div>
 
-      {/* ─── Dark Overlay ─── */}
+      {/* ─── Light Overlay — keeps the room image airy and visible ─── */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           zIndex: 2,
-          background: "rgba(0, 0, 0, 0.5)",
+          background: "rgba(0, 0, 0, 0.21)",
           pointerEvents: "none",
         }}
       />
@@ -106,12 +107,15 @@ export function PasswordGate() {
         <div
           style={{
             width: "420px",
-            background: "rgba(255, 255, 255, 0.15)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
+            background: "rgba(255, 255, 255, 0.20)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
             borderRadius: "20px",
-            border: "1px solid rgba(255, 255, 255, 0.25)",
-            boxShadow: "0 20px 50px rgba(0, 0, 0, 0.3)",
+            border: "1px solid rgba(255, 255, 255, 0.3)",
+            // Navy-tinted ambient shadow (calmer than pure black) + a soft
+            // white top highlight so the glass edge reads crisp on any wallpaper.
+            boxShadow:
+              "0 24px 60px rgba(15, 30, 55, 0.20), 0 2px 8px rgba(15, 30, 55, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.40)",
             padding: "40px 32px",
             display: "flex",
             flexDirection: "column",
@@ -122,12 +126,13 @@ export function PasswordGate() {
           {/* Title group */}
           <h1
             style={{
-              color: "#FFFFFF",
+              color: NAVY,
               fontSize: "30px",
               fontWeight: 800,
               margin: "0 0 4px",
               letterSpacing: "-0.5px",
               textAlign: "center",
+              textShadow: "0 1px 2px rgba(255, 255, 255, 0.35)",
             }}
           >
             Welcome!
@@ -135,7 +140,7 @@ export function PasswordGate() {
           
           <p
             style={{
-              color: "rgba(255, 255, 255, 0.75)",
+              color: "rgba(255, 255, 255, 0.85)",
               fontSize: "14px",
               fontWeight: 600,
               margin: "0 0 32px",
@@ -163,6 +168,7 @@ export function PasswordGate() {
                 >
                   <input
                     ref={inputRef}
+                    className="pg-password-input"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => {
@@ -186,16 +192,26 @@ export function PasswordGate() {
                       letterSpacing: showPassword ? "0px" : "2px",
                     }}
                   />
+                  {/* Single password visibility toggle — Eye = hidden, EyeOff = visible */}
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide access code" : "Show access code"}
+                    aria-pressed={showPassword}
+                    title={showPassword ? "Hide access code" : "Show access code"}
                     style={{
                       background: "none",
                       border: "none",
                       cursor: "pointer",
-                      padding: "0 14px 0 6px",
+                      flexShrink: 0,
+                      width: "44px",
+                      height: "44px",
+                      marginRight: "4px",
+                      padding: 0,
+                      borderRadius: "8px",
                       display: "flex",
                       alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
                     {showPassword ? (
@@ -329,6 +345,13 @@ export function PasswordGate() {
 
       {/* CSS animations */}
       <style>{`
+        /* Suppress Edge/Chromium's native password reveal + clear buttons —
+           we render our own single eye toggle, and the built-ins duplicate it. */
+        .pg-password-input::-ms-reveal,
+        .pg-password-input::-ms-clear {
+          display: none;
+        }
+
         @keyframes fadeSlideUp {
           from {
             opacity: 0;
