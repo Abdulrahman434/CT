@@ -5,7 +5,7 @@ import { setAccount, getAccount, updateNfcCard, clearAccount, verifyPin } from "
 import { useNfcTap } from "../utils/nfc";
 import { X, CheckCircle, Shield, AlertCircle, Trash2, ChevronRight, Globe, Layout, Settings, Image, Check, SlidersHorizontal } from "lucide-react";
 import { ApiImage } from "./ApiImage";
-import { getApiConfig, saveApiConfig, isCustomConfig, resetApiConfig, SECONDARY_OPTION } from "../lib/apiConfig";
+import { getApiConfig, saveApiConfig, isCustomConfig, resetApiConfig, SECONDARY_OPTION, resolveBaseUrl } from "../lib/apiConfig";
 import { fetchAllWallpapers, WallpaperGroup } from "../lib/hospitalApi";
 import { proxyImageUrls } from "../lib/imageProxy";
 import {
@@ -265,6 +265,10 @@ export function MyPreferencesDialog({
   const [adminPin, setAdminPin] = useState("");
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
 
+  // Connection diagnostics (admin-only) — probes the entered server for reachability vs CORS
+  const [testing, setTesting] = useState(false);
+  const [testResults, setTestResults] = useState<{ path: string; icon: string; note: string }[]>([]);
+
   const account = getAccount();
 
   useEffect(() => {
@@ -337,6 +341,54 @@ export function MyPreferencesDialog({
   const handleResetServer = () => {
     resetApiConfig();
     window.location.reload();
+  };
+
+  // Probe the entered server against the real endpoints. A normal fetch proves
+  // CORS is OK; if it fails, a no-cors fetch that still resolves means the
+  // request reached the server and only CORS blocked reading it — vs. a total
+  // failure (cleartext/network). Distinguishes CORS from transport on-device.
+  const runConnectionTest = async () => {
+    if (!isValidServerUrl(serverIp) || !apiKey.trim()) {
+      setError(true);
+      setTimeout(() => setError(false), 2000);
+      return;
+    }
+    setTesting(true);
+    setTestResults([]);
+    const base = resolveBaseUrl(serverIp);
+    const paths = [
+      "/user/organization/devices/",
+      "/hl7/httpreceiver/?reference_id=1",
+      "/apps/packages/",
+      "/resource/background/wallpaper/?group=1",
+      "/push/device/alerts/",
+    ];
+    const results: { path: string; icon: string; note: string }[] = [];
+    for (const path of paths) {
+      const sep = path.includes("?") ? "&" : "?";
+      const url = `${base}${path}${sep}apikey=${apiKey}`;
+      let entry: { path: string; icon: string; note: string };
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 6000);
+        const res = await fetch(url, { signal: ctrl.signal });
+        clearTimeout(timer);
+        entry = { path, icon: res.ok ? "✅" : "⚠️", note: res.ok ? `${res.status} OK` : `HTTP ${res.status}` };
+      } catch {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 6000);
+          await fetch(url, { mode: "no-cors", signal: ctrl.signal });
+          clearTimeout(timer);
+          entry = { path, icon: "⚠️", note: "reached, CORS-blocked" };
+        } catch {
+          entry = { path, icon: "❌", note: "unreachable" };
+        }
+      }
+      results.push(entry);
+      setTestResults([...results]);
+    }
+    setTesting(false);
   };
 
   const saveLayoutMode = (mode: 1 | 2 | 3) => {
@@ -594,6 +646,49 @@ export function MyPreferencesDialog({
                   Cancel
                 </button>
               </div>
+            </div>
+
+            {/* Connection diagnostics — tests the entered server for reachability vs CORS */}
+            <div className="mt-5 pt-4" style={{ borderTop: `1px solid ${t.borderDefault}` }}>
+              <button
+                onClick={runConnectionTest}
+                disabled={testing}
+                className="w-full py-3 rounded-lg font-bold transition-transform active:scale-[0.98]"
+                style={{ backgroundColor: t.tileInactiveBg, color: t.textHeading, fontFamily: t.fontFamily, border: `1px solid ${t.borderDefault}`, opacity: testing ? 0.6 : 1 }}
+              >
+                {testing ? "Testing…" : "Test Connection"}
+              </button>
+
+              {testResults.length > 0 && (
+                <div className="mt-3 flex flex-col gap-1" style={{ backgroundColor: t.surfaceElevated, borderRadius: t.radiusMd, padding: "12px" }}>
+                  <span style={{ fontFamily: t.fontFamily, fontSize: "12px", fontWeight: 700, color: t.textMuted, marginBottom: 4, wordBreak: "break-all" }}>
+                    {resolveBaseUrl(serverIp)}
+                  </span>
+                  {testResults.map((r) => (
+                    <div key={r.path} className="flex items-center justify-between gap-2">
+                      <span style={{ fontFamily: t.fontFamily, fontSize: "12px", color: t.textNormal, wordBreak: "break-all" }}>
+                        {r.icon} {r.path}
+                      </span>
+                      <span style={{ fontFamily: t.fontFamily, fontSize: "11px", color: t.textMuted, whiteSpace: "nowrap" }}>
+                        {r.note}
+                      </span>
+                    </div>
+                  ))}
+                  {!testing && (
+                    <span style={{ fontFamily: t.fontFamily, fontSize: "12px", fontWeight: 600, color: t.textHeading, marginTop: 8 }}>
+                      {(() => {
+                        const anyCors = testResults.some(r => r.note === "reached, CORS-blocked");
+                        const anyOk = testResults.some(r => r.icon === "✅");
+                        const allUnreachable = testResults.every(r => r.icon === "❌");
+                        if (allUnreachable) return "→ Server unreachable (network / cleartext).";
+                        if (anyCors && !anyOk) return "→ CORS: server reachable, browser reads blocked. Needs native bridge or server CORS header.";
+                        if (anyCors) return "→ Partial: some endpoints CORS-blocked.";
+                        return "→ All endpoints reachable.";
+                      })()}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         );
