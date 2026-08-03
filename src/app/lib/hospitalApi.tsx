@@ -893,7 +893,7 @@ export async function fetchAppPackages(
         category: item.category_title ?? "",
         type: item.type as "APK" | "URL" | "PDF",
         url: item.url ?? null,
-        apkUrl: item.package ? withApiKey(item.package) : null,
+        apkUrl: item.package ? rewriteImageUrl(item.package) : null,
         pdfUrl: item.pdf ?? null,
       }));
 
