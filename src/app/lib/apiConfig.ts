@@ -16,6 +16,11 @@ export const FAKEEH_SECONDARY_OPTION: ApiConfigData = {
   apiKey: "dc870ea4-d5d0-4f91-a4a4-502724603ec0",
 };
 
+export const CAREINN_SECONDARY_OPTION: ApiConfigData = {
+  serverIp: "http://10.32.0.86/api",
+  apiKey: "20b91694-7ea1-4a44-91a6-2878664428b3",
+};
+
 export function isFakeehHospital(hid?: string): boolean {
   let target = hid;
   if (!target) {
@@ -52,6 +57,24 @@ export function isBurjeelHospital(hid?: string): boolean {
   return norm === "burjeel" || norm.includes("burjeel") || norm.includes("bh");
 }
 
+export function isCareInnHospital(hid?: string): boolean {
+  let target = hid;
+  if (!target) {
+    try {
+      const savedTheme = localStorage.getItem("careinn-layout2-theme");
+      if (savedTheme) {
+        const parsed = JSON.parse(savedTheme);
+        target = typeof parsed === "string" ? parsed : (parsed.id || "");
+      }
+    } catch {}
+    if (!target) {
+      target = localStorage.getItem("active-hospital-id") || "";
+    }
+  }
+  const norm = (target || "").trim().toLowerCase();
+  return norm === "careinn" || norm.includes("careinn");
+}
+
 export function getSecondaryOption(hospitalId?: string): ApiConfigData {
   let hid = hospitalId;
   if (!hid) {
@@ -68,6 +91,9 @@ export function getSecondaryOption(hospitalId?: string): ApiConfigData {
   }
   if (isBurjeelHospital(hid)) {
     return BURJEEL_SECONDARY_OPTION;
+  }
+  if (isCareInnHospital(hid)) {
+    return CAREINN_SECONDARY_OPTION;
   }
   return BURJEEL_SECONDARY_OPTION;
 }

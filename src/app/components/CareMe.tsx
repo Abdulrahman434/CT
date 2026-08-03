@@ -1616,7 +1616,7 @@ function HospitalInvoiceOverlay({ theme, onClose }: { theme: any, onClose: () =>
             </button>
             <div className="mt-8">
               <p style={{ fontFamily: theme.fontFamily, fontSize: "14px", fontWeight: 700, color: theme.textHeading }}>{theme.hospitalName}</p>
-              <p style={{ fontFamily: theme.fontFamily, fontSize: "12px", color: theme.textMuted }}>Riyadh, Saudi Arabia</p>
+              <p style={{ fontFamily: theme.fontFamily, fontSize: "12px", color: theme.textMuted }}>{theme.location}, {theme.country}</p>
               <p style={{ fontFamily: theme.fontFamily, fontSize: "12px", color: theme.textMuted }}>VAT ID: 300000000000003</p>
             </div>
           </div>
