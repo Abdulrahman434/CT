@@ -1646,11 +1646,14 @@ export function AppLauncher({
       setInstallingApp(null);
     };
     const onError = (e: Event) => {
-      const { packageName } = (e as CustomEvent).detail;
+      const { packageName, message } = (e as CustomEvent).detail;
       setInstallingApp(prev => {
         if (prev?.packageName === packageName) {
+          // Surface the real reason (e.g. "Download failed: HTTP 404",
+          // cleartext/timeout, or a PackageInstaller status) instead of a
+          // generic message — needed to diagnose install failures on-device.
           window.AndroidSystem?.showToast?.(
-            "Installation failed. Opening web version.", false);
+            message ? `Install failed — ${message}` : "Installation failed.", false);
           return null;
         }
         return prev;
