@@ -1618,6 +1618,9 @@ export function AppLauncher({
     progress?: number;
   } | null>(null);
 
+  // "Opening…" overlay — shown while an installed app is whitelisted + launched
+  const [openingApp, setOpeningApp] = useState<{ packageName: string; name: string } | null>(null);
+
   // Listen for install progress/success/error events from Android
   useEffect(() => {
     const onProgress = (e: Event) => {
@@ -1660,6 +1663,21 @@ export function AppLauncher({
       window.removeEventListener("apk-install-progress", onProgress);
       window.removeEventListener("apk-install-success",  onSuccess);
       window.removeEventListener("apk-install-error",    onError);
+    };
+  }, []);
+
+  // Dismiss the "Opening…" overlay when the app launched (or failed to).
+  useEffect(() => {
+    const onLaunched = () => setOpeningApp(null);
+    const onFailed = () => setOpeningApp(prev => {
+      if (prev) window.AndroidSystem?.showToast?.("Couldn't open the app.", false);
+      return null;
+    });
+    window.addEventListener("app-launched", onLaunched);
+    window.addEventListener("app-launch-failed", onFailed);
+    return () => {
+      window.removeEventListener("app-launched", onLaunched);
+      window.removeEventListener("app-launch-failed", onFailed);
     };
   }, []);
 
@@ -1772,7 +1790,12 @@ export function AppLauncher({
     // 1a. Native APK app — launch if installed, else install
     if (app.packageName && isAndroidApp()) {
       if (apps.isInstalled(app.packageName)) {
-        window.AndroidSystem?.launchApp?.(app.packageName);
+        const pkg = app.packageName;
+        // Show an "Opening…" overlay while native whitelists (Lock Task) + launches.
+        setOpeningApp({ packageName: pkg, name: app.nameKey ? t(app.nameKey) : app.name });
+        window.AndroidSystem?.launchApp?.(pkg);
+        // Backstop: clear the overlay if no app-launched/app-launch-failed event arrives.
+        setTimeout(() => setOpeningApp(prev => (prev?.packageName === pkg ? null : prev)), 6000);
         return;
       }
       if (app.apkUrl) {
@@ -2248,6 +2271,46 @@ export function AppLauncher({
               textAlign: "center",
             }}>
               {installingApp.progress ?? 0}% · {t("appInstall.hint")}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* "Opening…" overlay — same concept as install, but indeterminate
+          (no measurable progress while whitelisting + launching). */}
+      {openingApp && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9998,
+          background: "rgba(0,0,0,0.75)",
+          backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            backgroundColor: theme.surface, borderRadius: theme.radiusXl,
+            padding: "36px 48px", display: "flex", flexDirection: "column",
+            alignItems: "center", gap: "20px", minWidth: "320px",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
+          }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%",
+              backgroundColor: theme.primarySubtle,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              animation: "breathePulse 1.6s ease-in-out infinite",
+            }}>
+              <PlayCircle size={28} style={{ color: theme.primary }} />
+            </div>
+            <p style={{
+              fontFamily: theme.fontFamily, fontSize: "17px", fontWeight: 700,
+              color: theme.textHeading, margin: 0, textAlign: "center",
+            }}>
+              {t("appLaunch.opening")} {openingApp.name}
+            </p>
+            <p style={{
+              fontFamily: theme.fontFamily, fontSize: "13px",
+              color: theme.textMuted, margin: 0, textAlign: "center",
+            }}>
+              {t("appLaunch.hint")}
             </p>
           </div>
         </div>

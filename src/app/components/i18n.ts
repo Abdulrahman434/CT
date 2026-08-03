@@ -1134,6 +1134,8 @@ const translations: Record<string, TranslationEntry> = {
   /* ─── App Install ─── */
   "appInstall.installing": { en: "Installing", ar: "جار تثبيت", ur: "انسٹال ہو رہا ہے" },
   "appInstall.hint": { en: "This only happens once", ar: "يحدث هذا مرة واحدة فقط", ur: "یہ صرف ایک بار ہوتا ہے" },
+  "appLaunch.opening": { en: "Opening", ar: "جارٍ الفتح", ur: "کھولا جا رہا ہے" },
+  "appLaunch.hint": { en: "Please wait a moment…", ar: "يرجى الانتظار لحظة…", ur: "براہ کرم ایک لمحہ انتظار کریں…" },
 
   /* ─── Offline Banner ─── */
   "offline.title": { en: "No Internet Connection", ar: "لا يوجد اتصال بالإنترنت", ur: "انٹرنیٹ کنکشن نہیں" },
