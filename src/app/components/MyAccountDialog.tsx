@@ -650,6 +650,20 @@ export function MyPreferencesDialog({
 
             {/* Connection diagnostics — tests the entered server for reachability vs CORS */}
             <div className="mt-5 pt-4" style={{ borderTop: `1px solid ${t.borderDefault}` }}>
+              {(window as any).AndroidSystem?.getKioskStatus && (() => {
+                let ks: any = {};
+                try { ks = JSON.parse((window as any).AndroidSystem.getKioskStatus() || "{}"); } catch {}
+                return (
+                  <div style={{ marginBottom: 12, fontFamily: t.fontFamily, fontSize: "12px", color: t.textMuted }}>
+                    <span>Device Owner: </span>
+                    <b style={{ color: ks.isDeviceOwner ? t.textHeading : "#EF4444" }}>{ks.isDeviceOwner ? "Yes" : "No"}</b>
+                    {!ks.isDeviceOwner && (
+                      <span style={{ color: "#EF4444" }}> — kiosk is screen-pinning; apps can't launch until Device Owner is restored</span>
+                    )}
+                    <div>Lock Task: {ks.isInLockTask ? "On" : "Off"} · Build: {ks.buildType || "?"}</div>
+                  </div>
+                );
+              })()}
               <button
                 onClick={runConnectionTest}
                 disabled={testing}
