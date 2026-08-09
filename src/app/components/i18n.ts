@@ -984,6 +984,38 @@ const translations: Record<string, TranslationEntry> = {
     ur: "غلط PIN"
   },
 
+  /* ── Guest home dashboard (entered via "Continue as Guest" on the access screen) ── */
+  "guest.home.welcome": {
+    en: "Welcome, Guest",
+    ar: "أهلاً بك، ضيفنا",
+    ur: "خوش آمدید، مہمان"
+  },
+  "guest.home.subtitle": {
+    en: "Enjoy entertainment and general hospital services.",
+    ar: "استمتع بخدمات الترفيه والخدمات العامة للمستشفى.",
+    ur: "تفریح اور ہسپتال کی عمومی خدمات سے لطف اٹھائیں۔"
+  },
+  "guest.home.modeBadge": {
+    en: "Guest Mode",
+    ar: "وضع الضيف",
+    ur: "مہمان موڈ"
+  },
+  "guest.home.patientLogin": {
+    en: "Patient Login",
+    ar: "تسجيل دخول المريض",
+    ur: "مریض لاگ ان"
+  },
+  "guest.services.title": {
+    en: "Patient Services",
+    ar: "خدمات المريض",
+    ur: "مریض کی خدمات"
+  },
+  "guest.services.subtitle": {
+    en: "Login required to access personalized services.",
+    ar: "يلزم تسجيل الدخول للوصول إلى الخدمات الشخصية.",
+    ur: "ذاتی خدمات تک رسائی کے لیے لاگ ان ضروری ہے۔"
+  },
+
   /* ── App Lock ── */
   "appLock.lock.title": { en: "Lock this app", ar: "قفل هذا التطبيق", ur: "یہ ایپ مقفل کریں" },
   "appLock.lock.subtitle": { en: "Require PIN to open", ar: "يتطلب رمز PIN للفتح", ur: "کھولنے کے لیے PIN درکار" },

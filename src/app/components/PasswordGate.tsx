@@ -219,10 +219,20 @@ export function PasswordGate() {
           {/* Form wrapper */}
           <div style={{ width: "100%" }}>
             <form onSubmit={handleSubmit} style={{ width: "100%" }}>
-              {/* Password field */}
-              <div style={{ marginBottom: compact ? "18px" : "28px" }}>
+              {/* Access code + Sign in share one row: the field flexes, the CTA
+                  is docked to its right at a fixed width. */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "stretch",
+                  gap: "10px",
+                }}
+              >
                 <div
                   style={{
+                    flex: 1,
+                    minWidth: 0,
+                    height: "48px",
                     display: "flex",
                     alignItems: "center",
                     border: `1.5px solid ${error ? "#EF4444" : isFocused ? SKY : "rgba(255, 255, 255, 0.25)"}`,
@@ -247,15 +257,19 @@ export function PasswordGate() {
                     autoComplete="off"
                     style={{
                       flex: 1,
+                      minWidth: 0,
                       background: "transparent",
                       border: "none",
                       outline: "none",
                       color: "#FFFFFF",
                       fontSize: "15px",
                       fontWeight: 500,
-                      padding: "14px 16px",
+                      padding: "0 4px 0 16px",
+                      height: "100%",
                       fontFamily: "inherit",
-                      letterSpacing: showPassword ? "0px" : "2px",
+                      // Only track the masked dots — tracking the placeholder too
+                      // overflows it now that the field shares its row with the CTA.
+                      letterSpacing: password && !showPassword ? "2px" : "0px",
                     }}
                   />
                   {/* Single password visibility toggle — Eye = hidden, EyeOff = visible */}
@@ -287,10 +301,43 @@ export function PasswordGate() {
                     )}
                   </button>
                 </div>
+
+                {/* Primary CTA — docked to the right of the field */}
+                <button
+                  type="submit"
+                  style={{
+                    flexShrink: 0,
+                    width: "116px",
+                    height: "48px",
+                    border: "none",
+                    borderRadius: "10px",
+                    background: `linear-gradient(135deg, ${SKY} 0%, #5BB8D6 100%)`,
+                    color: "#FFFFFF",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    letterSpacing: "0.5px",
+                    transition: "transform 0.15s ease, box-shadow 0.2s ease",
+                    boxShadow: "0 2px 12px rgba(108, 196, 224, 0.3)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 4px 20px rgba(108, 196, 224, 0.5)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 2px 12px rgba(108, 196, 224, 0.3)";
+                  }}
+                >
+                  Sign in
+                </button>
               </div>
 
-              {/* Error message */}
-              <div style={{ minHeight: "22px", marginBottom: compact ? "10px" : "14px" }}>
+              {/* Error message — the always-reserved slot doubles as the gap
+                  between the input row and Continue as Guest, so the spacing
+                  holds at 22px whether or not an error is showing. */}
+              <div style={{ minHeight: "22px" }}>
                 {error && (
                   <p
                     style={{
@@ -307,45 +354,14 @@ export function PasswordGate() {
                 )}
               </div>
 
-              {/* Sign in button */}
-              <button
-                type="submit"
-                style={{
-                  width: "100%",
-                  height: "48px",
-                  border: "none",
-                  borderRadius: "10px",
-                  background: `linear-gradient(135deg, ${SKY} 0%, #5BB8D6 100%)`,
-                  color: "#FFFFFF",
-                  fontSize: "15px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  letterSpacing: "0.5px",
-                  transition: "transform 0.15s ease, box-shadow 0.2s ease",
-                  boxShadow: "0 2px 12px rgba(108, 196, 224, 0.3)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 4px 20px rgba(108, 196, 224, 0.5)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 2px 12px rgba(108, 196, 224, 0.3)";
-                }}
-              >
-                Sign in
-              </button>
-
-              {/* Secondary action — outline treatment, same width/alignment as
-                  the primary CTA but no fill, lighter weight, no shadow. */}
+              {/* Secondary action — full width, outline treatment: no fill,
+                  lighter weight, no shadow. */}
               <button
                 type="button"
                 onClick={handleGuest}
                 style={{
                   width: "100%",
                   height: "48px",
-                  marginTop: compact ? "12px" : "16px",
                   borderRadius: "10px",
                   background: "transparent",
                   border: "1.5px solid rgba(255, 255, 255, 0.5)",

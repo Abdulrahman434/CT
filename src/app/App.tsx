@@ -8,6 +8,7 @@ import { useLocale, translateWithLocale } from "./components/i18n";
 import { TopBar } from "./components/TopBar";
 import { NewsTicker } from "./components/NewsTicker";
 import { PatientGreeting } from "./components/PatientGreeting";
+import { GuestGreeting, GuestPatientServices } from "./components/GuestHome";
 import { ServicesGrid, ShortcutsColumn, HubGridCompact, ServiceCardsRow } from "./components/ServicesGrid";
 import { useCmsHospital, useCmsSectionVisibility } from '../lib/useCmsContent';
 import { CareMe, CareMeExpanded } from "./components/CareMe";
@@ -313,6 +314,10 @@ function BedsideScreen() {
   // Note: Existing history back/push logic for normal overlays at line 174 
   // is still needed for non-lock overlays, but we've integrated popstate above.
   const { isGuest, careMeUnlocked } = useGuestMode();
+  /* Separate from useGuestMode() above, which is the screensaver lock-screen
+   * guest. This one is the session entered via "Continue as Guest" on the
+   * access-code screen, and it drives the guest home dashboard. */
+  const { isGuest: guestSession } = useAuth();
   const [showCall, setShowCall] = useState(false);
   const [showFoodOrder, setShowFoodOrder] = useState(false);
   const [showNeedSomething, setShowNeedSomething] = useState(false);
@@ -1511,16 +1516,25 @@ function BedsideScreen() {
                       {/* Top: Greeting + CareMe horizontally */}
                       <div className="flex-1 flex flex-row gap-5 min-h-0">
                         <div className="flex-1 min-w-0 min-h-0 flex flex-col">
-                          <PatientGreeting
-                            onOpenAboutUs={() => setShowAboutUs(true)}
-                            onOpenTour={() => setShowTour(true)}
-                            fillImage
-                            showAboutUs={v.show_about_us}
-                            onImageTap={(url) => setCtaMediaConfig({ type: "image", url, title: t("general.aboutUs") })}
-                          />
+                          {guestSession ? (
+                            <GuestGreeting
+                              onOpenAboutUs={() => setShowAboutUs(true)}
+                              showAboutUs={v.show_about_us}
+                            />
+                          ) : (
+                            <PatientGreeting
+                              onOpenAboutUs={() => setShowAboutUs(true)}
+                              onOpenTour={() => setShowTour(true)}
+                              fillImage
+                              showAboutUs={v.show_about_us}
+                              onImageTap={(url) => setCtaMediaConfig({ type: "image", url, title: t("general.aboutUs") })}
+                            />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0 min-h-0 flex flex-col">
-                          {(!isGuest || careMeUnlocked) ? (
+                          {guestSession ? (
+                            <GuestPatientServices />
+                          ) : (!isGuest || careMeUnlocked) ? (
                             <CareMe onExpand={() => setShowCareMeExpanded(true)} />
                           ) : (
                             <CareMeLockedPlaceholder onTap={() => setShowCareMePinDialog(true)} />
@@ -1535,6 +1549,8 @@ function BedsideScreen() {
                           setOpenAccountDirectly(true);
                           setShowSettings(true);
                         }}
+                        guestMode={guestSession}
+                        onOpenSurvey={() => setShowSurvey(true)}
                       />
                     </div>
 
@@ -1547,26 +1563,41 @@ function BedsideScreen() {
                           setOpenAccountDirectly(true);
                           setShowSettings(true);
                         }}
+                        guestMode={guestSession}
                       />
                     </div>
                   </div>
                 ) : layoutVersion === 1 ? (
                   <>
-                    {/* Left Column — PatientGreeting + CareMe */}
+                    {/* Left Column — PatientGreeting + CareMe (guest: welcome + locked services) */}
                     <div className="flex flex-col gap-5 shrink-0 min-h-0 h-full" style={{ width: "400px" }}>
-                      <PatientGreeting
-                        onOpenAboutUs={() => setShowAboutUs(true)}
-                        onOpenTour={() => setShowTour(true)}
-                        showAboutUs={v.show_about_us}
-                        onImageTap={(url) => setCtaMediaConfig({ type: "image", url, title: t("general.aboutUs") })}
-                      />
-                      <div className="flex-1 min-h-0 flex flex-col">
-                        {(!isGuest || careMeUnlocked) ? (
-                          <CareMe onExpand={() => setShowCareMeExpanded(true)} />
-                        ) : (
-                          <CareMeLockedPlaceholder onTap={() => setShowCareMePinDialog(true)} />
-                        )}
-                      </div>
+                      {guestSession ? (
+                        <>
+                          <GuestGreeting
+                            onOpenAboutUs={() => setShowAboutUs(true)}
+                            showAboutUs={v.show_about_us}
+                          />
+                          <div className="flex-1 min-h-0 flex flex-col">
+                            <GuestPatientServices />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <PatientGreeting
+                            onOpenAboutUs={() => setShowAboutUs(true)}
+                            onOpenTour={() => setShowTour(true)}
+                            showAboutUs={v.show_about_us}
+                            onImageTap={(url) => setCtaMediaConfig({ type: "image", url, title: t("general.aboutUs") })}
+                          />
+                          <div className="flex-1 min-h-0 flex flex-col">
+                            {(!isGuest || careMeUnlocked) ? (
+                              <CareMe onExpand={() => setShowCareMeExpanded(true)} />
+                            ) : (
+                              <CareMeLockedPlaceholder onTap={() => setShowCareMePinDialog(true)} />
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {/* Center + Right Column */}
@@ -1583,6 +1614,8 @@ function BedsideScreen() {
                           }}
                           lockMenu={lockMenuApp}
                           onLockMenuChange={setLockMenuApp}
+                          guestMode={guestSession}
+                          onOpenSurvey={() => setShowSurvey(true)}
                         />
                       </div>
 
@@ -1595,6 +1628,7 @@ function BedsideScreen() {
                             setOpenAccountDirectly(true);
                             setShowSettings(true);
                           }}
+                          guestMode={guestSession}
                         />
                       </div>
                     </div>
@@ -1602,20 +1636,31 @@ function BedsideScreen() {
                 ) : (
                   /* ─── V2 Layout: Shortcuts in container ─── */
                   <>
-                    {/* Left Column — PatientGreeting + CareMe */}
+                    {/* Left Column — PatientGreeting + CareMe (guest: welcome + locked services) */}
                     <div className="flex flex-col gap-5 shrink-0 min-h-0 h-full" style={{ width: "400px" }}>
-                      <PatientGreeting
-                        onOpenAboutUs={() => setShowAboutUs(true)}
-                        onOpenTour={() => setShowTour(true)}
-                        onImageTap={(url) => setCtaMediaConfig({ type: "image", url, title: t("general.aboutUs") })}
-                      />
-                      <div className="flex-1 min-h-0 flex flex-col">
-                        {(!isGuest || careMeUnlocked) ? (
-                          <CareMe onExpand={() => setShowCareMeExpanded(true)} />
-                        ) : (
-                          <CareMeLockedPlaceholder onTap={() => setShowCareMePinDialog(true)} />
-                        )}
-                      </div>
+                      {guestSession ? (
+                        <>
+                          <GuestGreeting onOpenAboutUs={() => setShowAboutUs(true)} />
+                          <div className="flex-1 min-h-0 flex flex-col">
+                            <GuestPatientServices />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <PatientGreeting
+                            onOpenAboutUs={() => setShowAboutUs(true)}
+                            onOpenTour={() => setShowTour(true)}
+                            onImageTap={(url) => setCtaMediaConfig({ type: "image", url, title: t("general.aboutUs") })}
+                          />
+                          <div className="flex-1 min-h-0 flex flex-col">
+                            {(!isGuest || careMeUnlocked) ? (
+                              <CareMe onExpand={() => setShowCareMeExpanded(true)} />
+                            ) : (
+                              <CareMeLockedPlaceholder onTap={() => setShowCareMePinDialog(true)} />
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     <div className="flex-1 flex flex-row gap-[40px] min-w-0 min-h-0">
@@ -1632,6 +1677,8 @@ function BedsideScreen() {
                           }}
                           lockMenu={lockMenuApp}
                           onLockMenuChange={setLockMenuApp}
+                          guestMode={guestSession}
+                          onOpenSurvey={() => setShowSurvey(true)}
                         />
                       </div>
 
@@ -1646,6 +1693,7 @@ function BedsideScreen() {
                             setOpenAccountDirectly(true);
                             setShowSettings(true);
                           }}
+                          guestMode={guestSession}
                         />
                       </div>
                     </div>

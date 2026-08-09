@@ -105,6 +105,10 @@ const serviceItems = [
   { label: "Call", labelKey: "service.call", svgPaths: [svgPaths.p1a7ce800], clipId: "clip_call" },
 ];
 
+/* Guest sessions gate Consultation / Housekeeping / Meal Ordering behind login —
+ * they render as locked previews in the sidebar instead. Call stays open. */
+const GUEST_SERVICE_ITEMS = serviceItems.filter((s) => s.label === "Call");
+
 const surveyItem = {
   label: "Survey",
   svgPaths: [
@@ -764,32 +768,38 @@ function AboutUsButton({ onTap, onLongPress, isLocked }: { onTap: () => void; on
 }
 
 /* ─── Engagement Grid: 4×2 hub + bottom row ─── */
-export function ServicesGrid({ 
-  onOpenCategory, 
-  onLaunchTool, 
-  contained, 
-  swapped, 
+export function ServicesGrid({
+  onOpenCategory,
+  onLaunchTool,
+  contained,
+  swapped,
   compact,
   visibility = DEFAULT_VISIBILITY,
   onRequestPinSetup,
   lockMenu,
-  onLockMenuChange: setLockMenu = () => {}
-}: { 
-  onOpenCategory?: (key: string) => void; 
-  onLaunchTool?: (id: string) => void; 
-  contained?: boolean; 
-  swapped?: boolean; 
+  onLockMenuChange: setLockMenu = () => {},
+  guestMode,
+  onOpenSurvey
+}: {
+  onOpenCategory?: (key: string) => void;
+  onLaunchTool?: (id: string) => void;
+  contained?: boolean;
+  swapped?: boolean;
   compact?: boolean;
   visibility?: SectionVisibility;
   onRequestPinSetup?: () => void;
   lockMenu?: string | null;
   onLockMenuChange?: (val: string | null) => void;
+  /** Guest session — personalized services move to the sidebar's locked card. */
+  guestMode?: boolean;
+  onOpenSurvey?: () => void;
 }) {
   const { theme } = useTheme();
   const { t } = useLocale();
   const lockedIds = useLockedApps();
 
   const shortcutItems = getShortcutItems(theme.id);
+  const visibleServices = guestMode ? GUEST_SERVICE_ITEMS : serviceItems;
   const gridGap = compact ? "gap-3" : "gap-6";
   const bottomHeight = compact ? "140px" : "192px";
 
@@ -858,7 +868,7 @@ export function ServicesGrid({
 
       {/* Bottom row — services (default) or shortcuts (swapped) */}
       <div
-        className={`grid grid-cols-4 ${gridGap} shrink-0 items-center`}
+        className={`grid ${guestMode && !swapped ? "grid-cols-2" : "grid-cols-4"} ${gridGap} shrink-0 items-center`}
         style={{ height: bottomHeight }}
       >
         {swapped
@@ -891,22 +901,39 @@ export function ServicesGrid({
               ))}
             </div>
           )
-          : serviceItems.map((item) => (
-              isServiceVisible(item.label) ? (
-                <ServiceCard
-                  key={item.label}
-                  item={item}
-                  contained={contained}
+          : (
+            <>
+              {visibleServices.map((item) => (
+                isServiceVisible(item.label) ? (
+                  <ServiceCard
+                    key={item.label}
+                    item={item}
+                    contained={contained}
+                    compact={compact}
+                    onTap={() => {
+                      if (lockedIds.has(item.label)) setLockMenu(item.label + "__open");
+                      else onOpenCategory?.(item.label);
+                    }}
+                    onLongPress={() => setLockMenu(item.label)}
+                    isLocked={lockedIds.has(item.label)}
+                  />
+                ) : <div key={item.label} className="w-full h-full" />
+              ))}
+              {/* Guest: Your Feedback moves here from the right rail, so the
+                  shortened row still fills its width. */}
+              {guestMode && (
+                <SurveyCardFilled
                   compact={compact}
-                  onTap={() => {
-                    if (lockedIds.has(item.label)) setLockMenu(item.label + "__open");
-                    else onOpenCategory?.(item.label);
+                  onOpen={() => {
+                    if (lockedIds.has("service.shareFeedback")) setLockMenu("service.shareFeedback__open");
+                    else onOpenSurvey?.();
                   }}
-                  onLongPress={() => setLockMenu(item.label)}
-                  isLocked={lockedIds.has(item.label)}
+                  onLongPress={() => setLockMenu("service.shareFeedback")}
+                  isLocked={lockedIds.has("service.shareFeedback")}
                 />
-              ) : <div key={item.label} className="w-full h-full" />
-            ))
+              )}
+            </>
+          )
         }
       </div>
 
@@ -921,6 +948,7 @@ export function ServicesGrid({
           onOpenApp={lockMenu.endsWith("__open") 
             ? () => {
                 const id = lockMenu.replace("__open", "");
+                if (id === "service.shareFeedback") onOpenSurvey?.();
                 const hub = hubItems.find(h => h.labelKey === id || h.label === id);
                 if (hub) onOpenCategory?.(hub.label);
                 const svc = serviceItems.find(s => s.label === id);
@@ -940,19 +968,20 @@ export function ServicesGrid({
 }
 
 /* ─── Right Column — shortcuts (default) or services (swapped) ─── */
-export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped, onRequestPinSetup }: { contained?: boolean; onOpenSurvey?: () => void; onLaunchTool?: (id: string) => void; swapped?: boolean; onRequestPinSetup?: () => void }) {
+export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped, onRequestPinSetup, guestMode }: { contained?: boolean; onOpenSurvey?: () => void; onLaunchTool?: (id: string) => void; swapped?: boolean; onRequestPinSetup?: () => void; guestMode?: boolean }) {
   const { theme } = useTheme();
   const { t } = useLocale();
   const lockedIds = useLockedApps();
   const [lockMenu, setLockMenu] = useState<string | null>(null);
 
   const shortcutItems = getShortcutItems(theme.id);
+  const visibleServices = guestMode ? GUEST_SERVICE_ITEMS : serviceItems;
   if (swapped) {
     return (
       <div className="flex flex-col h-full" style={{ gap: "36px" }}>
         {/* Services section — matches hub grid height (flex-1) */}
         <div className="flex flex-col gap-6 flex-1 min-h-0 justify-end">
-          {serviceItems.map((item) => (
+          {visibleServices.map((item) => (
             <div key={item.label} className="flex-1 min-h-0">
               <ServiceCard
                 item={item}
@@ -1032,17 +1061,20 @@ export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped
         </div>
       </div>
 
-      {/* Survey — separate card, same height as services row (190px) */}
-      <div className="shrink-0" style={{ height: "192px" }}>
-        <SurveyCardFilled
-          onOpen={() => {
-            if (lockedIds.has("service.shareFeedback")) setLockMenu("service.shareFeedback__open");
-            else onOpenSurvey?.();
-          }}
-          onLongPress={() => setLockMenu("service.shareFeedback")}
-          isLocked={lockedIds.has("service.shareFeedback")}
-        />
-      </div>
+      {/* Survey — separate card, same height as services row (190px).
+          In guest mode it renders in the shortened services row instead. */}
+      {!guestMode && (
+        <div className="shrink-0" style={{ height: "192px" }}>
+          <SurveyCardFilled
+            onOpen={() => {
+              if (lockedIds.has("service.shareFeedback")) setLockMenu("service.shareFeedback__open");
+              else onOpenSurvey?.();
+            }}
+            onLongPress={() => setLockMenu("service.shareFeedback")}
+            isLocked={lockedIds.has("service.shareFeedback")}
+          />
+        </div>
+      )}
       {lockMenu && (
         <AppLockMenu
           appId={lockMenu.replace("__open", "")}
@@ -1188,18 +1220,25 @@ export function HubGridCompact({
 }
 
 /* ─── V3 Service Cards Row: standalone bottom row ─── */
-export function ServiceCardsRow({ 
+export function ServiceCardsRow({
   onOpenCategory,
   visibility = DEFAULT_VISIBILITY,
-  onRequestPinSetup
-}: { 
+  onRequestPinSetup,
+  guestMode,
+  onOpenSurvey
+}: {
   onOpenCategory?: (key: string) => void;
   visibility?: SectionVisibility;
   onRequestPinSetup?: () => void;
+  /** Guest session — personalized services move to the sidebar's locked card. */
+  guestMode?: boolean;
+  onOpenSurvey?: () => void;
 }) {
   const { t } = useLocale();
   const lockedIds = useLockedApps();
   const [lockMenu, setLockMenu] = useState<string | null>(null);
+
+  const visibleServices = guestMode ? GUEST_SERVICE_ITEMS : serviceItems;
 
   const isServiceVisible = (label: string) => {
     if (label === "Consultation") return visibility.show_care_plan;
@@ -1209,8 +1248,8 @@ export function ServiceCardsRow({
   };
 
   return (
-    <div className="grid grid-cols-4 gap-6 shrink-0 items-center" style={{ height: "192px" }}>
-      {serviceItems.map((item) => (
+    <div className={`grid ${guestMode ? "grid-cols-2" : "grid-cols-4"} gap-6 shrink-0 items-center`} style={{ height: "192px" }}>
+      {visibleServices.map((item) => (
         isServiceVisible(item.label) ? (
           <ServiceCard
             key={item.label}
@@ -1224,6 +1263,16 @@ export function ServiceCardsRow({
           />
         ) : <div key={item.label} className="w-full h-full" />
       ))}
+      {guestMode && (
+        <SurveyCardFilled
+          onOpen={() => {
+            if (lockedIds.has("service.shareFeedback")) setLockMenu("service.shareFeedback__open");
+            else onOpenSurvey?.();
+          }}
+          onLongPress={() => setLockMenu("service.shareFeedback")}
+          isLocked={lockedIds.has("service.shareFeedback")}
+        />
+      )}
       {lockMenu && (
         <AppLockMenu
           appId={lockMenu.replace("__open", "")}
@@ -1234,6 +1283,7 @@ export function ServiceCardsRow({
           onRequestPinSetup={onRequestPinSetup || (() => {})}
           onOpenApp={lockMenu.endsWith("__open") ? () => {
             const id = lockMenu.replace("__open", "");
+            if (id === "service.shareFeedback") onOpenSurvey?.();
             const svc = serviceItems.find(s => s.label === id);
             if (svc) onOpenCategory?.(svc.label);
           } : undefined}
