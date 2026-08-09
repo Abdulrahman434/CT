@@ -1,6 +1,7 @@
 import { isAndroidApp } from "../utils/androidBridge";
 import { nurseActions } from "../components/NurseDataStore";
 import { clearUserData } from "./onboardingStore";
+import { getPackagesCache } from "./hospitalApi";
 
 /**
  * Performs a partial data wipe, clearing cookies, sessionStorage, caches,
@@ -113,12 +114,30 @@ export async function clearAllDataAndReload(): Promise<void> {
     console.warn("Cookie clear skipped:", e);
   }
 
-  // 6. On Android — call native clear which handles WebView cache,
-  //    Android cookies, and app data. The native method also 
-  //    triggers the reload, so we return early.
-  if (isAndroidApp() && window.AndroidSystem?.clearAllDataAndReload) {
-    window.AndroidSystem.clearAllDataAndReload();
-    return;  // Android side handles the reload
+  // 6. On Android — first wipe third-party patient apps (WhatsApp, etc.) so
+  //    the next patient can't see the previous one's logins, then call native
+  //    clear (WebView cache/cookies) which also triggers the reload.
+  if (isAndroidApp()) {
+    try {
+      const apiPkgs = getPackagesCache()
+        .filter((p: any) => p.type === "APK" && p.packageName)
+        .map((p: any) => p.packageName as string);
+      const known = [
+        "com.whatsapp", "com.google.android.youtube", "com.android.chrome",
+        "com.microsoft.teams", "com.google.android.apps.tachyon",
+        "com.instagram.android", "com.facebook.katana", "com.twitter.android",
+        "com.snapchat.android",
+      ];
+      const pkgs = Array.from(new Set([...apiPkgs, ...known]));
+      window.AndroidSystem?.clearAppData?.(JSON.stringify(pkgs));
+    } catch (e) {
+      console.warn("clearAppData skipped:", e);
+    }
+
+    if (window.AndroidSystem?.clearAllDataAndReload) {
+      window.AndroidSystem.clearAllDataAndReload();
+      return;  // Android side handles the reload
+    }
   }
 
   // 7. Reload the page (browser fallback)
