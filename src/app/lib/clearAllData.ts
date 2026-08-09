@@ -119,9 +119,13 @@ export async function clearAllDataAndReload(): Promise<void> {
   //    clear (WebView cache/cookies) which also triggers the reload.
   if (isAndroidApp()) {
     try {
+      // Authoritative source: every app the server lists with a package
+      // name (any type), so all configured patient apps get wiped — not
+      // just the ones flagged "APK".
       const apiPkgs = getPackagesCache()
-        .filter((p: any) => p.type === "APK" && p.packageName)
-        .map((p: any) => p.packageName as string);
+        .filter((p: any) => p.packageName)
+        .map((p: any) => String(p.packageName).trim())
+        .filter(Boolean);
       const known = [
         "com.whatsapp", "com.google.android.youtube", "com.android.chrome",
         "com.microsoft.teams", "com.google.android.apps.tachyon",
