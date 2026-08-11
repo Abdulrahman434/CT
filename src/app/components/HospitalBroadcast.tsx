@@ -43,6 +43,7 @@ export interface BroadcastNotification {
   ctaUrl?: string;
   ctaSurveyId?: string;
   isLater?: boolean;
+  icon?: string;
 }
 
 const PRIORITY_CONFIG: Record<BroadcastPriority, {
