@@ -368,6 +368,13 @@ export function NotificationsPanel({
     const seen = getSeenAlertIds();
     let filtered = alerts.filter(a => !hidden.has(a.id));
 
+    // Filter out any alert that is already in acknowledgedBroadcasts history to avoid duplicates
+    filtered = filtered.filter(a => {
+      const apiId = `api-${a.id}`;
+      const alertId = `alert-${a.id}`;
+      return !acknowledgedBroadcasts.some(b => b.id === apiId || b.id === alertId);
+    });
+
     // Filter out anything not today if not historyMode
     if (!historyMode) {
       filtered = filtered.filter(a => {
@@ -385,7 +392,7 @@ export function NotificationsPanel({
       time:      formatNotificationTime(a.lastSentAt || a.scheduledAt || a.createdAt),
       read:      seen.has(a.id),
     }));
-  }, [locale, formatNotificationTime]);
+  }, [locale, formatNotificationTime, acknowledgedBroadcasts]);
 
   const mapHardcodedAlerts = useCallback((historyMode: boolean): Notification[] => {
     const hidden = getHardcodedHidden();

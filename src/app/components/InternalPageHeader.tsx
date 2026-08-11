@@ -17,7 +17,7 @@ export function InternalPageHeader({ title, subtitle, icon, onClose, rightAction
     <div className="shrink-0 flex items-center gap-5 px-12 pt-10 pb-6 relative z-10">
       <button
         onClick={onClose}
-        className="flex items-center justify-center transition-transform cursor-pointer active:scale-95"
+        className="flex items-center justify-center cursor-pointer active:scale-95"
         style={{
           width: "52px",
           height: "52px",
@@ -25,6 +25,9 @@ export function InternalPageHeader({ title, subtitle, icon, onClose, rightAction
           backgroundColor: "rgba(255,255,255,0.12)",
           border: "1px solid rgba(255,255,255,0.15)",
           outline: 'none',
+          touchAction: 'manipulation',
+          transition: 'transform 75ms ease',
+          WebkitTapHighlightColor: 'transparent',
         }}
       >
         <Home size={22} style={{ color: "#fff" }} />

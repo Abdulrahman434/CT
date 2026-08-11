@@ -19,6 +19,10 @@ import { useLockedApps } from "../lib/lockedApps";
 import { useLongPress } from "../lib/useLongPress";
 import { AppLockMenu } from "./AppLockMenu";
 import { LockBadge } from "./LockBadge";
+import { useGuestMode } from "../lib/guestMode";
+import { hasSeenAppLockTutorial } from "../lib/appLockTutorialStore";
+import { AppLockTutorialOverlay, TargetTileInfo } from "./AppLockTutorialOverlay";
+import { AppLockSetupModal } from "./AppLockSetupModal";
 
 export interface SectionVisibility {
   show_iptv: boolean;
@@ -173,7 +177,7 @@ function HubCard({
   isLocked
 }: {
   item: (typeof hubItems)[0];
-  onTap: () => void;
+  onTap: (e?: React.MouseEvent<HTMLElement>) => void;
   contained?: boolean;
   compact?: boolean;
   onLongPress: () => void;
@@ -187,7 +191,7 @@ function HubCard({
   const iconBoxSize = compact ? "48px" : "72px";
   const iconRadius = compact ? theme.radiusMd : theme.radiusLg;
 
-  const { handlers, handleClick } = useLongPress(onLongPress, 600);
+  const { handlers, handleClick } = useLongPress(onLongPress, 1000);
 
   return (
     <button
@@ -195,7 +199,7 @@ function HubCard({
       onPointerDown={(e) => { onPointerDown(e); handlers.onPointerDown(); setPressed(true); }}
       onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
       onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
-      onClick={() => handleClick(onTap)}
+      onClick={(e) => handleClick(() => onTap(e))}
       className={`relative overflow-hidden flex flex-col items-center justify-center ${compact ? "gap-1.5" : "gap-3"} transition-transform duration-100 ease-out cursor-pointer h-full w-full`}
       style={{
         backgroundColor: pressed ? theme.primary : contained ? theme.surfaceElevated : theme.surface,
@@ -244,7 +248,7 @@ function HubCard({
 }
 
 /* ─── Service Card — CareMe / Call / Education ─── */
-function ServiceCard({ item, onTap, square, contained, compact, onLongPress, isLocked }: { item: (typeof serviceItems)[0] & { viewBox?: string }; onTap?: () => void; square?: boolean; contained?: boolean; compact?: boolean; onLongPress: () => void; isLocked: boolean }) {
+function ServiceCard({ item, onTap, square, contained, compact, onLongPress, isLocked }: { item: (typeof serviceItems)[0] & { viewBox?: string }; onTap?: (e?: React.MouseEvent<HTMLElement>) => void; square?: boolean; contained?: boolean; compact?: boolean; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.12)");
@@ -255,7 +259,7 @@ function ServiceCard({ item, onTap, square, contained, compact, onLongPress, isL
   const iconRadius = compact ? theme.radiusMd : theme.radiusLg;
   const gapSize = compact ? 2 : 3;
 
-  const { handlers, handleClick } = useLongPress(onLongPress, 600);
+  const { handlers, handleClick } = useLongPress(onLongPress, 1000);
 
   return (
     <button
@@ -263,7 +267,7 @@ function ServiceCard({ item, onTap, square, contained, compact, onLongPress, isL
       onPointerDown={(e) => { onPointerDown(e); handlers.onPointerDown(); setPressed(true); }}
       onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
       onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
-      onClick={() => handleClick(() => onTap?.())}
+      onClick={(e) => handleClick(() => onTap?.(e))}
       className={`relative overflow-hidden flex flex-col items-center justify-center gap-${gapSize} transition-transform duration-100 ease-out cursor-pointer${square ? " flex-1 w-full" : " w-full h-full"}`}
       style={{
         height: square ? undefined : undefined,
@@ -340,7 +344,7 @@ function ServiceCard({ item, onTap, square, contained, compact, onLongPress, isL
 }
 
 /* ─── Survey Card — filled version for ShortcutsColumn ─── */
-function SurveyCardFilled({ onOpen, compact, onLongPress, isLocked }: { onOpen: () => void; compact?: boolean; onLongPress: () => void; isLocked: boolean }) {
+function SurveyCardFilled({ onOpen, compact, onLongPress, isLocked }: { onOpen: (e?: React.MouseEvent<HTMLElement>) => void; compact?: boolean; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.12)");
@@ -358,7 +362,7 @@ function SurveyCardFilled({ onOpen, compact, onLongPress, isLocked }: { onOpen: 
       onPointerDown={(e) => { onPointerDown(e); handlers.onPointerDown(); setPressed(true); }}
       onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
       onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
-      onClick={() => handleClick(onOpen)}
+      onClick={(e) => handleClick(() => onOpen(e))}
       className={`relative overflow-hidden flex flex-col items-center justify-center ${compact ? "gap-1" : "gap-3"} w-full h-full transition-transform duration-150 cursor-pointer`}
       style={{
         backgroundColor: pressed ? theme.accent : theme.surface,
@@ -399,7 +403,7 @@ function SurveyCardFilled({ onOpen, compact, onLongPress, isLocked }: { onOpen: 
 }
 
 /* ─── Survey Card — outline version for QuickActionsRow ─── */
-function SurveyCard({ square, contained, onOpen, onLongPress, isLocked }: { square?: boolean; contained?: boolean; onOpen: () => void; onLongPress: () => void; isLocked: boolean }) {
+function SurveyCard({ square, contained, onOpen, onLongPress, isLocked }: { square?: boolean; contained?: boolean; onOpen: (e?: React.MouseEvent<HTMLElement>) => void; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t } = useLocale();
   const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.12)");
@@ -412,7 +416,7 @@ function SurveyCard({ square, contained, onOpen, onLongPress, isLocked }: { squa
       onPointerDown={(e) => { onPointerDown(e); handlers.onPointerDown(); setPressed(true); }}
       onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
       onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
-      onClick={() => handleClick(onOpen)}
+      onClick={(e) => handleClick(() => onOpen(e))}
       className={`relative overflow-hidden flex flex-col items-center justify-center gap-3 w-full transition-transform duration-150 cursor-pointer${square ? " flex-1" : ""}`}
       style={{
         backgroundColor: pressed ? theme.accent : contained ? theme.accentSubtle : theme.surface,
@@ -798,6 +802,10 @@ export function ServicesGrid({
   const { t } = useLocale();
   const lockedIds = useLockedApps();
 
+  const { isGuest } = useGuestMode();
+  const [tutorialTarget, setTutorialTarget] = useState<TargetTileInfo | null>(null);
+  const [setupTarget, setSetupTarget] = useState<{ id: string; name: string } | null>(null);
+
   const shortcutItems = getShortcutItems(theme.id);
   const visibleServices = guestMode ? GUEST_SERVICE_ITEMS : serviceItems;
   const gridGap = compact ? "gap-3" : "gap-6";
@@ -816,6 +824,39 @@ export function ServicesGrid({
     return true;
   };
 
+  const handleTileTap = (
+    e: React.MouseEvent<HTMLElement> | undefined,
+    tileId: string,
+    tileName: string,
+    tileIcon: React.ReactNode,
+    isLocked: boolean,
+    onOpenApp: () => void
+  ) => {
+    if (isLocked) {
+      setLockMenu(tileId + "__open");
+    } else if (!isGuest && !hasSeenAppLockTutorial()) {
+      const rect = e?.currentTarget ? e.currentTarget.getBoundingClientRect() : null;
+      setTutorialTarget({
+        id: tileId,
+        name: tileName,
+        icon: tileIcon,
+        rect,
+        onOpenOriginalApp: onOpenApp,
+      });
+    } else {
+      onOpenApp();
+    }
+  };
+
+  const handleTileLongPress = (tileId: string, tileName: string, isLocked: boolean) => {
+    if (isGuest) return;
+    if (isLocked) {
+      setLockMenu(tileId);
+    } else {
+      setSetupTarget({ id: tileId, name: tileName });
+    }
+  };
+
   return (
     <div className={`flex flex-col flex-1 min-h-0`}>
       {/* 4×2 hub grid */}
@@ -832,11 +873,8 @@ export function ServicesGrid({
                 {isHubItemVisible(top.label) ? (
                   <HubCard
                     item={top}
-                    onTap={() => {
-                      if (lockedIds.has(top.labelKey)) setLockMenu(top.labelKey + "__open");
-                      else onOpenCategory?.(top.label);
-                    }}
-                    onLongPress={() => setLockMenu(top.labelKey)}
+                    onTap={(e) => handleTileTap(e, top.labelKey, t(top.labelKey), <HubIcon label={top.label} color={theme.primary} />, lockedIds.has(top.labelKey), () => onOpenCategory?.(top.label))}
+                    onLongPress={() => handleTileLongPress(top.labelKey, t(top.labelKey), lockedIds.has(top.labelKey))}
                     isLocked={lockedIds.has(top.labelKey)}
                     contained={contained}
                     compact={compact}
@@ -847,11 +885,8 @@ export function ServicesGrid({
                 {isHubItemVisible(bottom.label) ? (
                   <HubCard
                     item={bottom}
-                    onTap={() => {
-                      if (lockedIds.has(bottom.labelKey)) setLockMenu(bottom.labelKey + "__open");
-                      else onOpenCategory?.(bottom.label);
-                    }}
-                    onLongPress={() => setLockMenu(bottom.labelKey)}
+                    onTap={(e) => handleTileTap(e, bottom.labelKey, t(bottom.labelKey), <HubIcon label={bottom.label} color={theme.primary} />, lockedIds.has(bottom.labelKey), () => onOpenCategory?.(bottom.label))}
+                    onLongPress={() => handleTileLongPress(bottom.labelKey, t(bottom.labelKey), lockedIds.has(bottom.labelKey))}
                     isLocked={lockedIds.has(bottom.labelKey)}
                     contained={contained}
                     compact={compact}
@@ -887,15 +922,12 @@ export function ServicesGrid({
                 <ShortcutTileBare
                   key={item.labelKey}
                   item={item}
-                  onTap={() => {
-                    if (lockedIds.has(item.labelKey)) setLockMenu(item.labelKey + "__open");
-                    else {
-                      if (item.labelKey === "shortcut.mirror" && onLaunchTool) onLaunchTool("mirror");
-                      else if (item.url === "roomcontrol" && onLaunchTool) onLaunchTool("roomcontrol");
-                      else if (item.url) window.open(item.url, "_blank", "noopener,noreferrer");
-                    }
-                  }}
-                  onLongPress={() => setLockMenu(item.labelKey)}
+                  onTap={(e) => handleTileTap(e, item.labelKey, t(item.labelKey), undefined, lockedIds.has(item.labelKey), () => {
+                    if (item.labelKey === "shortcut.mirror" && onLaunchTool) onLaunchTool("mirror");
+                    else if (item.url === "roomcontrol" && onLaunchTool) onLaunchTool("roomcontrol");
+                    else if (item.url) window.open(item.url, "_blank", "noopener,noreferrer");
+                  })}
+                  onLongPress={() => handleTileLongPress(item.labelKey, t(item.labelKey), lockedIds.has(item.labelKey))}
                   isLocked={lockedIds.has(item.labelKey)}
                 />
               ))}
@@ -910,11 +942,8 @@ export function ServicesGrid({
                     item={item}
                     contained={contained}
                     compact={compact}
-                    onTap={() => {
-                      if (lockedIds.has(item.label)) setLockMenu(item.label + "__open");
-                      else onOpenCategory?.(item.label);
-                    }}
-                    onLongPress={() => setLockMenu(item.label)}
+                    onTap={(e) => handleTileTap(e, item.label, t(item.labelKey), undefined, lockedIds.has(item.label), () => onOpenCategory?.(item.label))}
+                    onLongPress={() => handleTileLongPress(item.label, t(item.labelKey), lockedIds.has(item.label))}
                     isLocked={lockedIds.has(item.label)}
                   />
                 ) : <div key={item.label} className="w-full h-full" />
@@ -924,11 +953,8 @@ export function ServicesGrid({
               {guestMode && (
                 <SurveyCardFilled
                   compact={compact}
-                  onOpen={() => {
-                    if (lockedIds.has("service.shareFeedback")) setLockMenu("service.shareFeedback__open");
-                    else onOpenSurvey?.();
-                  }}
-                  onLongPress={() => setLockMenu("service.shareFeedback")}
+                  onOpen={(e) => handleTileTap(e, "service.shareFeedback", t("service.shareFeedback"), undefined, lockedIds.has("service.shareFeedback"), () => onOpenSurvey?.())}
+                  onLongPress={() => handleTileLongPress("service.shareFeedback", t("service.shareFeedback"), lockedIds.has("service.shareFeedback"))}
                   isLocked={lockedIds.has("service.shareFeedback")}
                 />
               )}
@@ -963,6 +989,25 @@ export function ServicesGrid({
             : undefined}
         />
       )}
+
+      {tutorialTarget && (
+        <AppLockTutorialOverlay
+          target={tutorialTarget}
+          onClose={() => setTutorialTarget(null)}
+          onStartLockSetup={(id, name) => {
+            setTutorialTarget(null);
+            setSetupTarget({ id, name });
+          }}
+        />
+      )}
+
+      {setupTarget && (
+        <AppLockSetupModal
+          appId={setupTarget.id}
+          appName={setupTarget.name}
+          onClose={() => setSetupTarget(null)}
+        />
+      )}
     </div>
   );
 }
@@ -972,10 +1017,46 @@ export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped
   const { theme } = useTheme();
   const { t } = useLocale();
   const lockedIds = useLockedApps();
+  const { isGuest } = useGuestMode();
   const [lockMenu, setLockMenu] = useState<string | null>(null);
+  const [tutorialTarget, setTutorialTarget] = useState<TargetTileInfo | null>(null);
+  const [setupTarget, setSetupTarget] = useState<{ id: string; name: string } | null>(null);
 
   const shortcutItems = getShortcutItems(theme.id);
   const visibleServices = guestMode ? GUEST_SERVICE_ITEMS : serviceItems;
+
+  const handleTileTap = (
+    e: React.MouseEvent<HTMLElement> | undefined,
+    tileId: string,
+    tileName: string,
+    tileIcon: React.ReactNode,
+    isLocked: boolean,
+    onOpenApp: () => void
+  ) => {
+    if (isLocked) {
+      setLockMenu(tileId + "__open");
+    } else if (!isGuest && !hasSeenAppLockTutorial()) {
+      const rect = e?.currentTarget ? e.currentTarget.getBoundingClientRect() : null;
+      setTutorialTarget({
+        id: tileId,
+        name: tileName,
+        icon: tileIcon,
+        rect,
+        onOpenOriginalApp: onOpenApp,
+      });
+    } else {
+      onOpenApp();
+    }
+  };
+
+  const handleTileLongPress = (tileId: string, tileName: string, isLocked: boolean) => {
+    if (isGuest) return;
+    if (isLocked) {
+      setLockMenu(tileId);
+    } else {
+      setSetupTarget({ id: tileId, name: tileName });
+    }
+  };
   if (swapped) {
     return (
       <div className="flex flex-col h-full" style={{ gap: "36px" }}>
@@ -987,10 +1068,8 @@ export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped
                 item={item}
                 contained={contained}
                 compact
-                onTap={() => {
-                  if (lockedIds.has(item.label)) setLockMenu(item.label + "__open");
-                }}
-                onLongPress={() => setLockMenu(item.label)}
+                onTap={(e) => handleTileTap(e, item.label, t(item.labelKey), undefined, lockedIds.has(item.label), () => {})}
+                onLongPress={() => handleTileLongPress(item.label, t(item.labelKey), lockedIds.has(item.label))}
                 isLocked={lockedIds.has(item.label)}
               />
             </div>
@@ -1000,11 +1079,8 @@ export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped
         {/* Share Feedback — fixed 192px to align with shortcuts row */}
         <div className="shrink-0" style={{ height: "192px" }}>
           <SurveyCardFilled
-            onOpen={() => {
-              if (lockedIds.has("service.shareFeedback")) setLockMenu("service.shareFeedback__open");
-              else onOpenSurvey?.();
-            }}
-            onLongPress={() => setLockMenu("service.shareFeedback")}
+            onOpen={(e) => handleTileTap(e, "service.shareFeedback", t("service.shareFeedback"), undefined, lockedIds.has("service.shareFeedback"), () => onOpenSurvey?.())}
+            onLongPress={() => handleTileLongPress("service.shareFeedback", t("service.shareFeedback"), lockedIds.has("service.shareFeedback"))}
             isLocked={lockedIds.has("service.shareFeedback")}
           />
         </div>
@@ -1021,6 +1097,25 @@ export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped
               if (id === "service.shareFeedback") onOpenSurvey?.();
               else onOpenSurvey?.(); // fallback
             } : undefined}
+          />
+        )}
+
+        {tutorialTarget && (
+          <AppLockTutorialOverlay
+            target={tutorialTarget}
+            onClose={() => setTutorialTarget(null)}
+            onStartLockSetup={(id, name) => {
+              setTutorialTarget(null);
+              setSetupTarget({ id, name });
+            }}
+          />
+        )}
+
+        {setupTarget && (
+          <AppLockSetupModal
+            appId={setupTarget.id}
+            appName={setupTarget.name}
+            onClose={() => setSetupTarget(null)}
           />
         )}
       </div>
@@ -1046,15 +1141,12 @@ export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped
             <ShortcutTileCompact
               key={item.labelKey}
               item={item}
-              onTap={() => {
-                if (lockedIds.has(item.labelKey)) setLockMenu(item.labelKey + "__open");
-                else {
-                  if (item.labelKey === "shortcut.mirror" && onLaunchTool) onLaunchTool("mirror");
-                  else if (item.url === "roomcontrol" && onLaunchTool) onLaunchTool("roomcontrol");
-                  else if (item.url) window.open(item.url, "_blank", "noopener,noreferrer");
-                }
-              }}
-              onLongPress={() => setLockMenu(item.labelKey)}
+              onTap={(e) => handleTileTap(e, item.labelKey, t(item.labelKey), undefined, lockedIds.has(item.labelKey), () => {
+                if (item.labelKey === "shortcut.mirror" && onLaunchTool) onLaunchTool("mirror");
+                else if (item.url === "roomcontrol" && onLaunchTool) onLaunchTool("roomcontrol");
+                else if (item.url) window.open(item.url, "_blank", "noopener,noreferrer");
+              })}
+              onLongPress={() => handleTileLongPress(item.labelKey, t(item.labelKey), lockedIds.has(item.labelKey))}
               isLocked={lockedIds.has(item.labelKey)}
             />
           ))}
@@ -1066,11 +1158,8 @@ export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped
       {!guestMode && (
         <div className="shrink-0" style={{ height: "192px" }}>
           <SurveyCardFilled
-            onOpen={() => {
-              if (lockedIds.has("service.shareFeedback")) setLockMenu("service.shareFeedback__open");
-              else onOpenSurvey?.();
-            }}
-            onLongPress={() => setLockMenu("service.shareFeedback")}
+            onOpen={(e) => handleTileTap(e, "service.shareFeedback", t("service.shareFeedback"), undefined, lockedIds.has("service.shareFeedback"), () => onOpenSurvey?.())}
+            onLongPress={() => handleTileLongPress("service.shareFeedback", t("service.shareFeedback"), lockedIds.has("service.shareFeedback"))}
             isLocked={lockedIds.has("service.shareFeedback")}
           />
         </div>
@@ -1095,6 +1184,25 @@ export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped
               }
             }
           } : undefined}
+        />
+      )}
+
+      {tutorialTarget && (
+        <AppLockTutorialOverlay
+          target={tutorialTarget}
+          onClose={() => setTutorialTarget(null)}
+          onStartLockSetup={(id, name) => {
+            setTutorialTarget(null);
+            setSetupTarget({ id, name });
+          }}
+        />
+      )}
+
+      {setupTarget && (
+        <AppLockSetupModal
+          appId={setupTarget.id}
+          appName={setupTarget.name}
+          onClose={() => setSetupTarget(null)}
         />
       )}
     </div>

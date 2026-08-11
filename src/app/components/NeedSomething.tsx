@@ -1,18 +1,44 @@
-import { CSSProperties, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence, PanInfo } from "motion/react";
 import {
   HandHelping, Wrench, ClipboardList,
   CheckCircle2, Clock, X, Send, Inbox, Globe,
+  ChevronLeft, ChevronRight, Check,
+  CircleDot, UserRound, Truck,
   // Unified Patient Services icon set — clean, outlined, single-stroke lucide
   // glyphs replacing the old emoji illustrations (matches Entertainment / Home).
   BedDouble, GlassWater, BedSingle, Shirt, SprayCan, Layers, Footprints,
   AirVent, Lightbulb, Tv, ShowerHead, Plug,
+  Ear, Eye, Accessibility, ShieldCheck, BookOpen, PersonStanding,
+  Scissors, Brush, Droplets, Sparkles, Trash2,
   createLucideIcon, type LucideIcon,
 } from "lucide-react";
 import { useTheme, TYPE_SCALE, WEIGHT, TEXT_STYLE, SHADOW, SPACE, LEADING } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { InternalPageHeader } from "./InternalPageHeader";
 import { ApiImage } from "./ApiImage";
+
+/* ── Housekeeping product photos (compressed JPEG — 12-31 KB each) ── */
+import imgBlanket from "../../assets/Housekeeping/blanket.jpg";
+import imgWater from "../../assets/Housekeeping/water.jpg";
+import imgPillow from "../../assets/Housekeeping/pillow.jpg";
+import imgTowel from "../../assets/Housekeeping/towels.jpg";
+import imgToiletries from "../../assets/Housekeeping/toiletries.jpg";
+import imgTissues from "../../assets/Housekeeping/tissues.jpg";
+import imgSheets from "../../assets/Housekeeping/bedsheets.jpg";
+import imgSlippers from "../../assets/Housekeeping/slippers.jpg";
+import imgEarplugs from "../../assets/Housekeeping/Earplugs.jpg";
+import imgSleepMask from "../../assets/Housekeeping/Sleep Mask.jpg";
+import imgWheelchair from "../../assets/Housekeeping/Wheelchair.jpg";
+import imgFaceMask from "../../assets/Housekeeping/face mask.jpg";
+import imgPrayerMat from "../../assets/Housekeeping/prayer matt.jpg";
+import imgQuran from "../../assets/Housekeeping/quran.jpg";
+import imgWalker from "../../assets/Housekeeping/walker.jpg";
+import imgWalkingStick from "../../assets/Housekeeping/walking stick.jpg";
+import imgCrutches from "../../assets/Housekeeping/crutches.jpg";
+import imgDentalKit from "../../assets/Housekeeping/dental kit.jpg";
+import imgComb from "../../assets/Housekeeping/comb.jpg";
+import imgWetWipes from "../../assets/Housekeeping/wet wipes.jpg";
 
 /**
  * Patient Services — "I Need Something" flow.
@@ -37,7 +63,7 @@ const STORAGE_KEY = "careinn-need-requests";
 
 interface NeedRequest {
   id: string;
-  kind: "request" | "report";
+  kind: "request" | "report" | "roomcare";
   itemKey: string; // i18n key, e.g. "need.item.blanket"
   emoji: string;
   note: string;
@@ -53,36 +79,77 @@ const TissueBox: LucideIcon = createLucideIcon("TissueBox", [
   ["rect", { x: "3", y: "11", width: "18", height: "9", rx: "2", key: "box" }],
 ]);
 
+/* Prayer mat icon (carpet with fringe detail) — no lucide equivalent */
+const PrayerMatIcon: LucideIcon = createLucideIcon("PrayerMat", [
+  ["rect", { x: "4", y: "6", width: "16", height: "12", rx: "1.5", key: "mat" }],
+  ["path", { d: "M7 6V4.5M10 6V4.5M14 6V4.5M17 6V4.5M7 18V19.5M10 18V19.5M14 18V19.5M17 18V19.5", key: "fringe" }],
+  ["path", { d: "M12 9 C10 11 10 13 12 15 C14 13 14 11 12 9", key: "arch" }],
+]);
+
 interface CardDef {
   key: string; // i18n label key
   emoji: string; // retained for back-compat with requests persisted before the redesign
   Icon: LucideIcon; // unified vector icon shown in the light-blue container
+  image?: string; // optional product photo — replaces the icon box in the grid
+  subtitle?: string; // short issue hints (shown beneath the title on report cards)
 }
 
+/* Issue-type chip options for the report dialog */
+const ISSUE_CHIPS: Record<string, string[]> = {
+  "need.issue.ac": ["need.chip.notCooling", "need.chip.tooCold", "need.chip.noise"],
+  "need.issue.lights": ["need.chip.notWorking", "need.chip.flickering", "need.chip.tooDim", "need.chip.broken", "need.chip.other"],
+  "need.issue.tv": ["need.chip.notWorking", "need.chip.noSignal"],
+  "need.issue.bed": ["need.chip.uncomfortable", "need.chip.broken"],
+  "need.issue.bathroom": ["need.chip.leaking", "need.chip.clogged", "need.chip.dirty"],
+  "need.issue.power": ["need.chip.notWorking", "need.chip.loose", "need.chip.sparking"],
+};
+
 const REQUEST_ITEMS: CardDef[] = [
-  { key: "need.item.blanket", emoji: "🛏️", Icon: BedDouble },
-  { key: "need.item.water", emoji: "💧", Icon: GlassWater },
-  { key: "need.item.pillow", emoji: "🧸", Icon: BedSingle },
-  { key: "need.item.towel", emoji: "🧺", Icon: Shirt },
-  { key: "need.item.toiletries", emoji: "🧼", Icon: SprayCan },
-  { key: "need.item.tissues", emoji: "🧻", Icon: TissueBox },
-  { key: "need.item.sheets", emoji: "🛌", Icon: Layers },
-  { key: "need.item.slippers", emoji: "🩴", Icon: Footprints },
+  /* ── Page 1 ── */
+  { key: "need.item.blanket", emoji: "🛏️", Icon: BedDouble, image: imgBlanket },
+  { key: "need.item.water", emoji: "💧", Icon: GlassWater, image: imgWater },
+  { key: "need.item.pillow", emoji: "🧸", Icon: BedSingle, image: imgPillow },
+  { key: "need.item.towel", emoji: "🧺", Icon: Shirt, image: imgTowel },
+  { key: "need.item.toiletries", emoji: "🧼", Icon: SprayCan, image: imgToiletries },
+  { key: "need.item.tissues", emoji: "🧻", Icon: TissueBox, image: imgTissues },
+  { key: "need.item.sheets", emoji: "🛌", Icon: Layers, image: imgSheets },
+  { key: "need.item.slippers", emoji: "🩴", Icon: Footprints, image: imgSlippers },
+  /* ── Page 2 ── */
+  { key: "need.item.earplugs", emoji: "👂", Icon: Ear, image: imgEarplugs },
+  { key: "need.item.sleepmask", emoji: "😴", Icon: Eye, image: imgSleepMask },
+  { key: "need.item.wheelchair", emoji: "♿", Icon: Accessibility, image: imgWheelchair },
+  { key: "need.item.facemask", emoji: "😷", Icon: ShieldCheck, image: imgFaceMask },
+  { key: "need.item.prayermat", emoji: "🧎", Icon: PrayerMatIcon, image: imgPrayerMat },
+  { key: "need.item.quran", emoji: "📖", Icon: BookOpen, image: imgQuran },
+  { key: "need.item.crutches", emoji: "🩼", Icon: PersonStanding, image: imgCrutches },
+  { key: "need.item.walkingcane", emoji: "🦯", Icon: PersonStanding, image: imgWalkingStick },
+  /* ── Page 3 ── */
+  { key: "need.item.dentalkit", emoji: "🪥", Icon: Brush, image: imgDentalKit },
+  { key: "need.item.comb", emoji: "💇", Icon: Scissors, image: imgComb },
+  { key: "need.item.wetwipes", emoji: "🧴", Icon: Droplets, image: imgWetWipes },
+  { key: "need.item.walker", emoji: "🚶", Icon: PersonStanding, image: imgWalker },
 ];
 
 const REPORT_ITEMS: CardDef[] = [
-  { key: "need.issue.ac", emoji: "❄️", Icon: AirVent },
-  { key: "need.issue.lights", emoji: "💡", Icon: Lightbulb },
-  { key: "need.issue.tv", emoji: "📺", Icon: Tv },
-  { key: "need.issue.bed", emoji: "🛏️", Icon: BedDouble },
-  { key: "need.issue.bathroom", emoji: "🚿", Icon: ShowerHead },
-  { key: "need.issue.power", emoji: "🔌", Icon: Plug },
+  { key: "need.issue.ac", emoji: "❄️", Icon: AirVent, subtitle: "need.issue.ac.sub" },
+  { key: "need.issue.lights", emoji: "💡", Icon: Lightbulb, subtitle: "need.issue.lights.sub" },
+  { key: "need.issue.tv", emoji: "📺", Icon: Tv, subtitle: "need.issue.tv.sub" },
+  { key: "need.issue.bed", emoji: "🛏️", Icon: BedDouble, subtitle: "need.issue.bed.sub" },
+  { key: "need.issue.bathroom", emoji: "🚿", Icon: ShowerHead, subtitle: "need.issue.bathroom.sub" },
+  { key: "need.issue.power", emoji: "🔌", Icon: Plug, subtitle: "need.issue.power.sub" },
 ];
 
 /* Look up the unified icon for a persisted request by its i18n item key, so the
    "My Requests" list and dialogs render the same vector set as the grid cards. */
+const ROOM_CARE_ITEMS: CardDef[] = [
+  { key: "need.care.bedlinen", emoji: "🛏️", Icon: BedSingle, subtitle: "need.care.bedlinen.sub" },
+  { key: "need.care.trash", emoji: "🗑️", Icon: Trash2, subtitle: "need.care.trash.sub" },
+  { key: "need.care.spill", emoji: "💧", Icon: Droplets, subtitle: "need.care.spill.sub" },
+  { key: "need.care.bathroom", emoji: "🚿", Icon: ShowerHead, subtitle: "need.care.bathroom.sub" },
+];
+
 const ICON_BY_KEY: Record<string, LucideIcon> = Object.fromEntries(
-  [...REQUEST_ITEMS, ...REPORT_ITEMS].map((c) => [c.key, c.Icon]),
+  [...REQUEST_ITEMS, ...REPORT_ITEMS, ...ROOM_CARE_ITEMS].map((c) => [c.key, c.Icon]),
 );
 
 /* ── Status: derived from elapsed time (no backend). ── */
@@ -98,11 +165,13 @@ function deriveStatus(createdAt: number, now: number): StatusKey {
 
 interface NeedSomethingProps {
   onClose: () => void;
+  /** When provided, opens directly to this tab (e.g. "mine" for My Requests) */
+  initialTab?: Tab;
 }
 
-type Tab = "request" | "report" | "mine";
+type Tab = "request" | "roomcare" | "report";
 
-export function NeedSomething({ onClose }: NeedSomethingProps) {
+export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
   const { theme, setLocale } = useTheme();
   const { t, isRTL, fontFamily, locale } = useLocale();
 
@@ -116,17 +185,19 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
      (gray / blue / orange / green) so a patient reads the same status the same
      way on every hospital: success & warning are already constant theme tokens,
      info is the blue token, textMuted is the neutral gray. */
-  const STATUS_STYLE: Record<StatusKey, { fg: string; emoji: string }> = {
-    sent: { fg: theme.textMuted, emoji: "🟢" },
-    preparing: { fg: theme.info, emoji: "👩‍⚕️" },
-    onway: { fg: theme.warning, emoji: "🚶" },
-    delivered: { fg: theme.success, emoji: "✅" },
+  const STATUS_STYLE: Record<StatusKey, { fg: string; Icon: typeof Check }> = {
+    sent: { fg: theme.textMuted, Icon: CircleDot },
+    preparing: { fg: theme.info, Icon: UserRound },
+    onway: { fg: theme.warning, Icon: Truck },
+    delivered: { fg: theme.success, Icon: CheckCircle2 },
   };
 
   /* ── View state ── */
-  const [tab, setTab] = useState<Tab>("request");
-  const [selected, setSelected] = useState<{ card: CardDef; kind: "request" | "report" } | null>(null);
+  const [tab, setTab] = useState<Tab>(initialTab || "request");
+  const [showRequestsOverlay, setShowRequestsOverlay] = useState(false);
+  const [selected, setSelected] = useState<{ card: CardDef; kind: "request" | "report" | "roomcare" } | null>(null);
   const [note, setNote] = useState("");
+  const [selectedChip, setSelectedChip] = useState<string | null>(null);
   const [success, setSuccess] = useState<null | "request" | "report">(null);
 
   /* ── Persisted requests + time-derived status ── */
@@ -161,21 +232,24 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
     if (!success) return;
     successTimer.current = setTimeout(() => {
       setSuccess(null);
-      setTab("mine");
+      setTab("request");
+      setShowRequestsOverlay(true);
     }, 3000);
     return () => {
       if (successTimer.current) clearTimeout(successTimer.current);
     };
   }, [success]);
 
-  const openSheet = (card: CardDef, kind: "request" | "report") => {
+  const openSheet = (card: CardDef, kind: "request" | "report" | "roomcare") => {
     setSelected({ card, kind });
     setNote("");
+    setSelectedChip(null);
   };
 
   const closeSheet = () => {
     setSelected(null);
     setNote("");
+    setSelectedChip(null);
   };
 
   const sendRequest = () => {
@@ -192,13 +266,14 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
     const kind = selected.kind;
     setSelected(null);
     setNote("");
+    setSelectedChip(null);
     setSuccess(kind);
   };
 
   const backToMine = () => {
     if (successTimer.current) clearTimeout(successTimer.current);
     setSuccess(null);
-    setTab("mine");
+    setShowRequestsOverlay(true);
   };
 
   /* Relative day + clock time, e.g. "Today at 4:51 PM", "Yesterday at 11:46 AM",
@@ -234,18 +309,50 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
     return t(`need.status.${status}`);
   };
 
-  const gridItems = tab === "report" ? REPORT_ITEMS : REQUEST_ITEMS;
-  const gridKind: "request" | "report" = tab === "report" ? "report" : "request";
+  const allGridItems = tab === "report" ? REPORT_ITEMS : tab === "roomcare" ? ROOM_CARE_ITEMS : REQUEST_ITEMS;
+  const gridKind: "request" | "report" | "roomcare" = tab === "report" ? "report" : tab === "roomcare" ? "roomcare" : "request";
+
+  /* ── Pagination (8 items per page) ── */
+  const ITEMS_PER_PAGE = 8;
+  const [gridPage, setGridPage] = useState(0);
+  const totalPages = Math.ceil(allGridItems.length / ITEMS_PER_PAGE);
+  const gridItems = allGridItems.slice(gridPage * ITEMS_PER_PAGE, (gridPage + 1) * ITEMS_PER_PAGE);
+
+  /* Reset to page 0 when switching tabs */
+  const prevTab = useRef(tab);
+  useEffect(() => {
+    if (prevTab.current !== tab) { setGridPage(0); prevTab.current = tab; }
+  }, [tab]);
+
+  const goPage = useCallback((pg: number) => {
+    /* Infinite wrap: going past the end wraps to 0 and vice-versa */
+    if (totalPages <= 1) return;
+    setGridPage(((pg % totalPages) + totalPages) % totalPages);
+  }, [totalPages]);
+
+  /* ── Swipe / drag gesture for infinite slider ── */
+  const SWIPE_THRESHOLD = 50; // min px to trigger page change
+  const handleDragEnd = useCallback((_: any, info: PanInfo) => {
+    if (Math.abs(info.offset.x) > SWIPE_THRESHOLD) {
+      if (info.offset.x < 0) {
+        // Swiped left → next page (or right in RTL)
+        goPage(gridPage + (isRTL ? -1 : 1));
+      } else {
+        // Swiped right → prev page (or next in RTL)
+        goPage(gridPage + (isRTL ? 1 : -1));
+      }
+    }
+  }, [goPage, gridPage, isRTL]);
 
   const tabs: { key: Tab; Icon: typeof HandHelping; label: string; count?: number }[] = [
     { key: "request", Icon: HandHelping, label: t("need.tab.request") },
+    { key: "roomcare", Icon: Sparkles, label: t("need.tab.roomcare") },
     { key: "report", Icon: Wrench, label: t("need.tab.report") },
-    { key: "mine", Icon: ClipboardList, label: t("need.tab.mine"), count: requests.length },
   ];
 
   const titleKey =
-    tab === "mine" ? "need.title.mine" : tab === "report" ? "need.title.report" : "need.title.request";
-  const subKey = tab === "report" ? "need.sub.report" : "need.sub.request";
+    tab === "report" ? "need.title.report" : tab === "roomcare" ? "need.title.roomcare" : "need.title.request";
+  const subKey = tab === "report" ? "need.sub.report" : tab === "roomcare" ? "need.sub.roomcare" : "need.sub.request";
 
   return (
     <motion.div
@@ -275,6 +382,8 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
         .ns-card { transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
         .ns-card:hover { border-color: var(--ns-primary); box-shadow: ${SHADOW.md}; transform: translateY(-4px); }
         .ns-card:active { transform: scale(0.985); }
+        .ns-card img { transition: transform .4s cubic-bezier(.25,.46,.45,.94); }
+        .ns-card:hover img { transform: scale(1.06); }
         .ns-iconbox { transition: background-color .2s ease; }
         .ns-card:hover .ns-iconbox { background-color: color-mix(in srgb, var(--ns-primary) 18%, #fff); }
         .ns-textarea::placeholder { color: ${theme.textDisabled}; }
@@ -292,32 +401,41 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
         icon={<HandHelping size={24} />}
         onClose={onClose}
         rightAction={
-          <button
-            onClick={toggleLanguage}
-            aria-label={t("settings.language")}
-            className="flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"
-            style={{
-              backgroundColor: "rgba(255,255,255,0.15)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              borderRadius: "12px",
-              padding: "10px 16px",
-              color: "#fff",
-              outline: "none",
-            }}
-          >
-            <Globe size={20} />
-            <span
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            {/* My Requests — same style as FoodOrdering "My Orders" */}
+            <button
+              onClick={() => setShowRequestsOverlay(true)}
+              className="cursor-pointer active:scale-95 transition-transform"
               style={{
-                ...TEXT_STYLE.buttonSm,
-                /* Label is the target-language endonym: render it in that
-                   language's brand font (Arabic when currently in English). */
-                fontFamily: locale === "en" ? theme.fontFamilyAr : fontFamily,
-                color: "#fff",
+                display: "flex", alignItems: "center", gap: "8px",
+                backgroundColor: "rgba(255,255,255,0.15)",
+                borderRadius: "12px", padding: "10px 16px",
+                color: "#fff", fontFamily, fontWeight: 600,
+                border: "1px solid rgba(255,255,255,0.15)",
+                outline: "none",
               }}
             >
-              {t("need.header.language")}
-            </span>
-          </button>
+              <ClipboardList size={20} />
+              {t("need.tab.mine")}
+            </button>
+            {/* Language switcher — icon only */}
+            <button
+              onClick={toggleLanguage}
+              aria-label={t("settings.language")}
+              className="cursor-pointer active:scale-95 transition-transform"
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: 42, height: 42,
+                backgroundColor: "rgba(255,255,255,0.15)",
+                borderRadius: "10px",
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,0.15)",
+                outline: "none",
+              }}
+            >
+              <Globe size={20} />
+            </button>
+          </div>
         }
       />
 
@@ -399,6 +517,8 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
             {tabs.map((tb) => {
               const active = tab === tb.key;
               const TIcon = tb.Icon;
+              const isReportTab = tb.key === "report";
+              const activeBg = isReportTab ? theme.error : theme.primary;
               return (
                 <button
                   key={tb.key}
@@ -407,7 +527,7 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                   style={{
                     padding: "13px 22px",
                     borderRadius: theme.radiusFull,
-                    backgroundColor: active ? theme.primary : theme.surface,
+                    backgroundColor: active ? activeBg : theme.surface,
                     border: active ? "1px solid transparent" : `1px solid ${theme.borderDefault}`,
                     outline: "none",
                     boxShadow: active ? SHADOW.sm : "none",
@@ -449,9 +569,9 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
           </div>
 
           {/* Body */}
-          <div className="ns-scroll flex-1 min-h-0 overflow-y-auto px-8 py-7">
+          <div className="ns-scroll flex-1 min-h-0 overflow-y-auto px-8 py-7 flex flex-col">
             {/* Section heading */}
-            <div className="mb-6">
+            <div className="shrink-0 mb-4">
               <div className="flex items-center gap-3 flex-wrap">
                 <h3 style={{ ...TEXT_STYLE.pageTitle, fontFamily, color: theme.textHeading }}>
                   {t(titleKey)}
@@ -484,187 +604,212 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                   </button>
                 )}
               </div>
-              {tab !== "mine" && (
-                <p style={{ ...TEXT_STYLE.body, fontFamily, color: theme.textMuted, marginTop: 4 }}>
+              <p style={{ ...TEXT_STYLE.body, fontFamily, color: theme.textMuted, marginTop: 4 }}>
                   {t(subKey)}
                 </p>
-              )}
             </div>
 
-            {tab === "mine" ? (
-              requests.length === 0 ? (
-                <div className="flex flex-col items-center justify-center text-center gap-4 min-h-[360px]">
-                  <div
-                    className="flex items-center justify-center"
-                    style={{
-                      width: 96,
-                      height: 96,
-                      borderRadius: theme.radiusFull,
-                      backgroundColor: theme.primarySubtle,
-                    }}
-                  >
-                    <Inbox size={44} color={theme.primary} strokeWidth={1.8} />
-                  </div>
-                  <p style={{ ...TEXT_STYLE.sectionTitle, fontFamily, color: theme.textHeading }}>
-                    {t("need.empty.title")}
-                  </p>
-                  <p style={{ ...TEXT_STYLE.body, fontFamily, color: theme.textMuted, maxWidth: 420 }}>
-                    {t("need.empty.body")}
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {requests.map((r) => {
-                    const status = deriveStatus(r.createdAt, now);
-                    const st = STATUS_STYLE[status];
-                    const isComplaint = r.kind === "report";
-                    const typeColor = isComplaint ? theme.accent : theme.primary;
-                    const RowIcon = ICON_BY_KEY[r.itemKey];
-                    return (
-                      <div
-                        key={r.id}
-                        className="flex items-center gap-5"
-                        style={{
-                          backgroundColor: theme.surface,
-                          borderRadius: theme.radiusLg,
-                          border: `1px solid ${theme.borderDefault}`,
-                          padding: "18px 22px",
-                        }}
-                      >
-                        <div
-                          className="shrink-0 flex items-center justify-center"
-                          style={{
-                            width: 60,
-                            height: 60,
-                            borderRadius: theme.radiusMd,
-                            backgroundColor: theme.primaryLight,
-                            fontSize: 30,
-                            lineHeight: 1,
-                          }}
-                        >
-                          {RowIcon ? (
-                            <RowIcon size={30} color={theme.primary} strokeWidth={1.8} />
-                          ) : (
-                            r.emoji
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <span
-                            className="inline-flex items-center mb-1.5"
-                            style={{
-                              padding: "3px 12px",
-                              borderRadius: theme.radiusFull,
-                              backgroundColor: `color-mix(in srgb, ${typeColor} 14%, transparent)`,
-                              color: typeColor,
-                              fontFamily,
-                              fontSize: TYPE_SCALE.sm,
-                              fontWeight: WEIGHT.bold,
-                              letterSpacing: "0.6px",
-                              textTransform: "uppercase",
-                              lineHeight: 1.35,
-                            }}
-                          >
-                            {isComplaint ? t("need.type.complaint") : t("need.type.request")}
-                          </span>
-                          <p style={{ ...TEXT_STYLE.cardTitle, fontFamily, color: theme.textHeading }}>
-                            {t(r.itemKey)}
-                          </p>
-                          {r.note ? (
-                            <p
-                              className="truncate"
-                              style={{ ...TEXT_STYLE.caption, fontFamily, color: theme.textMuted, marginTop: 3 }}
-                            >
-                              “{r.note}”
-                            </p>
-                          ) : null}
-                          <div className="flex items-center gap-1.5 mt-1.5">
-                            <Clock size={14} color={theme.textDisabled} />
-                            <span style={{ ...TEXT_STYLE.caption, fontFamily, color: theme.textMuted }}>
-                              {t("need.requestedOn")} {formatDateTime(r.createdAt)}
-                            </span>
-                          </div>
-                          <span
-                            style={{
-                              display: "block",
-                              marginTop: 4,
-                              fontFamily,
-                              fontSize: TYPE_SCALE.sm,
-                              fontWeight: WEIGHT.normal,
-                              color: theme.textDisabled,
-                              letterSpacing: "0.2px",
-                            }}
-                          >
-                            {t("need.ref", refFor(r))}
-                          </span>
-                        </div>
-                        <div
-                          className="shrink-0 flex items-center gap-2.5"
-                          style={{
-                            padding: "12px 22px",
-                            borderRadius: theme.radiusFull,
-                            backgroundColor: `color-mix(in srgb, ${st.fg} 16%, transparent)`,
-                            border: `1.5px solid color-mix(in srgb, ${st.fg} 32%, transparent)`,
-                          }}
-                        >
-                          <span style={{ fontSize: 18, lineHeight: 1 }}>{st.emoji}</span>
-                          <span
-                            style={{
-                              fontFamily,
-                              fontSize: TYPE_SCALE.base,
-                              fontWeight: WEIGHT.bold,
-                              color: st.fg,
-                              whiteSpace: "nowrap",
-                              lineHeight: 1,
-                            }}
-                          >
-                            {statusLabel(r.kind, status)}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )
-            ) : (
-              <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
-                {gridItems.map((card) => {
-                  const CardIcon = card.Icon;
-                  return (
-                    <button
-                      key={card.key}
-                      onClick={() => openSheet(card, gridKind)}
-                      className="ns-card flex flex-col items-center justify-center gap-4 cursor-pointer"
+              <div className="flex-1 min-h-0 flex flex-col">
+                {/* Cards grid — lifted up to make room for pagination */}
+                <div className="flex-1 min-h-0 flex items-start justify-center pt-1">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={`page-${gridPage}-${tab}`}
+                      initial={{ opacity: 0, x: 40 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -40 }}
+                      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                      drag={tab === "request" && totalPages > 1 ? "x" : false}
+                      dragConstraints={{ left: 0, right: 0 }}
+                      dragElastic={0.18}
+                      onDragEnd={handleDragEnd}
+                      className="grid w-full"
                       style={{
-                        backgroundColor: theme.surface,
-                        borderRadius: theme.radiusCard,
-                        border: `1.5px solid ${theme.borderDefault}`,
-                        boxShadow: SHADOW.sm,
-                        padding: "28px 18px",
-                        outline: "none",
+                        gridTemplateColumns: (tab === "report" || tab === "roomcare") ? "repeat(3, 1fr)" : "repeat(4, 1fr)",
+                        gridTemplateRows: "repeat(2, 1fr)",
+                        columnGap: "24px",
+                        rowGap: "20px",
+                        maxHeight: "92%",
+                        height: "100%",
+                        maxWidth: "100%",
+                        cursor: tab === "request" && totalPages > 1 ? "grab" : undefined,
+                        touchAction: "pan-y",
                       }}
                     >
-                      <div
-                        className="ns-iconbox shrink-0 flex items-center justify-center"
+                    {gridItems.map((card) => {
+                      const CardIcon = card.Icon;
+                      const isCompactCard = tab === "report" || tab === "roomcare";
+                      const isReport = tab === "report";
+                      const isCardSelected = isCompactCard && selected?.card.key === card.key;
+                      /* Dynamic colour: red for report, brand primary for room care */
+                      const accentColor = isReport ? theme.error : theme.primary;
+                      const accentSubtle = isReport ? theme.errorSubtle : theme.primaryLight;
+
+                      return (
+                        <button
+                          key={card.key}
+                          onClick={() => openSheet(card, gridKind)}
+                          className="ns-card flex flex-col items-stretch cursor-pointer relative"
+                          style={{
+                            backgroundColor: theme.surface,
+                            borderRadius: theme.radiusCard,
+                            border: isCardSelected
+                              ? `2px solid ${accentColor}`
+                              : `1px solid rgba(0,0,0,0.10)`,
+                            boxShadow: isCardSelected ? `0 0 0 1px ${accentColor}` : "none",
+                            padding: 0,
+                            outline: "none",
+                            overflow: "hidden",
+                            minHeight: 0,
+                          }}
+                        >
+                          {card.image ? (
+                            /* Product photo — fills the top of the card, flexes to available height */
+                            <>
+                              <div
+                                style={{
+                                  flex: 1,
+                                  minHeight: 0,
+                                  overflow: "hidden",
+                                  backgroundColor: "#f5f5f5",
+                                }}
+                              >
+                                <img
+                                  src={card.image}
+                                  alt={t(card.key)}
+                                  loading="lazy"
+                                  draggable={false}
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                    display: "block",
+                                  }}
+                                />
+                              </div>
+                              <div
+                                className="shrink-0 text-center"
+                                style={{ padding: "10px 8px 12px" }}
+                              >
+                                <span
+                                  style={{
+                                    ...TEXT_STYLE.cardTitle,
+                                    fontFamily,
+                                    color: theme.textHeading,
+                                    display: "block",
+                                  }}
+                                >
+                                  {t(card.key)}
+                                </span>
+                              </div>
+                            </>
+                          ) : isCompactCard ? (
+                            /* Compact card (Report / Room Care) — white bg, circle icon, stacked text */
+                            <div
+                              className="flex flex-col items-center justify-center"
+                              style={{ flex: 1, minHeight: 0, padding: "20px 12px 14px" }}
+                            >
+                              <div
+                                style={{
+                                  width: 88,
+                                  height: 88,
+                                  borderRadius: "50%",
+                                  backgroundColor: accentSubtle,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  marginBottom: 12,
+                                }}
+                              >
+                                <CardIcon size={42} color={accentColor} strokeWidth={2.2} />
+                              </div>
+                              <span
+                                style={{
+                                  ...TEXT_STYLE.cardTitle,
+                                  fontFamily,
+                                  color: theme.textHeading,
+                                  display: "block",
+                                  textAlign: "center",
+                                }}
+                              >
+                                {t(card.key)}
+                              </span>
+                              {card.subtitle && (
+                                <span
+                                  style={{
+                                    fontFamily,
+                                    fontSize: TYPE_SCALE.sm,
+                                    color: theme.textMuted,
+                                    display: "block",
+                                    marginTop: 6,
+                                    lineHeight: 1.3,
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  {t(card.subtitle)}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            /* Request fallback icon box */
+                            <>
+                              <div
+                                className="ns-iconbox flex items-center justify-center"
+                                style={{
+                                  flex: 1,
+                                  minHeight: 0,
+                                  backgroundColor: theme.primaryLight,
+                                }}
+                              >
+                                <CardIcon size={48} color={theme.primary} strokeWidth={1.8} />
+                              </div>
+                              <div
+                                className="shrink-0 text-center"
+                                style={{ padding: "12px 8px 14px" }}
+                              >
+                                <span
+                                  style={{
+                                    ...TEXT_STYLE.cardTitle,
+                                    fontFamily,
+                                    color: theme.textHeading,
+                                    display: "block",
+                                  }}
+                                >
+                                  {t(card.key)}
+                                </span>
+                              </div>
+                            </>
+                          )}
+                        </button>
+                      );
+                    })}
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+
+                {/* Pagination: dots only (no arrows) — swipe to navigate */}
+                {totalPages > 1 && (
+                  <div className="shrink-0 flex items-center justify-center gap-3 py-3">
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => goPage(i)}
+                        className="rounded-full cursor-pointer transition-all duration-300"
                         style={{
-                          width: 92,
-                          height: 92,
-                          borderRadius: theme.radiusLg,
-                          backgroundColor: theme.primaryLight,
+                          width: i === gridPage ? "24px" : "8px",
+                          height: "8px",
+                          backgroundColor: i === gridPage ? theme.primary : "rgba(0,0,0,0.10)",
+                          border: "none",
+                          outline: "none",
+                          padding: 0,
+                          transition: "width 0.3s ease, background-color 0.3s ease",
                         }}
-                      >
-                        <CardIcon size={42} color={theme.primary} strokeWidth={1.8} />
-                      </div>
-                      <span
-                        className="text-center"
-                        style={{ ...TEXT_STYLE.cardTitle, fontFamily, color: theme.textHeading }}
-                      >
-                        {t(card.key)}
-                      </span>
-                    </button>
-                  );
-                })}
+                        aria-label={`Page ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
           </div>
         </div>
         )}
@@ -706,22 +851,58 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                     width: 64,
                     height: 64,
                     borderRadius: theme.radiusMd,
-                    backgroundColor: theme.primaryLight,
+                    backgroundColor: selected.kind === "report" ? theme.errorSubtle : theme.primaryLight,
                     fontSize: 34,
                     lineHeight: 1,
                   }}
                 >
-                  <selected.card.Icon size={34} color={theme.primary} strokeWidth={1.8} />
+                  <selected.card.Icon size={34} color={selected.kind === "report" ? theme.error : theme.primary} strokeWidth={1.8} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p style={{ ...TEXT_STYLE.sectionTitle, fontFamily, color: theme.textHeading }}>
                     {t(selected.card.key)}
                   </p>
                   <p style={{ ...TEXT_STYLE.body, fontFamily, color: theme.textMuted, marginTop: 2 }}>
-                    {t("need.notes.title")}
+                    {selected.kind === "report" ? t("need.report.whatIssue") : t("need.notes.title")}
                   </p>
                 </div>
               </div>
+
+              {/* Issue-type chip selector (report only) */}
+              {selected.kind === "report" && ISSUE_CHIPS[selected.card.key] && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {ISSUE_CHIPS[selected.card.key].map((chipKey) => {
+                    const isActive = selectedChip === chipKey;
+                    return (
+                      <button
+                        key={chipKey}
+                        onClick={() => setSelectedChip(isActive ? null : chipKey)}
+                        className="cursor-pointer active:scale-95 transition-transform"
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: theme.radiusFull,
+                          backgroundColor: isActive ? theme.errorSubtle : theme.surface,
+                          border: `1.5px solid ${isActive ? theme.error : theme.borderDefault}`,
+                          outline: "none",
+                          fontFamily,
+                          fontSize: TYPE_SCALE.base,
+                          fontWeight: isActive ? WEIGHT.bold : WEIGHT.medium,
+                          color: isActive ? theme.error : theme.textHeading,
+                        }}
+                      >
+                        {t(chipKey)}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Details label */}
+              {selected.kind === "report" && (
+                <p style={{ ...TEXT_STYLE.body, fontFamily, color: theme.textMuted, marginBottom: 8 }}>
+                  {t("need.report.addDetails")}
+                </p>
+              )}
 
               <textarea
                 className="ns-textarea w-full"
@@ -743,9 +924,11 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                   textAlign: isRTL ? "right" : "left",
                 }}
               />
-              <p style={{ ...TEXT_STYLE.helper, fontFamily, color: theme.textMuted, marginTop: 8 }}>
-                {t("need.notes.optional")}
-              </p>
+              {selected.kind === "request" && (
+                <p style={{ ...TEXT_STYLE.helper, fontFamily, color: theme.textMuted, marginTop: 8 }}>
+                  {t("need.notes.optional")}
+                </p>
+              )}
 
               {/* Actions */}
               <div className="flex items-center gap-3 mt-6">
@@ -773,7 +956,7 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                   style={{
                     height: 60,
                     borderRadius: theme.radiusMd,
-                    backgroundColor: theme.primary,
+                    backgroundColor: selected.kind === "report" ? theme.error : theme.primary,
                     border: "1.5px solid transparent",
                     boxShadow: SHADOW.md,
                     outline: "none",
@@ -791,6 +974,186 @@ export function NeedSomething({ onClose }: NeedSomethingProps) {
                 </button>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── My Requests overlay (popup, same pattern as FoodOrdering My Orders) ─── */}
+      <AnimatePresence>
+        {showRequestsOverlay && (
+          <motion.div
+            key="requests-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 z-50 flex flex-col"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+          >
+            <div
+              className="flex-1 flex flex-col m-8 mt-4 rounded-[28px] overflow-hidden"
+              style={{ backgroundColor: "#fff", boxShadow: "0 12px 48px rgba(0,0,0,0.25)" }}
+            >
+              {/* Overlay header */}
+              <div className="shrink-0 flex items-center justify-between px-8 py-5" style={{ borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
+                <div className="flex items-center gap-3">
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    backgroundColor: theme.primaryLight,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <ClipboardList size={20} color={theme.primary} />
+                  </div>
+                  <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>
+                    {t("need.tab.mine")}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowRequestsOverlay(false)}
+                  className="flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+                  style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    backgroundColor: "rgba(0,0,0,0.05)", border: "none", outline: "none",
+                    color: theme.textMuted, fontSize: "20px",
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+              {/* Overlay content */}
+              <div className="flex-1 min-h-0 overflow-y-auto px-8 py-6">
+                {requests.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center text-center gap-4 min-h-[300px]">
+                    <div
+                      className="flex items-center justify-center"
+                      style={{
+                        width: 96, height: 96,
+                        borderRadius: theme.radiusFull,
+                        backgroundColor: theme.primarySubtle,
+                      }}
+                    >
+                      <Inbox size={44} color={theme.primary} strokeWidth={1.8} />
+                    </div>
+                    <p style={{ ...TEXT_STYLE.sectionTitle, fontFamily, color: theme.textHeading }}>
+                      {t("need.empty.title")}
+                    </p>
+                    <p style={{ ...TEXT_STYLE.body, fontFamily, color: theme.textMuted, maxWidth: 420 }}>
+                      {t("need.empty.body")}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {requests.map((r) => {
+                      const status = deriveStatus(r.createdAt, now);
+                      const st = STATUS_STYLE[status];
+                      const StatusIcon = st.Icon;
+                      const isComplaint = r.kind === "report";
+                      const typeColor = isComplaint ? theme.accent : theme.primary;
+                      const RowIcon = ICON_BY_KEY[r.itemKey];
+                      return (
+                        <div
+                          key={r.id}
+                          className="flex items-center gap-5"
+                          style={{
+                            backgroundColor: theme.surface,
+                            borderRadius: theme.radiusLg,
+                            border: `1px solid rgba(0,0,0,0.08)`,
+                            padding: "18px 22px",
+                          }}
+                        >
+                          <div
+                            className="shrink-0 flex items-center justify-center"
+                            style={{
+                              width: 60, height: 60,
+                              borderRadius: theme.radiusMd,
+                              backgroundColor: theme.primaryLight,
+                            }}
+                          >
+                            {RowIcon ? (
+                              <RowIcon size={30} color={theme.primary} strokeWidth={1.8} />
+                            ) : (
+                              r.emoji
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span
+                              className="inline-flex items-center mb-1.5"
+                              style={{
+                                padding: "3px 12px",
+                                borderRadius: theme.radiusFull,
+                                backgroundColor: `color-mix(in srgb, ${typeColor} 14%, transparent)`,
+                                color: typeColor,
+                                fontFamily,
+                                fontSize: TYPE_SCALE.sm,
+                                fontWeight: WEIGHT.bold,
+                                letterSpacing: "0.6px",
+                                textTransform: "uppercase",
+                                lineHeight: 1.35,
+                              }}
+                            >
+                              {isComplaint ? t("need.type.complaint") : t("need.type.request")}
+                            </span>
+                            <p style={{ ...TEXT_STYLE.cardTitle, fontFamily, color: theme.textHeading }}>
+                              {t(r.itemKey)}
+                            </p>
+                            {r.note ? (
+                              <p
+                                className="truncate"
+                                style={{ ...TEXT_STYLE.caption, fontFamily, color: theme.textMuted, marginTop: 3 }}
+                              >
+                                "{r.note}"
+                              </p>
+                            ) : null}
+                            <div className="flex items-center gap-1.5 mt-1.5">
+                              <Clock size={14} color={theme.textDisabled} />
+                              <span style={{ ...TEXT_STYLE.caption, fontFamily, color: theme.textMuted }}>
+                                {t("need.requestedOn")} {formatDateTime(r.createdAt)}
+                              </span>
+                            </div>
+                            <span
+                              style={{
+                                display: "block",
+                                marginTop: 4,
+                                fontFamily,
+                                fontSize: TYPE_SCALE.sm,
+                                fontWeight: WEIGHT.normal,
+                                color: theme.textDisabled,
+                                letterSpacing: "0.2px",
+                              }}
+                            >
+                              {t("need.ref", refFor(r))}
+                            </span>
+                          </div>
+                          <div
+                            className="shrink-0 flex items-center gap-2"
+                            style={{
+                              padding: "10px 18px",
+                              borderRadius: theme.radiusFull,
+                              backgroundColor: `color-mix(in srgb, ${st.fg} 12%, transparent)`,
+                              border: `1.5px solid color-mix(in srgb, ${st.fg} 28%, transparent)`,
+                            }}
+                          >
+                            <StatusIcon size={18} color={st.fg} strokeWidth={2.2} />
+                            <span
+                              style={{
+                                fontFamily,
+                                fontSize: TYPE_SCALE.base,
+                                fontWeight: WEIGHT.bold,
+                                color: st.fg,
+                                whiteSpace: "nowrap",
+                                lineHeight: 1,
+                              }}
+                            >
+                              {statusLabel(r.kind, status)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

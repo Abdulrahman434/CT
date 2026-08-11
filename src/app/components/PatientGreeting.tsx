@@ -12,6 +12,7 @@ import { useGuestMode } from "../lib/guestMode";
 import { useAuth } from "./AuthContext";
 import svgPaths from "../../imports/svg-ca68x68c4i";
 import { getSavedHeroImage, isSlideshowEnabled } from "../lib/backgroundPrefs";
+import { usePatientInfo } from "../lib/usePatientInfo";
 
 function AboutUsIcon({ color }: { color?: string }) {
   const { theme } = useTheme();
@@ -52,23 +53,17 @@ export function PatientGreeting({
   const { theme } = useTheme();
   const { t, isRTL, fontFamily } = useLocale();
   const rippleElements = useRipple(theme.primarySubtle).rippleElements;
-  const nurseStore = useNurseStore();
   const { isGuest } = useGuestMode();
   const { logout } = useAuth();
 
-  // Data now comes from NurseDataStore (synchronized at App level)
-  const p = nurseStore.patient;
-
-  // Name: i18n demo key → manual/API name (with RTL/Arabic support)
-  const displayName = isRTL && p.nameAr
-    ? p.nameAr
-    : (p.nameKey ? t(p.nameKey) : p.name);
-
-  // Other fields
-  const displayMrn    = p.mrn;
-  const displayRoom   = p.room;
-  const displayBed    = p.bed;
-  const displayAdmit  = p.admissionDate;
+  const {
+    patient: p,
+    displayName,
+    displayMrn,
+    displayRoom,
+    displayBed,
+    displayAdmit,
+  } = usePatientInfo();
 
   // Hero image fallback chain:
   // 1. User-saved image from Backgrounds preferences
@@ -145,11 +140,21 @@ export function PatientGreeting({
         </p>
         {!isGuest && (
           <p
+            className="cursor-pointer active:scale-[0.98] transition-transform"
             style={{
               fontFamily: fontFamily,
               ...TEXT_STYLE.display,
               fontWeight: WEIGHT.extrabold,
               color: theme.textHeading,
+            }}
+            onClick={() => {
+              const careTeam = nurseStore.careTeam.filter(m => m.visible);
+              const staffList = careTeam.map(m => ({
+                name: t(m.nameKey),
+                role: t(m.roleKey),
+                img: m.img,
+              }));
+              (window as any).__demoRtlsToast?.(staffList.length ? staffList : undefined);
             }}
           >
             {displayName}
@@ -170,8 +175,9 @@ export function PatientGreeting({
         {!isGuest && (
           <div className="flex items-center flex-wrap gap-2" style={{ paddingTop: SPACE[2] }}>
             <div
-              className="flex items-center px-3 py-1.5"
+              className="flex items-center px-3 py-1.5 cursor-pointer active:scale-95 transition-transform"
               style={{ backgroundColor: theme.primarySubtle, borderRadius: theme.radiusFull }}
+              onClick={() => (window as any).__demoHkToast?.()}
             >
               <span
                 style={{
@@ -184,8 +190,9 @@ export function PatientGreeting({
               </span>
             </div>
             <div
-              className="flex items-center px-3 py-1.5"
+              className="flex items-center px-3 py-1.5 cursor-pointer active:scale-95 transition-transform"
               style={{ backgroundColor: theme.primarySubtle, borderRadius: theme.radiusFull }}
+              onClick={() => (window as any).__demoMealToast?.()}
             >
               <span
                 style={{

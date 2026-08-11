@@ -189,7 +189,7 @@ function tintHex(hex: string, amount = 0.92): string {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
-export function FoodOrdering({ onClose }: { onClose: () => void }) {
+export function FoodOrdering({ onClose, initialView }: { onClose: () => void; initialView?: "order" | "my-orders" }) {
   const { theme } = useTheme();
 
   const { isRTL, fontFamily } = useLocale();
@@ -205,7 +205,7 @@ export function FoodOrdering({ onClose }: { onClose: () => void }) {
   const [kidsBreakfastType, setKidsBreakfastType] = useState<KidsBreakfastType>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [wasEditMode, setWasEditMode] = useState(false);
-  const [showHistoryOverlay, setShowHistoryOverlay] = useState(false);
+  const [showHistoryOverlay, setShowHistoryOverlay] = useState(initialView === "my-orders");
   const isEditMode = editingOrderId !== null;
 
   // Read diet from Care Teams Settings (NurseDataStore)
@@ -2067,7 +2067,7 @@ function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL, meals, onEdi
   };
 
   return (
-    <div className="flex-1 min-h-0 rounded-[30px] flex flex-col" style={{ backgroundColor: "#fff", boxShadow: "0 8px 32px rgba(0,0,0,0.15)", overflow: "hidden" }}>
+    <div className="flex-1 min-h-0 flex flex-col" style={{ overflow: "hidden" }}>
       {/* Tabs row */}
       <div className="shrink-0 flex items-center justify-between px-[30px] pt-[28px] pb-[20px]">
         <div className="flex items-center gap-3 flex-wrap">

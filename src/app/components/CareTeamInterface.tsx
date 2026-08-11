@@ -199,15 +199,8 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
   const { theme: t } = useTheme();
   const { t: tr, dir } = useLocale();
   const observations = useClinicalStore();
-
-  const patient = {
-    nameKey: "clinical.patient.sara",
-    age: "32",
-    mrn: "00-284619",
-    room: "412",
-    admissionDate: "10 Mar 2026",
-    extension: "4217"
-  };
+  const nurseStore = useNurseStore();
+  const patient = nurseStore.patient;
 
   // ── Selection State ──────────────────────────────────────────────────────────
   const [selectedObsId, setSelectedObsId] = useState<string | null>(null);

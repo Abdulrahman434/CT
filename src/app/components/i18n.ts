@@ -43,6 +43,12 @@ const translations: Record<string, TranslationEntry> = {
   "general.go": { en: "Go", ar: "اذهب", ur: "جاؤ" },
   "general.loading": { en: "Loading...", ar: "جاري التحميل...", ur: "لوڈنگ ہو رہی ہے..." },
 
+  /* ─── Connection Status ─── */
+  "connection.localNotReachable": { en: "Local server is not reachable, connected to cloud", ar: "الخادم المحلي غير متصل، متصل بالسحابة", ur: "مقامی سرور تک رسائی ممکن نہیں، کلاؤڈ سے منسلک ہے" },
+  "connection.failed": { en: "Failed to connect to hospital server", ar: "تعذر الاتصال بخادم المستشفى", ur: "ہسپتال کے سرور سے رابطہ قائم کرنے میں ناکامی" },
+  "connection.showingDemo": { en: "Showing demo patient profile", ar: "عرض الملف التعريفي التجريبي للمريض", ur: "ڈیمو مریض کا پروفائل دکھایا جا رہا ہے" },
+  "connection.retry": { en: "Retry Connection", ar: "إعادة المحاولة", ur: "دوبارہ کوشش کریں" },
+
   /* ─── Kids Layout (Layout 3) ─── */
   "kids.greeting.morning": { en: "Good Morning", ar: "صباح الخير", ur: "صبح بخیر" },
   "kids.greeting.afternoon": { en: "Good Afternoon", ar: "مساء الخير", ur: "سہ پہر بخیر" },
@@ -128,13 +134,24 @@ const translations: Record<string, TranslationEntry> = {
      rendered in its own script), so it reads correctly regardless of the active UI locale. */
   "need.header.language": { en: "العربية", ar: "English", ur: "English" },
   "need.tab.request": { en: "I Need Something", ar: "أحتاج شيئاً", ur: "مجھے کچھ چاہیے" },
+  "need.tab.roomcare": { en: "Room Care", ar: "العناية بالغرفة", ur: "کمرے کی دیکھ بھال" },
   "need.tab.report": { en: "Report an Issue", ar: "أبلغ عن مشكلة", ur: "مسئلہ رپورٹ کریں" },
   "need.tab.mine": { en: "My Requests", ar: "طلباتي", ur: "میری درخواستیں" },
   "need.title.request": { en: "What do you need today?", ar: "ماذا تحتاج اليوم؟", ur: "آپ کو آج کیا چاہیے؟" },
+  "need.title.roomcare": { en: "Room care request", ar: "طلب عناية بالغرفة", ur: "کمرے کی دیکھ بھال کی درخواست" },
   "need.title.report": { en: "Report an issue", ar: "أبلغ عن مشكلة", ur: "مسئلہ رپورٹ کریں" },
   "need.title.mine": { en: "Your requests", ar: "طلباتك", ur: "آپ کی درخواستیں" },
   "need.sub.request": { en: "Tap what you'd like us to bring.", ar: "اختر ما تودّ أن نُحضره لك.", ur: "جو آپ چاہتے ہیں اس پر ٹیپ کریں۔" },
+  "need.sub.roomcare": { en: "Let us know what your room needs.", ar: "أخبرنا بما تحتاجه غرفتك.", ur: "ہمیں بتائیں آپ کے کمرے کو کیا چاہیے۔" },
   "need.sub.report": { en: "Tell us what needs attention.", ar: "أخبرنا بما يحتاج إلى اهتمام.", ur: "ہمیں بتائیں کیا توجہ چاہیے۔" },
+  "need.care.bedlinen": { en: "Change Bed Linen", ar: "تغيير مفارش السرير", ur: "بستر کی چادریں تبدیل کریں" },
+  "need.care.bedlinen.sub": { en: "Fresh sheets & pillowcases", ar: "ملاءات ووسائد نظيفة", ur: "تازہ چادریں اور تکیے کے غلاف" },
+  "need.care.trash": { en: "Remove Trash", ar: "إفراغ سلة المهملات", ur: "کچرا ہٹائیں" },
+  "need.care.trash.sub": { en: "Empty the waste bin", ar: "تفريغ سلة المهملات", ur: "کچرے کا ڈبا خالی کریں" },
+  "need.care.spill": { en: "Clean a Spill", ar: "تنظيف سوائل منسكبة", ur: "پھیلی ہوئی چیز صاف کریں" },
+  "need.care.spill.sub": { en: "Water, food or other spills", ar: "ماء أو طعام أو غيره", ur: "پانی، کھانا یا دیگر" },
+  "need.care.bathroom": { en: "Bathroom Cleaning", ar: "تنظيف الحمام", ur: "باتھ روم کی صفائی" },
+  "need.care.bathroom.sub": { en: "General bathroom cleanup", ar: "تنظيف عام للحمام", ur: "عمومی باتھ روم کی صفائی" },
   "need.item.blanket": { en: "Blanket", ar: "بطانية", ur: "کمبل" },
   "need.item.water": { en: "Water", ar: "ماء", ur: "پانی" },
   "need.item.pillow": { en: "Pillow", ar: "وسادة", ur: "تکیہ" },
@@ -143,14 +160,49 @@ const translations: Record<string, TranslationEntry> = {
   "need.item.tissues": { en: "Tissues", ar: "مناديل", ur: "ٹشو" },
   "need.item.sheets": { en: "Fresh Sheets", ar: "شراشف نظيفة", ur: "صاف چادریں" },
   "need.item.slippers": { en: "Slippers", ar: "شبشب", ur: "چپل" },
+  "need.item.earplugs": { en: "Earplugs", ar: "سدادات أذن", ur: "ایئر پلگ" },
+  "need.item.sleepmask": { en: "Sleep Mask", ar: "قناع النوم", ur: "نیند کا ماسک" },
+  "need.item.wheelchair": { en: "Wheelchair", ar: "كرسي متحرك", ur: "وہیل چیئر" },
+  "need.item.facemask": { en: "Face Mask", ar: "كمامة", ur: "فیس ماسک" },
+  "need.item.prayermat": { en: "Prayer Mat", ar: "سجادة صلاة", ur: "جائے نماز" },
+  "need.item.quran": { en: "Quran", ar: "مصحف", ur: "قرآن" },
+  "need.item.crutches": { en: "Crutches", ar: "عكازات طبية", ur: "بیساکھیاں" },
+  "need.item.walkingcane": { en: "Walking Cane", ar: "عكاز", ur: "چھڑی" },
+  "need.item.walker": { en: "Walker", ar: "مشّاية", ur: "واکر" },
+  "need.item.dentalkit": { en: "Dental Kit", ar: "طقم أسنان", ur: "دانتوں کا سامان" },
+  "need.item.comb": { en: "Comb", ar: "مشط", ur: "کنگھی" },
+  "need.item.wetwipes": { en: "Wet Wipes", ar: "مناديل مبللة", ur: "گیلے وائپس" },
   "need.issue.ac": { en: "Air Conditioner", ar: "المكيّف", ur: "ایئر کنڈیشنر" },
   "need.issue.lights": { en: "Lights", ar: "الإضاءة", ur: "لائٹس" },
   "need.issue.tv": { en: "TV", ar: "التلفاز", ur: "ٹی وی" },
   "need.issue.bed": { en: "Bed", ar: "السرير", ur: "بستر" },
   "need.issue.bathroom": { en: "Bathroom", ar: "الحمّام", ur: "باتھ روم" },
   "need.issue.power": { en: "Power Outlet", ar: "مقبس الكهرباء", ur: "بجلی کا ساکٹ" },
+  "need.issue.ac.sub": { en: "Not cooling • Too cold • Noise", ar: "لا يبرّد • بارد جداً • ضوضاء", ur: "ٹھنڈا نہیں • بہت ٹھنڈا • شور" },
+  "need.issue.lights.sub": { en: "Not working • Flickering", ar: "لا تعمل • تومض", ur: "کام نہیں کر رہی • ٹمٹما رہی ہیں" },
+  "need.issue.tv.sub": { en: "Not working • No signal", ar: "لا يعمل • لا إشارة", ur: "کام نہیں کر رہا • سگنل نہیں" },
+  "need.issue.bed.sub": { en: "Uncomfortable • Broken", ar: "غير مريح • مكسور", ur: "آرام دہ نہیں • ٹوٹا ہوا" },
+  "need.issue.bathroom.sub": { en: "Leaking • Clogged • Dirty", ar: "تسريب • مسدود • متسخ", ur: "رساؤ • بند • گندا" },
+  "need.issue.power.sub": { en: "Not working • Loose • Sparking", ar: "لا يعمل • فضفاض • يشرر", ur: "کام نہیں • ڈھیلا • چنگاریاں" },
+  "need.chip.notCooling": { en: "Not cooling", ar: "لا يبرّد", ur: "ٹھنڈا نہیں" },
+  "need.chip.tooCold": { en: "Too cold", ar: "بارد جداً", ur: "بہت ٹھنڈا" },
+  "need.chip.noise": { en: "Noise", ar: "ضوضاء", ur: "شور" },
+  "need.chip.notWorking": { en: "Not working", ar: "لا يعمل", ur: "کام نہیں کر رہا" },
+  "need.chip.flickering": { en: "Flickering", ar: "تومض", ur: "ٹمٹما رہا" },
+  "need.chip.tooDim": { en: "Too dim", ar: "خافت جداً", ur: "بہت مدھم" },
+  "need.chip.broken": { en: "Broken", ar: "مكسور", ur: "ٹوٹا ہوا" },
+  "need.chip.other": { en: "Other", ar: "أخرى", ur: "دیگر" },
+  "need.chip.noSignal": { en: "No signal", ar: "لا إشارة", ur: "سگنل نہیں" },
+  "need.chip.uncomfortable": { en: "Uncomfortable", ar: "غير مريح", ur: "آرام دہ نہیں" },
+  "need.chip.leaking": { en: "Leaking", ar: "تسريب", ur: "رساؤ" },
+  "need.chip.clogged": { en: "Clogged", ar: "مسدود", ur: "بند" },
+  "need.chip.dirty": { en: "Dirty", ar: "متسخ", ur: "گندا" },
+  "need.chip.loose": { en: "Loose", ar: "فضفاض", ur: "ڈھیلا" },
+  "need.chip.sparking": { en: "Sparking", ar: "يشرر", ur: "چنگاریاں" },
+  "need.report.whatIssue": { en: "What is the issue?", ar: "ما هي المشكلة؟", ur: "مسئلہ کیا ہے؟" },
+  "need.report.addDetails": { en: "Add more details (optional)", ar: "أضف تفاصيل إضافية (اختياري)", ur: "مزید تفصیلات شامل کریں (اختیاری)" },
   "need.notes.title": { en: "Any special notes for our team?", ar: "هل لديك أي ملاحظات خاصة لفريقنا؟", ur: "کیا ہماری ٹیم کے لیے کوئی خاص نوٹ ہے؟" },
-  "need.notes.placeholder": { en: "Example: Please bring two pillows.", ar: "مثال: من فضلك أحضر وسادتين.", ur: "مثال: براہ کرم دو تکیے لے آئیں۔" },
+  "need.notes.placeholder": { en: "Please describe the issue in more detail...", ar: "يرجى وصف المشكلة بمزيد من التفصيل...", ur: "براہ کرم مسئلے کی مزید تفصیل بیان کریں..." },
   "need.notes.optional": { en: "You can leave this empty.", ar: "يمكنك تركها فارغة.", ur: "آپ اسے خالی چھوڑ سکتے ہیں۔" },
   "need.cancel": { en: "Cancel", ar: "إلغاء", ur: "منسوخ کریں" },
   "need.send": { en: "Send Request", ar: "أرسل الطلب", ur: "درخواست بھیجیں" },
@@ -179,6 +231,35 @@ const translations: Record<string, TranslationEntry> = {
   "need.rel.yesterday": { en: "Yesterday", ar: "أمس", ur: "کل" },
   "need.rel.daysAgo": { en: "{0} days ago", ar: "قبل {0} أيام", ur: "{0} دن پہلے" },
   "need.close": { en: "Close", ar: "إغلاق", ur: "بند کریں" },
+
+  /* ─── Toast Notifications ─── */
+  "toast.justNow": { en: "Just now", ar: "الآن", ur: "ابھی" },
+  "toast.rtls.category": { en: "Alert: Staff Entry", ar: "تنبيه: دخول موظف", ur: "الرٹ: عملے کا داخلہ" },
+  "toast.rtls.subtitle": { en: "Staff entered the room", ar: "دخل موظف إلى الغرفة", ur: "عملے کا فرد کمرے میں داخل ہوا" },
+  "toast.rtls.authorized": { en: "Authorized", ar: "مصرّح", ur: "مجاز" },
+  "toast.rtls.unauthorized": { en: "Unauthorized", ar: "غير مصرّح", ur: "غیر مجاز" },
+  /* Housekeeping toast messages */
+  "toast.hk.category.request": { en: "HOUSEKEEPING REQUEST", ar: "طلب خدمة الغرف", ur: "ہاؤس کیپنگ کی درخواست" },
+  "toast.hk.category.issue": { en: "HOUSEKEEPING ISSUE", ar: "بلاغ صيانة", ur: "ہاؤس کیپنگ مسئلہ" },
+  "toast.hk.waterDelivered": { en: "Water has been delivered", ar: "تم توصيل المياه", ur: "پانی پہنچا دیا گیا" },
+  "toast.hk.blanketOnWay": { en: "Blanket is on the way", ar: "البطانية في الطريق", ur: "کمبل راستے میں ہے" },
+  "toast.hk.pillowPreparing": { en: "Pillow is being prepared", ar: "يتم تحضير الوسادة", ur: "تکیا تیار ہو رہا ہے" },
+  "toast.hk.acFixed": { en: "Air Conditioner issue has been fixed", ar: "تم إصلاح مشكلة المكيّف", ur: "ایئر کنڈیشنر کا مسئلہ حل ہو گیا" },
+  "toast.hk.delivered": { en: "Delivered", ar: "تم التوصيل", ur: "پہنچا دیا گیا" },
+  "toast.hk.onTheWay": { en: "On the Way", ar: "في الطريق", ur: "راستے میں" },
+  "toast.hk.preparing": { en: "Preparing", ar: "جاري التحضير", ur: "تیاری جاری" },
+  "toast.hk.fixed": { en: "Fixed", ar: "تم الإصلاح", ur: "ٹھیک ہو گیا" },
+  /* Meal ordering toast messages */
+  "toast.meal.category": { en: "MEAL ORDERING", ar: "طلب الوجبات", ur: "کھانے کا آرڈر" },
+  "toast.meal.dinnerOpen": { en: "Dinner ordering is now open!", ar: "طلب العشاء متاح الآن!", ur: "رات کے کھانے کا آرڈر اب کھلا ہے!" },
+  "toast.meal.hurryLunch": { en: "Only 30 min left to order Lunch!", ar: "باقي 30 دقيقة فقط لطلب الغداء!", ur: "دوپہر کے کھانے کا آرڈر دینے کے لیے صرف 30 منٹ باقی!" },
+  "toast.meal.breakfastServed": { en: "Your Breakfast is being served now 🍽️", ar: "يتم تقديم فطورك الآن 🍽️", ur: "آپ کا ناشتہ اب پیش کیا جا رہا ہے 🍽️" },
+  "toast.meal.lunchOnWay": { en: "Lunch #4827 — On the Way", ar: "الغداء #4827 — في الطريق", ur: "دوپہر کا کھانا #4827 — راستے میں" },
+  "toast.meal.orderNow": { en: "Order Now", ar: "اطلب الآن", ur: "ابھی آرڈر کریں" },
+  "toast.meal.hurry": { en: "Hurry!", ar: "أسرع!", ur: "جلدی کریں!" },
+  "toast.meal.bonAppetit": { en: "Bon Appétit!", ar: "بالهناء والشفاء!", ur: "بالعافیہ!" },
+  "toast.meal.breakfast": { en: "Breakfast", ar: "الفطور", ur: "ناشتہ" },
+  "toast.meal.lunch": { en: "Lunch", ar: "الغداء", ur: "دوپہر کا کھانا" },
 
   /* ─── Idle Screen ─── */
   "idle.welcome": { en: "Welcome to {0}", ar: "مرحباً بك في {0}", ur: "{0} میں خوش آمدید" },
@@ -416,6 +497,15 @@ const translations: Record<string, TranslationEntry> = {
   "care.mobility.bedRest": { en: "Complete Bed Rest", ar: "راحة تامة في السرير", ur: "مکمل بیڈ ریسٹ" },
   "care.assistance.bed": { en: "Do not leave bed without nursing assistance", ar: "يرجى عدم مغادرة السرير بدون مساعدة التمريض", ur: "نرسنگ امداد کے بغیر بستر نہ چھوڑیں" },
 
+
+
+  /* ─── HIS Data Fallback & Demo Preview ─── */
+  "care.his.noInfo": { en: "No information provided from HIS", ar: "لا تتوفر معلومات من نظام المستشفى (HIS)", ur: "HIS سے کوئی معلومات فراہم نہیں کی گئیں" },
+  "care.his.noInfoSub": { en: "This section currently has no active data linked to your medical record.", ar: "هذا القسم لا يحتوي على بيانات نشطة مرتبطة بملفك الطبي حالياً.", ur: "اس سیکشن میں فی الحال آپ کے میڈیکل ریکارڈ سے مربوط کوئی فعال ڈیٹا نہیں ہے۔" },
+  "care.his.checkDemo": { en: "Check demo look", ar: "معاينة العرض التوضيحي", ur: "ڈیمو لک دیکھیں" },
+  "care.his.hideDemo": { en: "Back to HIS status", ar: "العودة لحالة النظام (HIS)", ur: "HIS کی حالت پر واپس جائیں" },
+  "care.his.demoBadge": { en: "Demo Preview", ar: "معاينة تجريبية", ur: "ڈیمو کا پیش نظارہ" },
+
   /* ─── Lab Results ─── */
   "care.labs.cbc": { en: "Complete Blood Count", ar: "تعداد الدم الكامل", ur: "خون کا مکمل ٹیسٹ" },
   "care.labs.glucose": { en: "Glucose Level", ar: "مستوى الجلوكوز", ur: "گلوکوز کی سطح" },
@@ -571,6 +661,32 @@ const translations: Record<string, TranslationEntry> = {
   "settings.clearData.reset": { en: "Return to login screen", ar: "العودة إلى شاشة تسجيل الدخول", ur: "لاگ ان اسکرین پر واپس جائیں" },
   "settings.clearData.question": { en: "Are you sure you want to clear all data?", ar: "هل أنت متأكد من مسح جميع البيانات؟", ur: "کیا آپ واقعی تمام ڈیٹا صاف کرنا چاہتے ہیں؟" },
   "settings.clearData.desc": { en: "This action cannot be undone. It will prepare the terminal for the next patient.", ar: "لا يمكن التراجع عن هذا الإجراء. سيقوم بإعداد الشاشة للمريض التالي.", ur: "اس کارروائی کو واپس نہیں کیا جا سکتا۔ یہ اگلے مریض کے لیے ٹرمینل تیار کرے گا۔" },
+  "settings.clearData.clearMyData.title": { en: "Clear My Data", ar: "مسح بياناتي", ur: "میرا ڈیٹا صاف کریں" },
+  "settings.clearData.clearMyData.desc": { en: "Clears third-party apps, browser cache, and website logins. Your preferences and PIN remain safe.", ar: "يمسح التطبيقات الخارجية وسجل التصفح وتسجيلات الدخول. تظل إعداداتك ورمز PIN الخاص بك آمنين.", ur: "تھرڈ پارٹی ایپس، براؤزر کیشے اور ویب سائٹ لاگ ان کو صاف کرتا ہے۔ آپ کی ترجیحات اور PIN محفوظ رہیں گے۔" },
+  "settings.clearData.clearEverything.title": { en: "Clear Everything", ar: "مسح كل شيء", ur: "سب کچھ صاف کریں" },
+  "settings.clearData.clearEverything.desc": { en: "Resets the device fully to factory defaults. Wipes all preferences, language setup, and PIN.", ar: "إعادة ضبط الجهاز بالكامل إلى إعدادات المصنع. يمسح جميع التفضيلات وإعداد اللغة ورمز PIN.", ur: "ڈیوائس کو فیکٹری ڈیفالٹس پر مکمل طور پر ری سیٹ کرتا ہے۔ تمام ترجیحات، زبان کے سیٹ اپ اور PIN کو صاف کرتا ہے۔" },
+  "settings.clearData.btn.clearEverything": { en: "Clear Everything", ar: "مسح كل شيء", ur: "سب کچھ صاف کریں" },
+  "settings.clearData.btn.clearMyData": { en: "Clear My Data", ar: "مسح بياناتي", ur: "میرا ڈیٹا صاف کریں" },
+
+  /* ─── App Lock Tutorial & Setup ─── */
+  "appLock.tutorial.title": { en: "Keep an app private", ar: "حافظ على خصوصية التطبيقات", ur: "ایپ کو پرائیویٹ رکھیں" },
+  "appLock.tutorial.body": { en: "Touch and hold any app to lock it with your PIN.", ar: "اضغط مطولاً على أي تطبيق لإغلاقه برمز PIN الخاص بك.", ur: "کسی بھی ایپ کو PIN سے لاک کرنے کے لیے دبائے رکھیں۔" },
+  "appLock.tutorial.hint": { en: "Hold for 1 second", ar: "اضغط لمدة ثانية واحدة", ur: "1 سیکنڈ کے لیے دبائے رکھیں" },
+  "appLock.tutorial.pressAndHold": { en: "Press and hold", ar: "اضغط مطولاً", ur: "دبائے رکھیں" },
+  "appLock.tutorial.tryIt": { en: "Try it", ar: "جرب الآن", ur: "آزمائیں" },
+  "appLock.tutorial.gotIt": { en: "Got it", ar: "فهمت", ur: "سمجھ گیا" },
+  "appLock.tutorial.progress": { en: "1 of 1", ar: "1 من 1", ur: "1 of 1" },
+  "appLock.tutorial.replay": { en: "Replay App Lock Tutorial", ar: "إعادة تشغيل دليل قفل التطبيقات", ur: "ایپ لاک ٹیوٹوریل دوباره چلائیں" },
+  "appLock.tutorial.replayDesc": { en: "Show the long-press guide on your next app selection", ar: "عرض دليل الضغط المطوّل عند اختيار التطبيق التالي", ur: "اگلی ایپ کے انتخاب پر گائیڈ دکھائیں" },
+  "appLock.tutorial.replayToast": { en: "App Lock tutorial will show on your next app selection.", ar: "سيظهر دليل قفل التطبيقات عند اختيار التطبيق التالي.", ur: "ایپ لاک ٹیوٹوریل اگلی ایپ پر نظر آئے گا۔" },
+  "appLock.setup.title": { en: "Lock {name}?", ar: "قفل {name}؟", ur: "لاک کریں {name}؟" },
+  "appLock.setup.desc": { en: "A PIN will be required whenever someone opens this app.", ar: "سيتطلب إدخال رمز PIN في كل مرة يتم فيها فتح هذا التطبيق.", ur: "جب بھی کوئی اس ایپ کو کھولے گا تو PIN درکار ہوگا۔" },
+  "appLock.setup.confirm": { en: "Lock App", ar: "قفل التطبيق", ur: "ایپ لاک کریں" },
+  "appLock.lockedSuccessSuffix": { en: "is now locked.", ar: "مغلق الآن.", ur: "اب لاک ہے۔" },
+  "appLock.createPin.title": { en: "Create Privacy PIN", ar: "إنشاء رمز PIN الخصوصية", ur: "پرائیویسی PIN بنائیں" },
+  "appLock.createPin.sub1": { en: "Set a 4-digit PIN to protect your locked apps", ar: "أنشئ رمز PIN مكون من 4 أرقام لحماية تطبيقك", ur: "اپنی ایپس کو لاک کرنے کے لیے 4 ہندسوں کا PIN درج کریں" },
+  "appLock.createPin.confirmTitle": { en: "Confirm Privacy PIN", ar: "تأكيد رمز PIN الخصوصية", ur: "پرائیویسی PIN کی تصدیق کریں" },
+  "appLock.createPin.sub2": { en: "Re-enter your 4-digit PIN to confirm", ar: "أعد إدخال رمز PIN المكون من 4 أرقام للتأكيد", ur: "تصدیق کے لیے اپنا 4 ہندسوں کا PIN دوبارہ درج کریں" },
 
   /* ─── Care Team Access Dialog ─── */
   "careteam.title": { en: "Care Team Access", ar: "دخول فريق الرعاية", ur: "کیئر ٹیم رسائی" },
@@ -1049,19 +1165,113 @@ const translations: Record<string, TranslationEntry> = {
 
   /* ─── App Install ─── */
   "appInstall.installing": { en: "Installing", ar: "جار تثبيت", ur: "انسٹال ہو رہا ہے" },
-  "appInstall.hint":       { en: "This only happens once", ar: "يحدث هذا مرة واحدة فقط", ur: "یہ صرف ایک بار ہوتا ہے" },
+  "appInstall.hint": { en: "This only happens once", ar: "يحدث هذا مرة واحدة فقط", ur: "یہ صرف ایک بار ہوتا ہے" },
+  "appLaunch.opening": { en: "Opening", ar: "جارٍ الفتح", ur: "کھولا جا رہا ہے" },
+  "appLaunch.hint": { en: "Please wait a moment…", ar: "يرجى الانتظار لحظة…", ur: "براہ کرم ایک لمحہ انتظار کریں…" },
 
   /* ─── Offline Banner ─── */
-  "offline.title":     { en: "No Internet Connection", ar: "لا يوجد اتصال بالإنترنت", ur: "انٹرنیٹ کنکشن نہیں" },
-  "offline.subtitle":  { en: "Showing last saved content. Connect to WiFi to refresh.", ar: "يتم عرض المحتوى المحفوظ. اتصل بالواي فاي للتحديث.", ur: "آخری محفوظ مواد دکھایا جا رہا ہے۔" },
-  "offline.openWifi":  { en: "Open WiFi Settings", ar: "فتح إعدادات الواي فاي", ur: "وائی فائی سیٹنگز کھولیں" },
-  "offline.adminPin":  { en: "Continue Offline", ar: "الاستمرار بدون اتصال", ur: "آف لائن جاری رکھیں" },
-  "offline.enterPin":  { en: "Enter admin PIN", ar: "أدخل رمز PIN للمسؤول", ur: "ایڈمن PIN درج کریں" },
-  "offline.cancel":    { en: "Cancel", ar: "إلغاء", ur: "منسوخ" },
+  "offline.title": { en: "No Internet Connection", ar: "لا يوجد اتصال بالإنترنت", ur: "انٹرنیٹ کنکشن نہیں" },
+  "offline.subtitle": { en: "Showing last saved content. Connect to WiFi to refresh.", ar: "يتم عرض المحتوى المحفوظ. اتصل بالواي فاي للتحديث.", ur: "آخری محفوظ مواد دکھایا جا رہا ہے۔" },
+  "offline.openWifi": { en: "Open WiFi Settings", ar: "فتح إعدادات الواي فاي", ur: "وائی فائی سیٹنگز کھولیں" },
+  "offline.adminPin": { en: "Continue Offline", ar: "الاستمرار بدون اتصال", ur: "آف لائن جاری رکھیں" },
+  "offline.enterPin": { en: "Enter admin PIN", ar: "أدخل رمز PIN للمسؤول", ur: "ایڈمن PIN درج کریں" },
+  "offline.cancel": { en: "Cancel", ar: "إلغاء", ur: "منسوخ" },
 
   /* ─── Updates ─── */
   "update.available": { en: "An update is available", ar: "يتوفر تحديث", ur: "ایک اپ ڈیٹ دستیاب ہے" },
-  "update.reload":    { en: "Reload now", ar: "إعادة التحميل الآن", ur: "ابھی ری لوڈ کریں" }
+  "update.reload": { en: "Reload now", ar: "إعادة التحميل الآن", ur: "ابھی ری لوڈ کریں" },
+
+  /* ─── First-run Onboarding Wizard ─── */
+  "onboarding.header.title": { en: "Setup your Preferences", ar: "إعداد تفضيلاتك", ur: "اپنی ترجیحات ترتیب دیں" },
+  "onboarding.header.subtitle": { en: "Let's personalize your screen for your stay", ar: "لنخصّص شاشتك طوال فترة إقامتك", ur: "آئیے آپ کے قیام کے لیے اسکرین کو ذاتی بنائیں" },
+  "onboarding.progress": { en: "Step {0} of {1}", ar: "الخطوة {0} من {1}", ur: "مرحلہ {0} از {1}" },
+  "onboarding.next": { en: "Next", ar: "التالي", ur: "اگلا" },
+  "onboarding.skip": { en: "Skip", ar: "تخطي", ur: "چھوڑیں" },
+  "onboarding.skipAll": { en: "Skip all", ar: "تخطي الكل", ur: "سب چھوڑ دیں" },
+  "onboarding.yes": { en: "Yes", ar: "نعم", ur: "ہاں" },
+  "onboarding.no": { en: "No", ar: "لا", ur: "نہیں" },
+
+  "onboarding.welcome.title": { en: "Welcome — we're glad you're here", ar: "مرحباً — يسعدنا وجودك هنا", ur: "خوش آمدید — آپ کی موجودگی ہمارے لیے خوشی کی بات ہے" },
+  "onboarding.welcome.body": { en: "This is your personal screen for the stay: entertainment, hospital services, and a way to stay connected, all in one place. Let's take a minute to set it up just for you.", ar: "هذه شاشتك الشخصية طوال فترة إقامتك: ترفيه وخدمات المستشفى ووسيلة للبقاء على تواصل، كل ذلك في مكان واحد. لنستغرق دقيقة لإعدادها خصيصاً لك.", ur: "یہ آپ کے قیام کے لیے آپ کی ذاتی اسکرین ہے: تفریح، ہسپتال کی خدمات، اور رابطے میں رہنے کا ذریعہ، سب ایک جگہ۔ آئیے ایک منٹ میں اسے صرف آپ کے لیے ترتیب دیں۔" },
+  "onboarding.welcome.start": { en: "Get started", ar: "ابدأ", ur: "شروع کریں" },
+
+  "onboarding.language.title": { en: "Which language do you prefer?", ar: "ما اللغة التي تفضلها؟", ur: "آپ کون سی زبان پسند کرتے ہیں؟" },
+
+  "onboarding.displayName.title": { en: "How would you like us to call you?", ar: "كيف تحب أن نناديك؟", ur: "آپ چاہتے ہیں ہم آپ کو کیسے پکاریں؟" },
+  "onboarding.displayName.useFile": { en: "Use my file name", ar: "استخدم اسمي في الملف الطبي", ur: "میری فائل کا نام استعمال کریں" },
+  "onboarding.displayName.custom": { en: "Enter a name myself", ar: "أُدخل اسماً بنفسي", ur: "خود ایک نام درج کریں" },
+  "onboarding.displayName.nameEn": { en: "Name (English)", ar: "الاسم (بالإنجليزية)", ur: "نام (انگریزی)" },
+  "onboarding.displayName.nameAr": { en: "Name (Arabic)", ar: "الاسم (بالعربية)", ur: "نام (عربی)" },
+
+  "onboarding.pin.title": { en: "Would you like to set a PIN for your safety?", ar: "هل ترغب في تعيين رمز PIN لحمايتك؟", ur: "کیا آپ اپنی حفاظت کے لیے PIN سیٹ کرنا چاہیں گے؟" },
+  "onboarding.pin.alreadySet": { en: "A PIN is already set on this screen.", ar: "تم تعيين رمز PIN بالفعل على هذه الشاشة.", ur: "اس اسکرین پر پہلے سے PIN سیٹ ہے۔" },
+  "onboarding.pin.skipToast": { en: "You can set this anytime from My Preferences.", ar: "يمكنك تعيينه في أي وقت من تفضيلاتي.", ur: "آپ اسے کسی بھی وقت میری ترجیحات سے سیٹ کر سکتے ہیں۔" },
+
+  "onboarding.prayer.title": { en: "Would you like us to remind you at prayer times?", ar: "هل ترغب أن نذكّرك بأوقات الصلاة؟", ur: "کیا آپ چاہیں گے کہ ہم آپ کو نماز کے اوقات پر یاد دلائیں؟" },
+
+  "onboarding.decision.title": { en: "Would you like to continue setting up your preferences?", ar: "هل ترغب في متابعة إعداد تفضيلاتك؟", ur: "کیا آپ اپنی ترجیحات کی ترتیب جاری رکھنا چاہیں گے؟" },
+  "onboarding.decision.no": { en: "No, start immediately", ar: "أود البدء مباشرة", ur: "نہیں، ابھی شروع کریں" },
+
+  "onboarding.theme.title": { en: "Dark or light mode?", ar: "الوضع الداكن أم الفاتح؟", ur: "ڈارک یا لائٹ موڈ؟" },
+  "onboarding.theme.light": { en: "Light mode", ar: "الوضع الفاتح", ur: "لائٹ موڈ" },
+  "onboarding.theme.dark": { en: "Dark mode", ar: "الوضع الداكن", ur: "ڈارک موڈ" },
+
+  "onboarding.dataClear.title": { en: "How to manage your data", ar: "كيفية إدارة بياناتك", ur: "اپنے ڈیٹا کا انتظام کیسے کریں" },
+  "onboarding.dataClear.daily": { en: "Reset my app data daily.", ar: "إعادة تعيين بياناتي تلقائياً يومياً.", ur: "روزانہ میرا ایپ ڈیٹا صاف کریں۔" },
+  "onboarding.dataClear.idle": { en: "After 24 hours of inactivity.", ar: "بعد ٢٤ ساعة من عدم النشاط.", ur: "24 گھنٹے غیر فعالیت کے بعد۔" },
+  "onboarding.dataClear.discharge": { en: "Only when I am discharged.", ar: "فقط عند خروجي من المستشفى.", ur: "صرف تب جب میں ہسپتال سے فارغ ہو جاؤں۔" },
+  "onboarding.dataClear.note": { en: "You can change this anytime from Settings, or clear your data manually right now.", ar: "يمكنك تغيير هذا في أي وقت من الإعدادات، أو مسح بياناتك يدوياً الآن.", ur: "آپ اسے کسی بھی وقت سیٹنگز سے بدل سکتے ہیں، یا ابھی اپنا ڈیٹا خود صاف کر سکتے ہیں۔" },
+
+  "onboarding.notifications.title": { en: "How would you like to receive notifications?", ar: "كيف تحب أن تصلك الإشعارات؟", ur: "آپ اطلاعات کیسے وصول کرنا چاہیں گے?" },
+  "onboarding.notifications.sound": { en: "Sound", ar: "مع صوت", ur: "آواز کے ساتھ" },
+  "onboarding.notifications.silent": { en: "Silent", ar: "صامت", ur: "خاموش" },
+
+  "onboarding.bluetooth.title": { en: "Would you like to connect a Bluetooth device now?", ar: "هل ترغب في توصيل جهاز بلوتوث الآن؟", ur: "کیا آپ ابھی بلوٹوتھ ڈیوائس منسلک کرنا چاہیں گے؟" },
+
+  "onboarding.screensaver.title": { en: "How long before the screen dims to a screensaver?", ar: "بعد كم من الوقت تنتقل الشاشة إلى شاشة التوقف؟", ur: "اسکرین کتنی دیر بعد اسکرین سیور پر جائے؟" },
+  "onboarding.screensaver.30s": { en: "30 seconds", ar: "٣٠ ثانية", ur: "30 سیکنڈ" },
+  "onboarding.screensaver.1m": { en: "1 minute", ar: "دقيقة واحدة", ur: "1 منٹ" },
+  "onboarding.screensaver.5m": { en: "5 minutes", ar: "٥ دقائق", ur: "5 منٹ" },
+
+  "onboarding.consent.title": { en: "One last step", ar: "خطوة أخيرة", ur: "آخری مرحلہ" },
+  "onboarding.consent.tour.before": { en: "I've watched the ", ar: "لقد شاهدت ", ur: "میں نے " },
+  "onboarding.consent.tour.link": { en: "welcome slideshow", ar: "عرض الشرائح الترحيبي", ur: "خوش آمدید سلائیڈ شو" },
+  "onboarding.consent.tour.after": { en: "", ar: "", ur: " دیکھ لیا ہے" },
+  "onboarding.consent.terms.before": { en: "I agree to the ", ar: "أوافق على ", ur: "میں " },
+  "onboarding.consent.terms.link": { en: "Terms & Conditions", ar: "الشروط والأحكام", ur: "شرائط و ضوابط" },
+  "onboarding.consent.terms.after": { en: "", ar: "", ur: " سے متفق ہوں" },
+  "onboarding.consent.startWithTour": { en: "Start with a tour", ar: "ابدأ مع الجولة", ur: "ٹور کے ساتھ شروع کریں" },
+  "onboarding.consent.startNow": { en: "Start now", ar: "ابدأ الآن", ur: "ابھی شروع کریں" },
+
+  /* ─── My Preferences: Setup your Preferences ─── */
+  "prefs.setup":            { en: "Setup your Preferences", ar: "إعداد تفضيلاتك", ur: "اپنی ترجیحات ترتیب دیں" },
+  "prefs.setup.incomplete": { en: "Finish setting up your screen", ar: "أكمل إعداد شاشتك", ur: "اپنی اسکرین کی ترتیب مکمل کریں" },
+  "prefs.setup.review":     { en: "Review or change your setup", ar: "راجع أو غيّر إعدادك", ur: "اپنی ترتیب دیکھیں یا بدلیں" },
+
+  /* ─── My Preferences: Clear my data ─── */
+  "prefs.clearData": { en: "Clear my data", ar: "مسح بياناتي", ur: "میرا ڈیٹا صاف کریں" },
+  "prefs.clearData.subtitle": { en: "Manage your stored data", ar: "إدارة بياناتك المخزنة", ur: "اپنا محفوظ ڈیٹا منظم کریں" },
+  "prefs.clearData.everything": { en: "Clear everything", ar: "مسح كل شيء", ur: "سب کچھ صاف کریں" },
+  "prefs.clearData.everything.sub": { en: "Erases everything, including your PIN, and starts setup again from the beginning.", ar: "يمسح كل شيء، بما في ذلك رمز PIN، ويبدأ الإعداد من جديد.", ur: "PIN سمیت سب کچھ مٹا دیتا ہے، اور سیٹ اپ شروع سے دوبارہ شروع ہوتا ہے۔" },
+  "prefs.clearData.userOnly": { en: "Clear my data", ar: "مسح بياناتي", ur: "میرا ڈیٹا صاف کریں" },
+  "prefs.clearData.userOnly.sub": { en: "Clears your activity but keeps your setup, including your PIN.", ar: "يمسح نشاطك مع الاحتفاظ بإعداداتك، بما في ذلك رمز PIN.", ur: "آپ کی سرگرمی صاف کرتا ہے لیکن PIN سمیت آپ کا سیٹ اپ برقرار رکھتا ہے۔" },
+  "prefs.clearData.done": { en: "Your data has been cleared.", ar: "تم مسح بياناتك.", ur: "آپ کا ڈیٹا صاف کر دیا گیا ہے۔" },
+
+  /* ─── PIN / NFC setup (shared with onboarding) ─── */
+  "pinSetup.title": { en: "Set up a PIN", ar: "إعداد رمز PIN", ur: "PIN سیٹ کریں" },
+  "pinSetup.subtitle": { en: "Enter a 4-digit PIN for your settings", ar: "أدخل رمز PIN من ٤ أرقام لإعداداتك", ur: "اپنی سیٹنگز کے لیے 4 ہندسوں کا PIN درج کریں" },
+  "pinSetup.confirm": { en: "Confirm your PIN", ar: "أكّد رمز PIN", ur: "اپنے PIN کی تصدیق کریں" },
+  "pinSetup.mismatch": { en: "PINs do not match", ar: "الرمزان غير متطابقين", ur: "PIN مماثل نہیں ہیں" },
+  "pinSetup.saved": { en: "Saved successfully", ar: "تم الحفظ بنجاح", ur: "کامیابی سے محفوظ ہو گیا" },
+  "pinSetup.removed": { en: "Removed", ar: "تمت الإزالة", ur: "ہٹا دیا گیا" },
+  "nfcSetup.title": { en: "Add NFC Card (Optional)", ar: "إضافة بطاقة NFC (اختياري)", ur: "NFC کارڈ شامل کریں (اختیاری)" },
+  "nfcSetup.subtitle": { en: "You can pair an NFC card to easily unlock your screen later.", ar: "يمكنك ربط بطاقة NFC لفتح شاشتك بسهولة لاحقاً.", ur: "بعد میں اسکرین آسانی سے کھولنے کے لیے NFC کارڈ جوڑ سکتے ہیں۔" },
+  "nfcSetup.skip": { en: "Skip", ar: "تخطي", ur: "چھوڑیں" },
+  "nfcSetup.pair": { en: "Pair NFC", ar: "ربط البطاقة", ur: "NFC جوڑیں" },
+  "nfcSetup.tap1": { en: "Tap your NFC card", ar: "مرّر بطاقة NFC", ur: "اپنا NFC کارڈ ٹیپ کریں" },
+  "nfcSetup.tap2": { en: "Tap it again to confirm", ar: "مرّرها مرة أخرى للتأكيد", ur: "تصدیق کے لیے دوبارہ ٹیپ کریں" },
+  "nfcSetup.hold": { en: "Hold the card near the reader", ar: "قرّب البطاقة من القارئ", ur: "کارڈ کو ریڈر کے قریب رکھیں" },
+  "nfcSetup.mismatch": { en: "NFC cards do not match", ar: "البطاقتان غير متطابقتين", ur: "NFC کارڈ مماثل نہیں ہیں" }
 };
 
 /* ── Number Localization ── */

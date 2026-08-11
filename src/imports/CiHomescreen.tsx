@@ -8,6 +8,7 @@ import {
   type TileGroupStyle,
   type ThemeConfig,
 } from "../app/components/ThemeContext";
+import { usePatientInfo } from "../app/lib/usePatientInfo";
 import svgPaths from "./svg-jt2c43b1ae";
 
 /**
@@ -95,12 +96,15 @@ function Frame25() {
 }
 
 function Frame38() {
+  const { displayName, displayMrn } = usePatientInfo();
   return (
     <div className="content-stretch flex flex-col gap-[7px] items-start leading-[0] relative shrink-0 text-white w-[365px]">
       <div className="flex flex-col font-['Inter:Semi_Bold',sans-serif] font-semibold h-[26px] justify-center not-italic relative shrink-0 text-[24px] w-full">
         <p className="leading-[30px]" dir="auto">
-          <span>{`Sara Saleh `}</span>
-          <span className="font-['Inter:Regular',sans-serif] font-normal not-italic text-[#f8f8f8]">| MRN: 14789521</span>
+          <span>{`${displayName} `}</span>
+          {displayMrn && (
+            <span className="font-['Inter:Regular',sans-serif] font-normal not-italic text-[#f8f8f8]">| MRN: {displayMrn}</span>
+          )}
         </p>
       </div>
       <div className="flex flex-col font-['Inter:Italic',sans-serif] font-normal h-[16px] italic justify-center relative shrink-0 text-[15px] w-[464px]">
@@ -937,13 +941,16 @@ function Frame44() {
 }
 
 function Frame45({ style }: { style?: CSSProperties }) {
+  const { displayName, displayMrn } = usePatientInfo();
   return (
     <div data-tile-group="main-right" style={style} className="absolute bottom-[30px] content-stretch flex flex-col gap-[8px] items-end right-[30px]">
       {/* Patient name / info — left-aligned, directly above the Live TV / Food Order / Room Service row */}
       <div className="flex flex-col gap-[4px] items-start text-left w-full pl-[2px] pb-[4px]">
         <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold not-italic text-[24px] leading-[30px]" dir="auto" style={{ color: "var(--primary-color)" }}>
-          <span>{`Sara Saleh `}</span>
-          <span className="font-['Inter:Regular',sans-serif] font-normal" style={{ color: "var(--primary-dark)" }}>| MRN: 14789521</span>
+          <span>{`${displayName} `}</span>
+          {displayMrn && (
+            <span className="font-['Inter:Regular',sans-serif] font-normal" style={{ color: "var(--primary-dark)" }}>| MRN: {displayMrn}</span>
+          )}
         </p>
         <p className="font-['Inter:Italic',sans-serif] font-normal italic text-[15px] leading-[18px]" dir="auto" style={{ color: "var(--primary-color)", opacity: 0.7 }}>
           Welcome to CareInn Hospital. We wish you a speedy recovery!

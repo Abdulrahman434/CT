@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ApiImage } from "./ApiImage";
-import { Settings, Globe, Bell, Cast } from "lucide-react";
+import { Settings, Globe, Bell, Cast, AlertTriangle } from "lucide-react";
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, TEXT_STYLE, SPACE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import svgPaths from "../../imports/svg-ca68x68c4i";
@@ -8,6 +8,9 @@ import { getPrayerTimes, PRAYER_KEYS, PRAYER_NAMES, formatPrayerTime, getPrayerS
 import { Prayer } from "adhan";
 import { ConnectionStatus } from "./ConnectionStatus";
 import { useLongPress } from "../lib/useLongPress";
+import { useNurseStore, nurseActions } from "./NurseDataStore";
+import { fetchPatientForDevice } from "../lib/hospitalApi";
+import { getDeviceInfo } from "../utils/androidBridge";
 
 // Removed hardcoded prayerTimes
 
@@ -44,6 +47,40 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
   const [time, setTime] = useState(new Date());
   const [prayerData, setPrayerData] = useState(() => getPrayerStatus(new Date()));
   const [temperature, setTemperature] = useState<number | null>(null);
+
+  const nurseStore = useNurseStore();
+  const [showConnDetails, setShowConnDetails] = useState(false);
+  const [retryLoading, setRetryLoading] = useState(false);
+
+  const handleRetryConnection = () => {
+    setRetryLoading(true);
+    const info = getDeviceInfo();
+    const serial = info?.serial || "";
+    if (serial) {
+      fetchPatientForDevice(serial)
+        .then((result) => {
+          if (result) {
+            const p = result.patient;
+            nurseActions.updatePatientFromApi({
+              name: p.name || undefined,
+              nameAr: p.nameAr || undefined,
+              mrn: p.mrn || undefined,
+              room: p.room || undefined,
+              bed: p.bed || undefined,
+              sex: p.sex || undefined,
+              dob: p.dob || undefined,
+              admissionDate: p.admissionDate || undefined,
+              dischargeDate: p.dischargeDate || undefined,
+            });
+            nurseActions.setHisConnected(true);
+            setShowConnDetails(false);
+          }
+        })
+        .finally(() => setRetryLoading(false));
+    } else {
+      setRetryLoading(false);
+    }
+  };
 
   const weatherLongPress = useLongPress(() => {
     window.location.reload();
@@ -196,31 +233,100 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
           </span>
         )}
 
-        {/* Clock + Date stacked */}
-        <div className="flex flex-col items-end">
-          <span
-            style={{
-              fontFamily: fontFamily,
-              ...TEXT_STYLE.pageTitle,
-              color: theme.textHeading,
-              lineHeight: "25px",
-              textAlign: "end",
-            }}
-          >
-            {displayHours}:{minutes} {ampm}
-          </span>
-          <span
-            style={{
-              fontFamily: fontFamily,
-              ...TEXT_STYLE.caption,
-              fontWeight: WEIGHT.normal,
-              color: theme.textMuted,
-              lineHeight: "16px",
-              textAlign: "end",
-            }}
-          >
-            {dateStr}
-          </span>
+        {/* Clock + Date stacked (with connection warning icon beside clock) */}
+        <div className="relative flex items-center gap-2.5">
+          {(!nurseStore.isHisConnected || nurseStore.isLocalFallback) && (
+            <div className="relative">
+              <button
+                onClick={() => setShowConnDetails(!showConnDetails)}
+                className="flex items-center justify-center rounded-full cursor-pointer transition-transform hover:scale-110 active:scale-95"
+                style={{
+                  width: 32,
+                  height: 32,
+                  backgroundColor: nurseStore.isLocalFallback
+                    ? "rgba(245, 158, 11, 0.12)"
+                    : "rgba(239, 68, 68, 0.12)",
+                  border: nurseStore.isLocalFallback
+                    ? "1px solid rgba(245, 158, 11, 0.3)"
+                    : "1px solid rgba(239, 68, 68, 0.3)",
+                  color: nurseStore.isLocalFallback ? "#F59E0B" : "#EF4444",
+                }}
+                title={
+                  nurseStore.isLocalFallback
+                    ? t("connection.localNotReachable")
+                    : t("connection.failed")
+                }
+                aria-label={
+                  nurseStore.isLocalFallback
+                    ? t("connection.localNotReachable")
+                    : t("connection.failed")
+                }
+              >
+                <AlertTriangle size={17} className="animate-pulse" />
+              </button>
+
+              {showConnDetails && (
+                <div
+                  className="absolute right-0 top-full mt-2 z-[9999] flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-left"
+                  style={{
+                    backgroundColor: nurseStore.isLocalFallback
+                      ? "rgba(217, 119, 6, 0.95)"
+                      : "rgba(239, 68, 68, 0.95)",
+                    color: "#fff",
+                    borderColor: "rgba(255, 255, 255, 0.25)",
+                    backdropFilter: "blur(12px)",
+                    minWidth: "280px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <AlertTriangle size={18} className="shrink-0 animate-pulse" />
+                  <div className="flex flex-col text-xs flex-1">
+                    <span className="font-bold">
+                      {nurseStore.isLocalFallback
+                        ? t("connection.localNotReachable")
+                        : t("connection.failed")}
+                    </span>
+                    {!nurseStore.isLocalFallback && (
+                      <span className="opacity-90">{t("connection.showingDemo")}</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleRetryConnection}
+                    disabled={retryLoading}
+                    className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-xs font-bold transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                  >
+                    {retryLoading ? "..." : t("connection.retry")}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex flex-col items-end">
+            <span
+              style={{
+                fontFamily: fontFamily,
+                ...TEXT_STYLE.pageTitle,
+                color: theme.textHeading,
+                lineHeight: "25px",
+                textAlign: "end",
+              }}
+            >
+              {displayHours}:{minutes} {ampm}
+            </span>
+            <span
+              style={{
+                fontFamily: fontFamily,
+                ...TEXT_STYLE.caption,
+                fontWeight: WEIGHT.normal,
+                color: theme.textMuted,
+                lineHeight: "16px",
+                textAlign: "end",
+              }}
+            >
+              {dateStr}
+            </span>
+          </div>
         </div>
 
         {/* Weather */}

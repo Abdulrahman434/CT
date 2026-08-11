@@ -227,6 +227,7 @@ export interface ThemeConfig {
   slideshowInterval: number; // custom interval for slides in seconds
   heroOpacity: number;       // background photo opacity, percent 0–100 (default 40)
   location: string;
+  country: string;
 
   /* ── Brand Colors ── */
   primary: string;
@@ -345,6 +346,9 @@ function buildTheme(core: {
     slideshowInterval: c.slideshowInterval || 5,
     heroOpacity: c.heroOpacity ?? 40,
     location: (c as any).location || "Riyadh",
+    country: (c as any).country ||
+      ({ "Jeddah": "Saudi Arabia", "Riyadh": "Saudi Arabia", "Abu Dhabi": "United Arab Emirates", "Dubai": "United Arab Emirates", "Beirut": "Lebanon" } as Record<string, string>)[(c as any).location || "Riyadh"] ||
+      "Saudi Arabia",
 
     primary: c.primary,
     primaryDark: c.primaryDark,
@@ -694,7 +698,7 @@ export const CAREINN_CORE: HospitalCoreConfig = {
   accent: "#4A90D9",
   accentDark: "#3970a9",
   accentLight: "#e7f0fa",
-  location: "Riyadh",
+  location: "Jeddah",
 };
 
 export const PRIME_CORE: HospitalCoreConfig = {
@@ -712,7 +716,7 @@ export const PRIME_CORE: HospitalCoreConfig = {
   accent: "#6D6E71",
   accentDark: "#58595B",
   accentLight: "#EBEBEC",
-  location: "Dubai - UAE",
+  location: "Dubai",
 };
 
 export const KAUH_CORE: HospitalCoreConfig = {
@@ -732,7 +736,7 @@ export const KAUH_CORE: HospitalCoreConfig = {
   accent: "#1A5C40",
   accentDark: "#123D2B",
   accentLight: "#E5F5EE",
-  location: "Jeddah, Saudi Arabia",
+  location: "Jeddah",
 };
 
 export const ANDALUSIA_CORE: HospitalCoreConfig = {
@@ -792,6 +796,7 @@ export interface HospitalCoreConfig {
   accentDark: string;
   accentLight: string;
   location?: string;
+  country?: string;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

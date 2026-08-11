@@ -93,6 +93,7 @@ export interface Hl7Patient {
   bed: string;
   sex: string;
   dob: string;
+  age?: string;
   admissionDate: string;
   dischargeDate: string;
   admitRefId: number;
@@ -210,15 +211,137 @@ export async function fetchAllWallpapers(): Promise<WallpaperGroup[]> {
  * GET /user/organization/devices/
  * Find this device by serial number → get room, bed, patient reference_id.
  */
+/**
+ * Robustly extract patient full name (English and Arabic) from HL7 message.
+ */
+export function extractNameFromHl7(d: any): { nameEn: string; nameAr: string } {
+  if (!d) return { nameEn: "", nameAr: "" };
+  const pid = d.patient_identification ?? {};
+  const nameObj = pid.pid_patient_name;
+
+  let given = "";
+  let family = "";
+  let textName = "";
+
+  if (Array.isArray(nameObj) && nameObj.length > 0) {
+    const item = nameObj[0];
+    if (typeof item === "string") textName = item;
+    else if (item && typeof item === "object") {
+      given = item.given_name || item.given || item.first_name || "";
+      family = item.family_name || item.family || item.last_name || "";
+      textName = item.text || item.name || item.full_name || "";
+    }
+  } else if (nameObj && typeof nameObj === "object") {
+    given = nameObj.given_name || nameObj.given || nameObj.first_name || "";
+    family = nameObj.family_name || nameObj.family || nameObj.last_name || "";
+    textName = nameObj.text || nameObj.name || nameObj.full_name || "";
+  } else if (typeof nameObj === "string") {
+    textName = nameObj;
+  }
+
+  const nameEn = `${given} ${family}`.trim() || textName.trim();
+
+  let nameAr = "";
+  if (pid.pid_patient_name_ar) {
+    nameAr = String(pid.pid_patient_name_ar).trim();
+  } else if (Array.isArray(nameObj) && nameObj.length > 1) {
+    const arItem = nameObj[1];
+    if (typeof arItem === "string") nameAr = arItem.trim();
+    else if (arItem && typeof arItem === "object") {
+      const g = arItem.given_name || arItem.given || "";
+      const f = arItem.family_name || arItem.family || "";
+      nameAr = `${g} ${f}`.trim() || (arItem.text || arItem.name || "").trim();
+    }
+  }
+
+  return { nameEn, nameAr };
+}
+
+/**
+ * Robustly extract patient MRN / ID from HL7 message response.
+ */
+export function extractMrnFromHl7(d: any): string {
+  if (!d) return "";
+  const pid = d.patient_identification ?? {};
+
+  const idList = pid.pid_patient_identifier_list;
+  if (Array.isArray(idList) && idList.length > 0) {
+    for (const item of idList) {
+      if (typeof item === "string" && item.trim()) return item.trim();
+      if (item?.id_number) return String(item.id_number).trim();
+      if (item?.id) return String(item.id).trim();
+      if (item?.cx_1) return String(item.cx_1).trim();
+    }
+  } else if (idList && typeof idList === "object") {
+    if (idList.id_number) return String(idList.id_number).trim();
+    if (idList.id) return String(idList.id).trim();
+    if (idList.cx_1) return String(idList.cx_1).trim();
+  } else if (typeof idList === "string" && idList.trim()) {
+    return idList.trim();
+  }
+
+  const idInternal = pid.pid_patient_id_internal;
+  if (Array.isArray(idInternal) && idInternal.length > 0) {
+    for (const item of idInternal) {
+      if (typeof item === "string" && item.trim()) return item.trim();
+      if (item?.id_number) return String(item.id_number).trim();
+      if (item?.id) return String(item.id).trim();
+      if (item?.cx_1) return String(item.cx_1).trim();
+    }
+  } else if (idInternal && typeof idInternal === "object") {
+    if (idInternal.id_number) return String(idInternal.id_number).trim();
+    if (idInternal.id) return String(idInternal.id).trim();
+    if (idInternal.cx_1) return String(idInternal.cx_1).trim();
+  } else if (typeof idInternal === "string" && idInternal.trim()) {
+    return idInternal.trim();
+  }
+
+  if (pid.mrn) return String(pid.mrn).trim();
+  if (pid.id_number) return String(pid.id_number).trim();
+  if (pid.patient_id) return String(pid.patient_id).trim();
+  if (d.mrn) return String(d.mrn).trim();
+  if (d.patient_id) return String(d.patient_id).trim();
+
+  return "";
+}
+
+export function isMrnPasscodeMatch(input: string, target: string): boolean {
+  if (!input || !target) return false;
+  const cleanIn = input.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const cleanTar = target.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  if (!cleanIn || !cleanTar) return false;
+
+  if (cleanIn === cleanTar) return true;
+
+  const noZeroIn = cleanIn.replace(/^0+/, '');
+  const noZeroTar = cleanTar.replace(/^0+/, '');
+  if (noZeroIn && noZeroTar && noZeroIn === noZeroTar) return true;
+
+  if (noZeroTar && noZeroIn && (noZeroTar.endsWith(noZeroIn) || noZeroIn.endsWith(noZeroTar))) return true;
+
+  return false;
+}
+
+/**
+ * GET /user/organization/devices/
+ * Find this device by serial number → get room, bed, patient reference_id.
+ * STRICT MATCH: Only returns device location if device_id matches serial number.
+ */
 export async function fetchDeviceLocation(
   serial: string
 ): Promise<DeviceLocation | null> {
+  const normSerial = (serial || "").trim().toLowerCase();
+  if (!normSerial) return null;
+
   try {
     const res = await fetch(apiUrl("/user/organization/devices/"));
     if (!res.ok) return null;
     const devices: any[] = await res.json();
+    if (!Array.isArray(devices)) return null;
 
-    const device = devices.find(d => d.device_id.toLowerCase() === serial.toLowerCase());
+    const device = devices.find(
+      d => String(d.device_id || "").trim().toLowerCase() === normSerial
+    );
     if (!device?.device_location) return null;
 
     const loc = device.device_location;
@@ -243,6 +366,7 @@ export async function fetchDeviceLocation(
 export async function fetchPatientByRefId(
   referenceId: string | number
 ): Promise<Hl7Patient | null> {
+  if (!referenceId) return null;
   try {
     const res = await fetch(
       apiUrl(`/hl7/httpreceiver/?reference_id=${referenceId}`)
@@ -253,18 +377,32 @@ export async function fetchPatientByRefId(
     const pid = d.patient_identification ?? {};
     const pv = d.patient_visit ?? {};
 
-    const firstName = pid.pid_patient_name?.given_name ?? "";
-    const lastName = pid.pid_patient_name?.family_name ?? "";
-    const name = `${firstName} ${lastName}`.trim();
-    if (!name) return null;
+    const { nameEn, nameAr } = extractNameFromHl7(d);
+    const mrn = extractMrnFromHl7(d);
+
+    const dobRaw = pid.pid_date_time_of_birth?.time ?? pid.pid_date_time_of_birth ?? d.dob ?? "";
+    const dobParsed = parseHl7Date(dobRaw);
+    let ageStr = d.age || pid.age || pid.patient_age || "";
+    if (!ageStr && dobRaw) {
+      const match = String(dobRaw).match(/(\d{4})/);
+      if (match) {
+        const birthYear = parseInt(match[1], 10);
+        const currentYear = new Date().getFullYear();
+        if (birthYear > 1900 && birthYear <= currentYear) {
+          ageStr = String(currentYear - birthYear);
+        }
+      }
+    }
 
     return {
-      name,
-      mrn: pid.pid_patient_identifier_list?.id_number ?? "",
+      name: nameEn,
+      nameAr: nameAr || undefined,
+      mrn,
       room: pv.pv_assigned_patient_location?.room ?? "",
       bed: pv.pv_assigned_patient_location?.bed ?? "",
       sex: pid.pid_administrative_sex ?? "",
-      dob: parseHl7Date(pid.pid_date_time_of_birth?.time ?? ""),
+      dob: dobParsed,
+      age: ageStr ? String(ageStr) : undefined,
       admissionDate: parseHl7Date(pv.pv_admit_date_time?.time ?? ""),
       dischargeDate: parseHl7Date(pv.pv_discharge_date_time?.time ?? ""),
       admitRefId: Number(referenceId),
@@ -277,23 +415,381 @@ export async function fetchPatientByRefId(
 
 /**
  * Convenience: device serial → patient data in one call.
- * Returns { location, patient } or null if either step fails.
+ * Returns { location, patient, isFallback } or null if device/patient not found.
  */
 export async function fetchPatientForDevice(serial: string): Promise<{
   location: DeviceLocation;
   patient: Hl7Patient;
+  isFallback?: boolean;
 } | null> {
+  if (!serial) return null;
+
+  let activeHospitalId = localStorage.getItem("active-hospital-id") || "";
+  if (!activeHospitalId) {
+    try {
+      const savedTheme = localStorage.getItem("careinn-layout2-theme");
+      if (savedTheme) {
+        const parsed = JSON.parse(savedTheme);
+        activeHospitalId = typeof parsed === "string" ? parsed : (parsed.id || "");
+      }
+    } catch {}
+  }
+  const normHid = activeHospitalId.trim().toLowerCase();
+  const isFakeeh = normHid === "dsfh" || normHid === "fakeeh" || normHid.includes("dsfh") || normHid.includes("fakeeh");
+  const isBurjeel = normHid === "burjeel" || normHid.includes("burjeel") || normHid.includes("bh");
+
+  if (isBurjeel) {
+    const burjeelLocalIps = [
+      "https://careinn.bh.com/api",
+      "http://careinn.bh.com/api",
+      "http://10.11.16.15/api"
+    ];
+    const burjeelLocalKey = "3a68339d-e45f-478e-85a0-811f6b54b457";
+
+    const cloudIp = "https://control.careinn.com/api";
+    const cloudKey = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
+
+    // 1. Try Burjeel Local Servers First (careinn.bh.com & 10.11.16.15)
+    for (const burjeelLocalIp of burjeelLocalIps) {
+      try {
+        const locLocal = await fetchDeviceLocationWithConfig(serial, burjeelLocalIp, burjeelLocalKey);
+        if (locLocal) {
+          let patLocal: Hl7Patient | null = null;
+          if (locLocal.admit_data) {
+            patLocal = await fetchPatientByRefIdWithConfig(locLocal.admit_data, burjeelLocalIp, burjeelLocalKey);
+          }
+          const mrn = (patLocal?.mrn || locLocal.patient_id || "").trim();
+          if (patLocal) {
+            patLocal.room = locLocal.room_no || patLocal.room;
+            patLocal.bed = locLocal.bed_no || patLocal.bed;
+            patLocal.mrn = mrn;
+          } else if (locLocal.patient_id) {
+            patLocal = {
+              name: "",
+              mrn: locLocal.patient_id,
+              room: locLocal.room_no || "",
+              bed: locLocal.bed_no || "",
+              sex: "",
+              dob: "",
+              admissionDate: "",
+              dischargeDate: "",
+              admitRefId: Number(locLocal.admit_data || 0),
+            };
+          }
+          if (patLocal) {
+            saveApiConfig({ serverIp: burjeelLocalIp, apiKey: burjeelLocalKey });
+            return { location: locLocal, patient: patLocal, isFallback: false };
+          }
+        }
+      } catch {}
+    }
+
+    // 2. Local server unreachable -> Move to Cloud server (control.careinn.com)
+    saveApiConfig({ serverIp: cloudIp, apiKey: cloudKey });
+    try {
+      const locCloud = await fetchDeviceLocationWithConfig(serial, cloudIp, cloudKey);
+      if (locCloud) {
+        let patCloud: Hl7Patient | null = null;
+        if (locCloud.admit_data) {
+          patCloud = await fetchPatientByRefIdWithConfig(locCloud.admit_data, cloudIp, cloudKey);
+        }
+        const mrn = (patCloud?.mrn || locCloud.patient_id || "").trim();
+        if (patCloud) {
+          patCloud.room = locCloud.room_no || patCloud.room;
+          patCloud.bed = locCloud.bed_no || patCloud.bed;
+          patCloud.mrn = mrn;
+        } else if (locCloud.patient_id) {
+          patCloud = {
+            name: "",
+            mrn: locCloud.patient_id,
+            room: locCloud.room_no || "",
+            bed: locCloud.bed_no || "",
+            sex: "",
+            dob: "",
+            admissionDate: "",
+            dischargeDate: "",
+            admitRefId: Number(locCloud.admit_data || 0),
+          };
+        }
+        if (patCloud) {
+          return { location: locCloud, patient: patCloud, isFallback: true };
+        }
+      }
+    } catch {}
+
+    const emptyLoc: DeviceLocation = { room_no: "", bed_no: "", patient_id: "", admit_data: "" };
+    const emptyPat: Hl7Patient = { name: "", mrn: "", room: "", bed: "", sex: "", dob: "", admissionDate: "", dischargeDate: "", admitRefId: 0 };
+    return { location: emptyLoc, patient: emptyPat, isFallback: true };
+  }
+
+  if (isFakeeh) {
+    const fakeehLocalIp = "http://10.1.189.77/api";
+    const fakeehLocalKey = "dc870ea4-d5d0-4f91-a4a4-502724603ec0";
+
+    const cloudIp = "https://control.careinn.com/api";
+    const cloudKey = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
+
+    // 1. Try Fakeeh Local Server First (10.1.189.77)
+    try {
+      const locLocal = await fetchDeviceLocationWithConfig(serial, fakeehLocalIp, fakeehLocalKey);
+      if (locLocal) {
+        let patLocal: Hl7Patient | null = null;
+        if (locLocal.admit_data) {
+          patLocal = await fetchPatientByRefIdWithConfig(locLocal.admit_data, fakeehLocalIp, fakeehLocalKey);
+        }
+        const mrn = (patLocal?.mrn || locLocal.patient_id || "").trim();
+        if (patLocal) {
+          patLocal.room = locLocal.room_no || patLocal.room;
+          patLocal.bed = locLocal.bed_no || patLocal.bed;
+          patLocal.mrn = mrn;
+        } else if (locLocal.patient_id) {
+          patLocal = {
+            name: "",
+            mrn: locLocal.patient_id,
+            room: locLocal.room_no || "",
+            bed: locLocal.bed_no || "",
+            sex: "",
+            dob: "",
+            admissionDate: "",
+            dischargeDate: "",
+            admitRefId: Number(locLocal.admit_data || 0),
+          };
+        }
+        if (patLocal) {
+          saveApiConfig({ serverIp: fakeehLocalIp, apiKey: fakeehLocalKey });
+          return { location: locLocal, patient: patLocal, isFallback: false };
+        }
+      }
+    } catch {}
+
+    // 2. Local server unreachable -> Move to Cloud server (control.careinn.com)
+    saveApiConfig({ serverIp: cloudIp, apiKey: cloudKey });
+    try {
+      const locCloud = await fetchDeviceLocationWithConfig(serial, cloudIp, cloudKey);
+      if (locCloud) {
+        let patCloud: Hl7Patient | null = null;
+        if (locCloud.admit_data) {
+          patCloud = await fetchPatientByRefIdWithConfig(locCloud.admit_data, cloudIp, cloudKey);
+        }
+        const mrn = (patCloud?.mrn || locCloud.patient_id || "").trim();
+        if (patCloud) {
+          patCloud.room = locCloud.room_no || patCloud.room;
+          patCloud.bed = locCloud.bed_no || patCloud.bed;
+          patCloud.mrn = mrn;
+        } else if (locCloud.patient_id) {
+          patCloud = {
+            name: "",
+            mrn: locCloud.patient_id,
+            room: locCloud.room_no || "",
+            bed: locCloud.bed_no || "",
+            sex: "",
+            dob: "",
+            admissionDate: "",
+            dischargeDate: "",
+            admitRefId: Number(locCloud.admit_data || 0),
+          };
+        }
+        if (patCloud) {
+          return { location: locCloud, patient: patCloud, isFallback: true };
+        }
+      }
+    } catch {}
+
+    const emptyLoc: DeviceLocation = { room_no: "", bed_no: "", patient_id: "", admit_data: "" };
+    const emptyPat: Hl7Patient = { name: "", mrn: "", room: "", bed: "", sex: "", dob: "", admissionDate: "", dischargeDate: "", admitRefId: 0 };
+    return { location: emptyLoc, patient: emptyPat, isFallback: true };
+  }
+
+  // General server fetch for other hospitals
   const location = await fetchDeviceLocation(serial);
-  if (!location?.admit_data) return null;
+  if (!location) return null;
 
-  const patient = await fetchPatientByRefId(location.admit_data);
-  if (!patient) return null;
+  let patient: Hl7Patient | null = null;
+  if (location.admit_data) {
+    patient = await fetchPatientByRefId(location.admit_data);
+  }
 
-  // Prefer room/bed from device_location (more up-to-date than HL7)
-  patient.room = location.room_no || patient.room;
-  patient.bed = location.bed_no || patient.bed;
+  const mrn = (patient?.mrn || location.patient_id || "").trim();
 
-  return { location, patient };
+  if (patient) {
+    patient.room = location.room_no || patient.room;
+    patient.bed = location.bed_no || patient.bed;
+    patient.mrn = mrn;
+  } else if (location.patient_id) {
+    patient = {
+      name: "",
+      mrn: location.patient_id,
+      room: location.room_no || "",
+      bed: location.bed_no || "",
+      sex: "",
+      dob: "",
+      admissionDate: "",
+      dischargeDate: "",
+      admitRefId: Number(location.admit_data || 0),
+    };
+  } else {
+    return null;
+  }
+
+  return { location, patient, isFallback: false };
+}
+
+export async function fetchDeviceLocationWithConfig(
+  serial: string,
+  serverIp: string,
+  apiKey: string
+): Promise<DeviceLocation | null> {
+  const normSerial = (serial || "").trim().toLowerCase();
+  if (!normSerial) return null;
+
+  try {
+    const base = serverIp.startsWith("http")
+      ? serverIp.replace(/\/$/, "")
+      : `http://${serverIp}/api`;
+    const url = `${base}/user/organization/devices/?apikey=${apiKey}`;
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+
+    if (!res.ok) return null;
+    const devices: any[] = await res.json();
+    if (!Array.isArray(devices)) return null;
+
+    const device = devices.find(
+      d => String(d.device_id || "").trim().toLowerCase() === normSerial
+    );
+    if (!device?.device_location) return null;
+
+    const loc = device.device_location;
+    return {
+      room_no: loc.room_no ?? "",
+      bed_no: loc.bed_no ?? "",
+      patient_id: loc.patient_id ?? "",
+      admit_data: loc.admit_data ?? "",
+      group: loc.group ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchPatientByRefIdWithConfig(
+  referenceId: string | number,
+  serverIp: string,
+  apiKey: string
+): Promise<Hl7Patient | null> {
+  try {
+    const base = serverIp.startsWith("http")
+      ? serverIp.replace(/\/$/, "")
+      : `http://${serverIp}/api`;
+    const url = `${base}/hl7/httpreceiver/?reference_id=${referenceId}&apikey=${apiKey}`;
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+
+    if (!res.ok) return null;
+    const d = await res.json();
+
+    const pid = d.patient_identification ?? {};
+    const pv = d.patient_visit ?? {};
+
+    const { nameEn, nameAr } = extractNameFromHl7(d);
+    const mrn = extractMrnFromHl7(d);
+
+    return {
+      name: nameEn,
+      nameAr: nameAr || undefined,
+      mrn,
+      room: pv.pv_assigned_patient_location?.room ?? "",
+      bed: pv.pv_assigned_patient_location?.bed ?? "",
+      sex: pid.pid_administrative_sex ?? "",
+      dob: parseHl7Date(pid.pid_date_time_of_birth?.time ?? ""),
+      admissionDate: parseHl7Date(pv.pv_admit_date_time?.time ?? ""),
+      dischargeDate: parseHl7Date(pv.pv_discharge_date_time?.time ?? ""),
+      admitRefId: Number(referenceId),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export interface MrnMatchResult {
+  hospitalId: string;
+  serverIp: string;
+  apiKey: string;
+  location: DeviceLocation;
+  patient: Hl7Patient;
+}
+
+export async function findDeviceAndPatientByMrn(
+  enteredMrn: string,
+  serialNumber: string
+): Promise<MrnMatchResult | null> {
+  const normMrn = enteredMrn.trim().toLowerCase();
+  if (!normMrn || !serialNumber) return null;
+
+  const fakeehKey = "dc870ea4-d5d0-4f91-a4a4-502724603ec0";
+  const burjeelKey = "3a68339d-e45f-478e-85a0-811f6b54b457";
+  const cloudKey = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
+
+  const candidateServers = [
+    { hospitalId: "fakeeh", serverIp: "http://10.1.189.77/api", apiKey: fakeehKey },
+    { hospitalId: "careinn", serverIp: "https://control.careinn.com/api", apiKey: cloudKey },
+    { hospitalId: "burjeel", serverIp: "http://10.11.16.15/api", apiKey: burjeelKey },
+    { hospitalId: "burjeel", serverIp: "http://careinn.bh.com/api", apiKey: burjeelKey },
+    { hospitalId: "burjeel", serverIp: "https://careinn.bh.com/api", apiKey: burjeelKey },
+  ];
+
+  for (const srv of candidateServers) {
+    try {
+      const location = await fetchDeviceLocationWithConfig(serialNumber, srv.serverIp, srv.apiKey);
+      if (location) {
+        let patient: Hl7Patient | null = null;
+        if (location.admit_data) {
+          patient = await fetchPatientByRefIdWithConfig(location.admit_data, srv.serverIp, srv.apiKey);
+        }
+
+        const patMrn = (patient?.mrn || location.patient_id || "").trim();
+        const isMatched =
+          isMrnPasscodeMatch(enteredMrn, patMrn) ||
+          isMrnPasscodeMatch(enteredMrn, location.patient_id);
+
+        if (isMatched) {
+          if (!patient) {
+            patient = {
+              name: "",
+              mrn: patMrn,
+              room: location.room_no || "",
+              bed: location.bed_no || "",
+              sex: "",
+              dob: "",
+              admissionDate: "",
+              dischargeDate: "",
+              admitRefId: Number(location.admit_data || 0),
+            };
+          } else {
+            patient.room = location.room_no || patient.room;
+            patient.bed = location.bed_no || patient.bed;
+            patient.mrn = patMrn;
+          }
+
+          return {
+            hospitalId: srv.hospitalId,
+            serverIp: srv.serverIp,
+            apiKey: srv.apiKey,
+            location,
+            patient,
+          };
+        }
+      }
+    } catch {}
+  }
+
+  return null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -397,7 +893,7 @@ export async function fetchAppPackages(
         category: item.category_title ?? "",
         type: item.type as "APK" | "URL" | "PDF",
         url: item.url ?? null,
-        apkUrl: item.package ? withApiKey(item.package) : null,
+        apkUrl: item.package ? rewriteImageUrl(item.package) : null,
         pdfUrl: item.pdf ?? null,
       }));
 

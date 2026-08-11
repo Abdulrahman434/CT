@@ -35,3 +35,7 @@ translate.py
 
 src/ Fakeeh Menu - Diets x Days.pdf
 src/pdf_pages/
+
+# Old / duplicate git data directories
+.git_old/
+.git-*/

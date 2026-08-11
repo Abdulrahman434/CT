@@ -20,7 +20,8 @@ import { useState, useEffect } from "react";
 // Fields that can be overridden by nurse
 export type OverridableField = 
   | "name" | "room" | "bed" | "mrn" 
-  | "admissionDate" | "dischargeDate" | "nameAr";
+  | "admissionDate" | "dischargeDate" | "nameAr" | "age" | "dob" | "sex"
+  | "contact" | "emergencyContact" | "emergencyName" | "extension";
 
 // localStorage key
 const OVERRIDE_KEY     = "careinn-nurse-overrides";
@@ -223,6 +224,11 @@ export interface NurseStoreState {
   /** Care Plan Shared State */
   carePlanMode: "daily" | "overall";
   carePlanSelectedDate: string; // YYYY-MM-DD
+
+  /** HIS integration status & per-section HIS data flags */
+  isHisConnected: boolean;
+  isLocalFallback: boolean;
+  hisSections: Record<string, boolean>;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -235,7 +241,42 @@ import imgOmar from "@/assets/2318867853acb678569427c88b9e543e22bd46b6.png";
 import imgBabyCam from "@/assets/68ba9ba13c5aa1cc7d2af5bee7bc955298b612dd.png";
 
 function createDefaultState(): NurseStoreState {
+  const now = new Date();
+  const getISO = (d: Date) => d.toISOString().split("T")[0];
+  const shift = (d: Date, days: number) => {
+    const res = new Date(d);
+    res.setDate(res.getDate() + days);
+    return res;
+  };
+
+  const formatPatientDate = (d: Date) => {
+    const day = String(d.getDate()).padStart(2, "0");
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  };
+
+  const todayStr = getISO(now);
+  const tomorrowStr = getISO(shift(now, 1));
+  const day2Str = getISO(shift(now, 2));
+  const day3Str = getISO(shift(now, 3));
+
+  const defaultAdmitDate = formatPatientDate(shift(now, -2));
+  const defaultDischargeDate = formatPatientDate(shift(now, 2));
+
   return {
+    isHisConnected: false,
+    hisSections: {
+      profile: false,
+      emergency: false,
+      careOverview: false,
+      carePlan: false,
+      financial: false,
+      labs: false,
+      imaging: false,
+      baby: false,
+      discharge: false,
+      observations: false,
+    },
     sectionVisibility: {
       profile: true,
       careOverview: true,
@@ -259,8 +300,8 @@ function createDefaultState(): NurseStoreState {
       bed:           "",
       sex:           "",
       dob:           "",
-      admissionDate: "10 Mar 2026",
-      dischargeDate: "12 Mar 2026",
+      admissionDate: defaultAdmitDate,
+      dischargeDate: defaultDischargeDate,
       contact: "050 123 4567",
       emergencyContact: "055 987 6543",
       emergencyName: "Ahmed Saleh",
@@ -279,15 +320,15 @@ function createDefaultState(): NurseStoreState {
     painScore: 5,
 
     carePlan: [
-      { id: "cp-1", labelKey: "care.plan.initialAssessment", done: true, timeKey: "care.plan.done", day: 1, date: "2026-03-10" },
-      { id: "cp-2", labelKey: "care.plan.bloodWork", done: true, timeKey: "care.plan.done", day: 1, date: "2026-03-10" },
-      { id: "cp-3", labelKey: "care.plan.medicationRound", done: false, active: true, minutes: 45, day: 1, date: "2026-03-10" },
-      { id: "cp-4", labelKey: "care.plan.checkup", done: false, minutes: 15, day: 2, date: "2026-03-11" },
-      { id: "cp-5", labelKey: "care.plan.physicalTherapy", done: false, minutes: 30, day: 3, date: "2026-03-12" },
-      { id: "cp-6", labelKey: "care.plan.doctorReview", done: false, minutes: 10, day: 4, date: "2026-03-13" },
+      { id: "cp-1", labelKey: "care.plan.initialAssessment", done: true, timeKey: "care.plan.done", day: 1, date: todayStr },
+      { id: "cp-2", labelKey: "care.plan.bloodWork", done: true, timeKey: "care.plan.done", day: 1, date: todayStr },
+      { id: "cp-3", labelKey: "care.plan.medicationRound", done: false, active: true, minutes: 45, day: 1, date: todayStr },
+      { id: "cp-4", labelKey: "care.plan.checkup", done: false, minutes: 15, day: 2, date: tomorrowStr },
+      { id: "cp-5", labelKey: "care.plan.physicalTherapy", done: false, minutes: 30, day: 3, date: day2Str },
+      { id: "cp-6", labelKey: "care.plan.doctorReview", done: false, minutes: 10, day: 4, date: day3Str },
     ],
     carePlanMode: "daily",
-    carePlanSelectedDate: "2026-03-10",
+    carePlanSelectedDate: todayStr,
 
     financial: [
       { id: "fin-1", category: "Room & Board", description: "Private Room — 7 nights", amount: 35000, covered: 31500, date: "5–12 Mar" },
@@ -341,6 +382,7 @@ function createDefaultState(): NurseStoreState {
       },
     ],
     nurseViewShortcutVisible: false,
+    isLocalFallback: false,
   };
 }
 
@@ -364,14 +406,35 @@ function loadCachedState(): Partial<NurseStoreState> {
     // Legacy migration: old abbreviations → new DietType values
     if (parsed.patientDiet === "soft") parsed.patientDiet = "soft-diet";
     if (parsed.patientDiet === "chemo") parsed.patientDiet = "chemotherapy";
+    // Legacy migration: remove hardcoded dates so dynamic default dates take effect
+    if (parsed.patient) {
+      if (parsed.patient.dischargeDate === "12 Mar 2026") delete parsed.patient.dischargeDate;
+      if (parsed.patient.admissionDate === "10 Mar 2026") delete parsed.patient.admissionDate;
+      if (parsed.patient.mrn === "00-284619") delete parsed.patient.mrn;
+    }
+    const activeMrn = localStorage.getItem('careinn-active-mrn-passcode') || localStorage.getItem('careinn-last-mrn');
+    if (activeMrn) {
+      if (!parsed.patient) parsed.patient = {};
+      parsed.patient.mrn = activeMrn;
+    }
     return parsed;
   } catch { return {}; }
 }
 
 const nurseStore = (() => {
+  const defaultState = createDefaultState();
+  const cachedState = loadCachedState();
   let state = {
-    ...createDefaultState(),
-    ...loadCachedState(),
+    ...defaultState,
+    ...cachedState,
+    hisSections: {
+      ...defaultState.hisSections,
+      ...(cachedState.hisSections || {}),
+    },
+    sectionVisibility: {
+      ...defaultState.sectionVisibility,
+      ...(cachedState.sectionVisibility || {}),
+    },
   };
   const listeners = new Set<StoreListener>();
 
@@ -408,6 +471,7 @@ const nurseStore = (() => {
         nextPatient.nameKey = "";
       }
       state = { ...state, patient: nextPatient };
+      autoCheckKidsLayoutForPatient(nextPatient);
       notify();
     },
 
@@ -452,6 +516,15 @@ const nurseStore = (() => {
         applied[field as keyof PatientProfile] = apiValue as any;
       }
 
+      if (updates.mrn) {
+        applied.mrn = updates.mrn;
+        _nurseOverrides.delete("mrn");
+        try {
+          localStorage.setItem('careinn-active-mrn-passcode', updates.mrn.trim().toLowerCase());
+          localStorage.setItem('careinn-last-mrn', updates.mrn.trim());
+        } catch {}
+      }
+
       if (Object.keys(applied).length === 0) return;
 
       // Save API snapshot of what we just applied
@@ -460,10 +533,90 @@ const nurseStore = (() => {
 
       // Apply to store
       let nextPatient = { ...state.patient, ...applied };
-      if (applied.name && applied.name !== state.patient.name) {
+      if (applied.name) {
         nextPatient.nameKey = "";
+        if (!applied.nameAr || applied.nameAr === "سارة صالح") {
+          nextPatient.nameAr = applied.name;
+        }
       }
-      state = { ...state, patient: nextPatient };
+      const hasEmergency = !!(applied.emergencyContact || applied.emergencyName);
+      state = {
+        ...state,
+        patient: nextPatient,
+        isHisConnected: true,
+        hisSections: {
+          ...state.hisSections,
+          profile: true,
+          ...(hasEmergency ? { emergency: true } : {}),
+        },
+      };
+      autoCheckKidsLayoutForPatient(nextPatient);
+      notify();
+    },
+
+    /** Completely wipe all previous patient data, overrides, and local preferences for a new A01 admission */
+    resetStoreForNewPatient: (newPatient?: Partial<PatientProfile>) => {
+      clearOverrides();
+      try {
+        localStorage.removeItem('careinn-display-name');
+        localStorage.removeItem('careinn-display-name-ar');
+        localStorage.removeItem('careinn-display-name-mode');
+        localStorage.removeItem('careinn-nurse-store');
+        localStorage.removeItem('careinn-orders');
+        localStorage.removeItem('careinn-feedback');
+        localStorage.removeItem('careinn-cart');
+        localStorage.removeItem('careinn-onboarding-complete');
+      } catch {}
+
+      const cleanState = createDefaultState();
+      let nextPatient = cleanState.patient;
+      if (newPatient) {
+        const fields = Object.keys(newPatient) as OverridableField[];
+        const applied: Partial<PatientProfile> = {};
+        for (const f of fields) {
+          const val = newPatient[f as keyof PatientProfile];
+          if (val) applied[f as keyof PatientProfile] = val as any;
+        }
+        nextPatient = { ...nextPatient, ...applied };
+        if (applied.name) {
+          nextPatient.nameKey = "";
+          if (!applied.nameAr || applied.nameAr === "سارة صالح") {
+            nextPatient.nameAr = applied.name;
+          }
+        }
+      }
+
+      state = {
+        ...cleanState,
+        patient: nextPatient,
+        isHisConnected: true,
+        hisSections: {
+          ...cleanState.hisSections,
+          profile: true,
+        },
+      };
+
+      if (nextPatient.mrn) {
+        const normMrn = nextPatient.mrn.trim().toLowerCase();
+        localStorage.setItem('careinn-active-mrn-passcode', normMrn);
+        localStorage.setItem('careinn-last-mrn', nextPatient.mrn.trim());
+      }
+
+      autoCheckKidsLayoutForPatient(nextPatient);
+      notify();
+      window.dispatchEvent(new Event('display-name-changed'));
+    },
+
+    setHisConnected: (connected: boolean, isLocalFallback?: boolean) => {
+      state = { ...state, isHisConnected: connected, isLocalFallback: !!isLocalFallback };
+      notify();
+    },
+
+    setHisSectionData: (section: string, hasData: boolean) => {
+      state = {
+        ...state,
+        hisSections: { ...state.hisSections, [section]: hasData },
+      };
       notify();
     },
 
@@ -495,6 +648,7 @@ const nurseStore = (() => {
         nextPatient.nameKey = "";
       }
       state = { ...state, patient: nextPatient };
+      autoCheckKidsLayoutForPatient(nextPatient);
       notify();
     },
 
@@ -699,3 +853,63 @@ export function useNurseStore() {
 
 /** Direct access to store actions (stable references — no re-render trigger) */
 export const nurseActions = nurseStore;
+
+/* ═══════════════════════════════════════════════════════════════
+ * AGE & KIDS LAYOUT (LAYOUT 3) AUTO-DETECTION
+ * ═══════════════════════════════════════════════════════════════ */
+
+export function calculateAgeFromPatient(patient: Partial<PatientProfile>): number | null {
+  const ageStr = patient.age ? String(patient.age).trim() : "";
+  const dobStr = patient.dob ? String(patient.dob).trim() : "";
+
+  // 1. Try parsing numeric age string (e.g. "11", "8", "8 yrs", "12 years old", "4")
+  if (ageStr) {
+    const match = ageStr.match(/(\d+)/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num >= 0 && num < 120) return num;
+    }
+  }
+
+  // 2. Try parsing DOB string
+  if (dobStr) {
+    try {
+      let birthDate: Date | null = null;
+      const cleanDob = dobStr.trim();
+      if (/^\d{8}$/.test(cleanDob)) {
+        const y = parseInt(cleanDob.slice(0, 4), 10);
+        const m = parseInt(cleanDob.slice(4, 6), 10) - 1;
+        const d = parseInt(cleanDob.slice(6, 8), 10);
+        birthDate = new Date(y, m, d);
+      } else {
+        const d = new Date(cleanDob);
+        if (!isNaN(d.getTime())) birthDate = d;
+      }
+
+      if (birthDate) {
+        const today = new Date();
+        let years = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          years--;
+        }
+        if (years >= 0 && years < 120) return years;
+      }
+    } catch {}
+  }
+
+  return null;
+}
+
+export function autoCheckKidsLayoutForPatient(patient: Partial<PatientProfile>): void {
+  const ageYears = calculateAgeFromPatient(patient);
+  if (ageYears !== null && ageYears < 13) {
+    try {
+      const currentMode = localStorage.getItem("careinn-layout-mode");
+      if (currentMode !== "3") {
+        localStorage.setItem("careinn-layout-mode", "3");
+        window.dispatchEvent(new Event("layout-mode-changed"));
+      }
+    } catch {}
+  }
+}

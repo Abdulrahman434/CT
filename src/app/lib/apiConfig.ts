@@ -3,10 +3,134 @@ import { useState, useEffect } from "react";
 const STORAGE_KEY = "careinn-api-config";
 
 const CLOUD_HOST = "control.careinn.com";
-const CLOUD_KEY  = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
-const LOCAL_KEY  = "20b91694-7ea1-4a44-91a6-2878664428b3";
+const CLOUD_KEY = "2345fcba-1633-46c9-a27e-ed0ca9ee17e9";
+const LOCAL_KEY = "20b91694-7ea1-4a44-91a6-2878664428b3";
+
+export const BURJEEL_SECONDARY_OPTION: ApiConfigData = {
+  serverIp: "https://careinn.bh.com/api",
+  apiKey: "3a68339d-e45f-478e-85a0-811f6b54b457",
+};
+
+export const FAKEEH_SECONDARY_OPTION: ApiConfigData = {
+  serverIp: "http://10.1.189.77/api",
+  apiKey: "dc870ea4-d5d0-4f91-a4a4-502724603ec0",
+};
+
+export const CAREINN_SECONDARY_OPTION: ApiConfigData = {
+  serverIp: "http://10.32.0.86/api",
+  apiKey: "20b91694-7ea1-4a44-91a6-2878664428b3",
+};
+
+export function isFakeehHospital(hid?: string): boolean {
+  let target = hid;
+  if (!target) {
+    try {
+      const savedTheme = localStorage.getItem("careinn-layout2-theme");
+      if (savedTheme) {
+        const parsed = JSON.parse(savedTheme);
+        target = typeof parsed === "string" ? parsed : (parsed.id || "");
+      }
+    } catch {}
+    if (!target) {
+      target = localStorage.getItem("active-hospital-id") || "";
+    }
+  }
+  const norm = (target || "").trim().toLowerCase();
+  return norm === "dsfh" || norm === "fakeeh" || norm.includes("dsfh") || norm.includes("fakeeh");
+}
+
+export function isBurjeelHospital(hid?: string): boolean {
+  let target = hid;
+  if (!target) {
+    try {
+      const savedTheme = localStorage.getItem("careinn-layout2-theme");
+      if (savedTheme) {
+        const parsed = JSON.parse(savedTheme);
+        target = typeof parsed === "string" ? parsed : (parsed.id || "");
+      }
+    } catch {}
+    if (!target) {
+      target = localStorage.getItem("active-hospital-id") || "";
+    }
+  }
+  const norm = (target || "").trim().toLowerCase();
+  return norm === "burjeel" || norm.includes("burjeel") || norm.includes("bh");
+}
+
+export function isCareInnHospital(hid?: string): boolean {
+  let target = hid;
+  if (!target) {
+    try {
+      const savedTheme = localStorage.getItem("careinn-layout2-theme");
+      if (savedTheme) {
+        const parsed = JSON.parse(savedTheme);
+        target = typeof parsed === "string" ? parsed : (parsed.id || "");
+      }
+    } catch {}
+    if (!target) {
+      target = localStorage.getItem("active-hospital-id") || "";
+    }
+  }
+  const norm = (target || "").trim().toLowerCase();
+  return norm === "careinn" || norm.includes("careinn");
+}
+
+export function getSecondaryOption(hospitalId?: string): ApiConfigData {
+  let hid = hospitalId;
+  if (!hid) {
+    try {
+      const savedTheme = localStorage.getItem("careinn-layout2-theme");
+      if (savedTheme) {
+        const parsed = JSON.parse(savedTheme);
+        hid = typeof parsed === "string" ? parsed : parsed.id;
+      }
+    } catch {}
+  }
+  if (isFakeehHospital(hid)) {
+    return FAKEEH_SECONDARY_OPTION;
+  }
+  if (isBurjeelHospital(hid)) {
+    return BURJEEL_SECONDARY_OPTION;
+  }
+  if (isCareInnHospital(hid)) {
+    return CAREINN_SECONDARY_OPTION;
+  }
+  return BURJEEL_SECONDARY_OPTION;
+}
+
+export const SECONDARY_OPTION: ApiConfigData = {
+  get serverIp() {
+    return getSecondaryOption().serverIp;
+  },
+  get apiKey() {
+    return getSecondaryOption().apiKey;
+  },
+} as ApiConfigData;
+
+export interface ApiConfigData {
+  serverIp: string;   // can be IP, domain, or full URL with protocol
+  apiKey: string;
+}
+
+export const DEFAULTS: ApiConfigData = {
+  serverIp: 'https://control.careinn.com/api',
+  apiKey: '2345fcba-1633-46c9-a27e-ed0ca9ee17e9',
+};
+
+export function getDefaultApiConfig(): ApiConfigData {
+  if (isFakeehHospital()) {
+    return FAKEEH_SECONDARY_OPTION;
+  }
+  if (isBurjeelHospital()) {
+    return BURJEEL_SECONDARY_OPTION;
+  }
+  return DEFAULTS;
+}
 
 export function apiKeyForUrl(u: string): string {
+  if (!u) return CLOUD_KEY;
+  if (u.includes("10.1.189.77")) return FAKEEH_SECONDARY_OPTION.apiKey;
+  if (u.includes("10.11.16.15") || u.includes("careinn.bh.com")) return BURJEEL_SECONDARY_OPTION.apiKey;
   return u.includes(CLOUD_HOST) ? CLOUD_KEY : LOCAL_KEY;
 }
 
@@ -18,40 +142,26 @@ export function withApiKey(u: string): string {
   return `${u}${sep}apikey=${apiKeyForUrl(u)}`;
 }
 
-export interface ApiConfigData {
-  serverIp: string;   // can be IP, domain, or full URL with protocol
-  apiKey: string;
-}
-
-const DEFAULTS: ApiConfigData = {
-  serverIp: 'https://control.careinn.com/api',
-  apiKey: '2345fcba-1633-46c9-a27e-ed0ca9ee17e9',
-};
-
-export const SECONDARY_OPTION: ApiConfigData = {
-  serverIp: '10.32.0.86',
-  apiKey: '20b91694-7ea1-4a44-91a6-2878664428b3',
-};
-
 export function getApiConfig(): ApiConfigData {
+  const defaultConfig = getDefaultApiConfig();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULTS };
+    if (!raw) return { ...defaultConfig };
     const saved = JSON.parse(raw);
     let apiKey = saved.apiKey?.trim();
     if (apiKey === "efc9bcbf-6951-436a-8694-c13cc6f30913") {
-      apiKey = DEFAULTS.apiKey;
+      apiKey = defaultConfig.apiKey;
       // Write it back to localStorage so it stays updated
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        serverIp: saved.serverIp?.trim() || DEFAULTS.serverIp,
-        apiKey: DEFAULTS.apiKey,
+        serverIp: saved.serverIp?.trim() || defaultConfig.serverIp,
+        apiKey: defaultConfig.apiKey,
       }));
     }
     return {
-      serverIp: saved.serverIp?.trim() || DEFAULTS.serverIp,
-      apiKey: apiKey || DEFAULTS.apiKey,
+      serverIp: saved.serverIp?.trim() || defaultConfig.serverIp,
+      apiKey: apiKey || defaultConfig.apiKey,
     };
-  } catch { return { ...DEFAULTS }; }
+  } catch { return { ...defaultConfig }; }
 }
 
 export function isCustomConfig(): boolean {

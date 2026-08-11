@@ -28,6 +28,10 @@ import { useLongPress } from "../lib/useLongPress";
 import { AppLockMenu } from "./AppLockMenu";
 import { LockBadge } from "./LockBadge";
 import { AppIconPlaceholder } from "./figma/AppIconPlaceholder";
+import { useGuestMode } from "../lib/guestMode";
+import { hasSeenAppLockTutorial } from "../lib/appLockTutorialStore";
+import { AppLockTutorialOverlay, TargetTileInfo } from "./AppLockTutorialOverlay";
+import { AppLockSetupModal } from "./AppLockSetupModal";
 
 // import { InternetBrowser } from "./InternetBrowser";
 import { useTheme } from "./ThemeContext";
@@ -306,20 +310,6 @@ function getCategories(theme: any, locale: string = "en", t: any): Record<string
           ),
         },
         {
-          id: "the-subtle-art",
-          name: locale === "ar" ? "فن اللامبالاة (إنجليزي)" : "Subtle Art (EN)",
-          bg: "#fff",
-          mark: "SA",
-          textColor: "#333",
-          pdfSource: "/pdfs/the-subtle-art.pdf",
-          customRender: () => (
-            <div className="flex flex-col items-center justify-center p-4 bg-gray-800 rounded-xl w-full h-full text-white">
-              <Hash size={48} strokeWidth={1.5} />
-              <span className="font-bold text-xs mt-2 text-center text-white break-words w-full">The Subtle Art</span>
-            </div>
-          ),
-        },
-        {
           id: "why-we-sleep",
           name: locale === "ar" ? "لماذا ننام (إنجليزي)" : "Why We Sleep (EN)",
           bg: "#fff",
@@ -344,20 +334,6 @@ function getCategories(theme: any, locale: string = "en", t: any): Record<string
             <div className="flex flex-col items-center justify-center p-4 bg-emerald-700 rounded-xl w-full h-full text-white">
               <BookOpen size={48} strokeWidth={1.5} />
               <span className="font-bold text-xs mt-2 text-center text-white break-words w-full">الأعمال الكبرى</span>
-            </div>
-          ),
-        },
-        {
-          id: "fan-all-la-mubalah",
-          name: locale === "ar" ? "فن اللامبالاة (عربي)" : "فن اللامبالاة (AR)",
-          bg: "#fff",
-          mark: "فن اللامبالاة",
-          textColor: "#333",
-          pdfSource: "/pdfs/fan-all-la-mubalah.pdf",
-          customRender: () => (
-            <div className="flex flex-col items-center justify-center p-4 bg-purple-700 rounded-xl w-full h-full text-white">
-              <BookOpenText size={48} strokeWidth={1.5} />
-              <span className="font-bold text-xs mt-2 text-center text-white break-words w-full">فن اللامبالاة</span>
             </div>
           ),
         },
@@ -1417,13 +1393,13 @@ function getCategories(theme: any, locale: string = "en", t: any): Record<string
 
 /* ── App Tile ──────────────────────────────────────────────── */
 
-function AppTile({ app, onTap, onLongPress, isLocked }: { app: AppItem; onTap: () => void; onLongPress: () => void; isLocked: boolean }) {
+function AppTile({ app, onTap, onLongPress, isLocked }: { app: AppItem; onTap: (e?: React.MouseEvent<HTMLElement>) => void; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t, locale } = useLocale();
   const [pressed, setPressed] = useState(false);
   const { onPointerDown, rippleElements } = useRipple("rgba(255,255,255,0.15)");
 
-  const { handlers, handleClick } = useLongPress(onLongPress, 600);
+  const { handlers, handleClick } = useLongPress(onLongPress, 1000);
   const displayName = app.nameKey
     ? t(app.nameKey)
     : (locale === "ar" && app.nameAr ? app.nameAr : app.name);
@@ -1434,7 +1410,7 @@ function AppTile({ app, onTap, onLongPress, isLocked }: { app: AppItem; onTap: (
       onPointerDown={(e) => { onPointerDown(e); handlers.onPointerDown(); setPressed(true); }}
       onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
       onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
-      onClick={() => handleClick(onTap)}
+      onClick={(e) => handleClick(() => onTap(e))}
       className="relative flex flex-col items-center gap-3 transition-transform duration-100 ease-out active:scale-95 cursor-pointer"
       style={{ 
         width: 160, 
@@ -1578,6 +1554,44 @@ export function AppLauncher({
   const { theme } = useTheme();
   const { t, locale, isRTL } = useLocale();
   const lockedIds = useLockedApps();
+  const { isGuest } = useGuestMode();
+
+  const [tutorialTarget, setTutorialTarget] = useState<TargetTileInfo | null>(null);
+  const [setupTarget, setSetupTarget] = useState<{ id: string; name: string } | null>(null);
+
+  const handleTileTap = (
+    e: React.MouseEvent<HTMLElement> | undefined,
+    app: AppItem
+  ) => {
+    const isLocked = lockedIds.has(app.id);
+    const appName = app.nameKey ? t(app.nameKey) : (locale === "ar" && app.nameAr ? app.nameAr : app.name);
+
+    if (isLocked) {
+      setLockMenu(app.id + "__open");
+    } else if (!isGuest && !hasSeenAppLockTutorial()) {
+      const rect = e?.currentTarget ? e.currentTarget.getBoundingClientRect() : null;
+      setTutorialTarget({
+        id: app.id,
+        name: appName,
+        rect,
+        onOpenOriginalApp: () => handleAppTap(app),
+      });
+    } else {
+      handleAppTap(app);
+    }
+  };
+
+  const handleTileLongPress = (app: AppItem) => {
+    if (isGuest) return;
+    const isLocked = lockedIds.has(app.id);
+    const appName = app.nameKey ? t(app.nameKey) : (locale === "ar" && app.nameAr ? app.nameAr : app.name);
+
+    if (isLocked) {
+      setLockMenu(app.id);
+    } else {
+      setSetupTarget({ id: app.id, name: appName });
+    }
+  };
   const [activeKey, setActiveKey] = useState(categoryKey);
   const allCategories = getCategories(theme, locale, t);
   const apiPdfApps = useApiPdfApps(activeKey);
@@ -1604,6 +1618,9 @@ export function AppLauncher({
     progress?: number;
   } | null>(null);
 
+  // "Opening…" overlay — shown while an installed app is whitelisted + launched
+  const [openingApp, setOpeningApp] = useState<{ packageName: string; name: string } | null>(null);
+
   // Listen for install progress/success/error events from Android
   useEffect(() => {
     const onProgress = (e: Event) => {
@@ -1629,11 +1646,14 @@ export function AppLauncher({
       setInstallingApp(null);
     };
     const onError = (e: Event) => {
-      const { packageName } = (e as CustomEvent).detail;
+      const { packageName, message } = (e as CustomEvent).detail;
       setInstallingApp(prev => {
         if (prev?.packageName === packageName) {
+          // Surface the real reason (e.g. "Download failed: HTTP 404",
+          // cleartext/timeout, or a PackageInstaller status) instead of a
+          // generic message — needed to diagnose install failures on-device.
           window.AndroidSystem?.showToast?.(
-            "Installation failed. Opening web version.", false);
+            message ? `Install failed — ${message}` : "Installation failed.", false);
           return null;
         }
         return prev;
@@ -1646,6 +1666,21 @@ export function AppLauncher({
       window.removeEventListener("apk-install-progress", onProgress);
       window.removeEventListener("apk-install-success",  onSuccess);
       window.removeEventListener("apk-install-error",    onError);
+    };
+  }, []);
+
+  // Dismiss the "Opening…" overlay when the app launched (or failed to).
+  useEffect(() => {
+    const onLaunched = () => setOpeningApp(null);
+    const onFailed = () => setOpeningApp(prev => {
+      if (prev) window.AndroidSystem?.showToast?.("Couldn't open the app.", false);
+      return null;
+    });
+    window.addEventListener("app-launched", onLaunched);
+    window.addEventListener("app-launch-failed", onFailed);
+    return () => {
+      window.removeEventListener("app-launched", onLaunched);
+      window.removeEventListener("app-launch-failed", onFailed);
     };
   }, []);
 
@@ -1758,7 +1793,12 @@ export function AppLauncher({
     // 1a. Native APK app — launch if installed, else install
     if (app.packageName && isAndroidApp()) {
       if (apps.isInstalled(app.packageName)) {
-        window.AndroidSystem?.launchApp?.(app.packageName);
+        const pkg = app.packageName;
+        // Show an "Opening…" overlay while native whitelists (Lock Task) + launches.
+        setOpeningApp({ packageName: pkg, name: app.nameKey ? t(app.nameKey) : app.name });
+        window.AndroidSystem?.launchApp?.(pkg);
+        // Backstop: clear the overlay if no app-launched/app-launch-failed event arrives.
+        setTimeout(() => setOpeningApp(prev => (prev?.packageName === pkg ? null : prev)), 6000);
         return;
       }
       if (app.apkUrl) {
@@ -1937,14 +1977,8 @@ export function AppLauncher({
                     <AppTile
                       key={app.id}
                       app={app}
-                      onTap={() => {
-                        if (lockedIds.has(app.id)) {
-                          setLockMenu(app.id + "__open");
-                        } else {
-                          handleAppTap(app);
-                        }
-                      }}
-                      onLongPress={() => setLockMenu(app.id)}
+                      onTap={(e) => handleTileTap(e, app)}
+                      onLongPress={() => handleTileLongPress(app)}
                       isLocked={lockedIds.has(app.id)}
                     />
                   ))}
@@ -2243,6 +2277,65 @@ export function AppLauncher({
             </p>
           </div>
         </div>
+      )}
+
+      {/* "Opening…" overlay — same concept as install, but indeterminate
+          (no measurable progress while whitelisting + launching). */}
+      {openingApp && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9998,
+          background: "rgba(0,0,0,0.75)",
+          backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            backgroundColor: theme.surface, borderRadius: theme.radiusXl,
+            padding: "36px 48px", display: "flex", flexDirection: "column",
+            alignItems: "center", gap: "20px", minWidth: "320px",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
+          }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%",
+              backgroundColor: theme.primarySubtle,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              animation: "breathePulse 1.6s ease-in-out infinite",
+            }}>
+              <PlayCircle size={28} style={{ color: theme.primary }} />
+            </div>
+            <p style={{
+              fontFamily: theme.fontFamily, fontSize: "17px", fontWeight: 700,
+              color: theme.textHeading, margin: 0, textAlign: "center",
+            }}>
+              {t("appLaunch.opening")} {openingApp.name}
+            </p>
+            <p style={{
+              fontFamily: theme.fontFamily, fontSize: "13px",
+              color: theme.textMuted, margin: 0, textAlign: "center",
+            }}>
+              {t("appLaunch.hint")}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {tutorialTarget && (
+        <AppLockTutorialOverlay
+          target={tutorialTarget}
+          onClose={() => setTutorialTarget(null)}
+          onStartLockSetup={(id, name) => {
+            setTutorialTarget(null);
+            setSetupTarget({ id, name });
+          }}
+        />
+      )}
+
+      {setupTarget && (
+        <AppLockSetupModal
+          appId={setupTarget.id}
+          appName={setupTarget.name}
+          onClose={() => setSetupTarget(null)}
+        />
       )}
     </div>
   );

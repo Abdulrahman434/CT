@@ -36,6 +36,7 @@ import { TasbihScreenSaver } from "./components/TasbihScreenSaver";
 import { FoodOrdering } from "./components/FoodOrdering";
 import { NeedSomething } from "./components/NeedSomething";
 import { OrderProvider } from "./components/OrderStore";
+import { ToastProvider } from "./components/ToastNotifications";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { PasswordGate } from "./components/PasswordGate";
 import { HospitalBroadcast, SAMPLE_BROADCAST } from "./components/HospitalBroadcast";
@@ -75,7 +76,7 @@ import { AccountLockScreen } from "./components/AccountLockScreen";
 import { OfflineBanner } from "./components/OfflineBanner";
 import { useGuestMode, guestModeStore } from "./lib/guestMode";
 import { CareMePinDialog } from "./components/CareMePinDialog";
-import { Lock, Megaphone } from "lucide-react";
+import { Lock, Megaphone, AlertTriangle } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
 import {
@@ -83,8 +84,11 @@ import {
   fetchDeviceAlerts, getSeenAlertIds, markAlertSeen,
   markAllAlertsSeen, DeviceAlert
 } from "./lib/hospitalApi";
-import { nurseActions } from "./components/NurseDataStore";
+import { nurseActions, useNurseStore } from "./components/NurseDataStore";
 import { getDeviceInfo } from "./utils/androidBridge";
+import { OnboardingWizard } from "./components/OnboardingWizard";
+import { isOnboardingComplete } from "./lib/onboardingStore";
+import { startDataLifecycleWatchers } from "./lib/dataLifecycle";
 import { matchBinding } from "./lib/handsetConfig";
 import { sip, iptv, _getIptvChannels, _getIptvPlayingId, isAndroidApp, IptvChannel } from "./utils/androidBridge";
 
@@ -166,6 +170,22 @@ const isBeforeToday = (dateStr: string | null | undefined): boolean => {
   return d.getTime() < today.getTime();
 };
 
+/** Screensaver idle delay — reads the onboarding preference, falls back to
+ *  the historical 1-minute default when no choice was made. */
+const SCREENSAVER_TIMEOUT_MS: Record<string, number> = {
+  "30s": 30_000,
+  "1m": 60_000,
+  "5m": 300_000,
+};
+const getScreensaverTimeoutMs = (): number => {
+  try {
+    const v = localStorage.getItem("careinn-screensaver-timeout");
+    return (v && SCREENSAVER_TIMEOUT_MS[v]) || 60_000;
+  } catch {
+    return 60_000;
+  }
+};
+
 const getSavedLayoutMode = (): 1 | 2 | 3 => {
   try {
     const v = localStorage.getItem('careinn-layout-mode');
@@ -176,7 +196,7 @@ const getSavedLayoutMode = (): 1 | 2 | 3 => {
 };
 
 function BedsideScreen() {
-  const { patientAdmitted, setPatientAdmitted, theme, darkMode, switchConfig, prayerAlarm, layout2Theme } = useTheme();
+  const { patientAdmitted, setPatientAdmitted, theme, darkMode, switchConfig, prayerAlarm, layout2Theme, setLocale, setDarkMode, setPrayerAlarm } = useTheme();
   const { isFullAccess, lockedHospitalId } = useAuth();
   const { t, locale, isRTL, dir, fontFamily } = useLocale();
   const scale = useScreenScale();
@@ -220,41 +240,88 @@ function BedsideScreen() {
     }
   }, [lockedHospitalId, switchConfig]);
 
+  const [connectionError, setConnectionError] = useState(false);
+
   useEffect(() => {
     // Pre-fetch packages on startup so AppLauncher loads instantly
     fetchAppPackages();
 
     const syncPatient = () => {
-      if (!isAndroidApp()) return;
       const info = getDeviceInfo();
-      if (!info?.serial) return;
+      const serial = info?.serial || "";
+      if (!serial) {
+        nurseActions.setHisConnected(false);
+        setConnectionError(true);
+        return;
+      }
 
-
-      fetchPatientForDevice(info.serial)
+      fetchPatientForDevice(serial)
         .then(result => {
           if (result) {
             const p = result.patient;
+            const newAdmitRef = result.location.admit_data || "";
+            const newMrn = (p.mrn || result.location.patient_id || "").trim();
+
+            // Current admission reference — the onboarding wizard binds
+            // its completion record to this value
+            setCurrentAdmitRef(newAdmitRef || null);
 
             // Store device group for alert filtering
             deviceGroupRef.current = result.location.group?.id || null;
             fetchAlerts();
 
-            nurseActions.updatePatientFromApi({
+            const lastAdmitRef = localStorage.getItem("careinn-last-admit-ref") || "";
+            const lastMrn = localStorage.getItem("careinn-last-mrn") || "";
+
+            const isNewA01 =
+              Boolean(newMrn || newAdmitRef) &&
+              Boolean(lastMrn || lastAdmitRef) &&
+              (newMrn.toLowerCase() !== lastMrn.toLowerCase() || newAdmitRef !== lastAdmitRef);
+
+            const patientPayload = {
               name: p.name || undefined,
               nameAr: p.nameAr || undefined,
-              mrn: p.mrn || undefined,
+              mrn: newMrn || undefined,
               room: p.room || undefined,
               bed: p.bed || undefined,
               sex: p.sex || undefined,
               dob: p.dob || undefined,
+              age: p.age || undefined,
               admissionDate: p.admissionDate || undefined,
               dischargeDate: p.dischargeDate || undefined,
-            });
+            };
+
+            if (isNewA01) {
+              nurseActions.resetStoreForNewPatient(patientPayload);
+            } else {
+              nurseActions.updatePatientFromApi(patientPayload);
+            }
+
+            if (newMrn) {
+              localStorage.setItem("careinn-active-mrn-passcode", newMrn.toLowerCase());
+              localStorage.setItem("careinn-last-mrn", newMrn);
+            }
+            if (newAdmitRef) {
+              localStorage.setItem("careinn-last-admit-ref", newAdmitRef);
+            }
+
+            nurseActions.setHisConnected(true, !!result.isFallback);
+            setConnectionError(false);
+          } else {
+            nurseActions.setHisConnected(false);
+            setConnectionError(true);
           }
         })
-        .catch(() => { });
+        .catch(() => {
+          nurseActions.setHisConnected(false);
+          setConnectionError(true);
+        });
     };
+
     syncPatient();
+
+    // Re-check connection and patient data every 30 seconds (back and forth)
+    const intervalId = setInterval(syncPatient, 30000);
 
     // Re-fetch when server changes
     const handler = () => {
@@ -263,7 +330,10 @@ function BedsideScreen() {
       syncPatient();
     };
     window.addEventListener("api-config-changed", handler);
-    return () => window.removeEventListener("api-config-changed", handler);
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("api-config-changed", handler);
+    };
   }, []);
 
   // Close AppLauncher when kiosk app returns to foreground
@@ -281,6 +351,7 @@ function BedsideScreen() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifTrigger, setNotifTrigger] = useState(0);
   const [showTour, setShowTour] = useState(false);
+  const [showWelcomeSlideshow, setShowWelcomeSlideshow] = useState(false);
   const [showTasbih, setShowTasbih] = useState(false);
   const [tourDismissed, setTourDismissed] = useState(() => {
     try {
@@ -292,6 +363,53 @@ function BedsideScreen() {
   const [layoutMode, setLayoutMode] = useState<1 | 2 | 3>(getSavedLayoutMode);
   const [showConfigurator, setShowConfigurator] = useState(false);
   const [showThemeAppearance, setShowThemeAppearance] = useState(false);
+
+  /* ── First-run onboarding + data lifecycle ── */
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => localStorage.getItem("careinn-onboarding-complete") !== "true"
+  );
+  const [currentAdmitRef, setCurrentAdmitRef] = useState<string | null>(
+    () => localStorage.getItem("careinn-onboarding-admit-ref")
+  );
+
+  // Full reset back to a factory-fresh session: revert in-memory settings
+  // to their defaults (storage was already wiped by clearEverything) and
+  // reopen the wizard at Welcome. When the admission watcher triggers this
+  // it passes the NEW admission ref so the fresh session binds to it.
+  const forceOnboarding = useCallback((newAdmitRef?: string | null) => {
+    if (newAdmitRef !== undefined) setCurrentAdmitRef(newAdmitRef);
+    setLocale("en");
+    setDarkMode(false);
+    setPrayerAlarm(true);
+    setShowSettings(false);
+    setShowOnboarding(true);
+  }, [setLocale, setDarkMode, setPrayerAlarm]);
+
+  // Manual "Clear everything" from Settings dispatches this event.
+  useEffect(() => {
+    const handler = () => forceOnboarding();
+    window.addEventListener("careinn-force-onboarding", handler);
+    return () => window.removeEventListener("careinn-force-onboarding", handler);
+  }, [forceOnboarding]);
+
+  // "Setup your Preferences" from My Preferences re-opens the wizard WITHOUT
+  // clearing anything — the wizard pre-fills current choices from storage.
+  useEffect(() => {
+    const handler = () => {
+      setShowSettings(false);
+      setShowOnboarding(true);
+    };
+    window.addEventListener("careinn-open-onboarding", handler);
+    return () => window.removeEventListener("careinn-open-onboarding", handler);
+  }, []);
+
+  // Admission-change watcher + daily/24h-idle clear policies (kiosk only).
+  useEffect(() => {
+    if (!isAndroidApp()) return;
+    const serial = getDeviceInfo()?.serial;
+    if (!serial) return;
+    return startDataLifecycleWatchers(serial, forceOnboarding);
+  }, [forceOnboarding]);
 
   useEffect(() => {
     const handleLayoutModeChange = () => setLayoutMode(getSavedLayoutMode());
@@ -321,6 +439,8 @@ function BedsideScreen() {
   const [showCall, setShowCall] = useState(false);
   const [showFoodOrder, setShowFoodOrder] = useState(false);
   const [showNeedSomething, setShowNeedSomething] = useState(false);
+  const [needSomethingInitialTab, setNeedSomethingInitialTab] = useState<"request" | "report" | "mine" | undefined>(undefined);
+  const [foodOrderInitialView, setFoodOrderInitialView] = useState<"order" | "my-orders" | undefined>(undefined);
   const [activeCareRole, setActiveCareRole] = useState<"nurse" | "doctor" | null>(null);
   const [layoutVersion, setLayoutVersion] = useState<1 | 2 | 3>(1);
   const [activeBroadcast, setActiveBroadcast] = useState<BroadcastNotification | null>(null);
@@ -436,16 +556,17 @@ function BedsideScreen() {
     });
 
     if (dueSoon.length > 0) {
-      dueSoon.forEach(a => {
-        const title = locale === "ar" ? a.titleAr : a.titleEn;
-        const body = locale === "ar" ? a.bodyAr : a.bodyEn;
-
-        toast(title, {
-          description: body,
-          duration: 10000,
-          icon: <Megaphone size={18} />,
-        });
-      });
+      const broadcasts: BroadcastNotification[] = dueSoon.map(a => ({
+        id: `alert-${a.id}`,
+        type: "announcement" as const,
+        priority: "warning" as const,
+        title: { en: a.titleEn, ar: a.titleAr },
+        body: { en: a.bodyEn, ar: a.bodyAr },
+        icon: "megaphone",
+        timestamp: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
+        createdAt: Date.now(),
+      }));
+      setBroadcastQueue(prev => [...prev, ...broadcasts]);
       markAllAlertsSeen(dueSoon.map(a => a.id));
     }
   }, [locale, showTour]);
@@ -653,7 +774,7 @@ function BedsideScreen() {
         if (!anyOtherOverlayOpen) {
           setShowTasbih(true);
         }
-      }, 60000); // 1 minute
+      }, getScreensaverTimeoutMs()); // onboarding preference, default 1 min
     };
 
     const handleUserActivity = () => {
@@ -665,11 +786,16 @@ function BedsideScreen() {
 
     events.forEach(evt => window.addEventListener(evt, handleUserActivity));
 
+    // Re-arm with the new delay when the onboarding wizard / settings
+    // change the screensaver timeout preference
+    window.addEventListener("screensaver-timeout-changed", handleUserActivity);
+
     // Initial start
     startTimer();
 
     return () => {
       events.forEach(evt => window.removeEventListener(evt, handleUserActivity));
+      window.removeEventListener("screensaver-timeout-changed", handleUserActivity);
       clearTimeout(idleTimer);
     };
   }, [anyOtherOverlayOpen]);
@@ -959,23 +1085,30 @@ function BedsideScreen() {
       markAlertSeen(alertId);
       setNotifTrigger(prev => prev + 1);
 
-      // Show as broadcast popup
-      setBroadcastQueue(prev => [...prev, {
+      // Find original alert in apiNotifications to preserve correct localized values
+      const originalAlert = apiNotifications.find(a => a.id === alertId);
+      const titleEn = originalAlert?.titleEn ?? notif.titleText ?? "";
+      const titleAr = originalAlert?.titleAr ?? notif.titleText ?? "";
+      const bodyEn = originalAlert?.bodyEn ?? notif.bodyText ?? "";
+      const bodyAr = originalAlert?.bodyAr ?? notif.bodyText ?? "";
+
+      // Show as active broadcast popup immediately by bypassing the queue
+      setActiveBroadcast({
         id: notif.id,
         type: "announcement",
-        priority: "info",
+        priority: "warning",
         title: {
-          en: notif.titleText ?? "",
-          ar: notif.titleText ?? ""
+          en: titleEn,
+          ar: titleAr
         },
         body: {
-          en: notif.bodyText ?? "",
-          ar: notif.bodyText ?? ""
+          en: bodyEn,
+          ar: bodyAr
         },
         icon: "megaphone",
         timestamp: notif.time || new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
         createdAt: Date.now(),
-      }]);
+      });
       setShowNotifications(false);
       return;
     }
@@ -1095,14 +1228,16 @@ function BedsideScreen() {
     }
   };
 
-  // Auto-show tour on first visit once patient is admitted
+  // Auto-show tour on first visit once patient is admitted.
+  // Suppressed while the onboarding wizard is open — its Consent step
+  // offers the tour explicitly.
   useEffect(() => {
-    if (patientAdmitted && !tourDismissed && !showTour) {
+    if (patientAdmitted && !tourDismissed && !showTour && !showOnboarding) {
       // Small delay so the main UI renders first
       const timer = setTimeout(() => setShowTour(true), 600);
       return () => clearTimeout(timer);
     }
-  }, [patientAdmitted, tourDismissed]);
+  }, [patientAdmitted, tourDismissed, showOnboarding]);
 
   const handleCloseTour = useCallback(() => {
     setShowTour(false);
@@ -1133,6 +1268,28 @@ function BedsideScreen() {
     return () => {
       delete (window as any).__openCareTeam;
     };
+  }, []);
+
+  /* Toast tap → navigate to the relevant service panel */
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      if (detail === "housekeeping-requests") {
+        setNeedSomethingInitialTab("mine");
+        setShowNeedSomething(true);
+      } else if (detail === "housekeeping") {
+        setNeedSomethingInitialTab(undefined);
+        setShowNeedSomething(true);
+      } else if (detail === "meal-orders") {
+        setFoodOrderInitialView("my-orders");
+        setShowFoodOrder(true);
+      } else if (detail === "meal") {
+        setFoodOrderInitialView(undefined);
+        setShowFoodOrder(true);
+      }
+    };
+    window.addEventListener("toast-navigate", handler);
+    return () => window.removeEventListener("toast-navigate", handler);
   }, []);
 
   useEffect(() => {
@@ -1383,6 +1540,7 @@ function BedsideScreen() {
         }}
         className={`flex flex-col overflow-hidden relative shrink-0 ${isTV ? "careinn-tv" : "careinn-kiosk"}`}
       >
+        <ToastProvider>
         {layoutMode === 2 ? (
           /* Layout 2 (CareInn) — inherits Layout 1's active hospital brand
              colors (and logo) by feeding the active theme into the CSS vars
@@ -1815,6 +1973,63 @@ function BedsideScreen() {
           <AppTour onClose={handleCloseTour} />
         )}
 
+        {/* Welcome Slideshow Overlay */}
+        {showWelcomeSlideshow && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 100000,
+              background: "#000",
+              animation: "slideshowIn 0.35s ease-out both",
+            }}
+          >
+            <button
+              onClick={() => {
+                setShowWelcomeSlideshow(false);
+                setTourDismissed(true);
+                localStorage.setItem("hbs-tour-seen", "1");
+              }}
+              style={{
+                position: "absolute",
+                top: "24px",
+                right: "24px",
+                zIndex: 100001,
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                border: "none",
+                background: "rgba(255,255,255,0.12)",
+                color: "#FFF",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "background 0.2s ease",
+                backdropFilter: "blur(8px)",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.25)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; }}
+              title="Close Slideshow"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <iframe
+              src="/CareInn%20Welcome%20Slideshow.html"
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+              }}
+              allow="fullscreen"
+              title="CareInn Welcome Slideshow"
+            />
+          </div>
+        )}
+
         {/* Hospital Configurator */}
         {showConfigurator && (
           <HospitalConfigurator onClose={() => setShowConfigurator(false)} />
@@ -1837,12 +2052,12 @@ function BedsideScreen() {
 
         {/* Food Ordering Overlay */}
         {showFoodOrder && (
-          <FoodOrdering onClose={() => setShowFoodOrder(false)} />
+          <FoodOrdering onClose={() => { setShowFoodOrder(false); setFoodOrderInitialView(undefined); }} initialView={foodOrderInitialView} />
         )}
 
         {/* "I Need Something" flow (service requests + report an issue) */}
         {showNeedSomething && (
-          <NeedSomething onClose={() => setShowNeedSomething(false)} />
+          <NeedSomething onClose={() => { setShowNeedSomething(false); setNeedSomethingInitialTab(undefined); }} initialTab={needSomethingInitialTab} />
         )}
 
         {/* Tasbih Screen Saver */}
@@ -1909,6 +2124,7 @@ function BedsideScreen() {
             </div>
           </div>
         )}
+        </ToastProvider>
       </div>
 
 
@@ -2056,6 +2272,10 @@ function BedsideScreen() {
       )}
 
       <style>{`
+          @keyframes slideshowIn {
+            from { opacity: 0; transform: scale(1.03); }
+            to { opacity: 1; transform: scale(1); }
+          }
           @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -2082,6 +2302,20 @@ function BedsideScreen() {
           }
         `}</style>
       <RippleStyles />
+
+      {/* First-run onboarding wizard — hidden (not unmounted) while the
+          welcome tour plays on top of it */}
+      {showOnboarding && (
+        <OnboardingWizard
+          admitRef={currentAdmitRef}
+          hidden={showTour || showWelcomeSlideshow}
+          onComplete={() => setShowOnboarding(false)}
+          onStartTour={() => setShowTour(true)}
+          onStartSlideshow={() => setShowWelcomeSlideshow(true)}
+        />
+      )}
+
+      <Toaster position="bottom-center" />
     </div>
   );
 }

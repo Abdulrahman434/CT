@@ -3,9 +3,9 @@ import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { setAccount, getAccount, updateNfcCard, clearAccount, verifyPin } from "../lib/accountAuth";
 import { useNfcTap } from "../utils/nfc";
-import { X, CheckCircle, Shield, AlertCircle, Trash2, ChevronRight, Globe, Layout, Settings, Image, Check } from "lucide-react";
+import { X, CheckCircle, Shield, AlertCircle, Trash2, ChevronRight, Globe, Layout, Settings, Image, Check, SlidersHorizontal } from "lucide-react";
 import { ApiImage } from "./ApiImage";
-import { getApiConfig, saveApiConfig, isCustomConfig, resetApiConfig, SECONDARY_OPTION } from "../lib/apiConfig";
+import { getApiConfig, saveApiConfig, isCustomConfig, resetApiConfig, SECONDARY_OPTION, resolveBaseUrl } from "../lib/apiConfig";
 import { fetchAllWallpapers, WallpaperGroup } from "../lib/hospitalApi";
 import { proxyImageUrls } from "../lib/imageProxy";
 import {
@@ -233,13 +233,17 @@ export function PinKeypad({
 export function MyPreferencesDialog({
   open,
   onClose,
+  mode = "full",
 }: {
   open: boolean;
   onClose: () => void;
+  /** "pin-setup" jumps straight into the existing PIN setup flow and closes
+   *  when it finishes — used by the onboarding wizard. */
+  mode?: "full" | "pin-setup";
 }) {
   const { theme: t } = useTheme();
   const { t: tr, isRTL } = useLocale();
-  const [step, setStep] = useState<Step>('menu');
+  const [step, setStep] = useState<Step>(mode === "pin-setup" ? 'setup-pin1' : 'menu');
   const [pin1, setPin1] = useState("");
   const [pin2, setPin2] = useState("");
   const [error, setError] = useState(false);
@@ -261,11 +265,15 @@ export function MyPreferencesDialog({
   const [adminPin, setAdminPin] = useState("");
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
 
+  // Connection diagnostics (admin-only) — probes the entered server for reachability vs CORS
+  const [testing, setTesting] = useState(false);
+  const [testResults, setTestResults] = useState<{ path: string; icon: string; note: string }[]>([]);
+
   const account = getAccount();
 
   useEffect(() => {
     if (open) {
-      setStep('menu');
+      setStep(mode === "pin-setup" ? 'setup-pin1' : 'menu');
       setPin1("");
       setPin2("");
       setError(false);
@@ -305,11 +313,15 @@ export function MyPreferencesDialog({
   useEffect(() => {
     if (step === 'success') {
       const timer = setTimeout(() => {
-        setStep('menu');
+        if (mode === "pin-setup") {
+          onClose();
+        } else {
+          setStep('menu');
+        }
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [step]);
+  }, [step, mode, onClose]);
 
   function isValidServerUrl(s: string): boolean {
     // Allows IP, DNS, and optional http/https prefix. Also rejects empty spaces.
@@ -329,6 +341,54 @@ export function MyPreferencesDialog({
   const handleResetServer = () => {
     resetApiConfig();
     window.location.reload();
+  };
+
+  // Probe the entered server against the real endpoints. A normal fetch proves
+  // CORS is OK; if it fails, a no-cors fetch that still resolves means the
+  // request reached the server and only CORS blocked reading it — vs. a total
+  // failure (cleartext/network). Distinguishes CORS from transport on-device.
+  const runConnectionTest = async () => {
+    if (!isValidServerUrl(serverIp) || !apiKey.trim()) {
+      setError(true);
+      setTimeout(() => setError(false), 2000);
+      return;
+    }
+    setTesting(true);
+    setTestResults([]);
+    const base = resolveBaseUrl(serverIp);
+    const paths = [
+      "/user/organization/devices/",
+      "/hl7/httpreceiver/?reference_id=1",
+      "/apps/packages/",
+      "/resource/background/wallpaper/?group=1",
+      "/push/device/alerts/",
+    ];
+    const results: { path: string; icon: string; note: string }[] = [];
+    for (const path of paths) {
+      const sep = path.includes("?") ? "&" : "?";
+      const url = `${base}${path}${sep}apikey=${apiKey}`;
+      let entry: { path: string; icon: string; note: string };
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 6000);
+        const res = await fetch(url, { signal: ctrl.signal });
+        clearTimeout(timer);
+        entry = { path, icon: res.ok ? "✅" : "⚠️", note: res.ok ? `${res.status} OK` : `HTTP ${res.status}` };
+      } catch {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 6000);
+          await fetch(url, { mode: "no-cors", signal: ctrl.signal });
+          clearTimeout(timer);
+          entry = { path, icon: "⚠️", note: "reached, CORS-blocked" };
+        } catch {
+          entry = { path, icon: "❌", note: "unreachable" };
+        }
+      }
+      results.push(entry);
+      setTestResults([...results]);
+    }
+    setTesting(false);
   };
 
   const saveLayoutMode = (mode: 1 | 2 | 3) => {
@@ -440,7 +500,42 @@ export function MyPreferencesDialog({
                 <ChevronRight size={20} style={{ color: t.textMuted, transform: isRTL ? 'rotate(180deg)' : '' }} />
               </button>
 
-              {/* SECTION 5: Admin Settings */}
+              {/* SECTION 5: Setup your Preferences (re-opens the onboarding wizard) */}
+              {(() => {
+                const setupIncomplete = localStorage.getItem("careinn-onboarding-complete") !== "true";
+                return (
+                  <button
+                    onClick={() => {
+                      onClose();
+                      // App root listens: closes Settings and opens the wizard
+                      window.dispatchEvent(new CustomEvent("careinn-open-onboarding"));
+                    }}
+                    className="flex items-center gap-3 w-full text-left cursor-pointer active:scale-[0.98] transition-transform"
+                    style={{
+                      padding: "16px", borderRadius: t.radiusLg,
+                      backgroundColor: setupIncomplete ? t.warningSubtle : t.tileInactiveBg,
+                      border: setupIncomplete ? `1.5px solid ${t.warning}55` : "none",
+                    }}
+                  >
+                    <div style={{ padding: "8px", borderRadius: t.radiusMd, backgroundColor: setupIncomplete ? "#FFFFFF" : t.primarySubtle }}>
+                      <SlidersHorizontal size={20} style={{ color: setupIncomplete ? t.warning : t.primary }} />
+                    </div>
+                    <div className="flex flex-col flex-1">
+                      <span style={{ fontFamily: t.fontFamily, fontSize: "15px", fontWeight: 700, color: t.textHeading }}>
+                        {tr("prefs.setup")}
+                      </span>
+                      <span style={{ fontFamily: t.fontFamily, fontSize: "13px", color: setupIncomplete ? t.warning : t.textMuted }}>
+                        {setupIncomplete ? tr("prefs.setup.incomplete") : tr("prefs.setup.review")}
+                      </span>
+                    </div>
+                    {setupIncomplete
+                      ? <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: t.warning }} />
+                      : <ChevronRight size={20} style={{ color: t.textMuted, transform: isRTL ? 'rotate(180deg)' : '' }} />}
+                  </button>
+                );
+              })()}
+
+              {/* SECTION 6: Admin Settings */}
               <button
                 onClick={() => {
                   if (isAdminUnlocked) {
@@ -519,7 +614,11 @@ export function MyPreferencesDialog({
                 className="px-3 py-1.5 rounded-full font-bold cursor-pointer transition-all active:scale-95 shrink-0"
                 style={{ backgroundColor: t.tileInactiveBg, color: t.textMuted, fontSize: "12px", border: `1px solid ${t.borderDefault}` }}
               >
-                Secondary Local (10.32.x)
+                Secondary Local ({
+                  SECONDARY_OPTION.serverIp.includes("10.1.189.77") ? "10.1.189.77" :
+                  SECONDARY_OPTION.serverIp.includes("careinn.bh.com") ? "careinn.bh.com" :
+                  SECONDARY_OPTION.serverIp.includes("10.11.16.15") ? "10.11.16.15" : "10.32.x"
+                })
               </button>
             </div>
 
@@ -547,6 +646,63 @@ export function MyPreferencesDialog({
                   Cancel
                 </button>
               </div>
+            </div>
+
+            {/* Connection diagnostics — tests the entered server for reachability vs CORS */}
+            <div className="mt-5 pt-4" style={{ borderTop: `1px solid ${t.borderDefault}` }}>
+              {(window as any).AndroidSystem?.getKioskStatus && (() => {
+                let ks: any = {};
+                try { ks = JSON.parse((window as any).AndroidSystem.getKioskStatus() || "{}"); } catch {}
+                return (
+                  <div style={{ marginBottom: 12, fontFamily: t.fontFamily, fontSize: "12px", color: t.textMuted }}>
+                    <span>Device Owner: </span>
+                    <b style={{ color: ks.isDeviceOwner ? t.textHeading : "#EF4444" }}>{ks.isDeviceOwner ? "Yes" : "No"}</b>
+                    {!ks.isDeviceOwner && (
+                      <span style={{ color: "#EF4444" }}> — kiosk is screen-pinning; apps can't launch until Device Owner is restored</span>
+                    )}
+                    <div>Lock Task: {ks.isInLockTask ? "On" : "Off"} · Build: {ks.buildType || "?"}</div>
+                  </div>
+                );
+              })()}
+              <button
+                onClick={runConnectionTest}
+                disabled={testing}
+                className="w-full py-3 rounded-lg font-bold transition-transform active:scale-[0.98]"
+                style={{ backgroundColor: t.tileInactiveBg, color: t.textHeading, fontFamily: t.fontFamily, border: `1px solid ${t.borderDefault}`, opacity: testing ? 0.6 : 1 }}
+              >
+                {testing ? "Testing…" : "Test Connection"}
+              </button>
+
+              {testResults.length > 0 && (
+                <div className="mt-3 flex flex-col gap-1" style={{ backgroundColor: t.surfaceElevated, borderRadius: t.radiusMd, padding: "12px" }}>
+                  <span style={{ fontFamily: t.fontFamily, fontSize: "12px", fontWeight: 700, color: t.textMuted, marginBottom: 4, wordBreak: "break-all" }}>
+                    {resolveBaseUrl(serverIp)}
+                  </span>
+                  {testResults.map((r) => (
+                    <div key={r.path} className="flex items-center justify-between gap-2">
+                      <span style={{ fontFamily: t.fontFamily, fontSize: "12px", color: t.textNormal, wordBreak: "break-all" }}>
+                        {r.icon} {r.path}
+                      </span>
+                      <span style={{ fontFamily: t.fontFamily, fontSize: "11px", color: t.textMuted, whiteSpace: "nowrap" }}>
+                        {r.note}
+                      </span>
+                    </div>
+                  ))}
+                  {!testing && (
+                    <span style={{ fontFamily: t.fontFamily, fontSize: "12px", fontWeight: 600, color: t.textHeading, marginTop: 8 }}>
+                      {(() => {
+                        const anyCors = testResults.some(r => r.note === "reached, CORS-blocked");
+                        const anyOk = testResults.some(r => r.icon === "✅");
+                        const allUnreachable = testResults.every(r => r.icon === "❌");
+                        if (allUnreachable) return "→ Server unreachable (network / cleartext).";
+                        if (anyCors && !anyOk) return "→ CORS: server reachable, browser reads blocked. Needs native bridge or server CORS header.";
+                        if (anyCors) return "→ Partial: some endpoints CORS-blocked.";
+                        return "→ All endpoints reachable.";
+                      })()}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         );
@@ -658,10 +814,10 @@ export function MyPreferencesDialog({
             <div className="flex flex-col items-center" style={{ padding: "28px 24px 0 24px" }}>
               <Shield size={28} style={{ color: t.primary, marginBottom: "16px" }} />
               <span style={{ fontFamily: t.fontFamily, fontSize: "18px", fontWeight: 700, color: t.textHeading, textAlign: "center" }}>
-                Set up a PIN
+                {tr("pinSetup.title")}
               </span>
               <span style={{ fontFamily: t.fontFamily, fontSize: "13px", fontWeight: 500, color: t.textMuted, textAlign: "center", marginTop: "8px" }}>
-                Enter a 4-digit PIN for your settings
+                {tr("pinSetup.subtitle")}
               </span>
             </div>
             <PinKeypad pin={pin1} setPin={setPin1} error={false} onComplete={() => setStep('setup-pin2')} />
@@ -674,7 +830,7 @@ export function MyPreferencesDialog({
             <div className="flex flex-col items-center" style={{ padding: "28px 24px 0 24px" }}>
               <Shield size={28} style={{ color: t.primary, marginBottom: "16px" }} />
               <span style={{ fontFamily: t.fontFamily, fontSize: "18px", fontWeight: 700, color: t.textHeading, textAlign: "center" }}>
-                Confirm your PIN
+                {tr("pinSetup.confirm")}
               </span>
             </div>
             <PinKeypad
@@ -704,7 +860,7 @@ export function MyPreferencesDialog({
           <div className="flex flex-col items-center justify-center" style={{ padding: "40px 24px" }}>
             <AlertCircle size={40} style={{ color: "#D10044", marginBottom: "16px" }} />
             <span style={{ fontFamily: t.fontFamily, fontSize: "16px", fontWeight: 600, color: t.textHeading, textAlign: "center" }}>
-              PINs do not match
+              {tr("pinSetup.mismatch")}
             </span>
           </div>
         );
@@ -716,10 +872,10 @@ export function MyPreferencesDialog({
               <Shield size={32} style={{ color: t.primary }} />
             </div>
             <span style={{ fontFamily: t.fontFamily, fontSize: "18px", fontWeight: 700, color: t.textHeading, textAlign: "center" }}>
-              Add NFC Card (Optional)
+              {tr("nfcSetup.title")}
             </span>
             <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 500, color: t.textMuted, textAlign: "center", marginTop: "12px", marginBottom: "24px" }}>
-              You can pair an NFC card to easily unlock your screen later.
+              {tr("nfcSetup.subtitle")}
             </span>
             <div className="flex gap-3 w-full">
               <button
@@ -730,7 +886,7 @@ export function MyPreferencesDialog({
                 style={{ height: "48px", borderRadius: t.radiusLg, backgroundColor: t.tileInactiveBg, border: "none" }}
               >
                 <span style={{ fontFamily: t.fontFamily, fontSize: "15px", fontWeight: 600, color: t.textHeading }}>
-                  Skip
+                  {tr("nfcSetup.skip")}
                 </span>
               </button>
               <button
@@ -739,7 +895,7 @@ export function MyPreferencesDialog({
                 style={{ height: "48px", borderRadius: t.radiusLg, backgroundColor: t.primary, border: "none" }}
               >
                 <span style={{ fontFamily: t.fontFamily, fontSize: "15px", fontWeight: 600, color: "#fff" }}>
-                  Pair NFC
+                  {tr("nfcSetup.pair")}
                 </span>
               </button>
             </div>
@@ -758,19 +914,19 @@ export function MyPreferencesDialog({
               </div>
             </div>
             <span style={{ fontFamily: t.fontFamily, fontSize: "18px", fontWeight: 700, color: t.textHeading, textAlign: "center" }}>
-              {step === 'nfc-tap1' ? "Tap your NFC card" : "Tap it again to confirm"}
+              {step === 'nfc-tap1' ? tr("nfcSetup.tap1") : tr("nfcSetup.tap2")}
             </span>
             <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 500, color: t.textMuted, textAlign: "center", marginTop: "12px", marginBottom: "24px" }}>
-              Hold the card near the reader
+              {tr("nfcSetup.hold")}
             </span>
             <button
               onClick={() => {
                 if (getAccount()) setStep('menu');
                 else setStep('nfc-prompt');
               }}
-              style={{ padding: "10px 20px", color: t.textMuted, background: 'transparent', border: 'none', cursor: 'pointer' }}
+              style={{ padding: "10px 20px", color: t.textMuted, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: t.fontFamily }}
             >
-              Cancel
+              {tr("general.cancel")}
             </button>
           </div>
         );
@@ -780,7 +936,7 @@ export function MyPreferencesDialog({
           <div className="flex flex-col items-center justify-center" style={{ padding: "40px 24px" }}>
             <AlertCircle size={40} style={{ color: "#D10044", marginBottom: "16px" }} />
             <span style={{ fontFamily: t.fontFamily, fontSize: "16px", fontWeight: 600, color: t.textHeading, textAlign: "center" }}>
-              NFC cards do not match
+              {tr("nfcSetup.mismatch")}
             </span>
           </div>
         );
@@ -902,7 +1058,7 @@ export function MyPreferencesDialog({
           <div className="flex flex-col items-center justify-center" style={{ padding: "40px 24px" }}>
             <CheckCircle size={48} style={{ color: "#10B981", marginBottom: "16px" }} />
             <span style={{ fontFamily: t.fontFamily, fontSize: "18px", fontWeight: 700, color: t.textHeading, textAlign: "center" }}>
-              {pendingAction === 'remove-account' ? "Removed" : "Saved successfully"}
+              {pendingAction === 'remove-account' ? tr("pinSetup.removed") : tr("pinSetup.saved")}
             </span>
           </div>
         );
@@ -966,7 +1122,7 @@ export function MyPreferencesDialog({
   };
 
   const showHeader = step !== 'success' && step !== 'setup-pin-mismatch' && step !== 'nfc-mismatch';
-  const canGoBack = step !== 'menu' && step !== 'success';
+  const canGoBack = step !== 'menu' && step !== 'success' && mode !== 'pin-setup';
   const dialogWidth = step === 'backgrounds' ? 420 : 340;
 
   return (

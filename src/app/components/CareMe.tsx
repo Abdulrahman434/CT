@@ -50,6 +50,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowLeftRight,
+  Sparkles,
 } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { InternalPageHeader } from "./InternalPageHeader";
@@ -226,10 +227,171 @@ function GendersIcon({ size = 14, style }: { size?: number, style?: any }) {
   );
 }
 
+export function calculateAge(dobStr?: string, fallbackAge?: string): number {
+  if (!dobStr || !dobStr.trim()) {
+    return Number(fallbackAge) || 0;
+  }
+  const s = dobStr.trim();
+  let birthDate: Date | null = null;
+  if (/^\d{8}$/.test(s)) {
+    const y = parseInt(s.substring(0, 4), 10);
+    const m = parseInt(s.substring(4, 6), 10) - 1;
+    const d = parseInt(s.substring(6, 8), 10);
+    birthDate = new Date(y, m, d);
+  } else {
+    const parsed = new Date(s);
+    if (!isNaN(parsed.getTime())) {
+      birthDate = parsed;
+    }
+  }
+
+  if (!birthDate || isNaN(birthDate.getTime())) {
+    return Number(fallbackAge) || 0;
+  }
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age >= 0 ? age : (Number(fallbackAge) || 0);
+}
+
+function HisEmptyStateSection({
+  theme,
+  title,
+  description,
+  onCheckDemo,
+  isExpanded = false,
+}: {
+  theme: any;
+  title?: string;
+  description?: string;
+  onCheckDemo: () => void;
+  isExpanded?: boolean;
+}) {
+  const { t } = useLocale();
+  return (
+    <div
+      className="flex flex-col items-center justify-center text-center p-8 border border-dashed rounded-3xl"
+      style={{
+        borderColor: `${theme.primary}35` || "rgba(0,0,0,0.12)",
+        backgroundColor: theme.surfaceElevated || "rgba(255,255,255,0.75)",
+        minHeight: isExpanded ? "260px" : "200px",
+        margin: "auto 0",
+      }}
+    >
+      <div
+        className="w-14 h-14 rounded-full flex items-center justify-center mb-3 shrink-0"
+        style={{ backgroundColor: theme.primarySubtle }}
+      >
+        <Sparkles size={24} style={{ color: theme.primary }} strokeWidth={2.2} />
+      </div>
+      <h4
+        style={{
+          fontFamily: theme.fontFamily,
+          fontSize: isExpanded ? "18px" : "16px",
+          fontWeight: WEIGHT.bold,
+          color: theme.textHeading,
+          marginBottom: "6px",
+        }}
+      >
+        {title || t("care.his.noInfo")}
+      </h4>
+      <p
+        style={{
+          fontFamily: theme.fontFamily,
+          fontSize: isExpanded ? "14px" : "13px",
+          color: theme.textMuted,
+          maxWidth: "340px",
+          marginBottom: "18px",
+          lineHeight: "1.4",
+        }}
+      >
+        {description || t("care.his.noInfoSub")}
+      </p>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onCheckDemo();
+        }}
+        data-nav="true"
+        className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all active:scale-95 cursor-pointer shadow-md"
+        style={{
+          backgroundColor: theme.primary,
+          color: "#fff",
+          border: "none",
+          fontSize: isExpanded ? "15px" : "13px",
+          fontFamily: theme.fontFamily,
+        }}
+      >
+        <Sparkles size={16} />
+        <span>{t("care.his.checkDemo")}</span>
+      </button>
+    </div>
+  );
+}
+
+function DemoBannerHeader({
+  theme,
+  onCloseDemo,
+}: {
+  theme: any;
+  onCloseDemo: () => void;
+}) {
+  const { t } = useLocale();
+  return (
+    <div
+      className="flex items-center justify-between px-3 py-1.5 rounded-xl mb-3 border shrink-0"
+      style={{
+        backgroundColor: `${theme.primary}12`,
+        borderColor: `${theme.primary}35`,
+      }}
+    >
+      <div className="flex items-center gap-2">
+        <Sparkles size={14} style={{ color: theme.primary }} />
+        <span
+          style={{
+            fontFamily: theme.fontFamily,
+            fontSize: "12px",
+            fontWeight: 800,
+            color: theme.primary,
+          }}
+        >
+          {t("care.his.demoBadge")}
+        </span>
+      </div>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onCloseDemo();
+        }}
+        data-nav="true"
+        className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer"
+        style={{
+          backgroundColor: theme.surface,
+          color: theme.textMuted,
+          border: `1px solid ${theme.borderDefault}`,
+        }}
+      >
+        {t("care.his.hideDemo")}
+      </button>
+    </div>
+  );
+}
+
 function PatientProfileSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: boolean }) {
   const { t, isRTL, localizeNumber } = useLocale();
   const nurseStore = useNurseStore();
   const p = nurseStore.patient;
+  const [showDemoEmergency, setShowDemoEmergency] = useState(false);
+
+  const calculatedAge = useMemo(() => {
+    return calculateAge(p.dob, p.age);
+  }, [p.dob, p.age]);
+
+  const hasHisEmergency = nurseStore.isHisConnected ? !!nurseStore.hisSections?.emergency : true;
 
   const infoRow = (icon: React.ComponentType<any>, label: string, val: React.ReactNode, customColor?: string) => {
     const Icon = icon;
@@ -296,7 +458,7 @@ function PatientProfileSlide({ theme, isExpanded = false }: { theme: any, isExpa
           <div className="grid grid-cols-2 gap-x-6 gap-y-5">
             {infoRow(Hash, t("greeting.mrn"), <span dir="ltr">{p.mrn}</span>)}
             {infoRow(Shield, t("care.insurance"), t("care.insurance.tawuniya"))}
-            {infoRow(CalendarDays, t("care.age"), t("care.ageUnits", localizeNumber(Number(p.age) || 0)))}
+            {infoRow(CalendarDays, t("care.age"), t("care.ageUnits", localizeNumber(calculatedAge)))}
             {infoRow(GendersIcon, t("care.gender"), p.sex ? t(`care.gender.${p.sex.toLowerCase() === 'm' ? 'male' : (p.sex.toLowerCase() === 'f' ? 'female' : p.sex.toLowerCase())}`) : t("care.gender.female"))}
             {infoRow(Clock, t("care.dob"), p.dob || t("care.birthDateVal"))}
             {infoRow(DoorOpen, t("care.room") + " / " + t("care.bed"), `${p.room} / ${p.bed || 'A'}`)}
@@ -305,27 +467,40 @@ function PatientProfileSlide({ theme, isExpanded = false }: { theme: any, isExpa
       </SectionContainer>
 
       {/* Module 3: Emergency Contact */}
-      <SectionContainer theme={theme} isExpanded={isExpanded} bg="rgba(239, 68, 68, 0.03)" className="mt-auto">
-        <div className="flex flex-col gap-5">
-          <div className="flex items-start gap-3">
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-              style={{ backgroundColor: "#EF4444" }}
-            >
-              <User size={16} style={{ color: "#fff" }} strokeWidth={2.5} />
+      {nurseStore.isHisConnected && !hasHisEmergency && !showDemoEmergency ? (
+        <HisEmptyStateSection
+          theme={theme}
+          isExpanded={isExpanded}
+          title={t("care.his.noInfo")}
+          description={t("care.his.noInfoSub")}
+          onCheckDemo={() => setShowDemoEmergency(true)}
+        />
+      ) : (
+        <SectionContainer theme={theme} isExpanded={isExpanded} bg="rgba(239, 68, 68, 0.03)" className="mt-auto">
+          {nurseStore.isHisConnected && !hasHisEmergency && showDemoEmergency && (
+            <DemoBannerHeader theme={theme} onCloseDemo={() => setShowDemoEmergency(false)} />
+          )}
+          <div className="flex flex-col gap-5">
+            <div className="flex items-start gap-3">
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                style={{ backgroundColor: "#EF4444" }}
+              >
+                <User size={16} style={{ color: "#fff" }} strokeWidth={2.5} />
+              </div>
+              <div className="flex flex-col pt-0.5">
+                <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "16px" : "13px", color: theme.textMuted, lineHeight: "1.2" }}>{t("care.emergencyContact")}</p>
+                <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "16px" : "14.5px", fontWeight: WEIGHT.bold, color: theme.textHeading, lineHeight: "1.4", marginTop: "2px" }}>{t("care.emergencyName").split(' (')[0]}</p>
+              </div>
             </div>
-            <div className="flex flex-col pt-0.5">
-              <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "16px" : "13px", color: theme.textMuted, lineHeight: "1.2" }}>{t("care.emergencyContact")}</p>
-              <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "16px" : "14.5px", fontWeight: WEIGHT.bold, color: theme.textHeading, lineHeight: "1.4", marginTop: "2px" }}>{t("care.emergencyName").split(' (')[0]}</p>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-            {infoRow(Phone, t("care.mobile"), <span dir="ltr">{p.contact}</span>, "#EF4444")}
-            {infoRow(Heart, t("care.relative"), p.emergencyName.split('(')[1]?.replace(')', '') || "Mother", "#EF4444")}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+              {infoRow(Phone, t("care.mobile"), <span dir="ltr">{p.contact}</span>, "#EF4444")}
+              {infoRow(Heart, t("care.relative"), p.emergencyName.split('(')[1]?.replace(')', '') || "Mother", "#EF4444")}
+            </div>
           </div>
-        </div>
-      </SectionContainer>
+        </SectionContainer>
+      )}
     </div>
   );
 }
@@ -334,14 +509,30 @@ function PatientProfileSlide({ theme, isExpanded = false }: { theme: any, isExpa
 function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: boolean }) {
   const { t } = useLocale();
   const nurseStore = useNurseStore();
+  const [showDemo, setShowDemo] = useState(false);
   const storeAllergies = nurseStore.allergies;
   const patientDietLabel = DIET_DISPLAY_LABELS[nurseStore.patientDiet] || nurseStore.patientDiet;
   const isNpo = nurseStore.patientDiet === "npo";
   const storePainScore = nurseStore.painScore;
   const labelSize = isExpanded ? "16px" : "13px";
 
+  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections?.careOverview : true;
+
+  if (nurseStore.isHisConnected && !hasHisData && !showDemo) {
+    return (
+      <HisEmptyStateSection
+        theme={theme}
+        isExpanded={isExpanded}
+        onCheckDemo={() => setShowDemo(true)}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      {nurseStore.isHisConnected && !hasHisData && showDemo && (
+        <DemoBannerHeader theme={theme} onCloseDemo={() => setShowDemo(false)} />
+      )}
       {/* Module 1: Care Team */}
       <SectionContainer theme={theme} isExpanded={isExpanded}>
         <div className="flex flex-col gap-6">
@@ -524,8 +715,12 @@ function TimelineSlide({
 }) {
   const { t, isRTL } = useLocale();
   const store = useNurseStore();
+  const [showDemo, setShowDemo] = useState(false);
   const labelSize = isExpanded ? "16px" : "13px";
   const valueSize = isExpanded ? "16px" : "15.5px";
+
+  const sectionKey = type === "care" ? "carePlan" : "discharge";
+  const hasHisData = store.isHisConnected ? !!store.hisSections?.[sectionKey] : true;
 
   const toISO = (d: Date) => d.toISOString().split("T")[0];
   const mode = store.carePlanMode;
@@ -541,15 +736,32 @@ function TimelineSlide({
     }
   }, [store.carePlanSelectedDate]);
 
+  if (store.isHisConnected && !hasHisData && !showDemo) {
+    return (
+      <HisEmptyStateSection
+        theme={theme}
+        isExpanded={isExpanded}
+        onCheckDemo={() => setShowDemo(true)}
+      />
+    );
+  }
+
   const today = new Date();
   const yesterday = shiftDay(today, -1);
   const tomorrow = shiftDay(today, 1);
 
-  let dateLabel = "";
-  if (isSameDay(selectedDate, today)) dateLabel = t("careplan.today") || "Today";
-  else if (isSameDay(selectedDate, yesterday)) dateLabel = t("careplan.yesterday") || "Yesterday";
-  else if (isSameDay(selectedDate, tomorrow)) dateLabel = t("careplan.tomorrow") || "Tomorrow";
-  else dateLabel = selectedDate.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+  const dateFormatted = selectedDate.toLocaleDateString(isRTL ? "ar-SA" : "en-US", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+
+  let prefix = "";
+  if (isSameDay(selectedDate, today)) prefix = t("careplan.today") || "Today";
+  else if (isSameDay(selectedDate, yesterday)) prefix = t("careplan.yesterday") || "Yesterday";
+  else if (isSameDay(selectedDate, tomorrow)) prefix = t("careplan.tomorrow") || "Tomorrow";
+
+  const dateLabel = prefix ? `${prefix} · ${dateFormatted}` : dateFormatted;
 
   const items = rawItems.filter(item => {
     if (type === "discharge") return true; // Show all discharge items regardless of date
@@ -558,7 +770,11 @@ function TimelineSlide({
   });
 
   return (
-    <SectionContainer theme={theme} isExpanded={isExpanded} padding={isExpanded ? "24px" : "16px"}>
+    <div className="flex flex-col gap-2">
+      {store.isHisConnected && !hasHisData && showDemo && (
+        <DemoBannerHeader theme={theme} onCloseDemo={() => setShowDemo(false)} />
+      )}
+      <SectionContainer theme={theme} isExpanded={isExpanded} padding={isExpanded ? "24px" : "16px"}>
       <div className="flex flex-col gap-0">
         {/* Date Selector OR Overall Title (Only for Care Plan) */}
         {type === "care" && (
@@ -693,6 +909,7 @@ function TimelineSlide({
         })}
       </div>
     </SectionContainer>
+    </div>
   );
 }
 
@@ -743,9 +960,22 @@ function LabResultsSlide({ theme, isExpanded = false }: { theme: any, isExpanded
   const { t } = useLocale();
   const nurseStore = useNurseStore();
   const [pdfModal, setPdfModal] = useState<{ url: string; title: string } | null>(null);
+  const [showDemo, setShowDemo] = useState(false);
 
   const valueSize = isExpanded ? "16px" : "15.5px";
   const labelSize = isExpanded ? "16px" : "13.5px";
+
+  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections?.labs : true;
+
+  if (nurseStore.isHisConnected && !hasHisData && !showDemo) {
+    return (
+      <HisEmptyStateSection
+        theme={theme}
+        isExpanded={isExpanded}
+        onCheckDemo={() => setShowDemo(true)}
+      />
+    );
+  }
 
   const getStatusColor = (status?: string) => {
     if (status === "low" || status === "high") return theme.error;
@@ -764,6 +994,9 @@ function LabResultsSlide({ theme, isExpanded = false }: { theme: any, isExpanded
   return (
     <>
       <div className="flex flex-col gap-4">
+        {nurseStore.isHisConnected && !hasHisData && showDemo && (
+          <DemoBannerHeader theme={theme} onCloseDemo={() => setShowDemo(false)} />
+        )}
         {visibleResults.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 opacity-40">
             <FlaskConical size={40} />
@@ -874,15 +1107,31 @@ function ImagingSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
   const { t } = useLocale();
   const nurseStore = useNurseStore();
   const [pdfModal, setPdfModal] = useState<{ url: string; title: string } | null>(null);
+  const [showDemo, setShowDemo] = useState(false);
 
   const valueSize = isExpanded ? "16px" : "15.5px";
   const labelSize = isExpanded ? "16px" : "13.5px";
+
+  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections?.imaging : true;
+
+  if (nurseStore.isHisConnected && !hasHisData && !showDemo) {
+    return (
+      <HisEmptyStateSection
+        theme={theme}
+        isExpanded={isExpanded}
+        onCheckDemo={() => setShowDemo(true)}
+      />
+    );
+  }
 
   const visibleResults = nurseStore.imagingResults.filter(i => i.visible);
 
   return (
     <>
       <div className="flex flex-col gap-4">
+        {nurseStore.isHisConnected && !hasHisData && showDemo && (
+          <DemoBannerHeader theme={theme} onCloseDemo={() => setShowDemo(false)} />
+        )}
         {visibleResults.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 opacity-40">
             <ImageIcon size={40} />
@@ -943,9 +1192,22 @@ function ImagingSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
 function ClinicalObservationsSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: boolean }) {
   const { t } = useLocale();
   const nurseStore = useNurseStore();
+  const [showDemo, setShowDemo] = useState(false);
   const obs = [...nurseStore.observations].reverse();
 
   const labelSize = isExpanded ? "16px" : "13px";
+
+  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections?.observations : true;
+
+  if (nurseStore.isHisConnected && !hasHisData && !showDemo) {
+    return (
+      <HisEmptyStateSection
+        theme={theme}
+        isExpanded={isExpanded}
+        onCheckDemo={() => setShowDemo(true)}
+      />
+    );
+  }
 
   if (obs.length === 0) {
     return (
@@ -1030,7 +1292,21 @@ function ClinicalObservationsSlide({ theme, isExpanded = false }: { theme: any, 
 function BabyCameraSlide({ isExpanded = false }: { isExpanded?: boolean }) {
   const { theme } = useTheme();
   const { t } = useLocale();
+  const nurseStore = useNurseStore();
   const [fullscreen, setFullscreen] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
+
+  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections?.baby : true;
+
+  if (nurseStore.isHisConnected && !hasHisData && !showDemo) {
+    return (
+      <HisEmptyStateSection
+        theme={theme}
+        isExpanded={isExpanded}
+        onCheckDemo={() => setShowDemo(true)}
+      />
+    );
+  }
 
   const isDallah = theme.id === "dallah";
   const isCareMed = theme.id === "caremed";
@@ -1043,6 +1319,9 @@ function BabyCameraSlide({ isExpanded = false }: { isExpanded?: boolean }) {
 
   return (
     <div className="flex flex-col gap-3 h-full">
+      {nurseStore.isHisConnected && !hasHisData && showDemo && (
+        <DemoBannerHeader theme={theme} onCloseDemo={() => setShowDemo(false)} />
+      )}
       {/* 1:1 Camera Feed */}
       <div
         className="relative w-full cursor-pointer overflow-hidden group"
@@ -1195,9 +1474,22 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
   const nurseStore = useNurseStore();
   const [showPdf, setShowPdf] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
 
   const valueSize = isExpanded ? "16px" : "14px";
   const labelSize = isExpanded ? "16px" : "13px";
+
+  const hasHisData = nurseStore.isHisConnected ? !!nurseStore.hisSections?.financial : true;
+
+  if (nurseStore.isHisConnected && !hasHisData && !showDemo) {
+    return (
+      <HisEmptyStateSection
+        theme={theme}
+        isExpanded={isExpanded}
+        onCheckDemo={() => setShowDemo(true)}
+      />
+    );
+  }
 
   const Row = ({ label, value, description, isTotal = false, isHighlight = false, color }: any) => (
     <div className="flex items-center justify-between py-2" style={{ borderColor: theme.borderSubtle }}>
@@ -1232,6 +1524,9 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
 
   return (
     <div className="flex flex-col gap-4">
+      {nurseStore.isHisConnected && !hasHisData && showDemo && (
+        <DemoBannerHeader theme={theme} onCloseDemo={() => setShowDemo(false)} />
+      )}
       {/* Module 1: Itemized breakdown */}
       <SectionContainer theme={theme} isExpanded={isExpanded}>
         <div className="flex flex-col gap-0">
@@ -1321,7 +1616,7 @@ function HospitalInvoiceOverlay({ theme, onClose }: { theme: any, onClose: () =>
             </button>
             <div className="mt-8">
               <p style={{ fontFamily: theme.fontFamily, fontSize: "14px", fontWeight: 700, color: theme.textHeading }}>{theme.hospitalName}</p>
-              <p style={{ fontFamily: theme.fontFamily, fontSize: "12px", color: theme.textMuted }}>Riyadh, Saudi Arabia</p>
+              <p style={{ fontFamily: theme.fontFamily, fontSize: "12px", color: theme.textMuted }}>{theme.location}, {theme.country}</p>
               <p style={{ fontFamily: theme.fontFamily, fontSize: "12px", color: theme.textMuted }}>VAT ID: 300000000000003</p>
             </div>
           </div>

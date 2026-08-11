@@ -50,13 +50,14 @@ import {
 import { useTheme } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { useAuth } from "./AuthContext";
-import { clearAllDataAndReload } from "../lib/clearAllData";
+import { clearAllDataAndReload, clearUserDataAndReload } from "../lib/clearAllData";
 import { NurseInterface } from "./nurse/NurseInterface";
 import type { Locale } from "./i18n";
 import imgMosque from "../../assets/b51acb5e2ec4a2c930572c53103b020b12e76ee2.png";
 import { getPrayerStatus, getCountdown, formatPrayerTime, PRAYER_NAMES } from "../utils/prayerUtils";
 import { MyPreferencesDialog } from "./MyAccountDialog";
 import { isAccountSet } from "../lib/accountAuth";
+import { resetAppLockTutorial } from "../lib/appLockTutorialStore";
 
 /* ═══════════════════════════════════════════════════════════════
  * All colors/fonts/radii in this file come from ThemeContext.
@@ -740,7 +741,7 @@ const mockBtDevices = [
   { id: "bt-phone2", name: "iPhone 15", type: "Phone", icon: Smartphone, paired: false },
 ];
 
-function BluetoothDialog({
+export function BluetoothDialog({
   onClose,
   connectedId,
   onConnect,
@@ -1103,28 +1104,39 @@ function CastDialog({
 /* ─── Clear Data Confirmation Dialog ─── */
 function ClearDataDialog({
   onClose,
-  onConfirm,
+  onClearMyData,
+  onClearEverything,
 }: {
   onClose: () => void;
-  onConfirm: () => void;
+  onClearMyData: () => void;
+  onClearEverything: () => void;
 }) {
   const { theme: t } = useTheme();
   const { t: tr } = useLocale();
-  const items = [
-    tr("settings.clearData.signOut"),      // "Sign out"
-    tr("settings.clearData.history"),       // "Call history"
-    tr("settings.clearData.passwords"),     // "Saved passwords & PIN"
-    tr("settings.clearData.lockedApps"),    // "App lock settings"
-    tr("settings.clearData.preferences"),   // "Preferences & language"
-    tr("settings.clearData.reset"),         // "Return to login screen"
-  ];
 
   const DANGER = "#D10044";
   const DANGER_SUBTLE = "rgba(209,0,68,0.06)";
   const DANGER_BORDER = "rgba(209,0,68,0.12)";
 
   return (
-    <CenteredDialog onClose={onClose} width={380}>
+    <CenteredDialog onClose={onClose} width={560}>
+      {/* Absolute close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+        style={{
+          width: "36px",
+          height: "36px",
+          borderRadius: "50%",
+          backgroundColor: t.tileInactiveBg,
+          border: "none",
+          zIndex: 10,
+        }}
+        title={tr("general.close") || "Close"}
+      >
+        <X size={18} style={{ color: t.textHeading }} />
+      </button>
+
       <div
         className="flex flex-col items-center"
         style={{ padding: "28px 24px 8px 24px" }}
@@ -1167,93 +1179,76 @@ function ClearDataDialog({
         </span>
       </div>
 
-      {/* What will be cleared */}
-      <div style={{ padding: "16px 24px" }}>
+      {/* Description Cards of Options - Side by Side */}
+      <div className="flex gap-4 px-6 pb-6 pt-2">
         <div
-          className="flex flex-col gap-2"
+          onClick={onClearMyData}
+          className="flex-1 flex flex-col justify-between p-4 cursor-pointer active:scale-[0.98] transition-all hover:brightness-95"
           style={{
-            padding: "14px 16px",
             borderRadius: t.radiusLg,
-            backgroundColor: DANGER_SUBTLE,
-            border: `1px solid ${DANGER_BORDER}`,
+            border: `1.5px solid ${t.borderDefault}`,
+            backgroundColor: t.surfaceElevated,
+            minHeight: "170px",
           }}
         >
-          {items.map((item, i) => (
-            <div key={i} className="flex items-start gap-2.5">
-              <div
-                className="shrink-0 mt-0.5"
-                style={{
-                  width: "6px",
-                  height: "6px",
-                  borderRadius: t.radiusFull,
-                  backgroundColor: DANGER,
-                  opacity: 0.5,
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: t.fontFamily,
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: t.textMuted,
-                  lineHeight: "18px",
-                }}
-              >
-                {item}
-              </span>
-            </div>
-          ))}
+          <div>
+            <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 700, color: t.textHeading, display: "block" }}>
+              {tr("settings.clearData.clearMyData.title") || "Clear My Data"}
+            </span>
+            <span style={{ fontFamily: t.fontFamily, fontSize: "11px", color: t.textMuted, marginTop: "6px", display: "block", lineHeight: "15px" }}>
+              {tr("settings.clearData.clearMyData.desc") || "Clears third-party apps, browser cache, and website logins. Your preferences and PIN remain safe."}
+            </span>
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); onClearMyData(); }}
+            className="w-full flex items-center justify-center mt-4 cursor-pointer active:scale-95 transition-transform"
+            style={{
+              height: "36px",
+              borderRadius: t.radiusMd,
+              backgroundColor: t.tileInactiveBg,
+              border: `1px solid ${t.borderDefault}`,
+            }}
+          >
+            <span style={{ fontFamily: t.fontFamily, fontSize: "13px", fontWeight: 700, color: t.textHeading }}>
+              {tr("settings.clearData.btn.clearMyData") || "Clear My Data"}
+            </span>
+          </button>
         </div>
-      </div>
 
-      {/* Actions */}
-      <div
-        className="flex gap-3"
-        style={{ padding: "8px 24px 24px 24px" }}
-      >
-        <button
-          onClick={onClose}
-          className="flex-1 flex items-center justify-center cursor-pointer active:scale-[0.96] transition-transform"
+        <div
+          onClick={onClearEverything}
+          className="flex-1 flex flex-col justify-between p-4 cursor-pointer active:scale-[0.98] transition-all hover:brightness-95"
           style={{
-            height: "48px",
             borderRadius: t.radiusLg,
-            backgroundColor: t.tileInactiveBg,
-            border: "none",
+            border: `1.5px solid ${DANGER_BORDER}`,
+            backgroundColor: DANGER_SUBTLE,
+            minHeight: "170px",
           }}
         >
-          <span
+          <div>
+            <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 700, color: DANGER, display: "block" }}>
+              {tr("settings.clearData.clearEverything.title") || "Clear Everything"}
+            </span>
+            <span style={{ fontFamily: t.fontFamily, fontSize: "11px", color: t.textMuted, marginTop: "6px", display: "block", lineHeight: "15px" }}>
+              {tr("settings.clearData.clearEverything.desc") || "Resets the device fully to factory defaults. Wipes all preferences, language setup, and PIN."}
+            </span>
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); onClearEverything(); }}
+            className="w-full flex items-center justify-center mt-4 cursor-pointer active:scale-95 transition-transform"
             style={{
-              fontFamily: t.fontFamily,
-              fontSize: "15px",
-              fontWeight: 700,
-              color: t.textHeading,
+              height: "36px",
+              borderRadius: t.radiusMd,
+              backgroundColor: DANGER,
+              border: "none",
+              boxShadow: `0 4px 12px ${DANGER_SUBTLE}`,
             }}
           >
-            {tr("general.cancel")}
-          </span>
-        </button>
-        <button
-          onClick={onConfirm}
-          className="flex-1 flex items-center justify-center cursor-pointer active:scale-[0.96] transition-transform"
-          style={{
-            height: "48px",
-            borderRadius: t.radiusLg,
-            backgroundColor: DANGER,
-            border: "none",
-            boxShadow: `0 4px 16px ${DANGER_SUBTLE}`,
-          }}
-        >
-          <span
-            style={{
-              fontFamily: t.fontFamily,
-              fontSize: "15px",
-              fontWeight: 700,
-              color: "#FFFFFF",
-            }}
-          >
-            {tr("settings.clearData")}
-          </span>
-        </button>
+            <span style={{ fontFamily: t.fontFamily, fontSize: "13px", fontWeight: 700, color: "#FFFFFF" }}>
+              {tr("settings.clearData.btn.clearEverything") || "Clear Everything"}
+            </span>
+          </button>
+        </div>
       </div>
     </CenteredDialog>
   );
@@ -1852,6 +1847,7 @@ export function SettingsPanel({
   const [showLangDialog, setShowLangDialog] = useState(false);
   const [showCareTeamDialog, setShowCareTeamDialog] = useState(false);
   const [showAccountDialog, setShowAccountDialog] = useState(false);
+  const [replayToast, setReplayToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (openAccountDirectly) {
@@ -2256,10 +2252,12 @@ export function SettingsPanel({
       {showClearConfirm && (
         <ClearDataDialog
           onClose={() => setShowClearConfirm(false)}
-          onConfirm={async () => {
+          onClearMyData={async () => {
             setShowClearConfirm(false);
-            // clearAllDataAndReload() handles logout implicitly by 
-            // wiping all auth state and reloading — no need to call logout()
+            await clearUserDataAndReload();
+          }}
+          onClearEverything={async () => {
+            setShowClearConfirm(false);
             await clearAllDataAndReload();
           }}
         />
@@ -2292,6 +2290,13 @@ export function SettingsPanel({
           role={activeCareRole} 
           onClose={() => setActiveCareRole(null)} 
         />
+      )}
+
+      {replayToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[10010] bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-sm font-semibold animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <Check size={18} className="text-emerald-400" />
+          <span>{replayToast}</span>
+        </div>
       )}
 
       <style>{`
