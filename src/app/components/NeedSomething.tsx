@@ -163,13 +163,13 @@ function deriveStatus(createdAt: number, now: number): StatusKey {
   return "delivered";
 }
 
+type Tab = "request" | "roomcare" | "report";
+
 interface NeedSomethingProps {
   onClose: () => void;
   /** When provided, opens directly to this tab (e.g. "mine" for My Requests) */
-  initialTab?: Tab;
+  initialTab?: Tab | "mine";
 }
-
-type Tab = "request" | "roomcare" | "report";
 
 export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
   const { theme, setLocale } = useTheme();
@@ -193,12 +193,12 @@ export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
   };
 
   /* ── View state ── */
-  const [tab, setTab] = useState<Tab>(initialTab || "request");
-  const [showRequestsOverlay, setShowRequestsOverlay] = useState(false);
+  const [tab, setTab] = useState<Tab>(initialTab && initialTab !== "mine" ? initialTab : "request");
+  const [showRequestsOverlay, setShowRequestsOverlay] = useState(initialTab === "mine");
   const [selected, setSelected] = useState<{ card: CardDef; kind: "request" | "report" | "roomcare" } | null>(null);
   const [note, setNote] = useState("");
   const [selectedChip, setSelectedChip] = useState<string | null>(null);
-  const [success, setSuccess] = useState<null | "request" | "report">(null);
+  const [success, setSuccess] = useState<null | "request" | "report" | "roomcare">(null);
 
   /* ── Persisted requests + time-derived status ── */
   const [requests, setRequests] = useState<NeedRequest[]>(() => {

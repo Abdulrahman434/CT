@@ -439,7 +439,7 @@ function BedsideScreen() {
   const [showCall, setShowCall] = useState(false);
   const [showFoodOrder, setShowFoodOrder] = useState(false);
   const [showNeedSomething, setShowNeedSomething] = useState(false);
-  const [needSomethingInitialTab, setNeedSomethingInitialTab] = useState<"request" | "report" | "mine" | undefined>(undefined);
+  const [needSomethingInitialTab, setNeedSomethingInitialTab] = useState<"request" | "roomcare" | "report" | "mine" | undefined>(undefined);
   const [foodOrderInitialView, setFoodOrderInitialView] = useState<"order" | "my-orders" | undefined>(undefined);
   const [activeCareRole, setActiveCareRole] = useState<"nurse" | "doctor" | null>(null);
   const [layoutVersion, setLayoutVersion] = useState<1 | 2 | 3>(1);
