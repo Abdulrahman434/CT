@@ -462,7 +462,7 @@ function SurveyCard({ square, contained, onOpen, onLongPress, isLocked }: { squa
   );
 }
 
-function ShortcutTile({ item, contained, onTap, onLongPress, isLocked }: { item: ShortcutItem; contained?: boolean; onTap: () => void; onLongPress: () => void; isLocked: boolean }) {
+function ShortcutTile({ item, contained, onTap, onLongPress, isLocked }: { item: ShortcutItem; contained?: boolean; onTap: (e?: React.MouseEvent<HTMLElement>) => void; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
@@ -476,7 +476,7 @@ function ShortcutTile({ item, contained, onTap, onLongPress, isLocked }: { item:
       onPointerDown={() => { handlers.onPointerDown(); setPressed(true); }}
       onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
       onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
-      onClick={() => handleClick(onTap)}
+      onClick={(e) => handleClick(() => onTap(e))}
       className="relative overflow-hidden flex flex-col items-center justify-center gap-2 transition-transform duration-150 cursor-pointer w-full h-full"
       style={{
         borderRadius: theme.radiusCard,
@@ -547,7 +547,7 @@ function ShortcutTile({ item, contained, onTap, onLongPress, isLocked }: { item:
 }
 
 /* ─── Shortcut Tile — compact version for right column ─── */
-function ShortcutTileCompact({ item, onTap, onLongPress, isLocked }: { item: ShortcutItem; onTap: () => void; onLongPress: () => void; isLocked: boolean }) {
+function ShortcutTileCompact({ item, onTap, onLongPress, isLocked }: { item: ShortcutItem; onTap: (e?: React.MouseEvent<HTMLElement>) => void; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
@@ -562,7 +562,7 @@ function ShortcutTileCompact({ item, onTap, onLongPress, isLocked }: { item: Sho
       onPointerDown={() => { handlers.onPointerDown(); setPressed(true); }}
       onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
       onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
-      onClick={() => handleClick(onTap)}
+      onClick={(e) => handleClick(() => onTap(e))}
       className="relative overflow-hidden flex flex-col items-center justify-center gap-2.5 transition-transform duration-150 cursor-pointer w-full h-full"
       style={{
         borderRadius: theme.radiusLg,
@@ -630,7 +630,7 @@ function ShortcutTileCompact({ item, onTap, onLongPress, isLocked }: { item: Sho
 }
 
 /* ─── Shortcut Tile — bare version for bottom row ─── */
-function ShortcutTileBare({ item, onTap, onLongPress, isLocked }: { item: ShortcutItem; onTap: () => void; onLongPress: () => void; isLocked: boolean }) {
+function ShortcutTileBare({ item, onTap, onLongPress, isLocked }: { item: ShortcutItem; onTap: (e?: React.MouseEvent<HTMLElement>) => void; onLongPress: () => void; isLocked: boolean }) {
   const { theme } = useTheme();
   const { t, fontFamily } = useLocale();
   const [pressed, setPressed] = useState(false);
@@ -645,7 +645,7 @@ function ShortcutTileBare({ item, onTap, onLongPress, isLocked }: { item: Shortc
       onPointerDown={() => { handlers.onPointerDown(); setPressed(true); }}
       onPointerUp={() => { handlers.onPointerUp(); setPressed(false); }}
       onPointerLeave={() => { handlers.onPointerLeave(); setPressed(false); }}
-      onClick={() => handleClick(onTap)}
+      onClick={(e) => handleClick(() => onTap(e))}
       className="relative overflow-hidden flex flex-col items-center justify-center gap-2 transition-transform duration-150 cursor-pointer w-full h-full"
       style={{
         borderRadius: theme.radiusXl,
