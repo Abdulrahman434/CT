@@ -1,3 +1,13 @@
+// Polyfill URL.parse for older browser environments (like older Android WebViews)
+if (typeof URL.parse !== "function") {
+  URL.parse = function (url: string | URL, base?: string | URL) {
+    try {
+      return new URL(url, base);
+    } catch {
+      return null;
+    }
+  };
+}
 
 import { createRoot } from "react-dom/client";
 import App from "./app/App.tsx";
