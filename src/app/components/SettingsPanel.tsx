@@ -11,6 +11,8 @@ import {
   nightLight as nightLightBridge,
   useAndroidEvent,
   useDeviceInfo,
+  UI_VERSION,
+  getNativeAppVersion,
 } from "../utils/androidBridge";
 import { useNurseStore } from "./NurseDataStore";
 import {
@@ -1753,6 +1755,12 @@ export function SettingsPanel({
   // Fallback: hardcoded
   const ipDisplay = deviceInfo?.ipAddress || "10.10.42.118";
 
+  // Version line: "App V<apk> - UI V<web>" on the kiosk, or
+  // "App VWeb - UI V<web>" in a plain browser (no native APK).
+  const nativeVer = isAndroidApp() ? getNativeAppVersion() : null;
+  const appVerLabel = isAndroidApp() ? `V${nativeVer ?? "?"}` : "VWeb";
+  const versionDisplay = `App ${appVerLabel} - UI V${UI_VERSION}`;
+
   // ── Brightness: init from bridge, sync via event ──
   const [brightnessVal, setBrightnessState] = useState(() =>
     Math.round(brightnessBridge.get() * 100)
@@ -2184,7 +2192,19 @@ export function SettingsPanel({
               {tr("settings.deviceId")}: {deviceIdDisplay}
             </span>
 
-            {/* Line 3: IP address */}
+            {/* Line 3: App + UI version (before IP) */}
+            <span
+              style={{
+                fontFamily: t.fontFamily,
+                fontSize: "11px",
+                fontWeight: 500,
+                color: t.textDisabled,
+              }}
+            >
+              {versionDisplay}
+            </span>
+
+            {/* Line 4: IP address */}
             <span
               style={{
                 fontFamily: t.fontFamily,

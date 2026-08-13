@@ -2,6 +2,7 @@ import { isAndroidApp } from "../utils/androidBridge";
 import { nurseActions } from "../components/NurseDataStore";
 import { clearUserData } from "./onboardingStore";
 import { getPackagesCache } from "./hospitalApi";
+import { clearImageCache } from "./imageProxy";
 
 /**
  * Performs a partial data wipe, clearing cookies, sessionStorage, caches,
@@ -11,6 +12,10 @@ import { getPackagesCache } from "./hospitalApi";
 export async function clearUserDataAndReload(): Promise<void> {
   // 1. Clear non-setup localStorage keys (keep device config and onboarding answers)
   clearUserData();
+
+  // 1.5 Free the in-memory proxied-image cache (base64 data-URIs of the
+  //     previous patient's posters/photos) so it doesn't carry over.
+  clearImageCache();
 
   // 2. Clear sessionStorage
   sessionStorage.clear();
@@ -70,6 +75,9 @@ export async function clearAllDataAndReload(): Promise<void> {
 
   // 1.1 Clear patient overrides
   nurseActions.clearPatientOverrides();
+
+  // 1.2 Free the in-memory proxied-image cache (base64 data-URIs).
+  clearImageCache();
 
   // 2. Clear sessionStorage
   sessionStorage.clear();

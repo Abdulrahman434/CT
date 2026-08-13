@@ -458,6 +458,23 @@ export function getDeviceInfo(): DeviceInfo | null {
   } catch { return null; }
 }
 
+/* ─── Versions ─── */
+
+/** The web (UI) version, injected from package.json at build time. */
+export const UI_VERSION: string =
+  typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "0.0.0";
+
+/** Native APK versionName (e.g. "1.2.23"), or null when running in a
+ *  plain browser (no Android bridge). */
+export function getNativeAppVersion(): string | null {
+  try {
+    const json = sys()?.getAppVersion?.();
+    if (!json) return null;
+    const o = JSON.parse(json);
+    return o?.versionName ? String(o.versionName) : null;
+  } catch { return null; }
+}
+
 /**
  * Reactive hook — reads device info once on mount.
  * Refreshes when the bridge becomes available.

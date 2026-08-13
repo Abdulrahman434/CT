@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getApiConfig } from "../lib/apiConfig";
+import { isAggressiveMemoryMode } from "../lib/deviceCapability";
 import * as pdfjsLib from "pdfjs-dist";
 import {
   X, ChevronUp, ChevronDown, ZoomIn, ZoomOut,
@@ -43,6 +44,29 @@ function getResolvablePdfUrl(source: string): string {
 // Component
 // ═══════════════════════════════════════════════════════════
 export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
+  // ═══════════════════════════════════════════════════════════
+  // Adaptive memory caps (low-RAM devices only). On high-RAM
+  // devices every value below is the original behavior, so nothing
+  // changes for them. These bound the PDF's PEAK bitmap memory —
+  // the cause of OOM kills on 2 GB kiosks when opening big files.
+  //   renderDpr      — canvas backing-store pixel ratio (DPR² memory)
+  //   maxCanvasPx    — hard ceiling on a single page's backing pixels
+  //   maxCached      — how many rendered page canvases to keep alive
+  //   prefetch       — pages rendered on each side of the viewport
+  // ═══════════════════════════════════════════════════════════
+  const aggressive = isAggressiveMemoryMode();
+  const caps = {
+    aggressive,
+    renderDpr: aggressive ? 1 : Math.min(DPR, 1.5),
+    maxCanvasPx: (aggressive ? 2 : 4) * 1_000_000, // 2 MP low / 4 MP high
+    maxCached: aggressive ? 4 : 12,
+    prefetch: aggressive ? 1 : 2,
+  };
+  const capsRef = useRef(caps);
+  capsRef.current = caps;
+  // On low-RAM, force single-page view (two-page doubles live canvases).
+  const forceSinglePage = aggressive;
+
   // ─── PDF state ───
   const [numPages, setNumPages] = useState(0);
   const [pageDims, setPageDims] = useState<PageDim[]>([]);
@@ -57,6 +81,9 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
   const [zoomMode, setZoomMode] = useState("fit-page");
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const [viewMode, setViewMode] = useState<"single" | "two">("single");
+  // Low-RAM devices are pinned to single-page (two-page doubles the number
+  // of simultaneously-rendered canvases). No effect on high-RAM devices.
+  const effectiveViewMode = forceSinglePage ? "single" : viewMode;
 
   // ─── UI state ───
   const [showSidebar, setShowSidebar] = useState(true);
@@ -111,6 +138,10 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
         const pg = await pdf.getPage(i);
         const vp = pg.getViewport({ scale: 1.0 });
         dims.push({ w: vp.width, h: vp.height });
+        // On low-RAM devices, release each page's parsed data right after
+        // we've read its size — the eager all-pages loop would otherwise
+        // retain every PDFPageProxy for the life of the document.
+        if (capsRef.current.aggressive) { try { pg.cleanup(); } catch {} }
       }
 
       setNumPages(pdf.numPages);
@@ -175,20 +206,36 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
       const page = await doc.getPage(pg);
       const vp = page.getViewport({ scale: s, rotation: r });
 
+      // Adaptive backing-store resolution. The CSS size stays exactly
+      // vp.width × vp.height (layout unchanged); only the bitmap pixel
+      // count is capped. Two limiters:
+      //   • renderDpr  — clamps the DPR² memory factor
+      //   • maxCanvasPx — hard ceiling so a single huge page can't blow
+      //     the heap; excess pages render slightly soft (CSS upscales)
+      //     instead of OOM-killing the app.
+      const { renderDpr, maxCanvasPx } = capsRef.current;
+      let backing = renderDpr;
+      const wanted = (vp.width * backing) * (vp.height * backing);
+      if (wanted > maxCanvasPx) {
+        backing *= Math.sqrt(maxCanvasPx / wanted);
+      }
+
       const canvas = document.createElement("canvas");
-      canvas.width = Math.floor(vp.width * DPR);
-      canvas.height = Math.floor(vp.height * DPR);
+      canvas.width = Math.max(1, Math.floor(vp.width * backing));
+      canvas.height = Math.max(1, Math.floor(vp.height * backing));
       canvas.style.width = `${Math.floor(vp.width)}px`;
       canvas.style.height = `${Math.floor(vp.height)}px`;
       canvas.style.display = "block";
 
       const ctx = canvas.getContext("2d")!;
-      ctx.scale(DPR, DPR);
+      ctx.scale(backing, backing);
 
       const rt = page.render({ canvasContext: ctx, viewport: vp });
       renderTasks.current.set(pg, rt);
       await rt.promise;
       renderTasks.current.delete(pg);
+      // Free pdf.js's per-page render scratch on low-RAM devices.
+      if (capsRef.current.aggressive) { try { page.cleanup(); } catch {} }
 
       // Swap into DOM (off-screen → on-screen)
       const wrapper = pageWrappers.current.get(pg);
@@ -299,15 +346,18 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
         else visiblePages.current.delete(p);
       });
 
-      // Render visible ± 2
+      // Render visible ± prefetch (±1 low-RAM, ±2 otherwise)
+      const pf = capsRef.current.prefetch;
       const toRender = new Set<number>();
       visiblePages.current.forEach(p => {
-        for (let i = Math.max(1, p - 2); i <= Math.min(numPages, p + 2); i++) toRender.add(i);
+        for (let i = Math.max(1, p - pf); i <= Math.min(numPages, p + pf); i++) toRender.add(i);
       });
       toRender.forEach(p => renderPageCanvas(p));
 
-      // Unrender distant (keep max 12 cached)
-      if (renderedKeys.current.size > 12) {
+      // Unrender distant (keep at most `maxCached` canvases alive: 4 on
+      // low-RAM, 12 otherwise). Combined with the per-canvas pixel cap,
+      // this bounds total PDF bitmap memory regardless of page size.
+      if (renderedKeys.current.size > capsRef.current.maxCached) {
         const all = new Set<number>();
         renderedKeys.current.forEach(k => all.add(parseInt(k)));
         all.forEach(p => {
@@ -326,7 +376,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
     }, 100);
 
     return () => { clearTimeout(attachTimer); obs.disconnect(); };
-  }, [numPages, scale, rotation, viewMode, renderPageCanvas]);
+  }, [numPages, scale, rotation, effectiveViewMode, renderPageCanvas]);
 
   // Scroll to saved page on first load
   useEffect(() => {
@@ -382,7 +432,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
   }, [numPages, pdfSource, scrollEnabled]);
 
   // Page step for arrow navigation (2 in two-page view)
-  const pageStep = viewMode === "two" ? 2 : 1;
+  const pageStep = effectiveViewMode === "two" ? 2 : 1;
 
   // ═══════════════════════════════════════════════════════════
   // Swipe-to-Navigate (when scrolling disabled)
@@ -483,27 +533,36 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
         const vp0 = page.getViewport({ scale: 1.0, rotation: rotationRef.current });
         const ts = THUMB_W / vp0.width;
         const vp = page.getViewport({ scale: ts, rotation: rotationRef.current });
+        const tDpr = capsRef.current.renderDpr;
         const canvas = document.createElement("canvas");
-        canvas.width = Math.floor(vp.width * DPR);
-        canvas.height = Math.floor(vp.height * DPR);
+        canvas.width = Math.floor(vp.width * tDpr);
+        canvas.height = Math.floor(vp.height * tDpr);
         canvas.style.width = "100%";
         canvas.style.height = "auto";
         canvas.style.display = "block";
         canvas.style.borderRadius = "2px";
         const ctx = canvas.getContext("2d")!;
-        ctx.scale(DPR, DPR);
+        ctx.scale(tDpr, tDpr);
         await page.render({ canvasContext: ctx, viewport: vp }).promise;
         wrapper.querySelectorAll("canvas").forEach((c: any) => c.remove());
         wrapper.appendChild(canvas);
         thumbRendered.current.add(pg);
+        if (capsRef.current.aggressive) { try { page.cleanup(); } catch {} }
       } catch {}
     };
 
     const obs = new IntersectionObserver((entries) => {
       entries.forEach(e => {
+        const pg = Number((e.target as HTMLElement).dataset.thumb);
         if (e.isIntersecting) {
-          const pg = Number((e.target as HTMLElement).dataset.thumb);
           if (pg) renderThumb(pg);
+        } else if (capsRef.current.aggressive && pg) {
+          // Low-RAM: drop off-screen thumbnail canvases so scrolling a
+          // long doc's sidebar doesn't accumulate hundreds of bitmaps.
+          // Re-rendered when scrolled back into view.
+          const w = thumbWrappers.current.get(pg);
+          if (w) w.querySelectorAll("canvas").forEach((c: any) => c.remove());
+          thumbRendered.current.delete(pg);
         }
       });
     }, { root: sidebarScrollRef.current, rootMargin: "200px 0px", threshold: 0.01 });
@@ -708,7 +767,7 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
             <p style={{ fontSize: 16, fontWeight: 600 }}>Failed to load PDF</p>
             <p style={{ fontSize: 13, opacity: .5, maxWidth: 300 }}>{error}</p>
           </div>
-        ) : viewMode === "two" ? (
+        ) : effectiveViewMode === "two" ? (
           /* Two-page view: pages side by side in rows */
           <div key="two" className="flex flex-col items-center" style={{ padding: "20px 16px", minHeight: "100%" }}>
             {Array.from({ length: Math.ceil(numPages / 2) }, (_, row) => {
@@ -857,11 +916,12 @@ export function PdfReaderModal({ onClose, pdfSource, title }: Props) {
           >
             {/* View mode */}
             <button className="vm-row" onClick={() => { setViewMode("single"); setShowViewMenu(false); }}>
-              <div style={{ width: 20 }}>{viewMode === "single" && <Check size={16} color="#4A9EFF" />}</div>
+              <div style={{ width: 20 }}>{effectiveViewMode === "single" && <Check size={16} color="#4A9EFF" />}</div>
               <FileText size={16} /><span>Single page view</span>
             </button>
-            <button className="vm-row" onClick={() => { setViewMode("two"); setShowViewMenu(false); }}>
-              <div style={{ width: 20 }}>{viewMode === "two" && <Check size={16} color="#4A9EFF" />}</div>
+            <button className="vm-row" {...(forceSinglePage ? { "data-disabled": true } : {})}
+              onClick={() => { if (forceSinglePage) return; setViewMode("two"); setShowViewMenu(false); }}>
+              <div style={{ width: 20 }}>{effectiveViewMode === "two" && <Check size={16} color="#4A9EFF" />}</div>
               <Columns size={16} /><span>Two page view</span>
             </button>
 

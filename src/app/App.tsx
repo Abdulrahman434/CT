@@ -612,7 +612,8 @@ function BedsideScreen() {
             missedAt: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
           };
           setActiveBroadcast(null);
-          setAcknowledgedBroadcasts(prev => [missedNotif, ...prev]);
+          setAcknowledgedBroadcasts(prev =>
+            [missedNotif, ...prev].slice(0, MAX_ACKNOWLEDGED_BROADCASTS));
         }
       }
 
@@ -634,7 +635,8 @@ function BedsideScreen() {
         });
 
         if (expired.length > 0) {
-          setAcknowledgedBroadcasts(prev => [...expired, ...prev]);
+          setAcknowledgedBroadcasts(prev =>
+            [...expired, ...prev].slice(0, MAX_ACKNOWLEDGED_BROADCASTS));
         }
 
         return active;
@@ -1003,7 +1005,8 @@ function BedsideScreen() {
         };
         // Schedule outside state updater
         setTimeout(() => {
-          setAcknowledgedBroadcasts((list) => [acknowledged, ...list]);
+          setAcknowledgedBroadcasts((list) =>
+            [acknowledged, ...list].slice(0, MAX_ACKNOWLEDGED_BROADCASTS));
           setNotifTrigger((p) => p + 1);
 
           // Handle CTA Actions if present and user clicked "read" (main CTA button)
@@ -2459,6 +2462,14 @@ function GlobalNfcListener() {
 
   return null;
 }
+
+// Cap the in-memory notification history so an unattended kiosk running
+// for days doesn't accumulate an unbounded array (re-scanned every 2s).
+// This is transient UI state (missed/expired broadcast popups), cleared on
+// checkout — NOT an audit/clinical/legal record, which live server-side.
+// Newest entries are kept (they are prepended), so the visible recent
+// history is unaffected in practice.
+const MAX_ACKNOWLEDGED_BROADCASTS = 50;
 
 export default function App() {
   return (

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ApiImage } from "./ApiImage";
+import { isAggressiveMemoryMode } from "../lib/deviceCapability";
 
 /**
  * AutoCarousel — fills its nearest `position: relative` parent completely.
@@ -27,6 +28,19 @@ export function AutoCarousel({
 }) {
   const [index, setIndex] = useState(0);
   const validImages = images?.filter(Boolean) ?? [];
+
+  // On low-RAM devices, only keep the previous/current/next layers mounted
+  // instead of decoding EVERY wallpaper in the group at once. The 3-wide
+  // window fully preserves the cross-fade (outgoing fades out, incoming was
+  // already mounted as "next"), so transition quality is unchanged. High-RAM
+  // devices mount all layers as before.
+  const aggressive = isAggressiveMemoryMode();
+  const isLayerMounted = (i: number, len: number): boolean => {
+    if (!aggressive) return true;
+    const prev = (index - 1 + len) % len;
+    const next = (index + 1) % len;
+    return i === index || i === prev || i === next;
+  };
 
   useEffect(() => {
     if (validImages.length <= 1) return;
@@ -78,23 +92,25 @@ export function AutoCarousel({
       }}
       onClick={onImageClick ? () => onImageClick(validImages[index]) : undefined}
     >
-      {validImages.map((img, i) => (
-        <ApiImage
-          key={i}
-          src={img}
-          alt=""
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit,
-            objectPosition,
-            opacity: i === index ? opacity : 0,
-            transition: "opacity 1s ease-in-out",
-          }}
-        />
-      ))}
+      {validImages.map((img, i) =>
+        isLayerMounted(i, validImages.length) ? (
+          <ApiImage
+            key={i}
+            src={img}
+            alt=""
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit,
+              objectPosition,
+              opacity: i === index ? opacity : 0,
+              transition: "opacity 1s ease-in-out",
+            }}
+          />
+        ) : null
+      )}
     </div>
   );
 }
