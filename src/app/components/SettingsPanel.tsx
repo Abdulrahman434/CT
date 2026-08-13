@@ -15,6 +15,7 @@ import {
   getNativeAppVersion,
 } from "../utils/androidBridge";
 import { useNurseStore } from "./NurseDataStore";
+import { getMemoryStats, subscribeMemoryStats } from "../lib/memoryPressure";
 import {
   X,
   Sun,
@@ -1761,6 +1762,10 @@ export function SettingsPanel({
   const appVerLabel = isAndroidApp() ? `V${nativeVer ?? "?"}` : "VWeb";
   const versionDisplay = `App ${appVerLabel} - UI V${UI_VERSION}`;
 
+  // Admin memory-reclaim indicator (updates when native fires memory-pressure)
+  const [memStats, setMemStats] = useState(getMemoryStats());
+  useEffect(() => subscribeMemoryStats(setMemStats), []);
+
   // ── Brightness: init from bridge, sync via event ──
   const [brightnessVal, setBrightnessState] = useState(() =>
     Math.round(brightnessBridge.get() * 100)
@@ -2228,6 +2233,25 @@ export function SettingsPanel({
                 }}
               >
                 {deviceInfo.manufacturer} {deviceInfo.model}
+              </span>
+            )}
+
+            {/* Line 5: Memory reclaim indicator (admin diagnostic; only
+                appears once a low-memory reclaim has actually happened) */}
+            {memStats.reclaims > 0 && (
+              <span
+                style={{
+                  fontFamily: t.fontFamily,
+                  fontSize: "10px",
+                  fontWeight: 400,
+                  color: t.textDisabled,
+                  opacity: 0.6,
+                }}
+              >
+                Memory optimized ×{memStats.reclaims}
+                {memStats.lastAvailMb !== null
+                  ? ` · ${memStats.lastAvailMb}MB free`
+                  : ""}
               </span>
             )}
           </div>

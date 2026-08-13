@@ -173,7 +173,8 @@ export type AndroidEventName =
   | "apk-install-progress"
   | "apk-install-success"
   | "apk-install-error"
-  | "kiosk-resumed";
+  | "kiosk-resumed"
+  | "memory-pressure";
 
 /* ─── Augment the global Window type ─── */
 declare global {

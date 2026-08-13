@@ -12,7 +12,11 @@ if (typeof URL.parse !== "function") {
 import { createRoot } from "react-dom/client";
 import App from "./app/App.tsx";
 import PatientServicesPreview from "./preview/PatientServicesPreview.tsx";
+import { installMemoryPressureHandler } from "./app/lib/memoryPressure";
 import "./styles/index.css";
+
+// Respond to native low-memory signals by dropping non-essential caches.
+installMemoryPressureHandler();
 
 // Back button logic moved to App.tsx for better control
 
