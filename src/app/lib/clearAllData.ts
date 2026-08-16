@@ -5,8 +5,32 @@ import { getPackagesCache } from "./hospitalApi";
 import { clearImageCache } from "./imageProxy";
 
 /**
+ * Authoritative wipe list for third-party patient apps (WhatsApp, Teams,
+ * etc.): every server-listed app with a packageName, plus a hardcoded
+ * fallback set. Shared by both clear flows below — previously only
+ * clearAllDataAndReload() used this, so "Clear My Data" silently never
+ * touched third-party apps despite its own UI promising it does.
+ */
+function patientAppPackages(): string[] {
+  const apiPkgs = getPackagesCache()
+    .filter((p: any) => p.packageName)
+    .map((p: any) => String(p.packageName).trim())
+    .filter(Boolean);
+  const known = [
+    "com.whatsapp", "com.google.android.youtube", "com.android.chrome",
+    "com.microsoft.teams", "com.google.android.apps.tachyon",
+    "com.instagram.android", "com.facebook.katana", "com.twitter.android",
+    "com.snapchat.android",
+  ];
+  return Array.from(new Set([...apiPkgs, ...known]));
+}
+
+/**
  * Performs a partial data wipe, clearing cookies, sessionStorage, caches,
  * indexedDB, and non-setup local storage keys (preserving user PIN and preferences).
+ * On Android, also wipes third-party patient apps (WhatsApp, Teams, etc.)
+ * and the native WebView cache — the PIN/setup keys and device config are
+ * untouched (that's the whole point of this being the "lighter" clear).
  * Reloads the page afterwards.
  */
 export async function clearUserDataAndReload(): Promise<void> {
@@ -58,12 +82,30 @@ export async function clearUserDataAndReload(): Promise<void> {
     console.warn("Cookie clear skipped:", e);
   }
 
-  // 6. Reload the page (browser fallback)
+  // 6. On Android — wipe third-party patient apps and the native WebView
+  //    cache/cookies too, matching what this button's own description
+  //    promises. Does NOT touch localStorage/setup (that's clearUserData's
+  //    job above) and does NOT call the native clearAllDataAndReload —
+  //    that one is the heavier "Clear Everything" flow with its own reload.
+  if (isAndroidApp()) {
+    try {
+      window.AndroidSystem?.clearAppData?.(JSON.stringify(patientAppPackages()));
+    } catch (e) {
+      console.warn("clearAppData skipped:", e);
+    }
+    try {
+      window.AndroidSystem?.clearSession?.();
+    } catch (e) {
+      console.warn("clearSession skipped:", e);
+    }
+  }
+
+  // 7. Reload the page (browser fallback)
   window.location.replace(window.location.href);
 }
 
 /**
- * Performs a full data wipe of all stored kiosk data, then 
+ * Performs a full data wipe of all stored kiosk data, then
  * reloads the page. On Android, also clears the native WebView 
  * cache, cookies, and app data before reloading.
  *
@@ -127,21 +169,7 @@ export async function clearAllDataAndReload(): Promise<void> {
   //    clear (WebView cache/cookies) which also triggers the reload.
   if (isAndroidApp()) {
     try {
-      // Authoritative source: every app the server lists with a package
-      // name (any type), so all configured patient apps get wiped — not
-      // just the ones flagged "APK".
-      const apiPkgs = getPackagesCache()
-        .filter((p: any) => p.packageName)
-        .map((p: any) => String(p.packageName).trim())
-        .filter(Boolean);
-      const known = [
-        "com.whatsapp", "com.google.android.youtube", "com.android.chrome",
-        "com.microsoft.teams", "com.google.android.apps.tachyon",
-        "com.instagram.android", "com.facebook.katana", "com.twitter.android",
-        "com.snapchat.android",
-      ];
-      const pkgs = Array.from(new Set([...apiPkgs, ...known]));
-      window.AndroidSystem?.clearAppData?.(JSON.stringify(pkgs));
+      window.AndroidSystem?.clearAppData?.(JSON.stringify(patientAppPackages()));
     } catch (e) {
       console.warn("clearAppData skipped:", e);
     }
