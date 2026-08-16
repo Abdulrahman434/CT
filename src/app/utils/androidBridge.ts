@@ -475,6 +475,50 @@ export function getNativeAppVersion(): string | null {
   } catch { return null; }
 }
 
+/* ─── Content delivery / hidden admin gate ───
+ * Everything here talks to native ContentMode. The admin code itself is
+ * NEVER stored here — verifyAdminCode() just forwards the typed value to
+ * native, which holds the real secret compiled into the APK. */
+
+export type ContentModeValue = "online" | "offline" | "noupdates";
+
+export interface ContentStatus {
+  mode: ContentModeValue;
+  provisioned: boolean;
+  baseUrl: string;
+  defaultBaseUrl: string;
+}
+
+export function verifyAdminCode(code: string): boolean {
+  try { return !!sys()?.verifyAdminCode?.(code); } catch { return false; }
+}
+
+export function getContentStatus(): ContentStatus | null {
+  try {
+    const json = sys()?.getContentStatus?.();
+    if (!json) return null;
+    return JSON.parse(json);
+  } catch { return null; }
+}
+
+export function setContentMode(mode: ContentModeValue): void {
+  try { sys()?.setContentMode?.(mode); } catch {}
+}
+
+export function setContentBaseUrl(url: string): void {
+  try { sys()?.setContentBaseUrl?.(url); } catch {}
+}
+
+export function resetContentBaseUrl(): void {
+  try { sys()?.resetContentBaseUrl?.(); } catch {}
+}
+
+/** Re-opens the native provisioning ("Online / Offline") dialog on demand
+ *  and clears the provisioned flag — the admin "reset first-run" action. */
+export function resetFirstRun(): void {
+  try { sys()?.resetFirstRun?.(); } catch {}
+}
+
 /**
  * Reactive hook — reads device info once on mount.
  * Refreshes when the bridge becomes available.

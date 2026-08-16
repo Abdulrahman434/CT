@@ -11,6 +11,7 @@ import { useLongPress } from "../lib/useLongPress";
 import { useNurseStore, nurseActions } from "./NurseDataStore";
 import { fetchPatientForDevice } from "../lib/hospitalApi";
 import { getDeviceInfo } from "../utils/androidBridge";
+import { AdminGate, useAdminGateTap } from "./AdminGate";
 
 // Removed hardcoded prayerTimes
 
@@ -86,6 +87,9 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
     window.location.reload();
   }, 1000);
 
+  // Hidden admin gate: tap anywhere on the top bar 4x within 2s.
+  const adminGate = useAdminGateTap();
+
   useEffect(() => {
     const fetchWeather = async () => {
       try {
@@ -133,6 +137,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
   return (
     <div
       className="grid shrink-0 w-full items-center"
+      onClickCapture={adminGate.registerTap}
       style={{
         height: "104px",
         backgroundColor: theme.surface,
@@ -142,6 +147,8 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
         gridTemplateColumns: "1fr auto 1fr",
       }}
     >
+      <AdminGate open={adminGate.armed} onClose={() => adminGate.setArmed(false)} />
+
       {/* Left: Logo — always left-aligned within its column */}
       <div className="flex items-center gap-4 h-full">
         <a 
