@@ -5,7 +5,7 @@ import { RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 import { useTheme, WEIGHT, TYPE_SCALE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { ConfirmDialog } from "./ConfirmDialog";
-import islamicBg from "../../assets/5fe21555a4f83b05fa771caa690aaf6f27d2f6ec.png";
+import islamicBg from "../../assets/5fe21555a4f83b05fa771caa690aaf6f27d2f6ec.jpg";
 import { getPrayerStatus, PRAYER_NAMES, formatPrayerTime } from "../utils/prayerUtils";
 import { Prayer } from "adhan";
 
