@@ -1140,11 +1140,11 @@ function getCategories(theme: any, locale: string = "en", t: any): Record<string
       apps: theme.id === "careinn"
         ? /* ── CareInn product materials ── */
           [
-            { id: "ci-edu-careinn15",  name: "CareInn15",    pdf: "/pdfs/careinn/CareInn15.pdf" },
-            { id: "ci-edu-caretv",     name: "CareTV",       pdf: "/pdfs/careinn/CareTV.pdf" },
-            { id: "ci-edu-caresuite",  name: "CareSuite",    pdf: "/pdfs/careinn/CareSuite.pdf" },
-            { id: "ci-edu-careconnect",name: "CareConnect",  pdf: "/pdfs/careinn/CareConnect.pdf" },
-            { id: "ci-edu-caresign",   name: "CareSign",     pdf: "/pdfs/careinn/CareSign.pdf" },
+            { id: "ci-edu-careinn15",  name: "CareInn15",    pdf: "/pdfs/CareInn15.pdf" },
+            { id: "ci-edu-caretv",     name: "CareTV",       pdf: "/pdfs/CareTV.pdf" },
+            { id: "ci-edu-caresuite",  name: "CareSuite",    pdf: "/pdfs/CareSuite.pdf" },
+            { id: "ci-edu-careconnect",name: "CareConnect",  pdf: "/pdfs/CareConnect.pdf" },
+            { id: "ci-edu-caresign",   name: "CareSign",     pdf: "/pdfs/CareSign.pdf" },
           ].map((item) => ({
             id: item.id,
             name: item.name,
