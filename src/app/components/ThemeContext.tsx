@@ -533,34 +533,34 @@ export function primaryRgba(theme: ThemeConfig, alpha: number): string {
  * BUILT-IN CONFIGS — the default hospital(s) that ship with the system
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-import logoImage from "../../assets/28090400fb8eb3cdd61dbc2fa0cb3ac1b1f479a1.png";
-import hospitalImg from "../../assets/6b12d49b8fdc59d4a31417b20fc4c1d9751cd530.png";
+import logoImage from "../../assets/28090400fb8eb3cdd61dbc2fa0cb3ac1b1f479a1.webp";
+import hospitalImg from "../../assets/6b12d49b8fdc59d4a31417b20fc4c1d9751cd530.webp";
 
-import burjeelLogo from "../../assets/c8626cd3ed1ce90e9b3bab4a5f97a7315203f204.png";
-import burjeelHero from "../../assets/6c870dc0bd960be4275cdbc07d5394bb50ec781e.png";
-import slhLogo from "../../assets/000bda4db783fe15cbd489d69579eb6e0e831a8a.png";
-import slhHero from "../../assets/e956f98cfa0d9f06f0dd2befe535fed91ed51d1e.png";
+import burjeelLogo from "../../assets/c8626cd3ed1ce90e9b3bab4a5f97a7315203f204.webp";
+import burjeelHero from "../../assets/6c870dc0bd960be4275cdbc07d5394bb50ec781e.webp";
+import slhLogo from "../../assets/000bda4db783fe15cbd489d69579eb6e0e831a8a.webp";
+import slhHero from "../../assets/e956f98cfa0d9f06f0dd2befe535fed91ed51d1e.webp";
 
-import dallahLogo from "../../assets/DallahLogo.png";
-import dallahHero from "../../assets/dallah-hero-welcome.jpg";
+import dallahLogo from "../../assets/DallahLogo.webp";
+import dallahHero from "../../assets/dallah-hero-welcome.webp";
 
-import caremedLogo from "../../assets/CareMedicalLogo.png";
-import caremedHero from "../../assets/CareMedicalHospital.jpeg";
+import caremedLogo from "../../assets/CareMedicalLogo.webp";
+import caremedHero from "../../assets/CareMedicalHospital.webp";
 
-import imcLogo from "../../assets/imclogo.png";
-import imcHero from "../../assets/IMC-e1556123324461.jpg";
+import imcLogo from "../../assets/imclogo.webp";
+import imcHero from "../../assets/IMC-e1556123324461.webp";
 
-import careinnLogo from "../../assets/careinn-hospital-logo.png";
-import careinnHero from "../../assets/careinn-hospital-hero.jpg";
+import careinnLogo from "../../assets/careinn-hospital-logo.webp";
+import careinnHero from "../../assets/careinn-hospital-hero.webp";
 
-import primeLogo from "../../assets/prime-hospital-logo.png";
-import primeHero from "../../assets/prime-hospital-hero.jpg";
+import primeLogo from "../../assets/prime-hospital-logo.webp";
+import primeHero from "../../assets/prime-hospital-hero.webp";
 
-import kauhLogo from "../../assets/kauh-logo.png";
-import kauhHero from "../../assets/kauh-hero.jpg";
+import kauhLogo from "../../assets/kauh-logo.webp";
+import kauhHero from "../../assets/kauh-hero.webp";
 
-import andalusiaLogo from "../../assets/Andalusia.jpg";
-import andalusiaHero from "../../assets/andalusia-hero.jpg";
+import andalusiaLogo from "../../assets/Andalusia.webp";
+import andalusiaHero from "../../assets/andalusia-hero.webp";
 
 /* Canonical built-in asset URLs — used as fallbacks for DSFH */
 export const DSFH_LOGO = logoImage;

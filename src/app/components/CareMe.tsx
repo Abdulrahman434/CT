@@ -57,13 +57,13 @@ import { InternalPageHeader } from "./InternalPageHeader";
 import svgPaths from "../../imports/svg-ca68x68c4i";
 
 /* ─── Assets ─── */
-import imgNuraAlRashid from "@/assets/a7907a91bbdb1ced8824b3333ece109b3cd92b62.png";
-import imgDrOmarAbdulhalim from "@/assets/2318867853acb678569427c88b9e543e22bd46b6.png";
-import imgBabyCam from "@/assets/68ba9ba13c5aa1cc7d2af5bee7bc955298b612dd.png";
-import imgDallahBabyCam from "@/assets/dallah-baby-cam.jpg";
-import imgCareMedBabyCam from "@/assets/CareMedicalHospital.jpeg";
-import imgCareInnBabyCam from "@/assets/careinn-baby-cam.jpg";
-import imgFakeehBabyCam from "@/assets/fakeeh-baby-cam.jpg";
+import imgNuraAlRashid from "@/assets/a7907a91bbdb1ced8824b3333ece109b3cd92b62.webp";
+import imgDrOmarAbdulhalim from "@/assets/2318867853acb678569427c88b9e543e22bd46b6.webp";
+import imgBabyCam from "@/assets/68ba9ba13c5aa1cc7d2af5bee7bc955298b612dd.webp";
+import imgDallahBabyCam from "@/assets/dallah-baby-cam.webp";
+import imgCareMedBabyCam from "@/assets/CareMedicalHospital.webp";
+import imgCareInnBabyCam from "@/assets/careinn-baby-cam.webp";
+import imgFakeehBabyCam from "@/assets/fakeeh-baby-cam.webp";
 
 const careTeam = [
   { nameKey: "care.team.name.nura", roleKey: "care.team.primaryNurse", specialtyKey: "care.team.specialty.icu", img: imgNuraAlRashid },

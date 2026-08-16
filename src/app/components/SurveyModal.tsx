@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, MessageSquareHeart, FileText, AlertTriangle, Heart, Mic, CheckCircle2, Play, Pause, Square, RotateCcw, Trash2 } from "lucide-react";
 import { InternalPageHeader } from "./InternalPageHeader";
 import { ApiImage } from "./ApiImage";
-import thankYouImage from "../../assets/23db5e568918c9a319b272caa7a9e865d4fbd418.png";
+import thankYouImage from "../../assets/23db5e568918c9a319b272caa7a9e865d4fbd418.webp";
 
 /* ═══════════════════════════════════════════════════════════════
  * REAL VOICE RECORDER (uses MediaRecorder API)

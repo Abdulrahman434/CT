@@ -27,43 +27,43 @@ import { useRipple } from "./useRipple";
 import { InternalPageHeader } from "./InternalPageHeader";
 import { PdfReaderModal } from "./PdfReaderModal";
 import { apps, isAndroidApp, KNOWN_APPS } from "../utils/androidBridge";
-import edgeLogo from "../../assets/edge_logo.png";
-import saudiGazetteLogo from "../../assets/5a0099c6364ba06a603226f636904e61c8e17c07.png";
-import iptvIcon from "../../assets/e66dff686b2ee163965b5d28c8ab0d919a5e5307.png";
-import mbcIcon from "../../assets/c22249e2a0a3b6e2cac9fa73410c844f9f2ec1b4.png";
-import primeVideoIcon from "../../assets/c217a833e98f558d1368435c8c539345a42deab7.png";
-import netflixIcon from "../../assets/d894e26ef6abdd4628417d2b8281a2fa7079fafc.png";
-import youtubeIcon from "../../assets/910e8eb5a121f2bbb217c5d1ed740eeb1ce01ca5.png";
-import tiktokIcon from "../../assets/aa4f4e114ebe8e16ecf4b9d410598ba1e0a6fa1d.png";
-import snapchatIcon from "../../assets/c9af1b56faf040fa2dbba51c03e93969c87a108d.png";
-import facebookIcon from "../../assets/f10a380bb7655da2acb500aa31fc61aac96e9fce.png";
-import whatsappIcon from "../../assets/7583d2073e01dcd488456b25bc53248baf8547e8.png";
-import instagramIcon from "../../assets/1c2cbfafda976606c6fd3b030d9cafef43d07231.png";
-import chessIcon from "../../assets/e842d274df3c9994f31a5245916214a9d7bc72da.png";
-import candyCrushIcon from "../../assets/0a01385242fd43a92d43edec03bb3de4a4552b30.png";
-import angryBirdsIcon from "../../assets/f7026db1efe4c228ccbdaf12908efedf4f988275.png";
-import sonicDashIcon from "../../assets/6e7f22c2975760cd651074aadd9a19d7ffdcb36f.png";
-import subwaySurfersIcon from "../../assets/43c1260f8ca21114c22139de67424c286d7c4135.png";
-import sudokuIcon from "../../assets/312c1847bc594650fbe0506051af178e543edc49.png";
-import teamsIcon from "../../assets/1ac7892907f2161179b2b2d788a241b1b3d30e2c.png";
-import webexIcon from "../../assets/03dce872d8615b21848e1740340ee99e8e5bc9cb.png";
-import skypeIcon from "../../assets/5ad00d42b296a682caa3df83f3f93486ef273539.png";
-import zoomIcon from "../../assets/12632c3f9bb8c4baff556d00098b0a9ee6fcca9e.png";
-import meetIcon from "../../assets/9203106d98b7787c9ddb7620fde397d13b7d3929.png";
-import calculatorIcon from "../../assets/8d73fe9115f68197e837995a5535d0a5fb689492.png";
-import translatorIcon from "../../assets/0ffb58a0f7bbdbc1f2367e04b7accc575718f6d4.png";
-import mirrorIcon from "../../assets/2ff193a53a2123c565b49a392e2b4e27a9e822b6.png";
-import cardTalkIcon from "../../assets/b944498d81e395966a92e71f6b86456f7e5fd079.png";
-import alarmIcon from "../../assets/81d24475da6251f85e5b128b51774b1407fffbfd.png";
-import chatgptIcon from "../../assets/785f579adee0f9c706b04310062e9e54f8072f4c.png";
-import okazIcon from "../../assets/20e37f191525e59a0838912f6c96e7f68bacc510.png";
-import quranBookIcon from "../../assets/5303963df7d14bbca33ccffa43f982a464344809.png";
-import hadeethIcon from "../../assets/302f90f5f89039ae9d4a848ddc927a305177dab3.png";
-import rukyaIcon from "../../assets/33c7eb6cff8cb073385aca25c64b118a0d631e9d.png";
-import laTahzanIcon from "../../assets/d02bcddd68e867c29b228517ee3d625a69373dda.png";
-import janeEyreIcon from "../../assets/bc7024280eee30d0d9c7a8e1f5f9828be0781d11.png";
-import harryPotterIcon from "../../assets/c502247a276d2cebaac1f14a6f97e58877c0aaa2.png";
-import theSecretIcon from "../../assets/0020d69d075db3cf35e4a115636a15027a1101fe.png";
+import edgeLogo from "../../assets/edge_logo.webp";
+import saudiGazetteLogo from "../../assets/5a0099c6364ba06a603226f636904e61c8e17c07.webp";
+import iptvIcon from "../../assets/e66dff686b2ee163965b5d28c8ab0d919a5e5307.webp";
+import mbcIcon from "../../assets/c22249e2a0a3b6e2cac9fa73410c844f9f2ec1b4.webp";
+import primeVideoIcon from "../../assets/c217a833e98f558d1368435c8c539345a42deab7.webp";
+import netflixIcon from "../../assets/d894e26ef6abdd4628417d2b8281a2fa7079fafc.webp";
+import youtubeIcon from "../../assets/910e8eb5a121f2bbb217c5d1ed740eeb1ce01ca5.webp";
+import tiktokIcon from "../../assets/aa4f4e114ebe8e16ecf4b9d410598ba1e0a6fa1d.webp";
+import snapchatIcon from "../../assets/c9af1b56faf040fa2dbba51c03e93969c87a108d.webp";
+import facebookIcon from "../../assets/f10a380bb7655da2acb500aa31fc61aac96e9fce.webp";
+import whatsappIcon from "../../assets/7583d2073e01dcd488456b25bc53248baf8547e8.webp";
+import instagramIcon from "../../assets/1c2cbfafda976606c6fd3b030d9cafef43d07231.webp";
+import chessIcon from "../../assets/e842d274df3c9994f31a5245916214a9d7bc72da.webp";
+import candyCrushIcon from "../../assets/0a01385242fd43a92d43edec03bb3de4a4552b30.webp";
+import angryBirdsIcon from "../../assets/f7026db1efe4c228ccbdaf12908efedf4f988275.webp";
+import sonicDashIcon from "../../assets/6e7f22c2975760cd651074aadd9a19d7ffdcb36f.webp";
+import subwaySurfersIcon from "../../assets/43c1260f8ca21114c22139de67424c286d7c4135.webp";
+import sudokuIcon from "../../assets/312c1847bc594650fbe0506051af178e543edc49.webp";
+import teamsIcon from "../../assets/1ac7892907f2161179b2b2d788a241b1b3d30e2c.webp";
+import webexIcon from "../../assets/03dce872d8615b21848e1740340ee99e8e5bc9cb.webp";
+import skypeIcon from "../../assets/5ad00d42b296a682caa3df83f3f93486ef273539.webp";
+import zoomIcon from "../../assets/12632c3f9bb8c4baff556d00098b0a9ee6fcca9e.webp";
+import meetIcon from "../../assets/9203106d98b7787c9ddb7620fde397d13b7d3929.webp";
+import calculatorIcon from "../../assets/8d73fe9115f68197e837995a5535d0a5fb689492.webp";
+import translatorIcon from "../../assets/0ffb58a0f7bbdbc1f2367e04b7accc575718f6d4.webp";
+import mirrorIcon from "../../assets/2ff193a53a2123c565b49a392e2b4e27a9e822b6.webp";
+import cardTalkIcon from "../../assets/b944498d81e395966a92e71f6b86456f7e5fd079.webp";
+import alarmIcon from "../../assets/81d24475da6251f85e5b128b51774b1407fffbfd.webp";
+import chatgptIcon from "../../assets/785f579adee0f9c706b04310062e9e54f8072f4c.webp";
+import okazIcon from "../../assets/20e37f191525e59a0838912f6c96e7f68bacc510.webp";
+import quranBookIcon from "../../assets/5303963df7d14bbca33ccffa43f982a464344809.webp";
+import hadeethIcon from "../../assets/302f90f5f89039ae9d4a848ddc927a305177dab3.webp";
+import rukyaIcon from "../../assets/33c7eb6cff8cb073385aca25c64b118a0d631e9d.webp";
+import laTahzanIcon from "../../assets/d02bcddd68e867c29b228517ee3d625a69373dda.webp";
+import janeEyreIcon from "../../assets/bc7024280eee30d0d9c7a8e1f5f9828be0781d11.webp";
+import harryPotterIcon from "../../assets/c502247a276d2cebaac1f14a6f97e58877c0aaa2.webp";
+import theSecretIcon from "../../assets/0020d69d075db3cf35e4a115636a15027a1101fe.webp";
 
 // PDF Assets are now served from the public/pdfs/ directory
 
@@ -1048,11 +1048,11 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
       apps: theme.id === "careinn"
         ? /* ── CareInn product materials ── */
           [
-            { id: "ci-edu-careinn15",  name: "CareInn15",    pdf: "/pdfs/careinn/CareInn15.pdf" },
-            { id: "ci-edu-caretv",     name: "CareTV",       pdf: "/pdfs/careinn/CareTV.pdf" },
-            { id: "ci-edu-caresuite",  name: "CareSuite",    pdf: "/pdfs/careinn/CareSuite.pdf" },
-            { id: "ci-edu-careconnect",name: "CareConnect",  pdf: "/pdfs/careinn/CareConnect.pdf" },
-            { id: "ci-edu-caresign",   name: "CareSign",     pdf: "/pdfs/careinn/CareSign.pdf" },
+            { id: "ci-edu-careinn15",  name: "CareInn15",    pdf: "/pdfs/CareInn15.pdf" },
+            { id: "ci-edu-caretv",     name: "CareTV",       pdf: "/pdfs/CareTV.pdf" },
+            { id: "ci-edu-caresuite",  name: "CareSuite",    pdf: "/pdfs/CareSuite.pdf" },
+            { id: "ci-edu-careconnect",name: "CareConnect",  pdf: "/pdfs/CareConnect.pdf" },
+            { id: "ci-edu-caresign",   name: "CareSign",     pdf: "/pdfs/CareSign.pdf" },
           ].map((item) => ({
             id: item.id,
             name: item.name,
