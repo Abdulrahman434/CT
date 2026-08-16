@@ -82,21 +82,25 @@ export async function clearUserDataAndReload(): Promise<void> {
     console.warn("Cookie clear skipped:", e);
   }
 
-  // 6. On Android — wipe third-party patient apps and the native WebView
-  //    cache/cookies too, matching what this button's own description
-  //    promises. Does NOT touch localStorage/setup (that's clearUserData's
-  //    job above) and does NOT call the native clearAllDataAndReload —
-  //    that one is the heavier "Clear Everything" flow with its own reload.
+  // 6. On Android — wipe third-party patient apps (WhatsApp, Chrome,
+  //    Teams, etc.), matching what this button's own description promises:
+  //    "Clears third-party apps... your preferences and PIN remain safe."
+  //
+  //    Deliberately does NOT call AndroidSystem.clearSession() — that
+  //    method calls WebStorage.deleteAllData(), which wipes ALL WebView
+  //    localStorage at the native level, INCLUDING the SETUP/DEVICE keys
+  //    (PIN, device login, onboarding) that clearUserData() above just
+  //    surgically preserved. That combination was shipped briefly and
+  //    caused "Clear My Data" to kick the patient back to the login
+  //    screen — the opposite of what this button is supposed to do. The
+  //    JS-side steps above (sessionStorage/IndexedDB/Cache Storage API/
+  //    document.cookie) already cover CareInn's own "browser cache"
+  //    without touching localStorage, so nothing native is needed here.
   if (isAndroidApp()) {
     try {
       window.AndroidSystem?.clearAppData?.(JSON.stringify(patientAppPackages()));
     } catch (e) {
       console.warn("clearAppData skipped:", e);
-    }
-    try {
-      window.AndroidSystem?.clearSession?.();
-    } catch (e) {
-      console.warn("clearSession skipped:", e);
     }
   }
 
