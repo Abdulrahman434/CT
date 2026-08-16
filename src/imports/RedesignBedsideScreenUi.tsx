@@ -1,6 +1,6 @@
 import svgPaths from "./svg-encvr0znwi";
-import imgImg from "../assets/263ec53fbf8500b933f44fc6383900b86f59ef6a.webp";
-import imgImageWithFallback from "../assets/92d6d64f0efdc5041ab6e4803a2afb97fcfec377.webp";
+import imgImg from "../assets/263ec53fbf8500b933f44fc6383900b86f59ef6a.png";
+import imgImageWithFallback from "../assets/92d6d64f0efdc5041ab6e4803a2afb97fcfec377.png";
 
 function Container1() {
   return <div className="h-[11.514px] shrink-0 w-[1579px]" data-name="Container" />;

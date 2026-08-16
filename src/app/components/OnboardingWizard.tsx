@@ -14,13 +14,13 @@ import { MyPreferencesDialog } from "./MyAccountDialog";
 import { BluetoothDialog } from "./SettingsPanel";
 import { bluetooth as bluetoothBridge, isAndroidApp } from "../utils/androidBridge";
 
-import imgDataStorage from "../../assets/data storage.webp";
-import imgDarkLightMode from "../../assets/Dark and light mode.webp";
+import imgDataStorage from "../../assets/data storage.jpg";
+import imgDarkLightMode from "../../assets/Dark and light mode.jpg";
 import imgLockAppPages from "../../assets/lock app pages..jpg";
 import imgPrayerTimesPage from "../../assets/prayer times page.jpg";
 import imgWelcomeImage from "../../assets/Welcome Image.jpg";
-import imgLanguage from "../../assets/language.webp";
-import imgNotificationSet from "../../assets/notificationset.webp";
+import imgLanguage from "../../assets/language.jpg";
+import imgNotificationSet from "../../assets/notificationset.jpg";
 import imgMosque from "../../assets/b51acb5e2ec4a2c930572c53103b020b12e76ee2.png";
 
 const STEP_BACKGROUNDS: Record<string, string> = {

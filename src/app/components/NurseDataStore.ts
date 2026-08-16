@@ -236,9 +236,9 @@ export interface NurseStoreState {
  * ═══════════════════════════════════════════════════════════════ */
 
 // Import paths for team member images (same as CareMe.tsx)
-import imgNura from "@/assets/a7907a91bbdb1ced8824b3333ece109b3cd92b62.webp";
-import imgOmar from "@/assets/2318867853acb678569427c88b9e543e22bd46b6.webp";
-import imgBabyCam from "@/assets/68ba9ba13c5aa1cc7d2af5bee7bc955298b612dd.webp";
+import imgNura from "@/assets/a7907a91bbdb1ced8824b3333ece109b3cd92b62.png";
+import imgOmar from "@/assets/2318867853acb678569427c88b9e543e22bd46b6.png";
+import imgBabyCam from "@/assets/68ba9ba13c5aa1cc7d2af5bee7bc955298b612dd.png";
 
 function createDefaultState(): NurseStoreState {
   const now = new Date();

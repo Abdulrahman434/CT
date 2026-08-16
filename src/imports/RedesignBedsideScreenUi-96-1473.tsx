@@ -1,12 +1,12 @@
 import svgPaths from "./svg-78mua38w1m";
-import imgImageFakeehCareGroup from "../assets/7b9b440667ca2ce8678111ec37e1fb104ae88026.webp";
-import imgImage from "../assets/6b12d49b8fdc59d4a31417b20fc4c1d9751cd530.webp";
-import imgImage1 from "../assets/b7a2f2daf31fe397e61a8c8c5318a86dfe13b36d.webp";
-import imgImageWhatsApp from "../assets/7583d2073e01dcd488456b25bc53248baf8547e8.webp";
-import imgImageQuran from "../assets/5303963df7d14bbca33ccffa43f982a464344809.webp";
-import imgImageMirror from "../assets/0ab7565691ddb8401a21da44af1864e8f4058536.webp";
-import imgImagePodcast from "../assets/5513479d879a8c3fcdd1f6832dd30ce350c81789.webp";
-import imgImageFakeehCareDna from "../assets/7d25bcb72cca7f6efa0a0c3b850e8605d6d73401.webp";
+import imgImageFakeehCareGroup from "../assets/7b9b440667ca2ce8678111ec37e1fb104ae88026.png";
+import imgImage from "../assets/6b12d49b8fdc59d4a31417b20fc4c1d9751cd530.png";
+import imgImage1 from "../assets/b7a2f2daf31fe397e61a8c8c5318a86dfe13b36d.png";
+import imgImageWhatsApp from "../assets/7583d2073e01dcd488456b25bc53248baf8547e8.png";
+import imgImageQuran from "../assets/5303963df7d14bbca33ccffa43f982a464344809.png";
+import imgImageMirror from "../assets/0ab7565691ddb8401a21da44af1864e8f4058536.png";
+import imgImagePodcast from "../assets/5513479d879a8c3fcdd1f6832dd30ce350c81789.png";
+import imgImageFakeehCareDna from "../assets/7d25bcb72cca7f6efa0a0c3b850e8605d6d73401.png";
 import { imgVector, imgVector1, imgVector2, imgGroup } from "./svg-6d9cz";
 
 function ImageFakeehCareGroup() {

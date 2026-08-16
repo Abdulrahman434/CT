@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import hardwareMockup from "../../assets/2d721164145236877d6989e711cd07b18edfdba1.webp";
+import hardwareMockup from "../../assets/2d721164145236877d6989e711cd07b18edfdba1.png";
 
 /**
  * Full-screen modal showing the current bedside UI rendered inside

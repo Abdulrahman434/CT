@@ -1,8 +1,8 @@
 import svgPaths from "./svg-ca68x68c4i";
-import imgDrSolimanFakeehLogoTransparent1 from "../assets/7b9b440667ca2ce8678111ec37e1fb104ae88026.webp";
-import imgFakeehHospital from "../assets/f88a0dd1d15d773f44791379f2a3d4d00b412445.webp";
-import imgNuraAlRashid from "../assets/a7907a91bbdb1ced8824b3333ece109b3cd92b62.webp";
-import imgDrOmarAbdulhalim from "../assets/2318867853acb678569427c88b9e543e22bd46b6.webp";
+import imgDrSolimanFakeehLogoTransparent1 from "../assets/7b9b440667ca2ce8678111ec37e1fb104ae88026.png";
+import imgFakeehHospital from "../assets/f88a0dd1d15d773f44791379f2a3d4d00b412445.png";
+import imgNuraAlRashid from "../assets/a7907a91bbdb1ced8824b3333ece109b3cd92b62.png";
+import imgDrOmarAbdulhalim from "../assets/2318867853acb678569427c88b9e543e22bd46b6.png";
 
 function Group() {
   return (
