@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ApiImage } from "./ApiImage";
 import { motion, AnimatePresence } from "motion/react";
-import { RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
+import { RotateCcw, ChevronDown, ChevronUp, X } from "lucide-react";
 import { useTheme, WEIGHT, TYPE_SCALE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -617,6 +617,32 @@ export function TasbihScreenSaver({ onClose }: TasbihScreenSaverProps) {
           filter: pal.bgImgBrightness,
         }}
       />
+
+      {/* Visible exit button — a normal tap only counts a bead (the
+          long-press/swipe gestures below are shortcuts, not the only way
+          out). Without an obvious tap target, anyone unfamiliar with the
+          gesture reads this as the kiosk being stuck/frozen. */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        aria-label="Exit"
+        className="absolute active:scale-95 transition-transform"
+        style={{
+          top: 20,
+          right: 20,
+          zIndex: 20,
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
+          border: "none",
+          cursor: "pointer",
+        }}
+      >
+        <X size={22} color={darkMode ? "#fff" : "#1a1a1a"} strokeWidth={2.5} />
+      </button>
 
       {/* Radial glow — only in dark mode */}
       {darkMode && (
