@@ -636,10 +636,15 @@ export function TasbihScreenSaver({ onClose }: TasbihScreenSaverProps) {
         />
       )}
 
-      {/* ── Slow-rotating geometric accents ── */}
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 180, repeat: Infinity, ease: "linear" }}
+      {/* ── Geometric accents ──
+       * Previously an infinite rotate (motion.div animate={{rotate:360}},
+       * repeat: Infinity) — that runs the compositor every frame for as
+       * long as this screensaver is mounted, which on this kiosk hardware
+       * can be hours. Combined with the full-screen filtered background
+       * image, that was a permanent, unbounded tile-raster cost the RK3288
+       * GPU can't sustain — the likely source of the persistent lag on
+       * this screen. Static now; purely decorative, not worth the cost. */}
+      <div
         className="absolute pointer-events-none"
         style={{ top: "8%", right: "6%", opacity: darkMode ? 0.06 : 0.1 }}
       >
@@ -651,10 +656,8 @@ export function TasbihScreenSaver({ onClose }: TasbihScreenSaverProps) {
             <line key={d} x1="120" y1="20" x2="120" y2="220" stroke={pal.glow} strokeWidth="0.5" transform={`rotate(${d} 120 120)`} />
           ))}
         </svg>
-      </motion.div>
-      <motion.div
-        animate={{ rotate: -360 }}
-        transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
+      </div>
+      <div
         className="absolute pointer-events-none"
         style={{ bottom: "12%", left: "5%", opacity: darkMode ? 0.05 : 0.08 }}
       >
@@ -663,7 +666,7 @@ export function TasbihScreenSaver({ onClose }: TasbihScreenSaverProps) {
           <polygon points="100,35 165,100 100,165 35,100" fill="none" stroke={pal.glow} strokeWidth="0.5" />
           <polygon points="100,60 140,100 100,140 60,100" fill="none" stroke={pal.glow} strokeWidth="0.5" />
         </svg>
-      </motion.div>
+      </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
        * MAIN CENTERED COLUMN: Title → Azkar → Counter → Actions
