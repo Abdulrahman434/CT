@@ -412,7 +412,17 @@ export function TasbihScreenSaver({ onClose }: TasbihScreenSaverProps) {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), 1000);
+    // Same fix as TopBar: display only shows HH:MM/date, so avoid a full
+    // screensaver re-render every second — only commit when the minute
+    // rolls over.
+    const interval = setInterval(() => {
+      const next = new Date();
+      setNow((prev) =>
+        prev.getMinutes() !== next.getMinutes() || prev.getHours() !== next.getHours()
+          ? next
+          : prev
+      );
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
 

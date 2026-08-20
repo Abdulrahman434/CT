@@ -113,13 +113,28 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
 
 
   useEffect(() => {
+    // Display only shows HH:MM (see `displayHours`/`minutes` below), so
+    // there's no need to trigger a React re-render every second — that was
+    // forcing a full repaint of the whole top bar (logo, connection status,
+    // 5 prayer cells) 60x more often than the visible output ever changes,
+    // which is enough to blow the tile-raster budget on low-end kiosk
+    // hardware. Still poll every second (cheap, no re-render), but only
+    // commit state — and only recompute prayer status — when the minute
+    // actually rolls over.
     const interval = setInterval(() => {
       const now = new Date();
-      setTime(now);
-      setPrayerData(getPrayerStatus(now, theme.location));
+      setTime((prev) =>
+        prev.getMinutes() !== now.getMinutes() || prev.getHours() !== now.getHours()
+          ? now
+          : prev
+      );
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    setPrayerData(getPrayerStatus(time, theme.location));
+  }, [time, theme.location]);
 
 
 

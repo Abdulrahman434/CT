@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, TEXT_STYLE, SPACE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import separatorIcon from "../../imports/Asset_2_white.svg";
@@ -11,7 +11,14 @@ interface NewsTickerProps {
 export function NewsTicker({ items }: NewsTickerProps = {}) {
   const { theme } = useTheme();
   const { t, isRTL, fontFamily } = useLocale();
-  const [offset, setOffset] = useState(0);
+  // Offset lives in a ref, not React state — this animates every rAF tick
+  // (30-60x/sec) for as long as the ticker is mounted, and driving that
+  // through setState was forcing a full React re-render every frame,
+  // forever. Mutating the DOM style directly here is the standard pattern
+  // for continuous animations in React: the transform still moves an
+  // already-GPU-composited layer (will-change-transform below), but without
+  // going through React's render/commit machinery on every frame.
+  const offsetRef = useRef(0);
   const textRef = useRef<HTMLDivElement>(null);
 
   const newsItems = items ?? (theme.id === "dallah"
@@ -93,16 +100,18 @@ export function NewsTicker({ items }: NewsTickerProps = {}) {
     const animate = (now: number) => {
       const delta = now - lastTime;
       lastTime = now;
-      setOffset((prev) => {
-        const textWidth = textRef.current?.scrollWidth ?? 4000;
-        const half = textWidth / 2;
-        const next = prev + delta * 0.03 * direction;
-        if (isRTL) {
-          return next > half ? next - half : next;
-        } else {
-          return next < -half ? next + half : next;
-        }
-      });
+      const textWidth = textRef.current?.scrollWidth ?? 4000;
+      const half = textWidth / 2;
+      let next = offsetRef.current + delta * 0.03 * direction;
+      if (isRTL) {
+        next = next > half ? next - half : next;
+      } else {
+        next = next < -half ? next + half : next;
+      }
+      offsetRef.current = next;
+      if (textRef.current) {
+        textRef.current.style.transform = `translateX(${next}px)`;
+      }
       animFrame = requestAnimationFrame(animate);
     };
 
@@ -155,7 +164,9 @@ export function NewsTicker({ items }: NewsTickerProps = {}) {
           ref={textRef}
           className="absolute whitespace-nowrap will-change-transform flex items-center"
           style={{
-            transform: `translateX(${offset}px)`,
+            // Initial position only — the running offset is written directly
+            // to this element's style in the rAF loop above, not via React.
+            transform: `translateX(${offsetRef.current}px)`,
             fontFamily: fontFamily,
             color: theme.textInverse,
             ...TEXT_STYLE.body,
