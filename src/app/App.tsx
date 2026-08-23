@@ -39,6 +39,8 @@ import { OrderProvider } from "./components/OrderStore";
 import { ToastProvider } from "./components/ToastNotifications";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { PasswordGate } from "./components/PasswordGate";
+import { HospitalSelect } from "./components/HospitalSelect";
+import { getSelectedHospitalId, SELECTED_HOSPITAL_EVENT } from "./lib/hospitalAccess";
 import { HospitalBroadcast, SAMPLE_BROADCAST } from "./components/HospitalBroadcast";
 import type { BroadcastNotification } from "./components/HospitalBroadcast";
 import { MemoryGame } from "./components/games/MemoryGame";
@@ -2412,8 +2414,27 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 function AuthenticatedApp() {
   const { isAuthenticated } = useAuth();
 
+  /* ── Pre-auth routing (no URL routes — driven purely by stored state) ──
+   * no selection  → Hospital Selection
+   * selection set → sign-in gate, scoped to that hospital
+   * authenticated → dashboard
+   * The stored id is mirrored in state so choosing/clearing a hospital swaps
+   * screens immediately instead of waiting for a reload. */
+  const [selectedHospitalId, setSelectedHospitalId] = useState<string | null>(() =>
+    getSelectedHospitalId()
+  );
+
+  useEffect(() => {
+    const sync = () => setSelectedHospitalId(getSelectedHospitalId());
+    window.addEventListener(SELECTED_HOSPITAL_EVENT, sync);
+    return () => window.removeEventListener(SELECTED_HOSPITAL_EVENT, sync);
+  }, []);
+
   if (!isAuthenticated) {
-    return <PasswordGate />;
+    if (!selectedHospitalId) {
+      return <HospitalSelect onSelected={setSelectedHospitalId} />;
+    }
+    return <PasswordGate onChangeHospital={() => setSelectedHospitalId(null)} />;
   }
 
   return (

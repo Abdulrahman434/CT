@@ -45,8 +45,16 @@ export interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  /** Attempt to log in with a password. Returns true if valid. */
-  login: (password: string) => Promise<boolean>;
+  /**
+   * Attempt to log in with a password. Returns true if valid.
+   *
+   * `scopedHospitalId` is the hospital chosen on the Hospital Selection screen.
+   * When present, the entered code is first checked against THAT hospital's
+   * derived access code, and a legacy password belonging to a *different*
+   * hospital is rejected. The `careinn` full-access password and the MRN paths
+   * are unaffected, so admins and patient cards still work everywhere.
+   */
+  login: (password: string, scopedHospitalId?: string | null) => Promise<boolean>;
   /** Enter without an access code. No locked hospital, no configurator access. */
   loginAsGuest: () => void;
   /** Log out and return to the password screen */
@@ -86,11 +94,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("hbs-auth-v1", JSON.stringify(authState));
   }, [authState]);
 
-  const login = useCallback(async (password: string): Promise<boolean> => {
+  const login = useCallback(async (password: string, scopedHospitalId?: string | null): Promise<boolean> => {
     const normalizedInput = password.toLowerCase().trim();
     const isCmsMode = normalizedInput.endsWith("-hospital");
     const basePassword = isCmsMode ? normalizedInput.slice(0, -9) : normalizedInput;
-    
+
+    /* ── Derived per-hospital access code (e.g. Fakeeh/Jeddah → "J2100D") ──
+     * Checked first so the selected hospital's own code always wins, and so a
+     * newly created config is signable-in without touching the hash map. */
+    if (scopedHospitalId) {
+      try {
+        const { getAllHospitalConfigs } = await import("./ThemeContext");
+        const { accessCodeMatches } = await import("../lib/hospitalAccess");
+        const scoped = getAllHospitalConfigs().find((c) => c.id === scopedHospitalId);
+
+        if (scoped && accessCodeMatches(basePassword, scoped)) {
+          if (isCmsMode) localStorage.setItem("cms-mode", "true");
+          else localStorage.removeItem("cms-mode");
+
+          localStorage.setItem("active-hospital-id", scoped.id);
+
+          setAuthState({
+            isAuthenticated: true,
+            password: null,
+            lockedHospitalId: scoped.id,
+            isFullAccess: false,
+            isGuest: false,
+          });
+
+          window.dispatchEvent(new Event("hospital-changed"));
+          window.dispatchEvent(new Event("cms-mode-changed"));
+          return true;
+        }
+      } catch (e) {
+        console.warn("[AuthContext] Access-code check failed:", e);
+      }
+    }
+
     // Create SHA-256 hash using Web Crypto API (requires secure context)
     let hashHex = "";
     if (window.isSecureContext && crypto?.subtle) {
@@ -112,7 +152,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const mapping = HASHED_PASSWORD_MAP[hashHex];
-    if (mapping) {
+    /* A hospital was selected up front, so a legacy password that unlocks some
+     * OTHER hospital must not sign in here — it would silently re-brand the
+     * device away from the chosen hospital. `careinn` is exempt: it is the only
+     * route to full access and the configurator. */
+    const wrongHospitalPassword =
+      !!mapping && !!scopedHospitalId && hashHex !== CAREINN_HASH && mapping !== scopedHospitalId;
+
+    if (mapping && !wrongHospitalPassword) {
       // CMS Opt-in handling
       if (isCmsMode) {
         localStorage.setItem('cms-mode', 'true');

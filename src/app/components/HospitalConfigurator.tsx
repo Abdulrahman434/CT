@@ -19,6 +19,12 @@ import {
 import { useTheme, type HospitalCoreConfig, DSFH_CORE, BUILTIN_PRESETS, autoDarken, autoLighten } from "./ThemeContext";
 import { useAuth } from "./AuthContext";
 import { TokenGallery } from "./TokenGallery";
+import {
+  deriveAccessCode,
+  findAccessCodeConflicts,
+  getAccessCode,
+  setSelectedHospitalId as persistSelectedHospital,
+} from "../lib/hospitalAccess";
 
 /* ═══════════════════════════════════════════════════════════════
  * Hospital Configurator — triggered from TopBar (Dhuhr prayer tap)
@@ -667,13 +673,22 @@ export function HospitalConfigurator({ onClose }: { onClose: () => void }) {
   const [isNew, setIsNew] = useState(false);
   const [showAdvancedColors, setShowAdvancedColors] = useState(false);
   const [showTokenGallery, setShowTokenGallery] = useState(false);
+  const [codeConflict, setCodeConflict] = useState<string | null>(null);
 
   const startEdit = (config: HospitalCoreConfig, creating: boolean) => {
     setEditingConfig({ ...config });
     setIsNew(creating);
     setShowAdvancedColors(false);
+    setCodeConflict(null);
     setView("edit");
   };
+
+  /* Sign-in code for the config being edited, plus any hospital that already
+   * answers to it. A clash means the city initial AND short-code initial both
+   * match, so an override is the only way to keep the two distinguishable. */
+  const editingDerivedCode = editingConfig ? deriveAccessCode(editingConfig) : "";
+  const editingEffectiveCode = editingConfig ? getAccessCode(editingConfig) : "";
+  const editingConflicts = editingConfig ? findAccessCodeConflicts(editingConfig, allConfigs) : [];
 
   const updateField = <K extends keyof HospitalCoreConfig>(key: K, value: HospitalCoreConfig[K]) => {
     if (!editingConfig) return;
@@ -709,6 +724,19 @@ export function HospitalConfigurator({ onClose }: { onClose: () => void }) {
     // Generate ID only for truly new configs that have no ID yet
     const id = editingConfig.id || generateId(editingConfig.hospitalName);
 
+    /* Block the save while two hospitals would share a sign-in code — patients
+     * at either one could otherwise unlock the wrong brand. */
+    const conflicts = findAccessCodeConflicts({ ...editingConfig, id }, allConfigs);
+    if (conflicts.length > 0) {
+      setCodeConflict(
+        `Access code ${getAccessCode({ ...editingConfig, id })} is already used by ` +
+        `${conflicts.map((c) => c.hospitalName || c.id).join(", ")}. ` +
+        `Enter a different override code below.`
+      );
+      return;
+    }
+    setCodeConflict(null);
+
     // Auto-fill dark/light if left empty
     const finalConfig: HospitalCoreConfig = {
       ...editingConfig,
@@ -717,9 +745,12 @@ export function HospitalConfigurator({ onClose }: { onClose: () => void }) {
       primaryLight: editingConfig.primaryLight || autoLighten(editingConfig.primary),
       accentDark: editingConfig.accentDark || autoDarken(editingConfig.accent),
       accentLight: editingConfig.accentLight || autoLighten(editingConfig.accent),
+      accessCodeOverride: (editingConfig.accessCodeOverride || "").trim().toUpperCase() || undefined,
     };
 
     saveConfig(finalConfig);
+    // saveConfig makes this config active — keep the sign-in scope in step.
+    persistSelectedHospital(finalConfig.id);
     setView("list");
     setEditingConfig(null);
   };
@@ -842,7 +873,11 @@ export function HospitalConfigurator({ onClose }: { onClose: () => void }) {
                     config={config}
                     isActive={config.id === activeConfigId}
                     isBuiltIn={BUILTIN_PRESETS.some((p) => p.id === config.id)}
-                    onSwitch={() => switchConfig(config.id)}
+                    onSwitch={() => {
+                      switchConfig(config.id);
+                      // Also becomes the hospital the sign-in gate validates against.
+                      persistSelectedHospital(config.id);
+                    }}
                     onEdit={() => startEdit(config, false)}
                     onDelete={() => deleteConfig(config.id)}
                   />
@@ -991,7 +1026,79 @@ export function HospitalConfigurator({ onClose }: { onClose: () => void }) {
                   value={editingConfig.location || ""}
                   onChange={(v) => updateField("location", v)}
                   placeholder="e.g. Riyadh"
-                  hint="Used for weather and prayer times"
+                  hint="Used for weather, prayer times, and the access code"
+                />
+
+                {/* ── Sign-in access code ──
+                    Derived from city + short-code initials; shown read-only so
+                    the admin can hand it to the ward, with an override field
+                    that is mandatory when another hospital derives the same. */}
+                <div className="flex flex-col gap-1.5">
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      color: "#95A3AD",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    Access Code
+                  </span>
+                  <div
+                    className="flex items-center gap-2"
+                    style={{
+                      height: "40px",
+                      borderRadius: "10px",
+                      border: `1.5px solid ${editingConflicts.length > 0 ? t.accent : "rgba(0,0,0,0.08)"}`,
+                      backgroundColor: editingConflicts.length > 0 ? t.accentSubtle : "rgba(0,0,0,0.02)",
+                      padding: "0 12px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "monospace",
+                        fontSize: "15px",
+                        fontWeight: 700,
+                        letterSpacing: "1px",
+                        color: editingConflicts.length > 0 ? t.accent : t.textHeading,
+                      }}
+                    >
+                      {editingEffectiveCode || "—"}
+                    </span>
+                    {editingConfig.accessCodeOverride ? (
+                      <span style={{ fontSize: "11px", fontWeight: 600, color: t.textMuted }}>
+                        manual override
+                      </span>
+                    ) : (
+                      editingDerivedCode && (
+                        <span style={{ fontSize: "11px", fontWeight: 600, color: t.textMuted }}>
+                          auto-derived
+                        </span>
+                      )
+                    )}
+                  </div>
+
+                  {editingConflicts.length > 0 && (
+                    <span style={{ fontSize: "11px", fontWeight: 600, color: t.accent, lineHeight: 1.4 }}>
+                      <Info size={11} style={{ display: "inline", marginRight: "4px", verticalAlign: "-1px" }} />
+                      Same code as {editingConflicts.map((c) => c.hospitalName || c.id).join(", ")} — set an
+                      override below before saving.
+                    </span>
+                  )}
+                  {codeConflict && editingConflicts.length === 0 && (
+                    <span style={{ fontSize: "11px", fontWeight: 600, color: t.accent, lineHeight: 1.4 }}>
+                      {codeConflict}
+                    </span>
+                  )}
+                </div>
+
+                <TextField
+                  label="Access Code Override"
+                  value={editingConfig.accessCodeOverride || ""}
+                  onChange={(v) => updateField("accessCodeOverride", v.toUpperCase())}
+                  placeholder="Leave empty to use the derived code"
+                  hint="Only needed when the derived code collides with another hospital"
                 />
 
                 {/* ── Typography ── */}

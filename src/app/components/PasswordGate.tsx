@@ -1,6 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useAuth } from "./AuthContext";
 import { Eye, EyeOff, X } from "lucide-react";
+import { getAllHospitalConfigs } from "./ThemeContext";
+import { clearSelectedHospitalId, getSelectedHospitalId } from "../lib/hospitalAccess";
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * PASSWORD GATE — Redesigned immersive login screen
@@ -10,8 +12,21 @@ import { Eye, EyeOff, X } from "lucide-react";
 const SKY = "#6CC4E0";
 const NAVY = "#1B2F5B";
 
-export function PasswordGate() {
+export function PasswordGate({ onChangeHospital }: { onChangeHospital?: () => void } = {}) {
   const { login, loginAsGuest } = useAuth();
+
+  /* The hospital chosen on the Hospital Selection screen. Its access code is
+   * what the entered value is validated against, and its brand colour tints
+   * the CTA — read straight from the config list because ThemeProvider does
+   * not mount until after sign-in. */
+  const selectedHospitalId = useMemo(() => getSelectedHospitalId(), []);
+  const hospital = useMemo(
+    () => (selectedHospitalId ? getAllHospitalConfigs().find((c) => c.id === selectedHospitalId) || null : null),
+    [selectedHospitalId]
+  );
+  const brand = hospital?.primary || SKY;
+  const brandDark = hospital?.primaryDark || "#5BB8D6";
+
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(false);
@@ -69,7 +84,7 @@ export function PasswordGate() {
     e.preventDefault();
     if (!password.trim()) return;
 
-    const valid = await login(password);
+    const valid = await login(password, selectedHospitalId);
     if (!valid) {
       setError(true);
       setShaking(true);
@@ -189,6 +204,54 @@ export function PasswordGate() {
             animation: shaking ? "shakeForm 0.5s ease-in-out" : "fadeSlideUp 0.6s ease-out both",
           }}
         >
+          {/* Selected-hospital identity — logo + name, so the patient can see
+              which hospital this device is signing in to before typing. */}
+          {hospital && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "10px",
+                margin: compact ? "0 0 14px" : "0 0 22px",
+              }}
+            >
+              {hospital.logoUrl && (
+                <div
+                  style={{
+                    width: compact ? "56px" : "68px",
+                    height: compact ? "56px" : "68px",
+                    borderRadius: "16px",
+                    background: "rgba(255, 255, 255, 0.92)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    overflow: "hidden",
+                    boxShadow: "0 4px 16px rgba(15, 30, 55, 0.18)",
+                  }}
+                >
+                  <img
+                    src={hospital.logoUrl}
+                    alt=""
+                    style={{ maxWidth: "78%", maxHeight: "78%", objectFit: "contain" }}
+                  />
+                </div>
+              )}
+              <span
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: "15px",
+                  fontWeight: 700,
+                  textAlign: "center",
+                  lineHeight: 1.3,
+                  textShadow: "0 1px 3px rgba(0,0,0,0.35)",
+                }}
+              >
+                {hospital.hospitalName}
+              </span>
+            </div>
+          )}
+
           {/* Title group */}
           <h1
             style={{
@@ -235,11 +298,11 @@ export function PasswordGate() {
                     height: "48px",
                     display: "flex",
                     alignItems: "center",
-                    border: `1.5px solid ${error ? "#EF4444" : isFocused ? SKY : "rgba(255, 255, 255, 0.25)"}`,
+                    border: `1.5px solid ${error ? "#EF4444" : isFocused ? brand : "rgba(255, 255, 255, 0.25)"}`,
                     borderRadius: "10px",
                     background: error ? "rgba(239, 68, 68, 0.15)" : "rgba(255, 255, 255, 0.08)",
                     transition: "border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease",
-                    boxShadow: error ? "0 0 0 3px rgba(239, 68, 68, 0.25)" : isFocused ? `0 0 0 3px ${SKY}40` : "none",
+                    boxShadow: error ? "0 0 0 3px rgba(239, 68, 68, 0.25)" : isFocused ? `0 0 0 3px ${brand}40` : "none",
                   }}
                 >
                   <input
@@ -311,7 +374,7 @@ export function PasswordGate() {
                     height: "48px",
                     border: "none",
                     borderRadius: "10px",
-                    background: `linear-gradient(135deg, ${SKY} 0%, #5BB8D6 100%)`,
+                    background: `linear-gradient(135deg, ${brand} 0%, ${brandDark} 100%)`,
                     color: "#FFFFFF",
                     fontSize: "15px",
                     fontWeight: 700,
@@ -319,15 +382,15 @@ export function PasswordGate() {
                     fontFamily: "inherit",
                     letterSpacing: "0.5px",
                     transition: "transform 0.15s ease, box-shadow 0.2s ease",
-                    boxShadow: "0 2px 12px rgba(108, 196, 224, 0.3)",
+                    boxShadow: `0 2px 12px ${brand}4D`,
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = "translateY(-1px)";
-                    e.currentTarget.style.boxShadow = "0 4px 20px rgba(108, 196, 224, 0.5)";
+                    e.currentTarget.style.boxShadow = `0 4px 20px ${brand}80`;
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 2px 12px rgba(108, 196, 224, 0.3)";
+                    e.currentTarget.style.boxShadow = `0 2px 12px ${brand}4D`;
                   }}
                 >
                   Sign in
@@ -384,6 +447,34 @@ export function PasswordGate() {
               >
                 Continue as Guest
               </button>
+
+              {/* Escape hatch — a wrong pick would otherwise be unrecoverable
+                  before sign-in, since Hospital Configs lives behind the gate. */}
+              {hospital && onChangeHospital && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearSelectedHospitalId();
+                    onChangeHospital();
+                  }}
+                  style={{
+                    width: "100%",
+                    marginTop: "14px",
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    color: "rgba(255, 255, 255, 0.7)",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    textDecoration: "underline",
+                    textUnderlineOffset: "3px",
+                  }}
+                >
+                  Not {hospital.hospitalShortName || hospital.hospitalName}? Change hospital
+                </button>
+              )}
             </form>
           </div>
         </div>

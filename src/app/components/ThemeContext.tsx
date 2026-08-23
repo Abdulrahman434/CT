@@ -797,6 +797,11 @@ export interface HospitalCoreConfig {
   accentLight: string;
   location?: string;
   country?: string;
+  /**
+   * Manual sign-in code, set only when the code derived from city + short-code
+   * initials collides with another hospital. See lib/hospitalAccess.ts.
+   */
+  accessCodeOverride?: string;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -899,6 +904,9 @@ const STORAGE_KEY = "hospital-configs";
 const ACTIVE_KEY = "active-hospital-id";
 const LOCALE_KEY = "active-locale";
 
+/** Exported so pre-auth screens (outside ThemeProvider) write the same key. */
+export const ACTIVE_HOSPITAL_KEY = ACTIVE_KEY;
+
 function loadSavedConfigs(): HospitalCoreConfig[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -910,6 +918,40 @@ function loadSavedConfigs(): HospitalCoreConfig[] {
 
 function saveConfigs(configs: HospitalCoreConfig[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(configs));
+}
+
+/**
+ * Built-in presets (overlaid with any saved edits) + user-created configs.
+ * Module-level so screens that render outside ThemeProvider — the pre-auth
+ * Hospital Selection and sign-in screens — read the exact same list the
+ * configurator shows, without a second copy of the hospital data.
+ */
+export function mergeConfigs(savedConfigs: HospitalCoreConfig[]): HospitalCoreConfig[] {
+  const merged = BUILTIN_PRESETS.map((preset) => {
+    const saved = savedConfigs.find((c) => c.id === preset.id);
+    if (!saved) return preset;
+    const hasBuiltinAssets = ["dsfh", "burjeel", "slh", "dallah", "caremed", "careinn", "prime"].includes(preset.id);
+    return {
+      ...preset,
+      ...saved,
+      // For presets with bundled assets, keep them unless user provided external URLs
+      logoUrl: hasBuiltinAssets
+        ? (saved.logoUrl && isUserProvidedUrl(saved.logoUrl) ? saved.logoUrl : preset.logoUrl)
+        : (saved.logoUrl || preset.logoUrl),
+      heroImageUrl: hasBuiltinAssets
+        ? (saved.heroImageUrl && isUserProvidedUrl(saved.heroImageUrl) ? saved.heroImageUrl : preset.heroImageUrl)
+        : (saved.heroImageUrl || preset.heroImageUrl),
+    };
+  });
+  // Add any user-created configs that aren't built-in presets
+  const builtinIds = new Set(BUILTIN_PRESETS.map((p) => p.id));
+  const userCreated = savedConfigs.filter((c) => !builtinIds.has(c.id));
+  return [...merged, ...userCreated];
+}
+
+/** Same list as `useTheme().allConfigs`, readable without the React context. */
+export function getAllHospitalConfigs(): HospitalCoreConfig[] {
+  return mergeConfigs(loadSavedConfigs());
 }
 
 function loadActiveId(): string {
@@ -1090,29 +1132,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // All configs = built-in presets (overridable by saved versions) + user-created configs
-  const allConfigs: HospitalCoreConfig[] = (() => {
-    // Start with built-in presets, applying any saved overrides
-    const merged = BUILTIN_PRESETS.map((preset) => {
-      const saved = savedConfigs.find((c) => c.id === preset.id);
-      if (!saved) return preset;
-      const hasBuiltinAssets = ["dsfh", "burjeel", "slh", "dallah", "caremed", "careinn", "prime"].includes(preset.id);
-      return {
-        ...preset,
-        ...saved,
-        // For presets with bundled assets, keep them unless user provided external URLs
-        logoUrl: hasBuiltinAssets
-          ? (saved.logoUrl && isUserProvidedUrl(saved.logoUrl) ? saved.logoUrl : preset.logoUrl)
-          : (saved.logoUrl || preset.logoUrl),
-        heroImageUrl: hasBuiltinAssets
-          ? (saved.heroImageUrl && isUserProvidedUrl(saved.heroImageUrl) ? saved.heroImageUrl : preset.heroImageUrl)
-          : (saved.heroImageUrl || preset.heroImageUrl),
-      };
-    });
-    // Add any user-created configs that aren't built-in presets
-    const builtinIds = new Set(BUILTIN_PRESETS.map((p) => p.id));
-    const userCreated = savedConfigs.filter((c) => !builtinIds.has(c.id));
-    return [...merged, ...userCreated];
-  })();
+  const allConfigs: HospitalCoreConfig[] = mergeConfigs(savedConfigs);
 
   // Resolve effective config → theme.
   // Both layouts use the active hospital config as-is, so Layout 2 (CareInn)
