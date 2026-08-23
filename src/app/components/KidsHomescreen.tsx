@@ -74,8 +74,10 @@ function hslToHex(h: number, s: number, l: number): string {
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-/* A pastel "swatch" — fill / border / glow / ink — all rooted at one hue. */
-interface Swatch { bg: string; border: string; glow: string; ink: string }
+/* A pastel "swatch" — bg / fill / border / glow / ink — all rooted at one hue.
+   `bg` is the airy tint used behind text-led cards; `fill` is the same hue
+   pushed darker + more saturated so large tiles read as distinct colours. */
+interface Swatch { bg: string; fill: string; border: string; glow: string; ink: string }
 
 interface KidsHomescreenProps {
   onOpenCategory: (categoryKey: string) => void;
@@ -148,6 +150,7 @@ export default function KidsHomescreen({
     const h = bh + hueShift;
     return {
       bg: hslToHex(h, clamp(bs * 0.55, 42, 64), 93),
+      fill: hslToHex(h, clamp(bs * 0.8, 58, 86), 85),
       border: hslToHex(h, clamp(bs * 0.7, 46, 72), 80),
       glow: hslToHex(h, clamp(bs * 0.85, 52, 80), 86),
       ink: hslToHex(h, clamp(bs, 56, 80), 33),
@@ -158,6 +161,10 @@ export default function KidsHomescreen({
      to the brand, and rotate with it when the hospital changes. */
   const tints = [-24, 34, 96, 158].map(swatch);
   const [tRose, tLav, tAmber, tMint] = tints;
+
+  /* Un-rotated brand tint — used where the accent must stay on-brand rather
+     than take one of the four category hues (e.g. the Explore More pill). */
+  const brandSoft = swatch(0);
 
   const pageBg = hslToHex(bh, clamp(bs * 0.55, 30, 55), 95);
   const pageBg2 = hslToHex(bh + 22, clamp(bs * 0.55, 30, 55), 91);
@@ -615,10 +622,13 @@ export default function KidsHomescreen({
                 onClick={card.onClick}
                 className={`kids-tile relative overflow-hidden flex items-center gap-6 cursor-pointer flex-1 min-h-0 ${isRTL ? "flex-row-reverse text-right" : ""}`}
                 style={{
-                  backgroundColor: card.s.bg,
+                  backgroundColor: card.s.fill,
                   borderRadius: 22,
                   border: `3px solid ${card.s.border}`,
-                  boxShadow: `0 12px 30px ${card.s.border}44`,
+                  /* Thick accent rail on the reading-start edge — the strongest
+                     per-card colour cue separating the four stacked rows. */
+                  [isRTL ? "borderRight" : "borderLeft"]: `5px solid ${card.s.ink}`,
+                  boxShadow: `0 12px 30px ${card.s.border}55`,
                   padding: "0 40px",
                   outline: "none",
                 } as CSSProperties}
@@ -631,8 +641,8 @@ export default function KidsHomescreen({
                     top: "50%",
                     [isRTL ? "right" : "left"]: 20,
                     transform: "translateY(-50%)",
-                    width: 150,
-                    height: 150,
+                    width: 170,
+                    height: 170,
                     borderRadius: 9999,
                     background: `radial-gradient(circle, ${card.s.glow}, transparent 70%)`,
                     animation: "kidsBlob 5.5s ease-in-out infinite",
@@ -640,7 +650,7 @@ export default function KidsHomescreen({
                   } as CSSProperties}
                   aria-hidden="true"
                 />
-                <span style={{ position: "relative", fontSize: 68, lineHeight: 1, animation: "kidsBounce 2.4s ease-in-out infinite", animationDelay: `${ci * 0.3}s` }}>
+                <span style={{ position: "relative", fontSize: 78, lineHeight: 1, animation: "kidsBounce 2.4s ease-in-out infinite", animationDelay: `${ci * 0.3}s` }}>
                   {card.emoji}
                 </span>
                 <div className={`relative flex-1 min-w-0 flex flex-col ${isRTL ? "items-end" : "items-start"}`}>
@@ -658,40 +668,43 @@ export default function KidsHomescreen({
             ))}
           </div>
 
-          {/* ── Right sidebar (86px) — four quick tiles + Explore More ── */}
-          <div className="shrink-0 flex flex-col gap-3 min-h-0" style={{ width: 86 }}>
+          {/* ── Right sidebar (118px) — four quick tiles + Explore More ── */}
+          <div className="shrink-0 flex flex-col gap-3 min-h-0" style={{ width: 118 }}>
             {sideItems.map((item, i) => (
               <button
                 key={item.label}
                 onClick={item.onClick}
-                className="kids-tile flex-1 min-h-0 flex flex-col items-center justify-center gap-1 cursor-pointer"
+                className="kids-tile flex-1 min-h-0 flex flex-col items-center justify-center gap-1.5 cursor-pointer"
                 style={{
-                  backgroundColor: item.s.bg,
+                  backgroundColor: item.s.fill,
                   borderRadius: 20,
                   border: `3px solid ${item.s.border}`,
-                  boxShadow: `0 8px 20px ${item.s.border}44`,
+                  boxShadow: `0 8px 20px ${item.s.border}55`,
+                  padding: "0 6px",
                   outline: "none",
                 }}
               >
-                <span style={{ fontSize: 34, lineHeight: 1, animation: `kidsFloat ${5 + i * 0.4}s ease-in-out infinite` }}>{item.emoji}</span>
-                <span style={{ fontFamily: headFont, fontSize: 10.5, fontWeight: 800, color: item.s.ink, textAlign: "center", padding: "0 2px", lineHeight: 1.1 }}>{t(item.label)}</span>
+                <span style={{ fontSize: 40, lineHeight: 1, animation: `kidsFloat ${5 + i * 0.4}s ease-in-out infinite` }}>{item.emoji}</span>
+                <span style={{ fontFamily: headFont, fontSize: 13.5, fontWeight: 900, color: item.s.ink, textAlign: "center", lineHeight: 1.15 }}>{t(item.label)}</span>
               </button>
             ))}
 
-            {/* Explore More — distinct dashed tile that opens the bottom drawer */}
+            {/* Explore More — solid brand-tinted pill that opens the bottom drawer */}
             <button
               onClick={() => setMoreOpen(true)}
               className="kids-tile shrink-0 flex flex-col items-center justify-center gap-1 cursor-pointer"
               style={{
-                minHeight: 82,
-                backgroundColor: "#ffffff",
-                borderRadius: 20,
-                border: `2.5px dashed ${theme.primary}`,
+                minHeight: 86,
+                padding: "0 8px",
+                backgroundColor: brandSoft.bg,
+                borderRadius: 9999,
+                border: `2.5px solid ${theme.primary}`,
+                boxShadow: `0 8px 20px ${brandSoft.border}55`,
                 outline: "none",
               }}
             >
-              <span style={{ fontSize: 26, lineHeight: 1 }}>✨</span>
-              <span style={{ fontFamily: headFont, fontSize: 10.5, fontWeight: 800, color: theme.primary, textAlign: "center", padding: "0 2px", lineHeight: 1.05 }}>{t("kids.more.title")}</span>
+              <span style={{ fontSize: 30, lineHeight: 1 }}>✨</span>
+              <span style={{ fontFamily: headFont, fontSize: 13, fontWeight: 900, color: theme.primary, textAlign: "center", lineHeight: 1.1 }}>{t("kids.more.title")}</span>
             </button>
           </div>
         </div>
