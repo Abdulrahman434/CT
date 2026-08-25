@@ -35,8 +35,8 @@ import { ThemeAppearanceDialog } from "./components/ThemeAppearanceDialog";
 import { TasbihScreenSaver } from "./components/TasbihScreenSaver";
 import { FoodOrdering } from "./components/FoodOrdering";
 import { NeedSomething } from "./components/NeedSomething";
-import { OrderProvider } from "./components/OrderStore";
-import { ToastProvider } from "./components/ToastNotifications";
+import { OrderProvider, useOrders } from "./components/OrderStore";
+import { ToastProvider, useToast } from "./components/ToastNotifications";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { PasswordGate } from "./components/PasswordGate";
 import { HospitalBroadcast, SAMPLE_BROADCAST } from "./components/HospitalBroadcast";
@@ -199,6 +199,8 @@ function BedsideScreen() {
   const { patientAdmitted, setPatientAdmitted, theme, darkMode, switchConfig, prayerAlarm, layout2Theme, setLocale, setDarkMode, setPrayerAlarm } = useTheme();
   const { isFullAccess, lockedHospitalId } = useAuth();
   const { t, locale, isRTL, dir, fontFamily } = useLocale();
+  const { showToast } = useToast();
+  const { orders } = useOrders();
   const scale = useScreenScale();
   const isOnline = useNetworkStatus();
 
@@ -449,6 +451,50 @@ function BedsideScreen() {
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [showBlankPage, setShowBlankPage] = useState(false);
   const [showIptv, setShowIptv] = useState(false);
+
+  // Fakeeh ONLY: Home page landing toast if food order was not ordered yet
+  const isHomeScreen =
+    !openCategory &&
+    !showFoodOrder &&
+    !showCareMeExpanded &&
+    !showCall &&
+    !showSurvey &&
+    !showAboutUs &&
+    !showSettings &&
+    !showNotifications &&
+    !showTasbih &&
+    !showConfigurator &&
+    !showBlankPage &&
+    !showIptv &&
+    !activeGame &&
+    !activeTool &&
+    !showNeedSomething;
+
+  const prevIsHomeScreenRef = useRef(false);
+  useEffect(() => {
+    const isFakeeh = theme.id === "dsfh" || theme.id.includes("dsfh") || theme.id.includes("fakeeh");
+    if (isHomeScreen && !prevIsHomeScreenRef.current && isFakeeh) {
+      const hasPatientOrdered = orders.some(
+        (o) => o.orderFor === "patient" || !o.orderFor
+      );
+      if (!hasPatientOrdered) {
+        showToast({
+          variant: "meal",
+          category: isRTL ? "تذكير الوجبات" : "MEAL REMINDER",
+          title: isRTL
+            ? "لا تنسَ اختيار وجبات الغد اللذيذة"
+            : "Do not forget to choose your tommorows delicius meals",
+          actionText: isRTL ? "اطلب الآن" : "Order Now",
+          actionColor: "#2563EB",
+          onTap: () => {
+            setFoodOrderInitialView(undefined);
+            setShowFoodOrder(true);
+          },
+        });
+      }
+    }
+    prevIsHomeScreenRef.current = isHomeScreen;
+  }, [isHomeScreen, theme.id, orders, isRTL, showToast]);
 
   // Queue of immediate alerts to show as broadcast popups
   const [broadcastQueue, setBroadcastQueue] = useState<BroadcastNotification[]>([]);

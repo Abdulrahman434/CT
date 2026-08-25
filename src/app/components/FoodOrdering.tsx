@@ -15,6 +15,7 @@ import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { ApiImage } from "./ApiImage";
 import { useOrders } from "./OrderStore";
 import { useNurseStore, nurseActions } from "./NurseDataStore";
+import { useToast } from "./ToastNotifications";
 import mealSvg from "../../imports/meal.svg";
 import roomSvg from "../../imports/room.svg";
 import dietSvg from "../../imports/diet.svg";
@@ -195,6 +196,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
 
   const { isRTL, fontFamily } = useLocale();
   const { placeOrder, updateOrder, activeOrders, pastOrders, orders, clearOpenOrders } = useOrders();
+  const { showToast } = useToast();
 
   const nurseStore = useNurseStore();
 
@@ -307,9 +309,30 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
       // New order
       const placed = placeOrder(orderData);
       setLastOrderNumber(placed.orderNumber);
+
+      // Fakeeh ONLY: Push notification to order for companion
+      const isFakeeh = theme.id === "dsfh" || theme.id.includes("dsfh") || theme.id.includes("fakeeh");
+      if (isFakeeh && orderFor === "patient") {
+        setTimeout(() => {
+          showToast({
+            variant: "meal",
+            category: isRTL ? "وجبة المرافق" : "COMPANION MEAL",
+            title: isRTL ? "هل ترغب في طلب وجبات لمرافقك؟" : "Order for your companion",
+            actionText: isRTL ? "اطلب الآن" : "Order Now",
+            actionColor: "#16A34A",
+            onTap: () => {
+              setOrderFor("guest");
+              setStep("select-meal");
+            },
+            secondaryActionText: isRTL ? "تفقد لاحقاً" : "Check Later",
+            secondaryActionColor: "#6B7280",
+            onSecondaryTap: () => {},
+          });
+        }, 500);
+      }
     }
     setStep("confirmed");
-  }, [currentMeal, selections, isRTL, placeOrder, updateOrder, editingOrderId, orders, orderFor]);
+  }, [currentMeal, selections, isRTL, placeOrder, updateOrder, editingOrderId, orders, orderFor, theme.id, showToast]);
 
   const stepIndex: 1 | 2 | 3 | 4 =
     step === "select-type" ? 1 :
