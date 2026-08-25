@@ -404,7 +404,7 @@ function CenteredDialog({
           backgroundColor: "#FFFFFF",
           boxShadow: "0 16px 48px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.06)",
           animation: "castDialogIn 0.2s ease-out",
-          overflow: "hidden",
+          overflowX: "hidden",
         }}
       >
         {children}
