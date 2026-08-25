@@ -1714,7 +1714,10 @@ export function AppLauncher({
     
     // Rubber band at edges
     let finalDelta = deltaX;
-    if ((pageIndex === 0 && deltaX > 0) || (pageIndex === numPages - 1 && deltaX < 0)) {
+    const isOut = isRTL
+      ? (pageIndex === 0 && deltaX < 0) || (pageIndex === numPages - 1 && deltaX > 0)
+      : (pageIndex === 0 && deltaX > 0) || (pageIndex === numPages - 1 && deltaX < 0);
+    if (isOut) {
       finalDelta = deltaX * 0.3;
     }
     
@@ -1731,10 +1734,18 @@ export function AppLauncher({
     setDragOffset(0);
     swipeStartX.current = null;
 
-    if (deltaX > threshold && pageIndex > 0) {
-      setPageIndex(prev => prev - 1);
-    } else if (deltaX < -threshold && pageIndex < numPages - 1) {
-      setPageIndex(prev => prev + 1);
+    if (isRTL) {
+      if (deltaX > threshold && pageIndex < numPages - 1) {
+        setPageIndex(prev => prev + 1);
+      } else if (deltaX < -threshold && pageIndex > 0) {
+        setPageIndex(prev => prev - 1);
+      }
+    } else {
+      if (deltaX > threshold && pageIndex > 0) {
+        setPageIndex(prev => prev - 1);
+      } else if (deltaX < -threshold && pageIndex < numPages - 1) {
+        setPageIndex(prev => prev + 1);
+      }
     }
   };
   const currentApps = category.apps.slice(pageIndex * appsPerPage, (pageIndex + 1) * appsPerPage);
