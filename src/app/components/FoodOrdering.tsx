@@ -6,6 +6,7 @@ import {
   Check, Clock, Calendar, Utensils, Soup, ClipboardList, Bell, ChefHat,
   Star, Heart, Droplets, Flame, Snowflake, Globe,
   Baby, User, FlaskConical, ChevronDown, ChevronRight, ChevronLeft, Home,
+  AlertTriangle, X, Plus, ShieldAlert, Sparkles, CheckCircle2, Circle, SlidersHorizontal, Trash2,
 } from "lucide-react";
 import { InternalPageHeader } from "./InternalPageHeader";
 import { useTheme, TYPE_SCALE, WEIGHT, TEXT_STYLE, SHADOW } from "./ThemeContext";
@@ -13,7 +14,7 @@ import { useLocale } from "./i18n";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { ApiImage } from "./ApiImage";
 import { useOrders } from "./OrderStore";
-import { useNurseStore } from "./NurseDataStore";
+import { useNurseStore, nurseActions } from "./NurseDataStore";
 import mealSvg from "../../imports/meal.svg";
 import roomSvg from "../../imports/room.svg";
 import dietSvg from "../../imports/diet.svg";
@@ -207,6 +208,20 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
   const [wasEditMode, setWasEditMode] = useState(false);
   const [showHistoryOverlay, setShowHistoryOverlay] = useState(initialView === "my-orders");
   const isEditMode = editingOrderId !== null;
+
+  // Diet & Allergies interactive modal state
+  const [showDietAllergiesModal, setShowDietAllergiesModal] = useState(false);
+  const [dietAllergiesInitialTab, setDietAllergiesInitialTab] = useState<"diet" | "allergies">("diet");
+
+  const handleOpenDietModal = useCallback(() => {
+    setDietAllergiesInitialTab("diet");
+    setShowDietAllergiesModal(true);
+  }, []);
+
+  const handleOpenAllergiesModal = useCallback(() => {
+    setDietAllergiesInitialTab("allergies");
+    setShowDietAllergiesModal(true);
+  }, []);
 
   // Read diet from Care Teams Settings (NurseDataStore)
   const patientDiet = nurseStore.patientDiet as DietType | "npo";
@@ -443,6 +458,8 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
           mealName={currentMeal ? loc(currentMeal.label) : null}
           fontFamily={fontFamily}
           isRTL={isRTL}
+          onDietClick={orderFor === "patient" ? handleOpenDietModal : undefined}
+          onAllergiesClick={orderFor === "patient" ? handleOpenAllergiesModal : undefined}
         />
       ) : isFlow ? (
         /* Spacer matching patient bar height so content card aligns consistently */
@@ -702,6 +719,27 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ─── DIET & ALLERGIES INTERACTIVE MODAL ─── */}
+      <DietAllergiesModal
+        isOpen={showDietAllergiesModal}
+        onClose={() => setShowDietAllergiesModal(false)}
+        initialTab={dietAllergiesInitialTab}
+        currentDiet={patientDiet}
+        currentAllergies={patientAllergies}
+        onSelectDiet={(diet) => nurseActions.setPatientDiet(diet)}
+        onToggleAllergy={(allergy) => {
+          if (patientAllergies.includes(allergy)) {
+            nurseActions.removeAllergy(allergy);
+          } else {
+            nurseActions.addAllergy(allergy);
+          }
+        }}
+        onAddCustomAllergy={(allergy) => nurseActions.addAllergy(allergy)}
+        onClearAllergies={() => nurseActions.setAllergies([])}
+        fontFamily={fontFamily}
+        isRTL={isRTL}
+      />
     </motion.div>
   );
 }
@@ -779,7 +817,18 @@ function TopBar({ onBack, onMyOrders, showMyOrders, onDemoClear, title, fontFami
   );
 }
 
-function PatientBar({ isKid, orderFor, name, dietLabel, allergiesLabel, mealName, fontFamily, isRTL }: {
+function PatientBar({
+  isKid,
+  orderFor,
+  name,
+  dietLabel,
+  allergiesLabel,
+  mealName,
+  fontFamily,
+  isRTL,
+  onDietClick,
+  onAllergiesClick,
+}: {
   isKid: boolean;
   orderFor: OrderFor;
   name: string;
@@ -788,6 +837,8 @@ function PatientBar({ isKid, orderFor, name, dietLabel, allergiesLabel, mealName
   mealName: string | null;
   fontFamily: string;
   isRTL: boolean;
+  onDietClick?: () => void;
+  onAllergiesClick?: () => void;
 }) {
   const isGuest = orderFor === "guest";
   return (
@@ -796,7 +847,7 @@ function PatientBar({ isKid, orderFor, name, dietLabel, allergiesLabel, mealName
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
       className="shrink-0 mx-12 mt-[12px] flex items-center justify-center gap-[16px]"
-      style={{ backgroundColor: "#fff", borderRadius: "24px", padding: "18px 22px", border: "1px solid rgba(0,0,0,0.1)" }}
+      style={{ backgroundColor: "#fff", borderRadius: "24px", padding: "16px 22px", border: "1px solid rgba(0,0,0,0.1)" }}
     >
       {/* Avatar */}
       <div className="shrink-0" style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: isGuest ? SECONDARY : TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -818,21 +869,596 @@ function PatientBar({ isKid, orderFor, name, dietLabel, allergiesLabel, mealName
         <div className="flex items-center gap-[14px]">
           {mealName && <Pill icon={<MealSvg />} label={isRTL ? "الوجبة:" : "Meal:"} value={mealName} fontFamily={fontFamily} />}
           <Pill icon={<RoomSvg />} label={isRTL ? "الغرفة:" : "Room:"} value={DEMO_PATIENT.room.replace("Room ", "")} fontFamily={fontFamily} />
-          <Pill icon={<DietSvg />} label={isRTL ? "الحمية:" : "Diet:"} value={dietLabel} fontFamily={fontFamily} />
-          <Pill icon={<AlertSvg />} label={isRTL ? "الحساسية:" : "Allergies:"} value={allergiesLabel} fontFamily={fontFamily} />
+          <Pill
+            icon={<DietSvg />}
+            label={isRTL ? "الحمية:" : "Diet:"}
+            value={dietLabel}
+            fontFamily={fontFamily}
+            onClick={onDietClick}
+            tooltip={isRTL ? "انقر لتغيير الحمية (اختيار واحد فقط)" : "Click to select diet (single selection)"}
+            interactive={Boolean(onDietClick)}
+          />
+          <Pill
+            icon={<AlertSvg />}
+            label={isRTL ? "الحساسية:" : "Allergies:"}
+            value={allergiesLabel}
+            fontFamily={fontFamily}
+            onClick={onAllergiesClick}
+            tooltip={isRTL ? "انقر لتعديل الحساسيات (اختيارات متعددة)" : "Click to edit allergies (multiple selection)"}
+            interactive={Boolean(onAllergiesClick)}
+          />
         </div>
       </div>
     </motion.div>
   );
 }
 
-function Pill({ icon, label, value, fontFamily }: { icon: React.ReactNode; label: string; value: string; fontFamily: string }) {
+function Pill({
+  icon,
+  label,
+  value,
+  fontFamily,
+  onClick,
+  tooltip,
+  interactive,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  fontFamily: string;
+  onClick?: () => void;
+  tooltip?: string;
+  interactive?: boolean;
+}) {
+  const isInteractive = Boolean(onClick);
+  const Tag = isInteractive ? motion.button : "div";
+
   return (
-    <div className="flex items-center gap-[8px]" style={{ backgroundColor: "#F2F9FB", borderRadius: "10px", padding: "11px 16px" }}>
+    <Tag
+      {...(isInteractive ? { onClick, whileTap: { scale: 0.96 }, title: tooltip } : {})}
+      className={`flex items-center gap-[8px] ${isInteractive ? "cursor-pointer group transition-all" : ""}`}
+      style={{
+        backgroundColor: isInteractive ? "rgba(0, 138, 171, 0.08)" : "#F2F9FB",
+        borderRadius: "10px",
+        padding: "9px 15px",
+        border: isInteractive ? "1.5px solid rgba(0, 138, 171, 0.25)" : "1px solid transparent",
+        outline: "none",
+      }}
+    >
       {icon}
       <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#303030", whiteSpace: "nowrap", lineHeight: 1.2 }}>{label}</span>
-      <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#303030", whiteSpace: "nowrap", lineHeight: 1.2 }}>{value}</span>
-    </div>
+      <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: isInteractive ? "#008AAB" : "#303030", whiteSpace: "nowrap", lineHeight: 1.2 }}>{value}</span>
+      {isInteractive && (
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#008AAB"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ opacity: 0.8, marginInlineStart: "2px" }}
+        >
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg>
+      )}
+    </Tag>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * DIET & ALLERGIES MODAL (Interactive: Single Diet, Multiple Allergies)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+interface DietOptionItem {
+  id: DietType | "npo";
+  label: { en: string; ar: string };
+  desc: { en: string; ar: string };
+  color: string;
+  bg: string;
+  icon: React.ComponentType<{ size?: number; color?: string }>;
+}
+
+const ALL_DIET_OPTIONS: DietOptionItem[] = [
+  {
+    id: "regular",
+    label: { en: "Regular Diet", ar: "عادي" },
+    desc: { en: "Standard balanced hospital meal plan", ar: "خطة وجبات قياسية متوازنة وصحية" },
+    color: "#0284C7",
+    bg: "#F0F9FF",
+    icon: Utensils,
+  },
+  {
+    id: "diabetic",
+    label: { en: "Diabetic", ar: "السكري" },
+    desc: { en: "Controlled carbohydrates & low sugar", ar: "كربوهيدرات مقننة وسكريات منخفضة" },
+    color: "#2563EB",
+    bg: "#EFF6FF",
+    icon: Droplets,
+  },
+  {
+    id: "low-sodium",
+    label: { en: "Low Sodium", ar: "قليل الصوديوم" },
+    desc: { en: "Heart-healthy with restricted salt", ar: "صحي للقلب ومقيد الملح" },
+    color: "#059669",
+    bg: "#ECFDF5",
+    icon: Heart,
+  },
+  {
+    id: "low-potassium",
+    label: { en: "Low Potassium", ar: "قليل البوتاسيوم" },
+    desc: { en: "Kidney-care with low potassium foods", ar: "صحي للكلى بأطعمة منخفضة البوتاسيوم" },
+    color: "#DB2777",
+    bg: "#FDF2F8",
+    icon: Heart,
+  },
+  {
+    id: "soft-diet",
+    label: { en: "Soft Diet", ar: "نظام غذائي لين" },
+    desc: { en: "Easy to chew and digest meals", ar: "وجبات سهلة المضغ والهضم والبلع" },
+    color: "#D97706",
+    bg: "#FFFBEB",
+    icon: Soup,
+  },
+  {
+    id: "chemotherapy",
+    label: { en: "Chemotherapy", ar: "العلاج الكيميائي" },
+    desc: { en: "Nutrient-dense oncology nutrition", ar: "تغذية متكاملة لمرضى العلاج الكيميائي" },
+    color: "#7C3AED",
+    bg: "#F5F3FF",
+    icon: FlaskConical,
+  },
+  {
+    id: "ob",
+    label: { en: "OB Patients", ar: "مرضى التوليد" },
+    desc: { en: "Maternity & postpartum nutrition", ar: "تغذية للأمهات بعد الولادة وفترة الحمل" },
+    color: "#EA580C",
+    bg: "#FFF7ED",
+    icon: Star,
+  },
+  {
+    id: "kids",
+    label: { en: "Kids Menu", ar: "قائمة الأطفال" },
+    desc: { en: "Child-friendly meals and fun choices", ar: "وجبات شهية ومناسبة للأطفال" },
+    color: "#059669",
+    bg: "#ECFDF5",
+    icon: Baby,
+  },
+  {
+    id: "npo",
+    label: { en: "NPO / Fasting", ar: "صائم (NPO)" },
+    desc: { en: "Nothing by mouth (fasting for medical tests/surgery)", ar: "ممنوع تناول الطعام بالفم (صيام للفحوصات/الجراحة)" },
+    color: "#DC2626",
+    bg: "#FEF2F2",
+    icon: AlertTriangle,
+  },
+];
+
+const PRESET_ALLERGIES: { en: string; ar: string }[] = [
+  { en: "Penicillin", ar: "بنسلين" },
+  { en: "Latex", ar: "لاتكس" },
+  { en: "Shellfish", ar: "المأكولات البحرية" },
+  { en: "Peanuts", ar: "الفول السوداني" },
+  { en: "Aspirin", ar: "أسبرين" },
+  { en: "Sulfonamides", ar: "سلفوناميد" },
+  { en: "Morphine", ar: "مورفين" },
+  { en: "Eggs", ar: "البيض" },
+  { en: "Dairy", ar: "منتجات الألبان" },
+  { en: "Gluten", ar: "الجلوتين" },
+  { en: "Tree Nuts", ar: "المكسرات" },
+  { en: "NSAIDs", ar: "مضادات الالتهاب" },
+];
+
+function DietAllergiesModal({
+  isOpen,
+  onClose,
+  initialTab,
+  currentDiet,
+  currentAllergies,
+  onSelectDiet,
+  onToggleAllergy,
+  onAddCustomAllergy,
+  onClearAllergies,
+  fontFamily,
+  isRTL,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  initialTab: "diet" | "allergies";
+  currentDiet: string;
+  currentAllergies: string[];
+  onSelectDiet: (diet: string) => void;
+  onToggleAllergy: (allergy: string) => void;
+  onAddCustomAllergy: (allergy: string) => void;
+  onClearAllergies: () => void;
+  fontFamily: string;
+  isRTL: boolean;
+}) {
+  const [activeTab, setActiveTab] = useState<"diet" | "allergies">(initialTab);
+  const [customAllergyInput, setCustomAllergyInput] = useState("");
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setActiveTab(initialTab);
+      setCustomAllergyInput("");
+    }
+  }, [isOpen, initialTab]);
+
+  if (!isOpen) return null;
+
+  const loc = (v: { en: string; ar: string }) => (isRTL ? v.ar : v.en);
+
+  const handleAddCustom = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = customAllergyInput.trim();
+    if (trimmed) {
+      onAddCustomAllergy(trimmed);
+      setCustomAllergyInput("");
+    }
+  };
+
+  // Combine preset and any existing custom allergies in a single deduplicated list
+  const allKnownAllergies = Array.from(
+    new Set([...PRESET_ALLERGIES.map((a) => a.en), ...currentAllergies])
+  );
+
+  return (
+    <AnimatePresence>
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center p-6"
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.55)", backdropFilter: "blur(6px)" }}
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          transition={{ duration: 0.22 }}
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-[840px] max-h-[90vh] flex flex-col rounded-[28px] overflow-hidden"
+          style={{
+            backgroundColor: "#FFFFFF",
+            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.25)",
+            fontFamily,
+          }}
+        >
+          {/* ── Header ── */}
+          <div
+            className="shrink-0 flex items-center justify-between px-8 py-5"
+            style={{ borderBottom: "1px solid rgba(0,0,0,0.08)", backgroundColor: "#FAFCFD" }}
+          >
+            <div className="flex items-center gap-3.5">
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: "12px",
+                  backgroundColor: "rgba(0, 138, 171, 0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <SlidersHorizontal size={22} color="#008AAB" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: "20px", fontWeight: WEIGHT.bold, color: "#171717", margin: 0 }}>
+                  {isRTL ? "الحمية والحساسية للمريض" : "Patient Diet & Allergies"}
+                </h3>
+                <p style={{ fontSize: "13px", fontWeight: WEIGHT.medium, color: "#6B7280", margin: 0, marginTop: "2px" }}>
+                  {isRTL ? "اضبط الحمية الغذائية وسجل الحساسيات النشطة" : "Configure patient meal diet and allergy precautions"}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: "50%",
+                backgroundColor: "#F3F4F6",
+                border: "none",
+                outline: "none",
+                color: "#6B7280",
+              }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* ── Tabs (Diet vs Allergies) ── */}
+          <div
+            className="shrink-0 flex items-center gap-3 px-8 pt-4 pb-2"
+            style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}
+          >
+            <button
+              onClick={() => setActiveTab("diet")}
+              className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-bold cursor-pointer transition-all active:scale-98"
+              style={{
+                backgroundColor: activeTab === "diet" ? "#008AAB" : "#F3F4F6",
+                color: activeTab === "diet" ? "#FFFFFF" : "#4B5563",
+                fontSize: "15px",
+                border: "none",
+                outline: "none",
+              }}
+            >
+              <Utensils size={18} />
+              <span>{isRTL ? "الحمية الغذائية" : "Diet"}</span>
+              <span
+                style={{
+                  fontSize: "12px",
+                  padding: "2px 8px",
+                  borderRadius: "100px",
+                  backgroundColor: activeTab === "diet" ? "rgba(255,255,255,0.25)" : "#E5E7EB",
+                  color: activeTab === "diet" ? "#FFFFFF" : "#374151",
+                }}
+              >
+                1
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("allergies")}
+              className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-bold cursor-pointer transition-all active:scale-98"
+              style={{
+                backgroundColor: activeTab === "allergies" ? "#E11D48" : "#F3F4F6",
+                color: activeTab === "allergies" ? "#FFFFFF" : "#4B5563",
+                fontSize: "15px",
+                border: "none",
+                outline: "none",
+              }}
+            >
+              <AlertTriangle size={18} />
+              <span>{isRTL ? "الحساسية" : "Allergies"}</span>
+              <span
+                style={{
+                  fontSize: "12px",
+                  padding: "2px 8px",
+                  borderRadius: "100px",
+                  backgroundColor: activeTab === "allergies" ? "rgba(255,255,255,0.25)" : "#E5E7EB",
+                  color: activeTab === "allergies" ? "#FFFFFF" : "#374151",
+                }}
+              >
+                {currentAllergies.length}
+              </span>
+            </button>
+          </div>
+
+          {/* ── Content Body ── */}
+          <div className="flex-1 min-h-0 overflow-y-auto px-8 py-5 fo-scroll">
+            {activeTab === "diet" ? (
+              <div className="flex flex-col gap-4">
+                {/* Diets Grid (Single Selection) */}
+                <div className="grid grid-cols-2 gap-3.5">
+                  {ALL_DIET_OPTIONS.map((d) => {
+                    const isSelected = currentDiet === d.id;
+                    const Icon = d.icon;
+                    return (
+                      <motion.button
+                        key={d.id}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => onSelectDiet(d.id)}
+                        className="flex items-start gap-3.5 p-4 rounded-2xl text-left cursor-pointer transition-all"
+                        style={{
+                          backgroundColor: isSelected ? d.bg : "#FFFFFF",
+                          border: isSelected ? `2px solid ${d.color}` : "1.5px solid #E5E7EB",
+                          boxShadow: isSelected ? `0 4px 16px ${d.color}25` : "none",
+                          outline: "none",
+                          textAlign: isRTL ? "right" : "left",
+                        }}
+                      >
+                        {/* Diet Icon */}
+                        <div
+                          style={{
+                            width: "44px",
+                            height: "44px",
+                            borderRadius: "12px",
+                            backgroundColor: isSelected ? d.color : "#F3F4F6",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Icon size={22} color={isSelected ? "#FFFFFF" : d.color} />
+                        </div>
+
+                        {/* Label & Description */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <span style={{ fontSize: "16px", fontWeight: WEIGHT.bold, color: isSelected ? d.color : "#1F2937" }}>
+                              {loc(d.label)}
+                            </span>
+                            {/* Single selection Radio indicator */}
+                            <div
+                              style={{
+                                width: 22,
+                                height: 22,
+                                borderRadius: "50%",
+                                border: isSelected ? `6px solid ${d.color}` : "2px solid #D1D5DB",
+                                backgroundColor: "#FFFFFF",
+                                flexShrink: 0,
+                                transition: "all 0.2s ease",
+                              }}
+                            />
+                          </div>
+                          <p style={{ fontSize: "12.5px", fontWeight: WEIGHT.medium, color: "#6B7280", margin: 0, marginTop: "4px", lineHeight: 1.4 }}>
+                            {loc(d.desc)}
+                          </p>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* NPO Informational Alert */}
+                {currentDiet === "npo" && (
+                  <div
+                    className="flex items-start gap-3.5 p-4 rounded-2xl mt-2"
+                    style={{ backgroundColor: "#FEF2F2", border: "1.5px solid #FECACA" }}
+                  >
+                    <AlertTriangle size={22} color="#DC2626" className="shrink-0 mt-0.5" />
+                    <div>
+                      <p style={{ fontSize: "14px", fontWeight: WEIGHT.bold, color: "#991B1B", margin: 0 }}>
+                        {isRTL ? "تنبيه الصيام (NPO)" : "NPO Fasting Status"}
+                      </p>
+                      <p style={{ fontSize: "13px", fontWeight: WEIGHT.medium, color: "#B91C1C", margin: 0, marginTop: "2px", lineHeight: 1.4 }}>
+                        {isRTL
+                          ? "عند تفعيل وضع الصيام، سيتم تعطيل طلب الوجبات للمريض مع إمكانية طلب المرافقين."
+                          : "When NPO is active, patient meal ordering is disabled while companion meal orders remain allowed."}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── Allergies Section (Multiple Selection) ── */
+              <div className="flex flex-col gap-5">
+                {/* Header info & clear button */}
+                <div className="flex items-center justify-between pb-1">
+                  <div>
+                    <span style={{ fontSize: "14px", fontWeight: WEIGHT.bold, color: "#4B5563" }}>
+                      {isRTL ? "الحساسيات المحددة:" : "Selected Allergies:"}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={onClearAllergies}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all active:scale-95"
+                    style={{
+                      backgroundColor: currentAllergies.length === 0 ? "#E0F2FE" : "#FEE2E2",
+                      color: currentAllergies.length === 0 ? "#0369A1" : "#B91C1C",
+                      border: "none",
+                      outline: "none",
+                    }}
+                  >
+                    <Trash2 size={13} />
+                    <span>{isRTL ? "لا توجد حساسية (مسح الكل)" : "No Known Allergies (Clear)"}</span>
+                  </button>
+                </div>
+
+                {/* Active Allergies Chips */}
+                <div className="flex flex-wrap gap-2.5">
+                  {allKnownAllergies.map((allergyName) => {
+                    const isSelected = currentAllergies.includes(allergyName);
+                    const preset = PRESET_ALLERGIES.find((p) => p.en.toLowerCase() === allergyName.toLowerCase());
+                    const arLabel = preset ? preset.ar : allergyName;
+                    const enLabel = preset ? preset.en : allergyName;
+                    const label = isRTL ? arLabel : enLabel;
+
+                    return (
+                      <motion.button
+                        key={allergyName}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => onToggleAllergy(allergyName)}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold cursor-pointer transition-all"
+                        style={{
+                          backgroundColor: isSelected ? "#FEE2E2" : "#F9FAFB",
+                          border: isSelected ? "1.5px solid #EF4444" : "1.5px solid #E5E7EB",
+                          color: isSelected ? "#991B1B" : "#4B5563",
+                          fontSize: "14px",
+                          outline: "none",
+                          boxShadow: isSelected ? "0 2px 8px rgba(239, 68, 68, 0.18)" : "none",
+                        }}
+                      >
+                        {isSelected ? (
+                          <div
+                            style={{
+                              width: 18,
+                              height: 18,
+                              borderRadius: "50%",
+                              backgroundColor: "#EF4444",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Check size={12} color="#FFFFFF" strokeWidth={3} />
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              width: 18,
+                              height: 18,
+                              borderRadius: "50%",
+                              border: "1.5px solid #D1D5DB",
+                            }}
+                          />
+                        )}
+                        <span>{label}</span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* Add Custom Allergy Input */}
+                <form
+                  onSubmit={handleAddCustom}
+                  className="flex items-center gap-2 p-3 rounded-2xl mt-2"
+                  style={{ backgroundColor: "#F9FAFB", border: "1.5px dashed #D1D5DB" }}
+                >
+                  <Plus size={20} color="#6B7280" className="shrink-0" />
+                  <input
+                    type="text"
+                    value={customAllergyInput}
+                    onChange={(e) => setCustomAllergyInput(e.target.value)}
+                    placeholder={isRTL ? "إضافة حساسية أخرى مخصصة..." : "Add other custom allergy..."}
+                    style={{
+                      flex: 1,
+                      backgroundColor: "transparent",
+                      border: "none",
+                      outline: "none",
+                      fontFamily,
+                      fontSize: "14px",
+                      color: "#1F2937",
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!customAllergyInput.trim()}
+                    className="px-4 py-2 rounded-xl text-xs font-bold transition-all"
+                    style={{
+                      backgroundColor: customAllergyInput.trim() ? "#008AAB" : "#E5E7EB",
+                      color: customAllergyInput.trim() ? "#FFFFFF" : "#9CA3AF",
+                      border: "none",
+                      outline: "none",
+                      cursor: customAllergyInput.trim() ? "pointer" : "default",
+                    }}
+                  >
+                    {isRTL ? "إضافة" : "Add"}
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+
+          {/* ── Footer ── */}
+          <div
+            className="shrink-0 flex items-center justify-end px-8 py-4"
+            style={{ borderTop: "1px solid rgba(0,0,0,0.08)", backgroundColor: "#FAFCFD" }}
+          >
+            <button
+              onClick={onClose}
+              className="px-8 py-2.5 rounded-xl font-bold cursor-pointer transition-transform active:scale-95"
+              style={{
+                backgroundColor: "#008AAB",
+                color: "#FFFFFF",
+                fontSize: "15px",
+                border: "none",
+                outline: "none",
+                boxShadow: "0 4px 14px rgba(0, 138, 171, 0.3)",
+              }}
+            >
+              {isRTL ? "تم / تطبيق" : "Done / Apply"}
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
   );
 }
 
