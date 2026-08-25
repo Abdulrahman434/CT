@@ -2200,17 +2200,18 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
         </span>
       </div>
 
-      {/* Wrapped row/grid of chip cards */}
+      {/* 2-column grid of equal width boxes with wrapped long text */}
       <div
-        style={{ display: "flex", flexWrap: "wrap", gap: "12px", paddingBottom: "4px" }}>
+        style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px", paddingBottom: "4px" }}>
         {group.items.map((item) => {
           const sel = selections.includes(item.id);
           return (
             <button key={item.id} onClick={() => onToggle(item.id)}
-              className="flex items-center gap-2 active:scale-95 transition-transform"
+              className="flex items-center gap-3 active:scale-95 transition-transform w-full"
               style={{
-                padding: "12px 18px",
-                borderRadius: "12px",
+                padding: "14px 18px",
+                minHeight: "56px",
+                borderRadius: "14px",
                 backgroundColor: "#fff",
                 border: sel ? `2px solid ${TEAL}` : "1.5px solid rgba(0,0,0,0.12)",
                 boxShadow: sel ? `0 2px 8px ${TEAL_20}` : "none",
@@ -2226,7 +2227,15 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
               }}>
                 {sel && <Check size={14} color="#fff" strokeWidth={3} />}
               </div>
-              <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: sel ? TEAL : "#171717", whiteSpace: "nowrap" }}>
+              <span style={{
+                fontFamily,
+                fontSize: "15px",
+                fontWeight: WEIGHT.semibold,
+                color: sel ? TEAL : "#171717",
+                whiteSpace: "normal",
+                wordBreak: "break-word",
+                lineHeight: "1.35",
+              }}>
                 {loc(item.name)}
               </span>
             </button>
