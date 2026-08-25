@@ -1676,6 +1676,30 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
             {tomorrowStr}
           </span>
         </div>
+
+        {/* Highlighted Notice Banner */}
+        <div
+          className="shrink-0 flex items-center justify-center gap-3 px-6 py-3 rounded-2xl max-w-[860px] mx-auto text-center"
+          style={{
+            backgroundColor: "#FEF3C7",
+            border: "1.5px solid #F59E0B",
+            color: "#92400E",
+            boxShadow: "0 2px 8px rgba(245, 158, 11, 0.12)",
+          }}
+        >
+          <Clock size={20} color="#D97706" className="shrink-0" />
+          <p style={{ fontFamily, fontSize: "14.5px", fontWeight: WEIGHT.medium, margin: 0, lineHeight: 1.45 }}>
+            {isRTL ? (
+              <>
+                يرجى تحديد وجباتك المفضلة <b>قبل الساعة 8:00 مساءً</b> لضمان تحضير الوجبات المختارة وتوصيلها إليك. في حال عدم تحديد أي وجبة، سيتم تقديم وجبة قياسية.
+              </>
+            ) : (
+              <>
+                Please select your preferred meals <b>before 8:00 PM</b> to help ensure that your selected meals are prepared and delivered to you. If no meal is selected, a standard meal will be provided.
+              </>
+            )}
+          </p>
+        </div>
       </div>
 
       {/* Cards row — narrower, centered with whitespace, icon-led */}
@@ -2163,8 +2187,6 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
               className="flex items-center gap-2 active:scale-95 transition-transform"
               style={{
                 padding: "12px 18px",
-                minWidth: "168px",
-                flex: "1 1 240px",
                 borderRadius: "12px",
                 backgroundColor: "#fff",
                 border: sel ? `2px solid ${TEAL}` : "1.5px solid rgba(0,0,0,0.12)",
@@ -2181,7 +2203,7 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
               }}>
                 {sel && <Check size={14} color="#fff" strokeWidth={3} />}
               </div>
-              <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: sel ? TEAL : "#171717", whiteSpace: "normal" }}>
+              <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: sel ? TEAL : "#171717", whiteSpace: "nowrap" }}>
                 {loc(item.name)}
               </span>
             </button>

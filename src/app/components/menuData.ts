@@ -1047,7 +1047,7 @@ export const MEAL_WINDOWS: Record<MealId, {
   orderCutoff: number;
   color: string;
 }> = {
-  breakfast: { label: { en: "Breakfast", ar: "فطور" }, timeRange: "8:00 AM – 9:00 AM", hours: [8, 10], orderCutoff: 6, color: "#F59E0B" },
-  lunch:     { label: { en: "Lunch", ar: "غداء" },     timeRange: "1:00 PM – 2:00 PM", hours: [13, 14], orderCutoff: 11, color: "#22C55E" },
-  dinner:    { label: { en: "Dinner", ar: "عشاء" },    timeRange: "7:00 PM – 8:00 PM", hours: [19, 20], orderCutoff: 17, color: "#6366F1" },
+  breakfast: { label: { en: "Breakfast", ar: "فطور" }, timeRange: "8:00 AM – 9:00 AM", hours: [8, 10], orderCutoff: 20, color: "#F59E0B" },
+  lunch:     { label: { en: "Lunch", ar: "غداء" },     timeRange: "1:00 PM – 2:00 PM", hours: [13, 14], orderCutoff: 20, color: "#22C55E" },
+  dinner:    { label: { en: "Dinner", ar: "عشاء" },    timeRange: "7:00 PM – 8:00 PM", hours: [19, 20], orderCutoff: 20, color: "#6366F1" },
 };
