@@ -2132,52 +2132,16 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
   const max = group.mode === "choose-2" ? 2 : 1;
   const done = selections.length >= max;
 
-  // Horizontal scroll + pagination dots + mouse drag
-  const scrollerRef = React.useRef<HTMLDivElement>(null);
-  const [pageIdx, setPageIdx] = React.useState(0);
-  const PAGE_SIZE = 5;
-  const pageCount = Math.max(1, Math.ceil(group.items.length / PAGE_SIZE));
-  const dragState = React.useRef({ isDown: false, startX: 0, startScroll: 0, moved: false });
-
-  const handleScroll = () => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const ratio = el.scrollLeft / Math.max(el.scrollWidth - el.clientWidth, 1);
-    setPageIdx(Math.round(ratio * (pageCount - 1)));
-  };
-
-  const onMouseDown = (e: React.MouseEvent) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    dragState.current = { isDown: true, startX: e.pageX, startScroll: el.scrollLeft, moved: false };
-  };
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!dragState.current.isDown) return;
-    const el = scrollerRef.current;
-    if (!el) return;
-    const dx = e.pageX - dragState.current.startX;
-    if (Math.abs(dx) > 4) dragState.current.moved = true;
-    el.scrollLeft = dragState.current.startScroll - dx;
-  };
-  const onMouseUp = () => { dragState.current.isDown = false; };
-  const onClickCapture = (e: React.MouseEvent) => {
-    if (dragState.current.moved) {
-      e.stopPropagation();
-      e.preventDefault();
-      dragState.current.moved = false;
-    }
-  };
-
   return (
     <div style={{ padding: "16px 20px", borderRadius: "20px", border: "1.5px solid rgba(0,0,0,0.08)", backgroundColor: "#fff" }}>
       {/* Header: number circle + Item N + Choose only N */}
       <div className="flex items-center gap-3 mb-3">
         <div style={{ width: "40px", height: "40px", borderRadius: "50%",
           backgroundColor: done ? GREEN : "#E7F1F1",
-          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          display: "flex", alignItems: "center", justifyItems: "center", flexShrink: 0 }}>
           {done
-            ? <Check size={20} color="#fff" strokeWidth={2.5} />
-            : <span style={{ fontFamily, fontSize: "18px", fontWeight: WEIGHT.bold, color: TEAL }}>{index}</span>}
+            ? <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}><Check size={20} color="#fff" strokeWidth={2.5} /></div>
+            : <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}><span style={{ fontFamily, fontSize: "18px", fontWeight: WEIGHT.bold, color: TEAL }}>{index}</span></div>}
         </div>
         <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold, color: "#171717" }}>
           {loc(group.label)}
@@ -2189,26 +2153,25 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
         </span>
       </div>
 
-      {/* Horizontal scroll row of chip cards */}
-      <div ref={scrollerRef} onScroll={handleScroll}
-        onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
-        onClickCapture={onClickCapture}
-        className="fo-carousel"
-        style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "4px", touchAction: "pan-x", WebkitOverflowScrolling: "touch", userSelect: "none" }}>
+      {/* Wrapped row/grid of chip cards */}
+      <div
+        style={{ display: "flex", flexWrap: "wrap", gap: "12px", paddingBottom: "4px" }}>
         {group.items.map((item) => {
           const sel = selections.includes(item.id);
           return (
             <button key={item.id} onClick={() => onToggle(item.id)}
-              className="flex items-center gap-2 active:scale-95 transition-transform shrink-0"
+              className="flex items-center gap-2 active:scale-95 transition-transform"
               style={{
                 padding: "12px 18px",
                 minWidth: "168px",
+                flex: "1 1 240px",
                 borderRadius: "12px",
                 backgroundColor: "#fff",
                 border: sel ? `2px solid ${TEAL}` : "1.5px solid rgba(0,0,0,0.12)",
                 boxShadow: sel ? `0 2px 8px ${TEAL_20}` : "none",
                 cursor: "pointer", outline: "none",
                 transition: "border 0.15s, box-shadow 0.15s",
+                textAlign: isRTL ? "right" : "left",
               }}>
               <div style={{
                 width: "20px", height: "20px", borderRadius: "5px",
@@ -2218,36 +2181,13 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
               }}>
                 {sel && <Check size={14} color="#fff" strokeWidth={3} />}
               </div>
-              <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: sel ? TEAL : "#171717", whiteSpace: "nowrap" }}>
+              <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: sel ? TEAL : "#171717", whiteSpace: "normal" }}>
                 {loc(item.name)}
               </span>
             </button>
           );
         })}
       </div>
-
-      {/* Page indicator dots — only when there's more than one page worth (clickable) */}
-      {group.items.length > PAGE_SIZE && (
-        <div className="flex items-center justify-center gap-1.5 mt-3">
-          {Array.from({ length: pageCount }).map((_, i) => (
-            <button key={i}
-              onClick={() => {
-                const el = scrollerRef.current;
-                if (!el) return;
-                const target = (el.scrollWidth - el.clientWidth) * (i / Math.max(pageCount - 1, 1));
-                el.scrollTo({ left: target, behavior: "smooth" });
-              }}
-              style={{
-                width: i === pageIdx ? "26px" : "10px",
-                height: "10px",
-                borderRadius: "100px",
-                backgroundColor: i === pageIdx ? TEAL : "#D1D5DB",
-                border: "none", outline: "none", cursor: "pointer", padding: 0,
-                transition: "width 0.25s, background-color 0.25s",
-              }} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
