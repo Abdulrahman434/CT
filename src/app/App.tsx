@@ -473,7 +473,9 @@ function BedsideScreen() {
   const prevIsHomeScreenRef = useRef(false);
   useEffect(() => {
     const isFakeeh = theme.id === "dsfh" || theme.id.includes("dsfh") || theme.id.includes("fakeeh");
-    if (isHomeScreen && !prevIsHomeScreenRef.current && isFakeeh) {
+    if (!isFakeeh) return;
+
+    const checkAndShowToast = () => {
       const hasPatientOrdered = orders.some(
         (o) => o.orderFor === "patient" || !o.orderFor
       );
@@ -492,8 +494,20 @@ function BedsideScreen() {
           },
         });
       }
+    };
+
+    // Show initial toast on landing on Home screen
+    if (isHomeScreen && !prevIsHomeScreenRef.current) {
+      checkAndShowToast();
     }
     prevIsHomeScreenRef.current = isHomeScreen;
+
+    // Recurring check every 5 minutes (300,000 ms) as long as food has not been ordered
+    const intervalId = setInterval(() => {
+      checkAndShowToast();
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
   }, [isHomeScreen, theme.id, orders, isRTL, showToast]);
 
   // Queue of immediate alerts to show as broadcast popups
