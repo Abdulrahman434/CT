@@ -2,15 +2,44 @@ import { isAndroidApp } from "../utils/androidBridge";
 import { nurseActions } from "../components/NurseDataStore";
 import { clearUserData } from "./onboardingStore";
 import { getPackagesCache } from "./hospitalApi";
+import { clearImageCache } from "./imageProxy";
+
+/**
+ * Authoritative wipe list for third-party patient apps (WhatsApp, Teams,
+ * etc.): every server-listed app with a packageName, plus a hardcoded
+ * fallback set. Shared by both clear flows below — previously only
+ * clearAllDataAndReload() used this, so "Clear My Data" silently never
+ * touched third-party apps despite its own UI promising it does.
+ */
+function patientAppPackages(): string[] {
+  const apiPkgs = getPackagesCache()
+    .filter((p: any) => p.packageName)
+    .map((p: any) => String(p.packageName).trim())
+    .filter(Boolean);
+  const known = [
+    "com.whatsapp", "com.google.android.youtube", "com.android.chrome",
+    "com.microsoft.teams", "com.google.android.apps.tachyon",
+    "com.instagram.android", "com.facebook.katana", "com.twitter.android",
+    "com.snapchat.android",
+  ];
+  return Array.from(new Set([...apiPkgs, ...known]));
+}
 
 /**
  * Performs a partial data wipe, clearing cookies, sessionStorage, caches,
  * indexedDB, and non-setup local storage keys (preserving user PIN and preferences).
+ * On Android, also wipes third-party patient apps (WhatsApp, Teams, etc.)
+ * and the native WebView cache — the PIN/setup keys and device config are
+ * untouched (that's the whole point of this being the "lighter" clear).
  * Reloads the page afterwards.
  */
 export async function clearUserDataAndReload(): Promise<void> {
   // 1. Clear non-setup localStorage keys (keep device config and onboarding answers)
   clearUserData();
+
+  // 1.5 Free the in-memory proxied-image cache (base64 data-URIs of the
+  //     previous patient's posters/photos) so it doesn't carry over.
+  clearImageCache();
 
   // 2. Clear sessionStorage
   sessionStorage.clear();
@@ -53,12 +82,34 @@ export async function clearUserDataAndReload(): Promise<void> {
     console.warn("Cookie clear skipped:", e);
   }
 
-  // 6. Reload the page (browser fallback)
+  // 6. On Android — wipe third-party patient apps (WhatsApp, Chrome,
+  //    Teams, etc.), matching what this button's own description promises:
+  //    "Clears third-party apps... your preferences and PIN remain safe."
+  //
+  //    Deliberately does NOT call AndroidSystem.clearSession() — that
+  //    method calls WebStorage.deleteAllData(), which wipes ALL WebView
+  //    localStorage at the native level, INCLUDING the SETUP/DEVICE keys
+  //    (PIN, device login, onboarding) that clearUserData() above just
+  //    surgically preserved. That combination was shipped briefly and
+  //    caused "Clear My Data" to kick the patient back to the login
+  //    screen — the opposite of what this button is supposed to do. The
+  //    JS-side steps above (sessionStorage/IndexedDB/Cache Storage API/
+  //    document.cookie) already cover CareInn's own "browser cache"
+  //    without touching localStorage, so nothing native is needed here.
+  if (isAndroidApp()) {
+    try {
+      window.AndroidSystem?.clearAppData?.(JSON.stringify(patientAppPackages()));
+    } catch (e) {
+      console.warn("clearAppData skipped:", e);
+    }
+  }
+
+  // 7. Reload the page (browser fallback)
   window.location.replace(window.location.href);
 }
 
 /**
- * Performs a full data wipe of all stored kiosk data, then 
+ * Performs a full data wipe of all stored kiosk data, then
  * reloads the page. On Android, also clears the native WebView 
  * cache, cookies, and app data before reloading.
  *
@@ -70,6 +121,9 @@ export async function clearAllDataAndReload(): Promise<void> {
 
   // 1.1 Clear patient overrides
   nurseActions.clearPatientOverrides();
+
+  // 1.2 Free the in-memory proxied-image cache (base64 data-URIs).
+  clearImageCache();
 
   // 2. Clear sessionStorage
   sessionStorage.clear();
@@ -119,21 +173,7 @@ export async function clearAllDataAndReload(): Promise<void> {
   //    clear (WebView cache/cookies) which also triggers the reload.
   if (isAndroidApp()) {
     try {
-      // Authoritative source: every app the server lists with a package
-      // name (any type), so all configured patient apps get wiped — not
-      // just the ones flagged "APK".
-      const apiPkgs = getPackagesCache()
-        .filter((p: any) => p.packageName)
-        .map((p: any) => String(p.packageName).trim())
-        .filter(Boolean);
-      const known = [
-        "com.whatsapp", "com.google.android.youtube", "com.android.chrome",
-        "com.microsoft.teams", "com.google.android.apps.tachyon",
-        "com.instagram.android", "com.facebook.katana", "com.twitter.android",
-        "com.snapchat.android",
-      ];
-      const pkgs = Array.from(new Set([...apiPkgs, ...known]));
-      window.AndroidSystem?.clearAppData?.(JSON.stringify(pkgs));
+      window.AndroidSystem?.clearAppData?.(JSON.stringify(patientAppPackages()));
     } catch (e) {
       console.warn("clearAppData skipped:", e);
     }

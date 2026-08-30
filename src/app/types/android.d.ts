@@ -87,6 +87,21 @@ interface AndroidSystemInterface {
   // Image proxy — fetches http:// image, returns base64 data URL
   // Used to bypass mixed content restrictions in HTTPS WebView
   fetchImageAsBase64?(url: string): string;
+
+  // App / device versions
+  getAppVersion?(): string;           // returns JSON string
+  getTotalMemoryMb?(): number;
+  isAggressiveMemoryMode?(): boolean;
+
+  // Content delivery / hidden admin gate
+  verifyAdminCode?(code: string): boolean;
+  getContentMode?(): string;
+  setContentMode?(mode: string): void;
+  getContentBaseUrl?(): string;
+  setContentBaseUrl?(url: string): void;
+  resetContentBaseUrl?(): void;
+  getContentStatus?(): string;        // returns JSON string
+  resetFirstRun?(): void;
 }
 /* ─── CustomEvent detail shapes dispatched by the Android side ─── */
 export interface BrightnessChangedDetail {
@@ -173,7 +188,8 @@ export type AndroidEventName =
   | "apk-install-progress"
   | "apk-install-success"
   | "apk-install-error"
-  | "kiosk-resumed";
+  | "kiosk-resumed"
+  | "memory-pressure";
 
 /* ─── Augment the global Window type ─── */
 declare global {

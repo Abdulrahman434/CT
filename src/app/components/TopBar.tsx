@@ -11,6 +11,7 @@ import { useLongPress } from "../lib/useLongPress";
 import { useNurseStore, nurseActions } from "./NurseDataStore";
 import { fetchPatientForDevice } from "../lib/hospitalApi";
 import { getDeviceInfo } from "../utils/androidBridge";
+import { AdminGate, useAdminGateTap } from "./AdminGate";
 
 // Removed hardcoded prayerTimes
 
@@ -86,6 +87,9 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
     window.location.reload();
   }, 1000);
 
+  // Hidden admin gate: tap anywhere on the top bar 4x within 2s.
+  const adminGate = useAdminGateTap();
+
   useEffect(() => {
     const fetchWeather = async () => {
       try {
@@ -109,13 +113,28 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
 
 
   useEffect(() => {
+    // Display only shows HH:MM (see `displayHours`/`minutes` below), so
+    // there's no need to trigger a React re-render every second — that was
+    // forcing a full repaint of the whole top bar (logo, connection status,
+    // 5 prayer cells) 60x more often than the visible output ever changes,
+    // which is enough to blow the tile-raster budget on low-end kiosk
+    // hardware. Still poll every second (cheap, no re-render), but only
+    // commit state — and only recompute prayer status — when the minute
+    // actually rolls over.
     const interval = setInterval(() => {
       const now = new Date();
-      setTime(now);
-      setPrayerData(getPrayerStatus(now, theme.location));
+      setTime((prev) =>
+        prev.getMinutes() !== now.getMinutes() || prev.getHours() !== now.getHours()
+          ? now
+          : prev
+      );
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    setPrayerData(getPrayerStatus(time, theme.location));
+  }, [time, theme.location]);
 
 
 
@@ -133,6 +152,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
   return (
     <div
       className="grid shrink-0 w-full items-center"
+      onClickCapture={adminGate.registerTap}
       style={{
         height: "104px",
         backgroundColor: theme.surface,
@@ -142,6 +162,8 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
         gridTemplateColumns: "1fr auto 1fr",
       }}
     >
+      <AdminGate open={adminGate.armed} onClose={() => adminGate.setArmed(false)} />
+
       {/* Left: Logo — always left-aligned within its column */}
       <div className="flex items-center gap-4 h-full">
         <a 

@@ -1048,11 +1048,11 @@ function getCategories(theme: any, locale: string = "en"): Record<string, Catego
       apps: theme.id === "careinn"
         ? /* ── CareInn product materials ── */
           [
-            { id: "ci-edu-careinn15",  name: "CareInn15",    pdf: "/pdfs/careinn/CareInn15.pdf" },
-            { id: "ci-edu-caretv",     name: "CareTV",       pdf: "/pdfs/careinn/CareTV.pdf" },
-            { id: "ci-edu-caresuite",  name: "CareSuite",    pdf: "/pdfs/careinn/CareSuite.pdf" },
-            { id: "ci-edu-careconnect",name: "CareConnect",  pdf: "/pdfs/careinn/CareConnect.pdf" },
-            { id: "ci-edu-caresign",   name: "CareSign",     pdf: "/pdfs/careinn/CareSign.pdf" },
+            { id: "ci-edu-careinn15",  name: "CareInn15",    pdf: "/pdfs/CareInn15.pdf" },
+            { id: "ci-edu-caretv",     name: "CareTV",       pdf: "/pdfs/CareTV.pdf" },
+            { id: "ci-edu-caresuite",  name: "CareSuite",    pdf: "/pdfs/CareSuite.pdf" },
+            { id: "ci-edu-careconnect",name: "CareConnect",  pdf: "/pdfs/CareConnect.pdf" },
+            { id: "ci-edu-caresign",   name: "CareSign",     pdf: "/pdfs/CareSign.pdf" },
           ].map((item) => ({
             id: item.id,
             name: item.name,
@@ -1401,7 +1401,10 @@ export function AppLauncher({
     
     // Rubber band at edges
     let finalDelta = deltaX;
-    if ((pageIndex === 0 && deltaX > 0) || (pageIndex === numPages - 1 && deltaX < 0)) {
+    const isOut = isRTL
+      ? (pageIndex === 0 && deltaX < 0) || (pageIndex === numPages - 1 && deltaX > 0)
+      : (pageIndex === 0 && deltaX > 0) || (pageIndex === numPages - 1 && deltaX < 0);
+    if (isOut) {
       finalDelta = deltaX * 0.3;
     }
     
@@ -1418,10 +1421,18 @@ export function AppLauncher({
     setDragOffset(0);
     swipeStartX.current = null;
 
-    if (deltaX > threshold && pageIndex > 0) {
-      setPageIndex(prev => prev - 1);
-    } else if (deltaX < -threshold && pageIndex < numPages - 1) {
-      setPageIndex(prev => prev + 1);
+    if (isRTL) {
+      if (deltaX > threshold && pageIndex < numPages - 1) {
+        setPageIndex(prev => prev + 1);
+      } else if (deltaX < -threshold && pageIndex > 0) {
+        setPageIndex(prev => prev - 1);
+      }
+    } else {
+      if (deltaX > threshold && pageIndex > 0) {
+        setPageIndex(prev => prev - 1);
+      } else if (deltaX < -threshold && pageIndex < numPages - 1) {
+        setPageIndex(prev => prev + 1);
+      }
     }
   };
   const currentApps = category.apps.slice(pageIndex * appsPerPage, (pageIndex + 1) * appsPerPage);

@@ -37,6 +37,10 @@ export interface ToastInput {
   actionColor?: string;
   /** Callback when the toast body is tapped (not the close button) */
   onTap?: () => void;
+  /** Optional secondary action tag, e.g. "Check Later" */
+  secondaryActionText?: string;
+  secondaryActionColor?: string;
+  onSecondaryTap?: () => void;
   /* ── RTLS-specific fields ── */
   /** Staff photo URL (for rtls variant) */
   staffPhoto?: string;
@@ -453,22 +457,53 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
           </p>
         </div>
 
-        {/* Status badge — same pill style as RTLS auth badge */}
-        {toast.actionText && (
-          <div
-            className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full"
-            style={{ backgroundColor: badgeBg }}
-          >
-            <span style={{
-              fontFamily,
-              fontSize: TYPE_SCALE.sm,
-              fontWeight: WEIGHT.semibold,
-              color: badgeColor,
-            }}>
-              {toast.actionText}
-            </span>
-          </div>
-        )}
+        {/* Status / Action badges */}
+        <div className="shrink-0 flex items-center gap-1.5">
+          {toast.secondaryActionText && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (toast.onSecondaryTap) toast.onSecondaryTap();
+                onDismiss();
+              }}
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer active:scale-95 transition-transform"
+              style={{
+                backgroundColor: "rgba(107, 114, 128, 0.12)",
+                border: "none",
+                outline: "none",
+              }}
+            >
+              <span style={{
+                fontFamily,
+                fontSize: TYPE_SCALE.sm,
+                fontWeight: WEIGHT.semibold,
+                color: toast.secondaryActionColor || "#4B5563",
+              }}>
+                {toast.secondaryActionText}
+              </span>
+            </button>
+          )}
+          {toast.actionText && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (toast.onTap) toast.onTap();
+                onDismiss();
+              }}
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer active:scale-95 transition-transform"
+              style={{ backgroundColor: badgeBg, border: "none", outline: "none" }}
+            >
+              <span style={{
+                fontFamily,
+                fontSize: TYPE_SCALE.sm,
+                fontWeight: WEIGHT.semibold,
+                color: badgeColor,
+              }}>
+                {toast.actionText}
+              </span>
+            </button>
+          )}
+        </div>
       </div>
 
       <style>{`

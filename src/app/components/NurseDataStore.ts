@@ -672,6 +672,10 @@ const nurseStore = (() => {
     },
 
     // ── Allergies ──
+    setAllergies: (allergies: string[]) => {
+      state = { ...state, allergies };
+      notify();
+    },
     addAllergy: (name: string) => {
       if (!state.allergies.includes(name)) {
         state = { ...state, allergies: [...state.allergies, name] };

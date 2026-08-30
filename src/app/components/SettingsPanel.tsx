@@ -11,8 +11,11 @@ import {
   nightLight as nightLightBridge,
   useAndroidEvent,
   useDeviceInfo,
+  UI_VERSION,
+  getNativeAppVersion,
 } from "../utils/androidBridge";
 import { useNurseStore } from "./NurseDataStore";
+import { getMemoryStats, subscribeMemoryStats } from "../lib/memoryPressure";
 import {
   X,
   Sun,
@@ -401,7 +404,7 @@ function CenteredDialog({
           backgroundColor: "#FFFFFF",
           boxShadow: "0 16px 48px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.06)",
           animation: "castDialogIn 0.2s ease-out",
-          overflow: "hidden",
+          overflowX: "hidden",
         }}
       >
         {children}
@@ -1753,6 +1756,16 @@ export function SettingsPanel({
   // Fallback: hardcoded
   const ipDisplay = deviceInfo?.ipAddress || "10.10.42.118";
 
+  // Version line: "App V<apk> - UI V<web>" on the kiosk, or
+  // "App VWeb - UI V<web>" in a plain browser (no native APK).
+  const nativeVer = isAndroidApp() ? getNativeAppVersion() : null;
+  const appVerLabel = isAndroidApp() ? `V${nativeVer ?? "?"}` : "VWeb";
+  const versionDisplay = `App ${appVerLabel} - UI V${UI_VERSION}`;
+
+  // Admin memory-reclaim indicator (updates when native fires memory-pressure)
+  const [memStats, setMemStats] = useState(getMemoryStats());
+  useEffect(() => subscribeMemoryStats(setMemStats), []);
+
   // ── Brightness: init from bridge, sync via event ──
   const [brightnessVal, setBrightnessState] = useState(() =>
     Math.round(brightnessBridge.get() * 100)
@@ -2184,7 +2197,19 @@ export function SettingsPanel({
               {tr("settings.deviceId")}: {deviceIdDisplay}
             </span>
 
-            {/* Line 3: IP address */}
+            {/* Line 3: App + UI version (before IP) */}
+            <span
+              style={{
+                fontFamily: t.fontFamily,
+                fontSize: "11px",
+                fontWeight: 500,
+                color: t.textDisabled,
+              }}
+            >
+              {versionDisplay}
+            </span>
+
+            {/* Line 4: IP address */}
             <span
               style={{
                 fontFamily: t.fontFamily,
@@ -2208,6 +2233,25 @@ export function SettingsPanel({
                 }}
               >
                 {deviceInfo.manufacturer} {deviceInfo.model}
+              </span>
+            )}
+
+            {/* Line 5: Memory reclaim indicator (admin diagnostic; only
+                appears once a low-memory reclaim has actually happened) */}
+            {memStats.reclaims > 0 && (
+              <span
+                style={{
+                  fontFamily: t.fontFamily,
+                  fontSize: "10px",
+                  fontWeight: 400,
+                  color: t.textDisabled,
+                  opacity: 0.6,
+                }}
+              >
+                Memory optimized ×{memStats.reclaims}
+                {memStats.lastAvailMb !== null
+                  ? ` · ${memStats.lastAvailMb}MB free`
+                  : ""}
               </span>
             )}
           </div>

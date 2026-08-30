@@ -35,8 +35,8 @@ import { ThemeAppearanceDialog } from "./components/ThemeAppearanceDialog";
 import { TasbihScreenSaver } from "./components/TasbihScreenSaver";
 import { FoodOrdering } from "./components/FoodOrdering";
 import { NeedSomething } from "./components/NeedSomething";
-import { OrderProvider } from "./components/OrderStore";
-import { ToastProvider } from "./components/ToastNotifications";
+import { OrderProvider, useOrders } from "./components/OrderStore";
+import { ToastProvider, useToast } from "./components/ToastNotifications";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { PasswordGate } from "./components/PasswordGate";
 import { HospitalSelect } from "./components/HospitalSelect";
@@ -201,6 +201,8 @@ function BedsideScreen() {
   const { patientAdmitted, setPatientAdmitted, theme, darkMode, switchConfig, prayerAlarm, layout2Theme, setLocale, setDarkMode, setPrayerAlarm } = useTheme();
   const { isFullAccess, lockedHospitalId } = useAuth();
   const { t, locale, isRTL, dir, fontFamily } = useLocale();
+  const { showToast } = useToast();
+  const { orders } = useOrders();
   const scale = useScreenScale();
   const isOnline = useNetworkStatus();
 
@@ -452,6 +454,64 @@ function BedsideScreen() {
   const [showBlankPage, setShowBlankPage] = useState(false);
   const [showIptv, setShowIptv] = useState(false);
 
+  // Fakeeh ONLY: Home page landing toast if food order was not ordered yet
+  const isHomeScreen =
+    !openCategory &&
+    !showFoodOrder &&
+    !showCareMeExpanded &&
+    !showCall &&
+    !showSurvey &&
+    !showAboutUs &&
+    !showSettings &&
+    !showNotifications &&
+    !showTasbih &&
+    !showConfigurator &&
+    !showBlankPage &&
+    !showIptv &&
+    !activeGame &&
+    !activeTool &&
+    !showNeedSomething;
+
+  const prevIsHomeScreenRef = useRef(false);
+  useEffect(() => {
+    const isFakeeh = theme.id === "dsfh" || theme.id.includes("dsfh") || theme.id.includes("fakeeh");
+    if (!isFakeeh) return;
+
+    const checkAndShowToast = () => {
+      const hasPatientOrdered = orders.some(
+        (o) => o.orderFor === "patient" || !o.orderFor
+      );
+      if (!hasPatientOrdered) {
+        showToast({
+          variant: "meal",
+          category: isRTL ? "تذكير الوجبات" : "MEAL REMINDER",
+          title: isRTL
+            ? "لا تنسَ اختيار وجبات الغد اللذيذة"
+            : "Do not forget to choose your tommorows delicius meals",
+          actionText: isRTL ? "اطلب الآن" : "Order Now",
+          actionColor: "#2563EB",
+          onTap: () => {
+            setFoodOrderInitialView(undefined);
+            setShowFoodOrder(true);
+          },
+        });
+      }
+    };
+
+    // Show initial toast on landing on Home screen
+    if (isHomeScreen && !prevIsHomeScreenRef.current) {
+      checkAndShowToast();
+    }
+    prevIsHomeScreenRef.current = isHomeScreen;
+
+    // Recurring check every 5 minutes (300,000 ms) as long as food has not been ordered
+    const intervalId = setInterval(() => {
+      checkAndShowToast();
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [isHomeScreen, theme.id, orders, isRTL, showToast]);
+
   // Queue of immediate alerts to show as broadcast popups
   const [broadcastQueue, setBroadcastQueue] = useState<BroadcastNotification[]>([]);
 
@@ -614,7 +674,8 @@ function BedsideScreen() {
             missedAt: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
           };
           setActiveBroadcast(null);
-          setAcknowledgedBroadcasts(prev => [missedNotif, ...prev]);
+          setAcknowledgedBroadcasts(prev =>
+            [missedNotif, ...prev].slice(0, MAX_ACKNOWLEDGED_BROADCASTS));
         }
       }
 
@@ -636,7 +697,8 @@ function BedsideScreen() {
         });
 
         if (expired.length > 0) {
-          setAcknowledgedBroadcasts(prev => [...expired, ...prev]);
+          setAcknowledgedBroadcasts(prev =>
+            [...expired, ...prev].slice(0, MAX_ACKNOWLEDGED_BROADCASTS));
         }
 
         return active;
@@ -1005,7 +1067,8 @@ function BedsideScreen() {
         };
         // Schedule outside state updater
         setTimeout(() => {
-          setAcknowledgedBroadcasts((list) => [acknowledged, ...list]);
+          setAcknowledgedBroadcasts((list) =>
+            [acknowledged, ...list].slice(0, MAX_ACKNOWLEDGED_BROADCASTS));
           setNotifTrigger((p) => p + 1);
 
           // Handle CTA Actions if present and user clicked "read" (main CTA button)
@@ -2485,6 +2548,14 @@ function GlobalNfcListener() {
 
   return null;
 }
+
+// Cap the in-memory notification history so an unattended kiosk running
+// for days doesn't accumulate an unbounded array (re-scanned every 2s).
+// This is transient UI state (missed/expired broadcast popups), cleared on
+// checkout — NOT an audit/clinical/legal record, which live server-side.
+// Newest entries are kept (they are prepended), so the visible recent
+// history is unaffected in practice.
+const MAX_ACKNOWLEDGED_BROADCASTS = 50;
 
 export default function App() {
   return (
