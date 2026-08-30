@@ -1264,7 +1264,7 @@ const translations: Record<string, TranslationEntry> = {
   "ppf.comments.label": { en: "Comments", ar: "التعليقات", ur: "تبصرے" },
   "ppf.comments.placeholder": { en: "Anything else you'd like to add", ar: "أي شيء آخر تود إضافته", ur: "کچھ اور جو آپ شامل کرنا چاہیں" },
   "ppf.done.title": { en: "Thank you", ar: "شكراً لك", ur: "شکریہ" },
-  "ppf.done.body": { en: "Your preferences have been shared with your care team and will be included in your care plan.", ar: "تمت مشاركة تفضيلاتك مع فريق الرعاية وسيتم تضمينها في خطة رعايتك.", ur: "آپ کی ترجیحات آپ کی نگہداشت ٹیم کے ساتھ شیئر کر دی گئی ہیں اور آپ کے نگہداشت پلان میں شامل کی جائیں گی۔" },
+  "ppf.done.body": { en: "Your preferences have been saved and shared with the concerned teams.", ar: "تم حفظ تفضيلاتك ومشاركتها مع الجهات المعنية.", ur: "آپ کی ترجیحات محفوظ کر لی گئی ہیں اور متعلقہ ٹیموں کے ساتھ شیئر کر دی گئی ہیں۔" },
   "ppf.done.close": { en: "Close", ar: "إغلاق", ur: "بند کریں" },
 
   /* Sections */
