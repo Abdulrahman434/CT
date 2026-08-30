@@ -45,7 +45,8 @@ const SETUP_KEYS = [
   "careinn-data-clear-policy",
   "careinn-notification-sound",
   "careinn-screensaver-timeout",
-  "careinn-consent-tour-seen",
+  "careinn-prefs-completed",
+  "careinn-prefs-answers",
   "careinn-consent-terms-agreed",
   "careinn-has-seen-app-lock-tutorial",
   // Existing persistence keys behind the wizard's answers — the wizard applies

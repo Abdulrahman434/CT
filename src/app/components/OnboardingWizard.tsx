@@ -12,6 +12,7 @@ import { markOnboardingComplete } from "../lib/onboardingStore";
 import { isAccountSet } from "../lib/accountAuth";
 import { MyPreferencesDialog } from "./MyAccountDialog";
 import { BluetoothDialog } from "./SettingsPanel";
+import { PatientPreferenceForm } from "./PatientPreferenceForm";
 import { bluetooth as bluetoothBridge, isAndroidApp } from "../utils/androidBridge";
 
 import imgDataStorage from "../../assets/data storage.jpg";
@@ -96,13 +97,11 @@ export function OnboardingWizard({
   admitRef,
   onComplete,
   onStartTour,
-  onStartSlideshow,
   hidden = false,
 }: {
   admitRef: string | null;
   onComplete: () => void;
   onStartTour: () => void;
-  onStartSlideshow: () => void;
   /** Keeps the wizard mounted (state intact) but invisible — used while
    *  the welcome tour plays on top of it. */
   hidden?: boolean;
@@ -149,11 +148,11 @@ export function OnboardingWizard({
   const [selSaver, setSelSaver] = useState<"30s" | "1m" | "5m" | null>(
     () => (readLS("careinn-screensaver-timeout") as any) || null
   );
-  const [tourSeen, setTourSeen] = useState(() => !!readLS("careinn-consent-tour-seen"));
+  const [prefsCompleted, setPrefsCompleted] = useState(() => !!readLS("careinn-prefs-completed"));
   const [termsAgreed, setTermsAgreed] = useState(() => !!readLS("careinn-consent-terms-agreed"));
 
   /* reused native flows rendered on top of the wizard */
-  const [overlay, setOverlay] = useState<"pin" | "bluetooth" | null>(null);
+  const [overlay, setOverlay] = useState<"pin" | "bluetooth" | "prefs" | null>(null);
   const [btDevice, setBtDevice] = useState<string | null>(null);
 
   const visibleSteps = useMemo(
@@ -224,7 +223,7 @@ export function OnboardingWizard({
   const finish = (withTour: boolean) => {
     const now = String(Date.now());
     markOnboardingComplete(admitRef);
-    localStorage.setItem("careinn-consent-tour-seen", now);
+    localStorage.setItem("careinn-prefs-completed", now);
     localStorage.setItem("careinn-consent-terms-agreed", now);
     onComplete();
     if (withTour) onStartTour();
@@ -586,12 +585,12 @@ export function OnboardingWizard({
           <>
             <div className="flex flex-col gap-3 w-full" style={{ marginBottom: "8px" }}>
               <ConsentCheckbox
-                checked={tourSeen}
-                onToggle={() => setTourSeen(!tourSeen)}
-                before={tr("onboarding.consent.tour.before")}
-                link={tr("onboarding.consent.tour.link")}
-                after={tr("onboarding.consent.tour.after")}
-                onLinkClick={onStartSlideshow}
+                checked={prefsCompleted}
+                onToggle={() => setPrefsCompleted(!prefsCompleted)}
+                before={tr("onboarding.consent.prefs.before")}
+                link={tr("onboarding.consent.prefs.link")}
+                after={tr("onboarding.consent.prefs.after")}
+                onLinkClick={() => setOverlay("prefs")}
               />
               <ConsentCheckbox
                 checked={termsAgreed}
@@ -602,8 +601,8 @@ export function OnboardingWizard({
               />
             </div>
             <div className="flex items-center gap-3 w-full">
-              <div className="flex-1"><GhostButton label={tr("onboarding.consent.startWithTour")} onClick={() => (tourSeen && termsAgreed) && finish(true)} /></div>
-              <div className="flex-1"><PrimaryButton label={tr("onboarding.consent.startNow")} disabled={!tourSeen || !termsAgreed} onClick={() => finish(false)} /></div>
+              <div className="flex-1"><GhostButton label={tr("onboarding.consent.startWithTour")} onClick={() => (prefsCompleted && termsAgreed) && finish(true)} /></div>
+              <div className="flex-1"><PrimaryButton label={tr("onboarding.consent.startNow")} disabled={!prefsCompleted || !termsAgreed} onClick={() => finish(false)} /></div>
             </div>
           </>
         );
@@ -889,6 +888,16 @@ export function OnboardingWizard({
             setOverlay(null);
             if (isAccountSet()) goNext();
           }}
+        />
+      )}
+
+      {/* Patient Preferences Form — opened from the consent checkbox link.
+          Submitting it ticks the checkbox; closing without submitting leaves
+          the checkbox as the patient left it. */}
+      {overlay === "prefs" && (
+        <PatientPreferenceForm
+          onClose={() => setOverlay(null)}
+          onSubmitted={() => setPrefsCompleted(true)}
         />
       )}
 
