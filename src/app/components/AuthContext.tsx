@@ -206,11 +206,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Local MRN Passcode Matching Check
     try {
       const { isMrnPasscodeMatch } = await import("../lib/hospitalApi");
-      const { nurseStore } = await import("./NurseDataStore");
+      const { nurseActions } = await import("./NurseDataStore");
 
       const activeMrnPasscode = localStorage.getItem('careinn-active-mrn-passcode') || '';
       const lastMrnPasscode = localStorage.getItem('careinn-last-mrn') || '';
-      const storeMrn = nurseStore.get()?.patient?.mrn || '';
+      const storeMrn = nurseActions.get()?.patient?.mrn || '';
 
       const isMatch =
         isMrnPasscodeMatch(basePassword, activeMrnPasscode) ||
