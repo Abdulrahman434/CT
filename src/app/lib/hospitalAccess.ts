@@ -19,7 +19,10 @@ import { ACTIVE_HOSPITAL_KEY, type HospitalCoreConfig } from "../components/Them
 export const ACCESS_CODE_INFIX = "2100";
 
 /** localStorage key holding the hospital the user picked on first launch. */
-export const SELECTED_HOSPITAL_KEY = "careinn-selected-hospital-id";
+export const SELECTED_HOSPITAL_KEY = "selectedHospitalId";
+
+/** Pre-rename key. Read once on migration so provisioned devices aren't re-asked. */
+const LEGACY_SELECTED_HOSPITAL_KEY = "careinn-selected-hospital-id";
 
 /** Fired after the stored selection changes, so open screens can re-read it. */
 export const SELECTED_HOSPITAL_EVENT = "selected-hospital-changed";
@@ -74,7 +77,16 @@ export function findAccessCodeConflicts(
 
 export function getSelectedHospitalId(): string | null {
   try {
-    return localStorage.getItem(SELECTED_HOSPITAL_KEY) || null;
+    const current = localStorage.getItem(SELECTED_HOSPITAL_KEY);
+    if (current) return current;
+
+    const legacy = localStorage.getItem(LEGACY_SELECTED_HOSPITAL_KEY);
+    if (legacy) {
+      localStorage.setItem(SELECTED_HOSPITAL_KEY, legacy);
+      localStorage.removeItem(LEGACY_SELECTED_HOSPITAL_KEY);
+      return legacy;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -95,12 +107,6 @@ export function setSelectedHospitalId(id: string): void {
   window.dispatchEvent(new Event("hospital-changed"));
 }
 
-/** Drop the selection so the next load returns to the Hospital Selection screen. */
-export function clearSelectedHospitalId(): void {
-  try {
-    localStorage.removeItem(SELECTED_HOSPITAL_KEY);
-  } catch (e) {
-    console.error("[hospitalAccess] Could not clear hospital selection:", e);
-  }
-  window.dispatchEvent(new Event(SELECTED_HOSPITAL_EVENT));
-}
+/* No clear/reset counterpart by design: the selection is permanent from the
+ * app's perspective. The Hospital Selection screen returns only when the key is
+ * absent — first launch, or storage cleared outside the app by IT. */

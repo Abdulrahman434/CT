@@ -2414,12 +2414,10 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 function AuthenticatedApp() {
   const { isAuthenticated } = useAuth();
 
-  /* ── Pre-auth routing (no URL routes — driven purely by stored state) ──
-   * no selection  → Hospital Selection
-   * selection set → sign-in gate, scoped to that hospital
-   * authenticated → dashboard
-   * The stored id is mirrored in state so choosing/clearing a hospital swaps
-   * screens immediately instead of waiting for a reload. */
+  /* ── Pre-auth stage (no URL routes — conditional rendering off stored state) ──
+   * The stored id is mirrored in state so picking a hospital swaps screens
+   * immediately instead of waiting for a reload. It is never cleared from the
+   * UI: once set, "hospitalSelect" is unreachable for the rest of the install. */
   const [selectedHospitalId, setSelectedHospitalId] = useState<string | null>(() =>
     getSelectedHospitalId()
   );
@@ -2430,11 +2428,18 @@ function AuthenticatedApp() {
     return () => window.removeEventListener(SELECTED_HOSPITAL_EVENT, sync);
   }, []);
 
-  if (!isAuthenticated) {
-    if (!selectedHospitalId) {
-      return <HospitalSelect onSelected={setSelectedHospitalId} />;
-    }
-    return <PasswordGate onChangeHospital={() => setSelectedHospitalId(null)} />;
+  const appStage: "hospitalSelect" | "signIn" | "dashboard" = isAuthenticated
+    ? "dashboard"
+    : selectedHospitalId
+    ? "signIn"
+    : "hospitalSelect";
+
+  if (appStage === "hospitalSelect") {
+    return <HospitalSelect onSelected={setSelectedHospitalId} />;
+  }
+
+  if (appStage === "signIn") {
+    return <PasswordGate />;
   }
 
   return (

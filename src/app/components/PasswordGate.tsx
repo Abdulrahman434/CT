@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useAuth } from "./AuthContext";
 import { Eye, EyeOff, X } from "lucide-react";
 import { getAllHospitalConfigs } from "./ThemeContext";
-import { clearSelectedHospitalId, getSelectedHospitalId } from "../lib/hospitalAccess";
+import { getSelectedHospitalId } from "../lib/hospitalAccess";
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * PASSWORD GATE — Redesigned immersive login screen
@@ -12,7 +12,7 @@ import { clearSelectedHospitalId, getSelectedHospitalId } from "../lib/hospitalA
 const SKY = "#6CC4E0";
 const NAVY = "#1B2F5B";
 
-export function PasswordGate({ onChangeHospital }: { onChangeHospital?: () => void } = {}) {
+export function PasswordGate() {
   const { login, loginAsGuest } = useAuth();
 
   /* The hospital chosen on the Hospital Selection screen. Its access code is
@@ -447,34 +447,6 @@ export function PasswordGate({ onChangeHospital }: { onChangeHospital?: () => vo
               >
                 Continue as Guest
               </button>
-
-              {/* Escape hatch — a wrong pick would otherwise be unrecoverable
-                  before sign-in, since Hospital Configs lives behind the gate. */}
-              {hospital && onChangeHospital && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    clearSelectedHospitalId();
-                    onChangeHospital();
-                  }}
-                  style={{
-                    width: "100%",
-                    marginTop: "14px",
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                    color: "rgba(255, 255, 255, 0.7)",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    textDecoration: "underline",
-                    textUnderlineOffset: "3px",
-                  }}
-                >
-                  Not {hospital.hospitalShortName || hospital.hospitalName}? Change hospital
-                </button>
-              )}
             </form>
           </div>
         </div>
