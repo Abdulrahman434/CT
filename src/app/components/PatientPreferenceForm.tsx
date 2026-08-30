@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, LEADING } from "./ThemeContext";
 import { useLocale, type Locale } from "./i18n";
 import {
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { InternalPageHeader } from "./InternalPageHeader";
 import { ApiImage } from "./ApiImage";
+import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * Patient Preferences Form (source: Patient Preference Form V12)
@@ -22,19 +23,26 @@ import { ApiImage } from "./ApiImage";
  * the content clips visibly instead of silently growing a scrollbar, so the
  * regression is caught rather than shipped. Vertical budget per screen:
  *
- *   header (InternalPageHeader)   ~116px
- *   progress row                   ~72px
- *   question body (centered)      ~700px   ← all content must fit here
- *   footer (Back / Next)           ~92px
+ *   header (InternalPageHeader)   ~120px
+ *   progress block (shared)       ~185px
+ *   question body (centered)      ~530px   ← all content must fit here
+ *   footer (Back / Next)          ~104px
  *
- * Arabic and Urdu run longer than English, so BODY_MAX_* below are sized for
- * the longest of the three, not for English.
+ * Arabic and Urdu run longer than English, so every size below is chosen for
+ * the longest of the three, not for English. The tallest screen is Q6
+ * (bedside handover): 4 lines of question text in English, 3 in Arabic/Urdu.
+ *
+ * Question text is TYPE_SCALE.lg (26px) at the 1920x1080 design scale, and
+ * that is the floor for this screen rather than a starting point: patients
+ * here are elderly or unwell, so anything under ~20px is not readable from a
+ * bed. If a future translation stops fitting, widen the body or cut words —
+ * do not go under it.
  *
  * COLOUR — no hex literals. Every content icon is the per-hospital secondary
  * on a theme.accentSubtle chip, so icons re-brand with the active hospital.
  * See iconColor below for why the exact token depends on light/dark mode.
- * The one deliberate exception is SWATCHES below: those are the *answer
- * options* for "what is your favourite colour", not styling — theming them
+ * The one deliberate exception is the favourite-colour question: the hue rail
+ * and NEUTRALS below are the *answer options*, not styling — theming them
  * would make the question unanswerable.
  *
  * Sub-views are plain render functions, not nested components: a nested
@@ -57,9 +65,14 @@ export type YesNo = "yes" | "no";
 
 /** Every answer value is language-neutral except `note` / `text`. */
 export interface PreferenceAnswer {
-  /** "yes" | "no" for yes/no questions, an option id for choices,
-   *  an ISO "HH:MM" string for times, a colour id for the colour picker. */
+  /** "yes" | "no" for yes/no questions, an option id for choices, a 24-hour
+   *  "HH:MM" string for times, a "#RRGGBB" hex for the colour picker, or
+   *  NO_PREFERENCE when the patient deliberately declined to choose. */
   value?: string;
+  /** Language-neutral word for a value that is otherwise only machine
+   *  readable — currently the colour name ("red") behind the stored hex, so
+   *  the staff-side view can print the word they read on the paper form. */
+  label?: string;
   /** Free text that IS the answer (Other section) — language-tagged. */
   text?: NoteValue;
   /** Optional note column from the paper form — never blocks progress. */
@@ -83,6 +96,10 @@ export interface PreferenceFormRecord {
   carePartner?: CarePartnerAgreement;
 }
 
+/** Stored when the patient taps "No preference". A real, deliberate answer —
+ *  distinct from an unanswered question, which is what Next now blocks on. */
+export const NO_PREFERENCE = "no-preference";
+
 type ControlKind = "yesno" | "time" | "choice" | "text" | "color";
 
 interface QuestionDef {
@@ -99,19 +116,83 @@ interface SectionDef {
   questions: readonly QuestionDef[];
 }
 
-/** Favourite-colour options. THE ONE PLACE raw colours are legitimate: these
- *  are the answers the patient picks between, not theme styling. A patient's
- *  favourite colour has to be red, not "the active hospital's red". */
-const SWATCHES = [
-  { id: "red",    css: "#D64545" },
-  { id: "orange", css: "#E08A2E" },
-  { id: "yellow", css: "#E8C33F" },
-  { id: "green",  css: "#3E9E6B" },
-  { id: "teal",   css: "#2AA3A8" },
-  { id: "blue",   css: "#3B7DD8" },
-  { id: "purple", css: "#8256C4" },
-  { id: "pink",   css: "#D96BA0" },
+/* ── Favourite colour ─────────────────────────────────────────────────
+ * THE ONE PLACE raw colours are legitimate: these are the answers the patient
+ * picks between, not theme styling. A patient's favourite colour has to be
+ * red, not "the active hospital's red".
+ *
+ * There is no <input type="color"> here on purpose. It delegates to the OS
+ * colour dialog, which the Android kiosk WebView either suppresses outright or
+ * renders as an unthemed desktop-sized panel, and it carries the same
+ * unstyleable native swatch button that duplicated the themed icon on the time
+ * question. The rail below is plain DOM: a continuous hue gradient the patient
+ * touches anywhere, plus the neutrals a hue rail cannot express. */
+
+/** Fixed saturation/lightness for the rail, so a touch anywhere along it
+ *  lands on a colour vivid enough to name. */
+const HUE_SAT = 0.68;
+const HUE_LIGHT = 0.52;
+
+/** Greys and brown are unreachable on a hue rail but are real answers. */
+const NEUTRALS = [
+  { name: "white", css: "#FFFFFF" },
+  { name: "grey",  css: "#8A9099" },
+  { name: "black", css: "#1F272E" },
+  { name: "brown", css: "#8A5A34" },
 ] as const;
+
+/** Hue bucket -> the colour word staff read off the paper form today. The
+ *  stored record carries both the exact hex and this name. */
+const HUE_NAMES: readonly { max: number; name: string }[] = [
+  { max: 18,  name: "red" },
+  { max: 42,  name: "orange" },
+  { max: 64,  name: "yellow" },
+  { max: 160, name: "green" },
+  { max: 200, name: "teal" },
+  { max: 255, name: "blue" },
+  { max: 300, name: "purple" },
+  { max: 344, name: "pink" },
+  { max: 360, name: "red" },
+];
+const hueName = (h: number) => HUE_NAMES.find((b) => h <= b.max)!.name;
+
+/** hsl -> "#RRGGBB". The record stores hex so the exact colour survives. */
+function hslHex(h: number, s: number, l: number) {
+  const k = (n: number) => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const channel = (n: number) => {
+    const v = l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+    return Math.round(v * 255).toString(16).padStart(2, "0");
+  };
+  return `#${channel(0)}${channel(8)}${channel(4)}`.toUpperCase();
+}
+
+/** Hue back out of a stored hex, to place the rail's marker. Null for the
+ *  neutrals, which sit off the rail. */
+function hexHue(hex: string): number | null {
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  if (!m) return null;
+  const [r, g, b] = m.slice(1).map((v) => parseInt(v, 16) / 255);
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  if (d < 0.04) return null;
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return (Math.round(h * 60) + 360) % 360;
+}
+
+/** Rail background — 13 stops read as continuous at this width. */
+const HUE_GRADIENT = `linear-gradient(to right, ${
+  Array.from({ length: 13 }, (_, i) => hslHex(i * 30, HUE_SAT, HUE_LIGHT)).join(", ")
+})`;
+
+/* ── Time ─────────────────────────────────────────────────────────────
+ * Every choice is a button already on screen. The native <input type="time">
+ * was a dropdown with minute-by-minute scrolling — the wrong control for a
+ * bedside panel — and its calendar-picker glyph was the duplicate clock icon.
+ * Both are gone with the native control.
+ *
+ * 6 AM - 9 PM covers doctors' rounds and the daily bath; the half hour is one
+ * further tap, so every offered time is at most two taps away. */
+const TIME_HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] as const;
 
 const SECTIONS: readonly SectionDef[] = [
   {
@@ -213,9 +294,39 @@ export function PatientPreferenceForm({
     name: "", relationship: "", accepted: false, acceptedAt: null,
   });
   const [index, setIndex] = useState(0);
-  /* Time inputs, so the icon and the field itself can open the native picker. */
-  const timeRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [submitted, setSubmitted] = useState(false);
+
+  /* ── THE layout constraint ────────────────────────────────────────────
+   * The card is pinned to the viewport and never scrolls, so its content has
+   * to fit whatever height the card is given. That height is not always the
+   * 1920x1080 design budget: this form is opened by the onboarding wizard,
+   * which App.tsx renders OUTSIDE the scaled design canvas, so on a panel
+   * shorter than 1080 CSS px the card gets correspondingly less.
+   *
+   * So the card measures itself, and below the design height every vertical
+   * gap on every screen tightens together — one rule, no per-question
+   * exceptions. Font sizes are deliberately NOT part of it: 26px question
+   * text is the floor for a bedside screen, not a starting point. */
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [cardHeight, setCardHeight] = useState(0);
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([entry]) => setCardHeight(entry.contentRect.height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  /* 920px is the card at the design canvas; below that, tighten. */
+  const dense = cardHeight > 0 && cardHeight < 900;
+
+  /** Every vertical measurement the constraint moves, in one place. */
+  const M = dense
+    ? { progressTop: "10px", progressGap: "8px", chip: 40, chipIcon: 20, chipGap: "10px",
+        qGap: "12px", stackGap: "8px", notesTop: "10px", notesH: "52px",
+        footerY: "12px", railH: "68px", swatch: 52, reserved: "48px", timeH: "50px" }
+    : { progressTop: "24px", progressGap: "14px", chip: 48, chipIcon: 24, chipGap: "14px",
+        qGap: "20px", stackGap: "12px", notesTop: "16px", notesH: "64px",
+        footerY: "20px", railH: "88px", swatch: 64, reserved: "56px", timeH: "56px" };
 
   const wantsCarePartner = answers[CARE_PARTNER_TRIGGER]?.value === "yes";
 
@@ -248,32 +359,36 @@ export function PatientPreferenceForm({
   const patch = (id: string, next: Partial<PreferenceAnswer>) =>
     setAnswers((prev) => ({ ...prev, [id]: { ...prev[id], ...next } }));
 
-  /** Tapping the selected pill again clears it — nothing here is mandatory. */
-  const setValue = (id: string, value: string) =>
-    patch(id, { value: answers[id]?.value === value ? undefined : value });
+  /** Tapping the selected pill again clears it. Next then blocks again, which
+   *  is the point: an answer is only recorded when the patient chose it. */
+  const setValue = (id: string, value: string, label?: string) =>
+    patch(id, answers[id]?.value === value
+      ? { value: undefined, label: undefined }
+      : { value, label });
 
   /** Notes and free text are the only place a raw language string is stored,
    *  so tag them with the locale they were written in. */
   const setTagged = (id: string, field: "note" | "text", raw: string) =>
     patch(id, { [field]: raw.trim() ? { text: raw, lang: locale } : undefined });
 
-  /* The native picker indicator is hidden (see the stylesheet in renderShell)
-   * because it is an unthemeable dark glyph that duplicated the themed Clock.
-   * The themed icon takes over as the picker affordance.
-   *
-   * Deliberately NOT wired to the input's own onClick: that would open the
-   * picker on every tap and the hour/minute segments could never be focused or
-   * typed into. Tapping the field keeps its native behaviour (and Android
-   * WebView opens its time dialog on focus anyway); the icon is the explicit
-   * way to summon the picker. showPicker() needs a user gesture and is missing
-   * from older WebViews, so it falls back to focus(). */
-  const openTimePicker = (id: string) => {
-    const el = timeRefs.current[id];
-    if (!el) return;
-    try { el.showPicker(); } catch { el.focus(); }
-  };
+  /* ── Can this screen be left? ─────────────────────────────────────────
+   * Next is gated on a real answer so nothing is recorded as "skipped" that
+   * the patient never saw. That only works if every screen HAS an answer the
+   * patient can give, so every control that cannot be satisfied by tapping an
+   * option — both time questions and the free-text one — carries an explicit
+   * "No preference". Notes are never consulted: they stay optional. */
+  const canAdvance = (() => {
+    if (screen.kind === "comments") return true;          // closing screen, optional by design
+    if (screen.kind === "carePartner") return partner.accepted;
+    const a = answers[screen.q.id];
+    if (screen.q.kind === "text") return a?.value === NO_PREFERENCE || !!a?.text?.text.trim();
+    return !!a?.value;
+  })();
 
-  const goNext = () => (isLast ? handleSubmit() : setIndex(safeIndex + 1));
+  const goNext = () => {
+    if (!canAdvance) return;
+    isLast ? handleSubmit() : setIndex(safeIndex + 1);
+  };
   const goBack = () => setIndex(Math.max(0, safeIndex - 1));
 
   const handleSubmit = () => {
@@ -338,25 +453,58 @@ export function PatientPreferenceForm({
   );
 
   /** Compact notes field — the "Notes / ملاحظات" column from the paper form.
-   *  Deliberately ~3 rows so it never pushes the footer off-screen. */
+   *  Two rows: it is the last thing in the body, so any growth here is what
+   *  reaches the footer first. Never gates Next. */
   const renderNotesField = (id: string) => (
-    <div style={{ width: "100%", maxWidth: "760px", marginTop: "28px" }}>
+    <div className="shrink-0" style={{ width: "100%", maxWidth: "760px", marginTop: M.notesTop }}>
       <span style={{
         fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium,
-        color: theme.textMuted, display: "block", marginBottom: "8px",
+        color: theme.textMuted, display: "block", marginBottom: "6px",
         textAlign: isRTL ? "right" : "left",
       }}>
         {`${t("ppf.notes.label")} · ${t("ppf.optional")}`}
       </span>
       <textarea
-        rows={3}
+        rows={2}
         value={answers[id]?.note?.text ?? ""}
         onChange={(e) => setTagged(id, "note", e.target.value)}
         placeholder={t("ppf.notes.placeholder")}
         className="ppf-field"
-        style={fieldStyle("92px")}
+        style={fieldStyle(M.notesH)}
       />
     </div>
+  );
+
+  /** The deliberate way out of a question with nothing to enter. Same pill as
+   *  every other option, so it reads as an answer and not as a skip link. */
+  const renderNoPreference = (id: string) =>
+    renderPill(NO_PREFERENCE, answers[id]?.value === NO_PREFERENCE,
+      () => setValue(id, NO_PREFERENCE), t("ppf.noPreference"));
+
+  /** "6:00 AM" / "٦:٠٠ ص" — the display form of a stored "HH:MM". */
+  const timeLabel = (h24: number, minutes: string) =>
+    `${((h24 + 11) % 12) + 1}:${minutes} ${t(h24 < 12 ? "ppf.time.am" : "ppf.time.pm")}`;
+
+  /** Big, always-visible time button. */
+  const renderTimeButton = (key: string, selected: boolean, onClick: () => void, label: string, width?: string) => (
+    <button
+      key={key}
+      onClick={onClick}
+      data-ppf-time={key}
+      className="transition-transform duration-200 active:scale-[0.96] cursor-pointer"
+      style={{
+        height: M.timeH, width, padding: "0 12px",
+        borderRadius: theme.radiusLg,
+        border: selected ? `2px solid ${theme.accent}` : `1.5px solid ${theme.borderDefault}`,
+        backgroundColor: selected ? theme.accentSubtle : theme.surface,
+        fontFamily, fontSize: TYPE_SCALE.md,
+        fontWeight: selected ? WEIGHT.bold : WEIGHT.medium,
+        color: selected ? iconColor : theme.textBody,
+        outline: "none",
+      }}
+    >
+      {label}
+    </button>
   );
 
   const renderControl = (q: QuestionDef) => {
@@ -378,88 +526,186 @@ export function PatientPreferenceForm({
           </div>
         );
 
-      case "time":
+      case "time": {
+        /* Tap 1 picks the hour (and answers the question at ":00"); tap 2 is
+           the optional half hour. The minute row only exists once an hour is
+           chosen, so it can never be a control that does nothing — but its
+           height is reserved either way, so nothing below it moves. */
+        const value = answers[q.id]?.value;
+        const picked = value && value !== NO_PREFERENCE ? value : undefined;
+        const pickedHour = picked ? Number(picked.slice(0, 2)) : undefined;
+        const pickedMinutes = picked ? picked.slice(3) : "00";
         return (
-          <div className="flex items-center justify-center gap-3" style={{ direction: "ltr" }}>
-            <button
-              type="button"
-              onClick={() => openTimePicker(q.id)}
-              aria-label={t("ppf.time.label")}
-              className="flex items-center justify-center cursor-pointer active:scale-[0.96]"
-              style={{ background: "none", border: "none", outline: "none", padding: 0 }}
-            >
-              <Clock size={26} style={{ color: iconColor }} />
-            </button>
-            <input
-              ref={(el) => { timeRefs.current[q.id] = el; }}
-              type="time"
-              value={answers[q.id]?.value ?? ""}
-              onChange={(e) => patch(q.id, { value: e.target.value || undefined })}
-              aria-label={t("ppf.time.label")}
-              className="ppf-field ppf-time"
+          <div className="flex flex-col items-center w-full" style={{ gap: M.stackGap }}>
+            <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium, color: theme.textMuted }}>
+              {t("ppf.time.hint")}
+            </span>
+            <div
               style={{
-                ...fieldStyle("60px"),
-                width: "220px",
-                direction: "ltr",
-                textAlign: "left",
-                fontSize: TYPE_SCALE.md,
-                fontWeight: WEIGHT.semibold,
+                display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: "10px",
+                width: "100%", maxWidth: "1400px",
               }}
-            />
+            >
+              {TIME_HOURS.map((h) =>
+                renderTimeButton(
+                  String(h),
+                  pickedHour === h,
+                  () => setValue(q.id, `${String(h).padStart(2, "0")}:${pickedHour === h ? pickedMinutes : "00"}`),
+                  timeLabel(h, pickedHour === h ? pickedMinutes : "00")
+                )
+              )}
+            </div>
+            <div className="flex items-center justify-center gap-3" style={{ height: M.reserved }}>
+              {pickedHour !== undefined && ["00", "30"].map((mm) =>
+                renderTimeButton(
+                  `m${mm}`,
+                  pickedMinutes === mm,
+                  () => patch(q.id, { value: `${String(pickedHour).padStart(2, "0")}:${mm}` }),
+                  timeLabel(pickedHour, mm),
+                  "170px"
+                )
+              )}
+            </div>
+            {renderNoPreference(q.id)}
           </div>
         );
+      }
 
       case "text":
+        /* Typing is the answer here, so a patient with nothing to add would
+           have no way forward without the pill. Typing clears it, and picking
+           it clears what was typed — the record never holds both. */
         return (
-          <div style={{ width: "100%", maxWidth: "760px" }}>
-            <textarea
-              rows={3}
-              value={answers[q.id]?.text?.text ?? ""}
-              onChange={(e) => setTagged(q.id, "text", e.target.value)}
-              placeholder={t("ppf.freeText.placeholder")}
-              className="ppf-field"
-              style={fieldStyle("92px")}
-            />
+          <div className="flex flex-col items-center w-full" style={{ gap: M.stackGap }}>
+            <div style={{ width: "100%", maxWidth: "760px" }}>
+              <textarea
+                rows={2}
+                value={answers[q.id]?.text?.text ?? ""}
+                onChange={(e) => {
+                  setTagged(q.id, "text", e.target.value);
+                  if (e.target.value.trim()) patch(q.id, { value: undefined });
+                }}
+                placeholder={t("ppf.freeText.placeholder")}
+                className="ppf-field"
+                style={fieldStyle(M.notesH)}
+              />
+            </div>
+            {renderPill(
+              NO_PREFERENCE,
+              answers[q.id]?.value === NO_PREFERENCE,
+              () => {
+                const on = answers[q.id]?.value === NO_PREFERENCE;
+                patch(q.id, { value: on ? undefined : NO_PREFERENCE, text: on ? answers[q.id]?.text : undefined });
+              },
+              t("ppf.noPreference")
+            )}
           </div>
         );
 
-      case "color":
+      case "color": {
+        const value = answers[q.id]?.value;
+        const chosen = value && value !== NO_PREFERENCE ? value : undefined;
+        const chosenName = answers[q.id]?.label;
+        const railHue = chosen ? hexHue(chosen) : null;
+        /* The rail is a hue axis, so it always runs 0->360 left to right —
+           mirroring it under RTL would only make the same axis harder to
+           learn. Everything else on the screen still follows dir. */
+        const pickHue = (clientX: number, el: HTMLElement) => {
+          const r = el.getBoundingClientRect();
+          const x = Math.min(Math.max(clientX - r.left, 0), r.width);
+          const h = Math.round((x / Math.max(r.width, 1)) * 359);
+          patch(q.id, { value: hslHex(h, HUE_SAT, HUE_LIGHT), label: hueName(h) });
+        };
         return (
-          <div className="flex flex-wrap justify-center gap-5">
-            {SWATCHES.map((c) => {
-              const selected = answers[q.id]?.value === c.id;
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => setValue(q.id, c.id)}
-                  aria-label={t(`ppf.color.${c.id}`)}
-                  className="flex flex-col items-center gap-2 cursor-pointer transition-transform duration-200 active:scale-[0.96]"
-                  style={{ background: "none", border: "none", outline: "none", padding: 0 }}
-                >
-                  <span
-                    className="flex items-center justify-center"
+          <div className="flex flex-col items-center w-full" style={{ gap: M.stackGap }}>
+            <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium, color: theme.textMuted }}>
+              {t("ppf.color.pick")}
+            </span>
+
+            <div
+              role="slider"
+              aria-label={t("ppf.color.pick")}
+              aria-valuemin={0}
+              aria-valuemax={359}
+              aria-valuenow={railHue ?? 0}
+              data-ppf-hue-rail
+              onPointerDown={(e) => {
+                e.currentTarget.setPointerCapture(e.pointerId);
+                pickHue(e.clientX, e.currentTarget);
+              }}
+              onPointerMove={(e) => {
+                if (e.buttons === 1) pickHue(e.clientX, e.currentTarget);
+              }}
+              className="relative cursor-pointer touch-none"
+              style={{
+                width: "100%", maxWidth: "1280px", height: M.railH,
+                direction: "ltr",
+                background: HUE_GRADIENT,
+                borderRadius: theme.radiusLg,
+                border: `1.5px solid ${theme.borderDefault}`,
+                boxShadow: SHADOW.sm,
+              }}
+            >
+              {railHue !== null && (
+                <span
+                  className="absolute pointer-events-none"
+                  style={{
+                    top: "-6px", bottom: "-6px", width: "22px",
+                    left: `calc(${(railHue / 359) * 100}% - 11px)`,
+                    borderRadius: theme.radiusMd,
+                    border: `4px solid ${theme.surface}`,
+                    boxShadow: SHADOW.md,
+                  }}
+                />
+              )}
+            </div>
+
+            <div className="flex items-center justify-center gap-4">
+              {NEUTRALS.map((c) => {
+                const selected = chosen === c.css;
+                return (
+                  <button
+                    key={c.name}
+                    onClick={() => setValue(q.id, c.css, c.name)}
+                    aria-label={t(`ppf.color.${c.name}`)}
+                    className="flex items-center justify-center cursor-pointer transition-transform duration-200 active:scale-[0.96]"
                     style={{
-                      width: 60, height: 60,
+                      width: M.swatch, height: M.swatch,
                       borderRadius: theme.radiusFull,
                       backgroundColor: c.css,
                       border: selected ? `3px solid ${theme.accent}` : `1.5px solid ${theme.borderDefault}`,
                       boxShadow: selected ? SHADOW.md : SHADOW.sm,
+                      outline: "none", padding: 0,
                     }}
                   >
-                    {selected && <Check size={26} color={theme.textInverse} strokeWidth={3} />}
+                    {selected && <Check size={26} color={c.name === "white" ? theme.textHeading : theme.textInverse} strokeWidth={3} />}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Height reserved so picking a colour never shifts the rail. */}
+            <div className="flex items-center justify-center gap-3" style={{ height: M.reserved }}>
+              {chosen && chosenName && (
+                <>
+                  <span
+                    style={{
+                      width: 44, height: 44, borderRadius: theme.radiusFull,
+                      backgroundColor: chosen, border: `1.5px solid ${theme.borderDefault}`,
+                      boxShadow: SHADOW.sm,
+                    }}
+                  />
+                  <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: theme.textHeading }}>
+                    {`${t("ppf.color.yourChoice")} · ${t(`ppf.color.${chosenName}`)}`}
                   </span>
-                  <span style={{
-                    fontFamily, fontSize: TYPE_SCALE.sm,
-                    fontWeight: selected ? WEIGHT.bold : WEIGHT.medium,
-                    color: selected ? theme.textHeading : theme.textMuted,
-                  }}>
-                    {t(`ppf.color.${c.id}`)}
-                  </span>
-                </button>
-              );
-            })}
+                </>
+              )}
+            </div>
+
+            {renderNoPreference(q.id)}
           </div>
         );
+      }
     }
   };
 
@@ -468,15 +714,15 @@ export function PatientPreferenceForm({
   const renderSectionBadge = (section: SectionDef) => {
     const Icon = section.icon;
     return (
-      <div className="flex items-center justify-center gap-4" style={{ marginBottom: "20px" }}>
+      <div className="flex items-center justify-center gap-3 shrink-0" style={{ marginBottom: M.chipGap }}>
         <div
           className="flex items-center justify-center shrink-0"
-          style={{ width: 60, height: 60, borderRadius: theme.radiusFull, backgroundColor: theme.accentSubtle }}
+          style={{ width: M.chip, height: M.chip, borderRadius: theme.radiusFull, backgroundColor: theme.accentSubtle }}
         >
-          <Icon size={30} style={{ color: iconColor }} />
+          <Icon size={M.chipIcon} style={{ color: iconColor }} />
         </div>
         <span style={{
-          fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.semibold,
+          fontFamily, fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.semibold,
           color: iconColor, letterSpacing: "0.02em",
         }}>
           {t(`ppf.section.${section.id}.title`)}
@@ -489,9 +735,9 @@ export function PatientPreferenceForm({
     <>
       {renderSectionBadge(section)}
       <h2 style={{
-        fontFamily, fontSize: TYPE_SCALE.xl, fontWeight: WEIGHT.bold,
+        fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold,
         color: theme.textHeading, lineHeight: LEADING.snug,
-        textAlign: "center", maxWidth: "1000px", margin: "0 0 32px",
+        textAlign: "center", maxWidth: "1180px", margin: `0 0 ${M.qGap}`,
       }}>
         {t(`ppf.q.${q.id}`, appName)}
       </h2>
@@ -515,14 +761,14 @@ export function PatientPreferenceForm({
       <p style={{
         fontFamily, fontSize: TYPE_SCALE.base, color: theme.textMuted,
         lineHeight: LEADING.normal, textAlign: "center",
-        maxWidth: "860px", margin: "0 0 20px",
+        maxWidth: "980px", margin: "0 0 14px",
       }}>
         {t("ppf.partner.agreement.intro")}
       </p>
 
-      <ul style={{ margin: "0 0 20px", padding: 0, listStyle: "none", maxWidth: "900px", width: "100%" }}>
+      <ul style={{ margin: "0 0 14px", padding: 0, listStyle: "none", maxWidth: "1000px", width: "100%" }}>
         {["clause1", "clause2", "clause3", "clause4"].map((c) => (
-          <li key={c} className="flex items-start gap-3" style={{ marginBottom: "8px" }}>
+          <li key={c} className="flex items-start gap-3" style={{ marginBottom: "6px" }}>
             <Check size={20} strokeWidth={3} style={{ color: iconColor, flexShrink: 0, marginTop: "3px" }} />
             <span style={{ fontFamily, fontSize: TYPE_SCALE.base, color: theme.textBody, lineHeight: LEADING.normal }}>
               {t(`ppf.partner.agreement.${c}`)}
@@ -531,7 +777,7 @@ export function PatientPreferenceForm({
         ))}
       </ul>
 
-      <div className="flex gap-4 w-full" style={{ maxWidth: "900px", marginBottom: "16px" }}>
+      <div className="flex gap-4 w-full shrink-0" style={{ maxWidth: "1000px", marginBottom: "12px" }}>
         <input
           value={partner.name}
           onChange={(e) => setPartner((p) => ({ ...p, name: e.target.value }))}
@@ -556,10 +802,11 @@ export function PatientPreferenceForm({
           accepted: !p.accepted,
           acceptedAt: !p.accepted ? new Date().toISOString() : null,
         }))}
+        data-ppf="accept"
         className="flex items-center gap-4 cursor-pointer transition-transform duration-200 active:scale-[0.99]"
         style={{
-          width: "100%", maxWidth: "900px",
-          padding: "16px 20px",
+          width: "100%", maxWidth: "1000px",
+          padding: "14px 20px",
           borderRadius: theme.radiusLg,
           backgroundColor: partner.accepted ? theme.accentSubtle : theme.surface,
           border: partner.accepted ? `2px solid ${theme.accent}` : `2px solid ${theme.borderDefault}`,
@@ -586,44 +833,46 @@ export function PatientPreferenceForm({
 
   const renderCommentsScreen = () => (
     <>
-      <div className="flex items-center justify-center gap-4" style={{ marginBottom: "20px" }}>
+      <div className="flex items-center justify-center gap-4 shrink-0" style={{ marginBottom: M.chipGap }}>
         <div
           className="flex items-center justify-center shrink-0"
-          style={{ width: 60, height: 60, borderRadius: theme.radiusFull, backgroundColor: theme.accentSubtle }}
+          style={{ width: M.chip, height: M.chip, borderRadius: theme.radiusFull, backgroundColor: theme.accentSubtle }}
         >
-          <ClipboardList size={30} style={{ color: iconColor }} />
+          <ClipboardList size={M.chipIcon} style={{ color: iconColor }} />
         </div>
       </div>
       <h2 style={{
-        fontFamily, fontSize: TYPE_SCALE.xl, fontWeight: WEIGHT.bold,
+        fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold,
         color: theme.textHeading, lineHeight: LEADING.snug,
-        textAlign: "center", margin: "0 0 12px",
+        textAlign: "center", margin: "0 0 8px",
       }}>
         {t("ppf.comments.label")}
       </h2>
       <p style={{
         fontFamily, fontSize: TYPE_SCALE.base, color: theme.textMuted,
-        textAlign: "center", margin: "0 0 24px",
+        textAlign: "center", margin: "0 0 16px",
       }}>
         {t("ppf.optional")}
       </p>
       <div style={{ width: "100%", maxWidth: "860px" }}>
         <textarea
-          rows={4}
+          rows={3}
           value={comments}
           onChange={(e) => setComments(e.target.value)}
           placeholder={t("ppf.comments.placeholder")}
           className="ppf-field"
-          style={fieldStyle("128px")}
+          style={fieldStyle("96px")}
         />
       </div>
     </>
   );
 
   /* ── navigation ─────────────────────────────────────────────────────────
-   * Next is ALWAYS enabled — every question, and every note, is optional.
-   * Back is present on every screen but the first, so an answer can always
-   * be revised; a patient is never trapped moving forward. */
+   * Next waits for an answer, so nothing is stored as answered that the
+   * patient never chose. Every screen has an answer they can give — see
+   * canAdvance — so waiting can never become being stuck. Notes are not part
+   * of it. Back is present on every screen but the first, so an answer can
+   * always be revised. */
 
   const navButton = (
     label: string,
@@ -631,18 +880,21 @@ export function PatientPreferenceForm({
     variant: "ghost" | "primary",
     leadingIcon: React.ReactNode,
     trailingIcon: React.ReactNode,
+    disabled = false,
   ) => (
     <button
       onClick={onClick}
+      disabled={disabled}
+      aria-disabled={disabled}
       data-ppf={variant === "primary" ? "next" : "back"}
-      className="flex items-center gap-2 cursor-pointer transition-transform duration-200 active:scale-[0.96]"
+      className={`flex items-center gap-2 transition-transform duration-200 ${disabled ? "" : "cursor-pointer active:scale-[0.96]"}`}
       style={{
         height: "56px", padding: "0 32px", borderRadius: "14px",
         fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.semibold,
-        backgroundColor: variant === "primary" ? theme.primary : theme.surface,
-        color: variant === "primary" ? theme.textInverse : theme.textMuted,
-        border: variant === "primary" ? "none" : `1.5px solid ${theme.borderDefault}`,
-        boxShadow: variant === "primary" ? SHADOW.md : "none",
+        backgroundColor: disabled ? theme.tileInactiveBg : variant === "primary" ? theme.primary : theme.surface,
+        color: disabled ? theme.textDisabled : variant === "primary" ? theme.textInverse : theme.textMuted,
+        border: variant === "primary" || disabled ? "none" : `1.5px solid ${theme.borderDefault}`,
+        boxShadow: variant === "primary" && !disabled ? SHADOW.md : "none",
         outline: "none",
       }}
     >
@@ -668,6 +920,7 @@ export function PatientPreferenceForm({
       "primary",
       isRTL ? nextChevron : null,
       !isRTL ? nextChevron : null,
+      !canAdvance,
     );
 
   /** Shared page chrome — gradient canvas, hero wash and the navy header. */
@@ -690,10 +943,6 @@ export function PatientPreferenceForm({
 
       <style>{`
         .ppf-field:focus { border-color: ${theme.accent} !important; }
-        /* Drop Chromium's built-in clock glyph — it is a fixed dark icon that
-           cannot follow the hospital theme and duplicated the themed one. */
-        .ppf-time::-webkit-calendar-picker-indicator { display: none; }
-        .ppf-time { cursor: pointer; }
         .ppf-field::placeholder { color: ${theme.textDisabled}; }
       `}</style>
 
@@ -704,9 +953,10 @@ export function PatientPreferenceForm({
         onClose={onClose}
       />
 
-      <div className="flex-1 min-h-0 px-12 pt-2 pb-8 relative z-10 flex flex-col">
+      <div className="flex-1 min-h-0 px-12 pt-2 pb-6 relative z-10 flex flex-col">
         <div
-          className="flex-1 min-h-0 flex flex-col overflow-hidden"
+          ref={cardRef}
+          className="flex-1 min-h-0 flex flex-col overflow-hidden relative"
           style={{
             backgroundColor: theme.surface,
             borderRadius: theme.radiusXl,
@@ -753,34 +1003,29 @@ export function PatientPreferenceForm({
 
   /* ═══════════════════ question screen ═══════════════════ */
 
-  const progress = (safeIndex + 1) / screens.length;
-
   return renderShell(
     <>
-      {/* ─── Progress (same pattern as OnboardingWizard) ─── */}
-      <div className="shrink-0 flex items-center gap-5 px-16 pt-8 pb-2" data-ppf="progress">
-        <div className="flex-1">
-          <div style={{ height: "8px", borderRadius: "100px", backgroundColor: theme.tileInactiveBg, overflow: "hidden" }}>
-            <div style={{
-              height: "100%", width: `${progress * 100}%`,
-              backgroundColor: theme.accent, borderRadius: "100px",
-              transition: "width 0.25s ease",
-            }} />
-          </div>
-        </div>
-        <span className="shrink-0" style={{
-          fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.bold,
-          color: theme.textMuted, minWidth: "110px", textAlign: isRTL ? "left" : "right",
-        }}>
-          {t("onboarding.progress", safeIndex + 1, screens.length)}
-        </span>
+      {/* ─── Progress — the Share Your Experience design, shared component ─── */}
+      <QuestionProgressBar current={safeIndex + 1} total={screens.length} />
+      <div
+        className="shrink-0"
+        style={{ paddingTop: M.progressTop }}
+        data-ppf="progress"
+        data-ppf-progress-count={screens.length}
+      >
+        <QuestionProgress
+          current={safeIndex + 1}
+          total={screens.length}
+          marginBottom={M.progressGap}
+          dense={dense}
+        />
       </div>
 
       {/* ─── Question body — centered, never scrolls (see header comment) ─── */}
       <div
         key={safeIndex}
         data-ppf="body"
-        className="flex-1 min-h-0 overflow-hidden flex flex-col items-center justify-center px-16 py-4"
+        className="flex-1 min-h-0 overflow-hidden flex flex-col items-center justify-center px-16 pb-2"
       >
         {screen.kind === "question" && renderQuestionScreen(screen.section, screen.q)}
         {screen.kind === "carePartner" && renderCarePartnerScreen(screen.section)}
@@ -789,8 +1034,8 @@ export function PatientPreferenceForm({
 
       {/* ─── Footer ─── */}
       <div
-        className="shrink-0 flex items-center justify-between px-16 py-6"
-        style={{ borderTop: `1.5px solid ${theme.borderSubtle}` }}
+        className="shrink-0 flex items-center justify-between px-16"
+        style={{ paddingTop: M.footerY, paddingBottom: M.footerY, borderTop: `1.5px solid ${theme.borderSubtle}` }}
         data-ppf="footer"
       >
         {renderBack()}

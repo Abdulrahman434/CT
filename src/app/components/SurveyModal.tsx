@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, MessageSquareHeart, FileText, AlertTriangle, Heart, Mic, CheckCircle2, Play, Pause, Square, RotateCcw, Trash2 } from "lucide-react";
 import { InternalPageHeader } from "./InternalPageHeader";
 import { ApiImage } from "./ApiImage";
+import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
 import thankYouImage from "../../assets/23db5e568918c9a319b272caa7a9e865d4fbd418.png";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -445,20 +446,9 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
   /* ═══════════════════════════════════════════════════════════════
    * RENDER: SURVEY PATH (questions)
    * ═══════════════════════════════════════════════════════════════ */
-  const renderSurveyProgressBar = () => {
-    const progress = ((currentSlide + 1) / totalSlides) * 100;
-    return (
-      <div
-        className="absolute top-0 left-0 right-0 h-2"
-        style={{ backgroundColor: theme.primarySubtle, zIndex: 20 }}
-      >
-        <div
-          className="h-full transition-transform duration-500 ease-out"
-          style={{ width: `${progress}%`, backgroundColor: BRAND }}
-        />
-      </div>
-    );
-  };
+  const renderSurveyProgressBar = () => (
+    <QuestionProgressBar current={currentSlide + 1} total={totalSlides} />
+  );
 
   const renderQuestionSlide = (questionIndex: number) => {
     const question = questions[questionIndex];
@@ -466,20 +456,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
 
     return (
       <div className="flex flex-col items-center justify-center min-h-full px-16 py-10">
-        {/* Question number badge */}
-        <div
-          className="flex items-center justify-center rounded-full mb-6"
-          style={{ width: "96px", height: "96px", backgroundColor: theme.primarySubtle }}
-        >
-          <span style={{ fontFamily, fontSize: "40px", fontWeight: WEIGHT.bold, color: BRAND }}>
-            {question.id}
-          </span>
-        </div>
-
-        {/* Question counter */}
-        <p style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.medium, color: theme.textMuted, marginBottom: "40px" }}>
-          {t("survey.questionOf", question.id, questions.length)}
-        </p>
+        <QuestionProgress current={question.id} total={questions.length} />
 
         {/* Question text */}
         <h3 style={{

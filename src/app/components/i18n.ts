@@ -1254,6 +1254,10 @@ const translations: Record<string, TranslationEntry> = {
   "ppf.notes.placeholder": { en: "Add anything you'd like the team to know", ar: "أضف أي شيء تود أن يعرفه الفريق", ur: "کوئی بھی بات لکھیں جو آپ ٹیم کو بتانا چاہتے ہیں" },
   "ppf.freeText.placeholder": { en: "Type your answer here", ar: "اكتب إجابتك هنا", ur: "اپنا جواب یہاں لکھیں" },
   "ppf.time.label": { en: "Preferred time", ar: "الوقت المفضل", ur: "ترجیحی وقت" },
+  "ppf.noPreference": { en: "No preference", ar: "لا يوجد تفضيل", ur: "کوئی ترجیح نہیں" },
+  "ppf.time.hint": { en: "Choose the time that suits you", ar: "اختر الوقت المناسب لك", ur: "اپنی پسند کا وقت منتخب کریں" },
+  "ppf.time.am": { en: "AM", ar: "ص", ur: "صبح" },
+  "ppf.time.pm": { en: "PM", ar: "م", ur: "شام" },
   "ppf.back": { en: "Back", ar: "رجوع", ur: "واپس" },
   "ppf.next": { en: "Next", ar: "التالي", ur: "اگلا" },
   "ppf.submit": { en: "Submit", ar: "إرسال", ur: "جمع کریں" },
@@ -1308,6 +1312,12 @@ const translations: Record<string, TranslationEntry> = {
   "ppf.color.blue": { en: "Blue", ar: "أزرق", ur: "نیلا" },
   "ppf.color.purple": { en: "Purple", ar: "بنفسجي", ur: "جامنی" },
   "ppf.color.pink": { en: "Pink", ar: "وردي", ur: "گلابی" },
+  "ppf.color.brown": { en: "Brown", ar: "بني", ur: "بھورا" },
+  "ppf.color.white": { en: "White", ar: "أبيض", ur: "سفید" },
+  "ppf.color.grey": { en: "Grey", ar: "رمادي", ur: "سرمئی" },
+  "ppf.color.black": { en: "Black", ar: "أسود", ur: "سیاہ" },
+  "ppf.color.pick": { en: "Touch the colour you like", ar: "المس اللون الذي يعجبك", ur: "جو رنگ آپ کو پسند ہے اسے چھوئیں" },
+  "ppf.color.yourChoice": { en: "Your colour", ar: "لونك", ur: "آپ کا رنگ" },
 
   /* Care Partner Agreement — shown inline when the patient answers Yes */
   "ppf.partner.agreement.title": { en: "Care Partner Agreement", ar: "اتفاقية شريك الرعاية", ur: "کیئر پارٹنر معاہدہ" },
