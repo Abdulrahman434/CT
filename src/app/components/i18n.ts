@@ -1294,7 +1294,7 @@ const translations: Record<string, TranslationEntry> = {
   "ppf.q.religious.interpreter": { en: "Do you need a translator or sign language service?", ar: "هل ترغب بالحصول على مترجم أو خدمة لغة الإشارة؟", ur: "کیا آپ کو مترجم یا اشاروں کی زبان کی سروس درکار ہے؟" },
   "ppf.q.comfort.grooming": { en: "Do you need grooming services?", ar: "هل ترغب بخدمات الحلاقة؟", ur: "کیا آپ کو حجامت کی خدمات درکار ہیں؟" },
   "ppf.q.comfort.bathingTime": { en: "When would you prefer to have your daily bath?", ar: "ما هو وقتك المفضل للاستحمام اليومي؟", ur: "آپ روزانہ غسل کب کرنا پسند کریں گے؟" },
-  "ppf.q.comfort.rights": { en: "Do you know about rights and responsibilities?", ar: "هل تعرف حقوقك ومسؤولياتك؟", ur: "کیا آپ اپنے حقوق اور ذمہ داریوں کے بارے میں جانتے ہیں؟" },
+  "ppf.q.comfort.rights": { en: "Do you know about your rights and responsibilities?", ar: "هل تعرف حقوقك ومسؤولياتك؟", ur: "کیا آپ اپنے حقوق اور ذمہ داریوں کے بارے میں جانتے ہیں؟" },
   "ppf.q.other.otherPreference": { en: "Is there any other preference not mentioned in this checklist that you would like to receive or request?", ar: "هل هناك أي تفضيل آخر غير مذكور في هذه القائمة المرجعية ترغب في الاستفادة منه أو طلبه؟", ur: "کیا کوئی اور ترجیح ہے جو اس فہرست میں شامل نہیں اور آپ اسے حاصل کرنا یا اس کی درخواست کرنا چاہیں گے؟" },
   "ppf.q.other.virtualRoom": { en: "Virtual Room Content (Patient Rights and Responsibilities – Important Contacts – Quiet Time)", ar: "محتويات الغرفة الافتراضية (حقوق ومسؤوليات المريض – أرقام تهمك – أوقات الراحة)", ur: "ورچوئل روم کا مواد (مریض کے حقوق و ذمہ داریاں – اہم رابطے – خاموشی کا وقت)" },
   "ppf.q.other.favouriteColour": { en: "What is your favorite color?", ar: "ما هو لونك المفضل؟", ur: "آپ کا پسندیدہ رنگ کون سا ہے؟" },
