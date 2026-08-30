@@ -51,6 +51,18 @@ interface MealPeriod {
 
 type Selections = Record<string, string[]>;
 
+/** One meal the patient has built but not yet sent to the kitchen.
+ *  Keyed by day + meal, so re-opening a meal replaces it rather than
+ *  stacking a second copy of the same dinner. */
+interface PendingMeal {
+  dayOffset: number;
+  mealId: MealId;
+  selections: Selections;
+  orderData: any;
+}
+
+const pendingKey = (dayOffset: number, mealId: MealId) => `${dayOffset}:${mealId}`;
+
 /* ═══════════════════════════════════════════════════════════════════════════
  * BUILD MEAL PERIODS from menuData
  * ═══════════════════════════════════════════════════════════════════════════ */
@@ -107,12 +119,29 @@ let _enforceOrderTime = typeof window !== "undefined" ? localStorage.getItem("fo
 function setEnforceOrderTime(v: boolean) { _enforceOrderTime = v; if (typeof window !== "undefined") localStorage.setItem("fo_enforceTime", String(v)); }
 function getEnforceOrderTime() { return _enforceOrderTime; }
 
-/** Best-practice ordering rule: orders accepted up until `orderCutoff` (today). */
-function isMealOrderable(meal: MealPeriod): boolean {
+/* ── Ordering rules ───────────────────────────────────────────────────
+ * The kitchen takes orders in one window each afternoon, 4:00 PM - 8:00 PM,
+ * covering a rolling three-day menu: tomorrow and the two days after it. One
+ * window for all three meals, replacing the old per-meal orderCutoff, so the
+ * patient has a single time to remember rather than three.
+ *
+ * A missed cutoff is not a missed meal: the kitchen sends a standard meal for
+ * anything not ordered. Every surface that mentions the window says so too,
+ * because the patient most likely to miss the cutoff is the one who most needs
+ * to know they will still be fed. */
+const ORDER_WINDOW_START = 16;
+const ORDER_WINDOW_END = 20;
+
+/** Tomorrow and the two days after it. Today is already in the kitchen's
+ *  hands by the time this window opens, so the run starts at +1. */
+const ORDER_DAY_OFFSETS = [1, 2, 3] as const;
+
+/** Is the daily ordering window open right now? */
+function isOrderWindowOpen(): boolean {
   if (!_enforceOrderTime) return true;
   const now = new Date();
   const nowHours = now.getHours() + now.getMinutes() / 60;
-  return nowHours < meal.orderCutoff;
+  return nowHours >= ORDER_WINDOW_START && nowHours < ORDER_WINDOW_END;
 }
 
 /** Format a decimal hour (e.g. 11.5) as "11:30 AM" */
@@ -122,6 +151,33 @@ function formatHour(h: number, isRTL: boolean): string {
   const d = new Date();
   d.setHours(hh, mm, 0, 0);
   return d.toLocaleTimeString(isRTL ? "ar-SA" : "en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+}
+
+/** "4:00 PM – 8:00 PM" in the active language. */
+function orderWindowLabel(isRTL: boolean): string {
+  return `${formatHour(ORDER_WINDOW_START, isRTL)} – ${formatHour(ORDER_WINDOW_END, isRTL)}`;
+}
+
+/** The calendar date `offset` days from today. */
+function dayForOffset(offset: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d;
+}
+
+function formatDayLong(offset: number, isRTL: boolean): string {
+  return dayForOffset(offset).toLocaleDateString(isRTL ? "ar-SA" : "en-US",
+    { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+}
+
+/** Weekday alone — the day tabs are narrow. */
+function formatDayWeekday(offset: number, isRTL: boolean): string {
+  return dayForOffset(offset).toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long" });
+}
+
+/** Day + month, shown under the weekday in the day tabs. */
+function formatDayShort(offset: number, isRTL: boolean): string {
+  return dayForOffset(offset).toLocaleDateString(isRTL ? "ar-SA" : "en-US", { day: "numeric", month: "short" });
 }
 
 function locTimeRange(tr: string, isRTL: boolean): string {
@@ -195,7 +251,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
   const { theme } = useTheme();
 
   const { isRTL, fontFamily } = useLocale();
-  const { placeOrder, updateOrder, activeOrders, pastOrders, orders, clearOpenOrders } = useOrders();
+  const { placeOrder, activeOrders, pastOrders, orders, clearOpenOrders } = useOrders();
   const { showToast } = useToast();
 
   const nurseStore = useNurseStore();
@@ -206,10 +262,18 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
   const [selections, setSelections] = useState<Selections>({});
   const [lastOrderNumber, setLastOrderNumber] = useState("");
   const [kidsBreakfastType, setKidsBreakfastType] = useState<KidsBreakfastType>(null);
-  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
-  const [wasEditMode, setWasEditMode] = useState(false);
+
+  /* ── The three-day pending order ──────────────────────────────────────
+   * Choosing meals fills a basket; nothing reaches the kitchen until the
+   * patient presses "Place order". That is what lets one visit cover three
+   * days: without it, every meal built would submit itself and there would be
+   * no point at which the patient could still change their mind. */
+  const [selectedDayOffset, setSelectedDayOffset] = useState<number>(ORDER_DAY_OFFSETS[0]);
+  const [pendingMeals, setPendingMeals] = useState<PendingMeal[]>([]);
+  /** Meals sent in the last submission — the confirmation screen lists them. */
+  const [submittedSummary, setSubmittedSummary] = useState<PendingMeal[]>([]);
+
   const [showHistoryOverlay, setShowHistoryOverlay] = useState(initialView === "my-orders");
-  const isEditMode = editingOrderId !== null;
 
   // Diet & Allergies interactive modal state
   const [showDietAllergiesModal, setShowDietAllergiesModal] = useState(false);
@@ -230,10 +294,10 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
   const isNpo = patientDiet === "npo";
   // Guest/companion always uses Regular diet menu; NPO patients can't order but guests can
   const effectiveDiet: DietType = orderFor === "guest" ? "regular" : (isNpo ? "regular" : patientDiet as DietType);
-  // Orders are for TOMORROW's menu
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const dayOfWeek = tomorrow.getDay(); // 0=Sun … 6=Sat
+  // The menu shown is the one for the day currently being ordered for —
+  // anywhere in the rolling window, not always tomorrow.
+  const orderDay = dayForOffset(selectedDayOffset);
+  const dayOfWeek = orderDay.getDay(); // 0=Sun … 6=Sat
   const meals = useMemo(
     () => buildMeals(effectiveDiet, dayOfWeek, kidsBreakfastType),
     [effectiveDiet, dayOfWeek, kidsBreakfastType],
@@ -276,63 +340,96 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
     });
   }, []);
 
-  const handlePlaceOrder = useCallback(() => {
-    if (!currentMeal) return;
-    const selectedItems = currentMeal.groups.flatMap((g) => {
-      const sel = selections[g.id] || [];
+  /** Turn the current build into the shape OrderStore keeps. */
+  const buildOrderData = useCallback((meal: MealPeriod, sel: Selections, dayOffset: number) => {
+    const selectedItems = meal.groups.flatMap((g) => {
+      const chosen = sel[g.id] || [];
       if (g.mode === "included") return [];
-      return sel.map((id) => {
+      return chosen.map((id) => {
         const it = g.items.find((i) => i.id === id)!;
         return { id: it.id, name: it.name, qty: 1, image: it.image || "" };
       });
     });
-    const orderData = {
+    return {
       items: selectedItems.map((it) => ({ id: it.id, name: it.name, quantity: it.qty, calories: 0, image: it.image })),
       totalCalories: 0,
-      estimatedDelivery: isMealActive(currentMeal.hours) ? "25–35 min" : loc(currentMeal.label) + " delivery",
-      mealType: loc(currentMeal.label),
-      mealWindow: currentMeal.timeRange,
-      comesWith: currentMeal.groups.filter((g) => g.mode === "included").flatMap((g) => g.items.map((it) => it.name)),
+      estimatedDelivery: isMealActive(meal.hours) ? "25–35 min" : loc(meal.label) + " delivery",
+      mealType: loc(meal.label),
+      mealWindow: meal.timeRange,
+      comesWith: meal.groups.filter((g) => g.mode === "included").flatMap((g) => g.items.map((it) => it.name)),
       orderFor,
+      mealId: meal.id,
+      selections: { ...sel },
+      // Which day of the rolling window this is for. Without it the history
+      // view can only ever say "tomorrow", which is wrong for two days in three.
+      deliveryDate: dayForOffset(dayOffset).toISOString(),
+    };
+  }, [orderFor, isRTL]);
+
+  /** Add the meal just built to the basket and return to the day's meals.
+   *  Re-opening a meal replaces its entry rather than adding a second one. */
+  const handleAddToPending = useCallback(() => {
+    if (!currentMeal) return;
+    const entry: PendingMeal = {
+      dayOffset: selectedDayOffset,
       mealId: currentMeal.id,
       selections: { ...selections },
+      orderData: buildOrderData(currentMeal, selections, selectedDayOffset),
     };
-    if (editingOrderId) {
-      // Edit mode: update existing order in place
-      updateOrder(editingOrderId, orderData);
-      const existing = orders.find((o) => o.id === editingOrderId);
-      setLastOrderNumber(existing?.orderNumber || "");
-      setWasEditMode(true);
-      setEditingOrderId(null);
-    } else {
-      setWasEditMode(false);
-      // New order
-      const placed = placeOrder(orderData);
-      setLastOrderNumber(placed.orderNumber);
+    setPendingMeals((prev) => [
+      ...prev.filter((e) => pendingKey(e.dayOffset, e.mealId) !== pendingKey(entry.dayOffset, entry.mealId)),
+      entry,
+    ]);
+    setSelectedMealId(null);
+    setStep("select-meal");
+  }, [currentMeal, selections, selectedDayOffset, buildOrderData]);
 
-      // Fakeeh ONLY: Push notification to order for companion
-      const isFakeeh = theme.id === "dsfh" || theme.id.includes("dsfh") || theme.id.includes("fakeeh");
-      if (isFakeeh && orderFor === "patient") {
-        setTimeout(() => {
-          showToast({
-            variant: "meal",
-            category: isRTL ? "وجبة المرافق" : "COMPANION MEAL",
-            title: isRTL ? "هل ترغب في طلب وجبات لمرافقك؟" : "Order for your companion",
-            actionText: isRTL ? "اطلب الآن" : "Order Now",
-            actionColor: "#16A34A",
-            onTap: () => {
-              setOrderFor("guest");
-              setStep("select-meal");
-            },
-            secondaryActionText: isRTL ? "تفقد لاحقاً" : "Check Later",
-            secondaryActionColor: "#6B7280",
-            onSecondaryTap: () => {},
-          });
-        }, 500);
-      }
+  /** The explicit submit. Everything in the basket goes to the kitchen now —
+   *  nothing was sent while the patient was still choosing. */
+  const handleSubmitOrder = useCallback(() => {
+    if (pendingMeals.length === 0) return;
+    const ordered = [...pendingMeals].sort(
+      (a, b) => a.dayOffset - b.dayOffset || a.mealId.localeCompare(b.mealId),
+    );
+    let firstNumber = "";
+    ordered.forEach((entry) => {
+      const placed = placeOrder(entry.orderData);
+      if (!firstNumber) firstNumber = placed.orderNumber;
+    });
+    setLastOrderNumber(firstNumber);
+    setSubmittedSummary(ordered);
+    setPendingMeals([]);
+
+    /* The confirmation screen details one meal and lists the rest. Adding to
+       the basket clears the current selection, so restore the last meal built
+       — without it currentMeal is null and the confirmation renders empty. */
+    const headline = ordered[ordered.length - 1];
+    setSelectedDayOffset(headline.dayOffset);
+    setSelectedMealId(headline.mealId);
+    setSelections(headline.selections);
+
+    // Fakeeh ONLY: Push notification to order for companion
+    const isFakeeh = theme.id === "dsfh" || theme.id.includes("dsfh") || theme.id.includes("fakeeh");
+    if (isFakeeh && orderFor === "patient") {
+      setTimeout(() => {
+        showToast({
+          variant: "meal",
+          category: isRTL ? "وجبة المرافق" : "COMPANION MEAL",
+          title: isRTL ? "هل ترغب في طلب وجبات لمرافقك؟" : "Order for your companion",
+          actionText: isRTL ? "اطلب الآن" : "Order Now",
+          actionColor: "#16A34A",
+          onTap: () => {
+            setOrderFor("guest");
+            setStep("select-meal");
+          },
+          secondaryActionText: isRTL ? "تفقد لاحقاً" : "Check Later",
+          secondaryActionColor: "#6B7280",
+          onSecondaryTap: () => {},
+        });
+      }, 500);
     }
     setStep("confirmed");
-  }, [currentMeal, selections, isRTL, placeOrder, updateOrder, editingOrderId, orders, orderFor, theme.id, showToast]);
+  }, [pendingMeals, placeOrder, orderFor, theme.id, showToast, isRTL]);
 
   const stepIndex: 1 | 2 | 3 | 4 =
     step === "select-type" ? 1 :
@@ -360,7 +457,10 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
         setStep("kids-breakfast-type");
       } else {
         const m = meals.find((x) => x.id === selectedMealId)!;
-        setSelections(getInitialSelections(m));
+        const already = pendingMeals.find(
+          (e) => pendingKey(e.dayOffset, e.mealId) === pendingKey(selectedDayOffset, m.id),
+        );
+        setSelections(already ? { ...already.selections } : getInitialSelections(m));
         setStep("build-meal");
       }
     } else if (step === "kids-breakfast-type" && kidsBreakfastType) {
@@ -370,33 +470,16 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
       setSelections(getInitialSelections(m));
       setStep("build-meal");
     } else if (step === "build-meal") {
-      handlePlaceOrder();
+      handleAddToPending();
     }
-  }, [step, selectedMealId, effectiveDiet, dayOfWeek, kidsBreakfastType, meals, handlePlaceOrder, isNpo, orderFor]);
-
-  /** Enter edit mode: pre-fill the user's previous selections and jump to build-meal */
-  const startEditOrder = useCallback((orderId: string) => {
-    const order = orders.find((o) => o.id === orderId);
-    if (!order) return;
-    const mealId = (order.mealId || order.mealType?.toLowerCase()) as MealId;
-    setEditingOrderId(orderId);
-    setOrderFor(order.orderFor || "patient");
-    setSelectedMealId(mealId);
-    setSelections(order.selections || {});
-    setStep("build-meal");
-  }, [orders]);
+  }, [step, selectedMealId, effectiveDiet, dayOfWeek, kidsBreakfastType, meals, handleAddToPending, isNpo, orderFor, pendingMeals, selectedDayOffset]);
 
   const handleBack = useCallback(() => {
     if (step === "select-type") onClose();
     else if (step === "select-meal") setStep("select-type");
     else if (step === "kids-breakfast-type") setStep("select-meal");
     else if (step === "build-meal") {
-      if (isEditMode) {
-        // Cancel edit — go back to history
-        setEditingOrderId(null);
-        setSelections({});
-        setStep("history");
-      } else if (effectiveDiet === "kids" && selectedMealId === "breakfast") {
+      if (effectiveDiet === "kids" && selectedMealId === "breakfast") {
         setStep("kids-breakfast-type");
       } else {
         setStep("select-meal");
@@ -404,7 +487,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
     }
     else if (step === "confirmed") onClose();
     else if (step === "history") setStep("select-type");
-  }, [step, onClose, effectiveDiet, selectedMealId, isEditMode]);
+  }, [step, onClose, effectiveDiet, selectedMealId]);
 
   const showPatientBar = step !== "history" && step !== "confirmed";
   const showBottomBar = true;
@@ -501,40 +584,21 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
                 )}
                 {step === "select-meal" && (
                   <ChooseMealStep key="m" meals={meals} selectedMealId={selectedMealId} onSelect={handleSelectMeal} onDeselect={() => setSelectedMealId(null)} fontFamily={fontFamily} isRTL={isRTL}
-                    submittedMealIds={(() => {
-                      const todayStr = new Date().toDateString();
-                      const set = new Set<MealId>();
-                      orders.forEach((o) => {
-                        const d = o.placedAt instanceof Date ? o.placedAt : new Date(o.placedAt);
-                        if (d.toDateString() === todayStr && o.orderFor === orderFor) {
-                          // Prefer mealId match, fall back to label match
-                          if (o.mealId && meals.some((mm) => mm.id === o.mealId)) {
-                            set.add(o.mealId as MealId);
-                          } else {
-                            const m = meals.find((mm) => loc(mm.label) === o.mealType);
-                            if (m) set.add(m.id);
-                          }
-                        }
-                      });
-                      return set;
-                    })()}
-                    orders={orders}
-                    onEditOrder={(mealId: MealId) => {
-                      const todayStr = new Date().toDateString();
-                      const order = orders.find((o) => {
-                        const d = o.placedAt instanceof Date ? o.placedAt : new Date(o.placedAt);
-                        return d.toDateString() === todayStr &&
-                          (o.mealId === mealId || loc(meals.find(m => m.id === mealId)?.label || { en: '', ar: '' }) === o.mealType);
-                      });
-                      if (order) startEditOrder(order.id);
-                    }}
+                    selectedDayOffset={selectedDayOffset}
+                    onSelectDay={(offset) => { setSelectedDayOffset(offset); setSelectedMealId(null); }}
+                    pendingMealIds={new Set(
+                      pendingMeals
+                        .filter((e) => e.dayOffset === selectedDayOffset)
+                        .map((e) => e.mealId),
+                    )}
+                    pendingCount={pendingMeals.length}
                   />
                 )}
                 {step === "kids-breakfast-type" && (
                   <KidsBreakfastTypeStep key="kbt" selected={kidsBreakfastType} onSelect={setKidsBreakfastType} fontFamily={fontFamily} isRTL={isRTL} />
                 )}
                 {step === "build-meal" && currentMeal && (
-                  <BuildMealStep key="b" meal={currentMeal} selections={selections} onToggle={handleToggleItem} fontFamily={fontFamily} isRTL={isRTL} isEditMode={isEditMode} />
+                  <BuildMealStep key="b" meal={currentMeal} selections={selections} onToggle={handleToggleItem} fontFamily={fontFamily} isRTL={isRTL} dayOffset={selectedDayOffset} />
                 )}
                 {step === "confirmed" && currentMeal && (
                   <ConfirmStep key="c"
@@ -544,22 +608,12 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
                     room={DEMO_PATIENT.room.replace("Room ", "")}
                     dietLabel={dietDisplayLabel}
                     allergiesLabel={allergiesLabel}
-                    isEditMode={wasEditMode}
-                    onEdit={() => {
-                      const todayStr = new Date().toDateString();
-                      const thisOrder = orders.find((o) => {
-                        const d = o.placedAt instanceof Date ? o.placedAt : new Date(o.placedAt);
-                        return d.toDateString() === todayStr &&
-                          o.mealId === currentMeal.id && o.orderFor === orderFor;
-                      });
-                      if (thisOrder) startEditOrder(thisOrder.id);
-                    }}
                     meals={meals}
                     orders={orders}
+                    submitted={submittedSummary.map((e) => ({ dayOffset: e.dayOffset, mealId: e.mealId }))}
                     onOrderMeal={(mealId) => {
                       setSelectedMealId(mealId);
                       setSelections(getInitialSelections(meals.find((m) => m.id === mealId)!));
-                      setEditingOrderId(null);
                       setStep("build-meal");
                     }}
                     fontFamily={fontFamily} isRTL={isRTL} />
@@ -576,7 +630,6 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
             fontFamily={fontFamily}
             isRTL={isRTL}
             meals={meals}
-            onEdit={startEditOrder}
           />
         )}
 
@@ -666,14 +719,23 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
               ? { label: isRTL ? "طلباتي" : "View My Orders", onClick: () => setStep("history") }
               : undefined
           }
-          secondaryAction={undefined}
+          secondaryAction={
+            // The basket can only be sent from the meal list — the one screen
+            // where the patient can see what is in it across all three days.
+            step === "select-meal" && pendingMeals.length > 0
+              ? {
+                  label: isRTL
+                    ? `إرسال الطلب (${pendingMeals.length})`
+                    : `Place order (${pendingMeals.length})`,
+                  onClick: handleSubmitOrder,
+                }
+              : undefined
+          }
           backLabel={
-            step === "build-meal" && isEditMode ? (isRTL ? "إلغاء التعديل" : "Cancel Edit") :
             (isRTL ? "رجوع" : "Back")
           }
           continueLabel={
-            step === "build-meal" && isEditMode ? (isRTL ? "تحديث الطلب" : "Update Order") :
-            step === "build-meal" ? (isRTL ? "تأكيد الطلب" : "Place your order") :
+            step === "build-meal" ? (isRTL ? "أضف إلى الطلب" : "Add to order") :
             step === "confirmed"  ? (isRTL ? "خروج" : "Exit") :
             step === "history" ? (isRTL ? "طلب جديد" : "New Order") :
                                     (isRTL ? "متابعة" : "Continue")
@@ -735,7 +797,6 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
                   fontFamily={fontFamily}
                   isRTL={isRTL}
                   meals={meals}
-                  onEdit={(orderId) => { setShowHistoryOverlay(false); startEditOrder(orderId); }}
                 />
               </div>
             </div>
@@ -1664,22 +1725,45 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
- * STEP 2: CHOOSE MEAL
+ * STEP 2: CHOOSE MEALS (rolling three-day window)
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamily, isRTL, submittedMealIds, orders, onEditOrder }: {
+/** The ordering-window reminder is shown once per visit. Repeating it on every
+ *  return to this screen turns it into wallpaper, and the one thing it has to
+ *  land — that a missed cutoff still gets you a meal — is the thing a patient
+ *  stops reading first. sessionStorage, so a new visit sees it again. */
+const MEAL_REMINDER_KEY = "careinn-meal-window-reminder-seen";
+
+function useOncePerVisitReminder(): [boolean, () => void] {
+  const [show, setShow] = React.useState(() => {
+    try { return sessionStorage.getItem(MEAL_REMINDER_KEY) !== "true"; } catch { return true; }
+  });
+  const dismiss = React.useCallback(() => {
+    setShow(false);
+    try { sessionStorage.setItem(MEAL_REMINDER_KEY, "true"); } catch { /* private mode — just don't repeat this render */ }
+  }, []);
+  React.useEffect(() => {
+    if (!show) return;
+    try { sessionStorage.setItem(MEAL_REMINDER_KEY, "true"); } catch { /* ignore */ }
+  }, [show]);
+  return [show, dismiss];
+}
+
+function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamily, isRTL, selectedDayOffset, onSelectDay, pendingMealIds, pendingCount }: {
   meals: MealPeriod[]; selectedMealId: MealId | null; onSelect: (id: MealId) => void; onDeselect?: () => void; fontFamily: string; isRTL: boolean;
-  submittedMealIds: Set<MealId>;
-  orders?: any[];
-  onEditOrder?: (mealId: MealId) => void;
+  /** Which day of the rolling window is being chosen for. */
+  selectedDayOffset: number;
+  onSelectDay: (offset: number) => void;
+  /** Meals already in the basket for the selected day. */
+  pendingMealIds: Set<MealId>;
+  /** Basket size across all days — drives the "you have N waiting" line. */
+  pendingCount: number;
 }) {
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
-  // Tomorrow's date for display
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = tomorrow.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   const [blockedMeal, setBlockedMeal] = React.useState<MealPeriod | null>(null);
-  const [submittedMeal, setSubmittedMeal] = React.useState<MealPeriod | null>(null);
+  const [showReminder, dismissReminder] = useOncePerVisitReminder();
+  const windowOpen = isOrderWindowOpen();
+  const windowStr = orderWindowLabel(isRTL);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
@@ -1687,70 +1771,112 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
       {/* Centered heading */}
       <div className="shrink-0 text-center flex flex-col items-center gap-[10px]">
         <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
-          {isRTL ? "اختر وجبة الغد" : "Choose Tomorrow's Meal"}
+          {isRTL ? "اختر وجباتك" : "Choose Your Meals"}
         </h2>
-        {/* Date badge */}
-        <div className="inline-flex items-center gap-2" style={{
+
+        {/* Reminder — once per visit, above the day tabs where it is read
+            before anything is chosen rather than after. */}
+        {showReminder && (
+          <div
+            className="shrink-0 flex items-start gap-3 px-6 py-3 rounded-2xl max-w-[980px] mx-auto"
+            style={{
+              backgroundColor: "#FEF3C7",
+              border: "1.5px solid #F59E0B",
+              color: "#92400E",
+              boxShadow: "0 2px 8px rgba(245, 158, 11, 0.12)",
+              textAlign: isRTL ? "right" : "left",
+            }}
+          >
+            <Bell size={20} color="#D97706" className="shrink-0" style={{ marginTop: "2px" }} />
+            <p style={{ fontFamily, fontSize: "14.5px", fontWeight: WEIGHT.medium, margin: 0, lineHeight: 1.5, flex: 1 }}>
+              {isRTL ? (
+                <>
+                  باب الطلب مفتوح الآن من <b>{windowStr}</b>. اختر وجباتك للأيام الثلاثة القادمة ثم اضغط <b>إرسال الطلب</b>. في حال عدم اختيار أي وجبة قبل الساعة 8:00 مساءً، سيتم تقديم وجبة قياسية.
+                </>
+              ) : (
+                <>
+                  Ordering is open <b>{windowStr}</b>. Choose your meals for the next three days, then press <b>Place order</b> to send them. If you don't choose anything before 8:00 PM, a standard meal will be provided.
+                </>
+              )}
+            </p>
+            <button
+              onClick={dismissReminder}
+              aria-label={isRTL ? "إغلاق" : "Dismiss"}
+              className="shrink-0 active:scale-90 transition-transform cursor-pointer"
+              style={{ background: "none", border: "none", outline: "none", padding: "2px", lineHeight: 0 }}
+            >
+              <X size={18} color="#92400E" />
+            </button>
+          </div>
+        )}
+
+        {/* Day tabs — the rolling three-day window */}
+        <div className="flex items-center justify-center gap-3" dir={isRTL ? "rtl" : "ltr"}>
+          {ORDER_DAY_OFFSETS.map((offset) => {
+            const active = offset === selectedDayOffset;
+            return (
+              <button
+                key={offset}
+                onClick={() => onSelectDay(offset)}
+                data-fo-day={offset}
+                className="active:scale-[0.97] transition-transform cursor-pointer"
+                style={{
+                  minWidth: "180px", padding: "10px 22px", borderRadius: "16px",
+                  backgroundColor: active ? TEAL : "#fff",
+                  border: active ? `2px solid ${TEAL}` : "1.5px solid rgba(0,0,0,0.10)",
+                  outline: "none",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: "2px",
+                }}
+              >
+                <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: active ? "#fff" : "#171717" }}>
+                  {formatDayWeekday(offset, isRTL)}
+                </span>
+                <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: active ? "rgba(255,255,255,0.85)" : "#6B7280" }}>
+                  {formatDayShort(offset, isRTL)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Window + basket status */}
+        <div className="flex items-center justify-center gap-2" style={{
           padding: "8px 18px", borderRadius: "100px",
           backgroundColor: TEAL_15, border: `1px solid ${TEAL_20}`,
         }}>
-          <Calendar size={16} color={TEAL} />
+          <Clock size={16} color={TEAL} />
           <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL }}>
-            {tomorrowStr}
+            {isRTL
+              ? `الطلب متاح يومياً ${windowStr}`
+              : `Ordering ${windowStr} daily`}
+            {pendingCount > 0 && (isRTL
+              ? ` · ${pendingCount} في طلبك`
+              : ` · ${pendingCount} in your order`)}
           </span>
-        </div>
-
-        {/* Highlighted Notice Banner */}
-        <div
-          className="shrink-0 flex items-center justify-center gap-3 px-6 py-3 rounded-2xl max-w-[860px] mx-auto text-center"
-          style={{
-            backgroundColor: "#FEF3C7",
-            border: "1.5px solid #F59E0B",
-            color: "#92400E",
-            boxShadow: "0 2px 8px rgba(245, 158, 11, 0.12)",
-          }}
-        >
-          <Clock size={20} color="#D97706" className="shrink-0" />
-          <p style={{ fontFamily, fontSize: "14.5px", fontWeight: WEIGHT.medium, margin: 0, lineHeight: 1.45 }}>
-            {isRTL ? (
-              <>
-                يرجى تحديد وجباتك المفضلة <b>قبل الساعة 8:00 مساءً</b> لضمان تحضير الوجبات المختارة وتوصيلها إليك. في حال عدم تحديد أي وجبة، سيتم تقديم وجبة قياسية.
-              </>
-            ) : (
-              <>
-                Please select your preferred meals <b>before 8:00 PM</b> to help ensure that your selected meals are prepared and delivered to you. If no meal is selected, a standard meal will be provided.
-              </>
-            )}
-          </p>
         </div>
       </div>
 
       {/* Cards row — narrower, centered with whitespace, icon-led */}
       <div className="flex-1 min-h-0 flex items-center justify-center gap-[28px]" dir={isRTL ? "rtl" : "ltr"}>
         {meals.map((meal) => {
-          const submitted = submittedMealIds.has(meal.id);
-          const timeOpen = isMealOrderable(meal);
-          const orderable = !submitted && timeOpen;
+          /* In the basket for the day on screen — not sent to the kitchen. */
+          const inOrder = pendingMealIds.has(meal.id);
           const selected = selectedMealId === meal.id;
-          const cutoffStr = formatHour(meal.orderCutoff, isRTL);
 
           // Icon mapping
           const Icon = meal.id === "breakfast" ? Sun : meal.id === "lunch" ? Sunrise : Moon;
           const iconBg = meal.id === "breakfast" ? "#FEF3C7" : meal.id === "lunch" ? "#E0F2FE" : "#EDE9FE";
           const iconColor = meal.id === "breakfast" ? "#F59E0B" : meal.id === "lunch" ? TEAL : "#7C3AED";
 
-          // Status pill config
-          const statusBg = submitted ? "#E0F2FE" : orderable ? "#DCFCE7" : "#FFFBEB";
-          const statusColor = submitted ? "#0369A1" : orderable ? "#16A34A" : "#D97706";
-          const statusText = submitted
-            ? (isRTL ? "تم الطلب" : "Already ordered")
-            : orderable
-              ? (isRTL ? "متاح للطلب" : "Open for ordering")
-              : (isRTL ? "أُغلق الطلب" : "Ordering closed");
+          /* One badge on every card, whatever the day or the basket says.
+             The cards are a menu preview; what is actually in the order is
+             shown by the check mark and the basket count in the header. */
+          const statusBg = "#F1F5F9";
+          const statusColor = "#475569";
+          const statusText = isRTL ? "للاطلاع فقط" : "Preview Only";
 
           const handleClick = () => {
-            if (submitted) setSubmittedMeal(meal);
-            else if (orderable) onSelect(meal.id);
+            if (windowOpen) onSelect(meal.id);
             else setBlockedMeal(meal);
           };
 
@@ -1767,7 +1893,7 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                 border: selected ? `3px solid ${TEAL}` : "1.5px solid rgba(0,0,0,0.08)",
                 boxShadow: "none",
                 cursor: "pointer", outline: "none",
-                opacity: orderable || submitted ? 1 : 0.9,
+                opacity: windowOpen ? 1 : 0.9,
                 transition: "border 0.2s, box-shadow 0.2s, transform 0.2s",
                 display: "flex", flexDirection: "column", alignItems: "center",
                 padding: "40px 28px 28px",
@@ -1775,8 +1901,8 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                 position: "relative",
                 justifyContent: "space-between",
               }}>
-              {/* Selected check */}
-              {selected && (
+              {/* Selected now, or already sitting in the order for this day */}
+              {(selected || inOrder) && (
                 <div className="absolute pop-in" style={{ top: "16px", [isRTL ? "left" : "right"]: "16px", width: "36px", height: "36px", borderRadius: "50%", backgroundColor: TEAL, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 12px ${TEAL_50}` }}>
                   <Check size={20} color="#fff" strokeWidth={3} />
                 </div>
@@ -1796,28 +1922,32 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                 {loc(meal.label)}
               </span>
 
-              {/* Status pill (Available / Ordering closed / Already ordered) */}
+              {/* Unified badge — identical on all three cards */}
               <div className="flex items-center gap-2" style={{
                 padding: "9px 18px", borderRadius: "100px",
                 backgroundColor: statusBg,
               }}>
-                {submitted
-                  ? <Check size={15} color={statusColor} strokeWidth={3} />
-                  : <div style={{ width: "9px", height: "9px", borderRadius: "50%", backgroundColor: statusColor }} />}
                 <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: statusColor }}>
                   {statusText}
                 </span>
               </div>
 
-              {/* Divider + Submit before deadline */}
+              {/* Divider + the daily ordering window */}
               <div className="w-full flex flex-col items-center" style={{ marginTop: "auto" }}>
                 <div style={{ width: "100%", height: "1px", backgroundColor: "rgba(0,0,0,0.06)", marginBottom: "16px" }} />
-                <div className="flex items-center justify-center gap-2">
-                  <Clock size={16} color={timeOpen ? "#D97706" : "#9CA3AF"} />
-                  <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: timeOpen ? "#D97706" : "#9CA3AF" }}>
-                    {timeOpen
-                      ? (isRTL ? `أرسل قبل ${cutoffStr}` : `Submit before ${cutoffStr}`)
-                      : (isRTL ? "انتهى وقت الطلب" : "Ordering window closed")}
+                <div className="flex flex-col items-center gap-1">
+                  <div className="flex items-center justify-center gap-2">
+                    <Clock size={16} color={windowOpen ? "#D97706" : "#9CA3AF"} />
+                    <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: windowOpen ? "#D97706" : "#9CA3AF" }}>
+                      {windowOpen
+                        ? (isRTL ? `الطلب ${windowStr}` : `Ordering ${windowStr}`)
+                        : (isRTL ? "انتهى وقت الطلب" : "Ordering window closed")}
+                    </span>
+                  </div>
+                  <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: "#9CA3AF", textAlign: "center" }}>
+                    {isRTL
+                      ? "بدون اختيار، سيتم تقديم وجبة قياسية"
+                      : "No choice? A standard meal is provided"}
                   </span>
                 </div>
               </div>
@@ -1853,8 +1983,8 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                 </h3>
                 <p style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.5 }}>
                   {isRTL
-                    ? "انتهى وقت الطلب لهذه الوجبة. سيتم تحضير وجبتك الافتراضية وتوصيلها وفقاً لخطة الحمية المخصصة لك."
-                    : "Ordering for this meal is now closed. Your default meal will still be prepared and delivered according to your assigned diet plan."}
+                    ? `الطلب متاح يومياً ${windowStr}. خارج هذا الوقت سيتم تحضير وجبة قياسية وتوصيلها وفقاً لخطة الحمية المخصصة لك.`
+                    : `Ordering is open ${windowStr} each day. Outside that window a standard meal is prepared and delivered according to your assigned diet plan.`}
                 </p>
                 <button onClick={() => setBlockedMeal(null)}
                   className="active:scale-95 transition-transform"
@@ -1868,64 +1998,6 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
           </motion.div>
         )}
 
-        {/* Already submitted modal */}
-        {submittedMeal && (() => {
-          const canEdit = isMealOrderable(submittedMeal);
-          return (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ backgroundColor: "rgba(0,0,0,0.45)", zIndex: 50 }}
-            onClick={() => setSubmittedMeal(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.92, y: 16 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.92 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{ width: "540px", padding: "32px 28px", backgroundColor: "#fff", borderRadius: "24px", boxShadow: "0 16px 48px rgba(0,0,0,0.25)" }}
-            >
-              <div className="flex flex-col items-center gap-4 text-center">
-                <div style={{ width: "72px", height: "72px", borderRadius: "50%", backgroundColor: "#E0F2FE", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Check size={36} color="#0369A1" strokeWidth={2.5} />
-                </div>
-                <h3 style={{ fontFamily, fontSize: "24px", fontWeight: WEIGHT.bold, color: "#171717" }}>
-                  {isRTL ? "تم استلام طلبك بالفعل" : "Order Already Placed"}
-                </h3>
-                <p style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.5 }}>
-                  {isRTL
-                    ? canEdit
-                      ? `لقد قمت بطلب ${loc(submittedMeal.label)} مسبقاً اليوم. يمكنك تعديل طلبك أو مراجعة التفاصيل من "طلباتي".`
-                      : `لقد قمت بطلب ${loc(submittedMeal.label)} مسبقاً اليوم. يمكنك مراجعة تفاصيل الطلب من "طلباتي".`
-                    : canEdit
-                      ? `You've already placed a ${loc(submittedMeal.label).toLowerCase()} order for today. You can edit your order or find details in "My Orders".`
-                      : `You've already placed a ${loc(submittedMeal.label).toLowerCase()} order for today. You can find your order details in "My Orders".`}
-                </p>
-                <div className="flex items-center gap-3">
-                  {canEdit && onEditOrder && (
-                    <button onClick={() => { setSubmittedMeal(null); onEditOrder(submittedMeal.id); }}
-                      className="active:scale-95 transition-transform"
-                      style={{ marginTop: "8px", height: "52px", padding: "0 36px", borderRadius: "100px", backgroundColor: "#fff", border: `2px solid ${TEAL}`, outline: "none", cursor: "pointer" }}>
-                      <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: TEAL }}>
-                        {isRTL ? "تعديل الطلب" : "Edit Order"}
-                      </span>
-                    </button>
-                  )}
-                  <button onClick={() => setSubmittedMeal(null)}
-                    className="active:scale-95 transition-transform"
-                    style={{ marginTop: "8px", height: "52px", padding: "0 36px", borderRadius: "100px", backgroundColor: TEAL, border: "none", outline: "none", cursor: "pointer" }}>
-                    <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: "#fff" }}>
-                      {isRTL ? "حسناً" : "Got it"}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-          );
-        })()}
       </AnimatePresence>
     </motion.div>
   );
@@ -2032,13 +2104,14 @@ function KidsBreakfastTypeStep({ selected, onSelect, fontFamily, isRTL }: {
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 
-function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMode }: {
+function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, dayOffset }: {
   meal: MealPeriod;
   selections: Selections;
   onToggle: (gid: string, itemId: string, group: MenuGroup) => void;
   fontFamily: string;
   isRTL: boolean;
-  isEditMode?: boolean;
+  /** Day of the rolling window this build is for. */
+  dayOffset: number;
 }) {
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
   const active = isMealActive(meal.hours);
@@ -2058,20 +2131,14 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMo
       }}>
         {/* Pre-order banner — top of the same container */}
         {(() => {
-          const tmrw = new Date();
-          tmrw.setDate(tmrw.getDate() + 1);
-          const tmrwDate = tmrw.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long" });
+          const tmrwDate = dayForOffset(dayOffset).toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long" });
           return (
             <div className="shrink-0 flex items-center gap-2 px-5 py-3" style={{ backgroundColor: "#F2F9FB", borderBottom: `1px solid ${TEAL_20}` }}>
               <Clock size={17} color={TEAL} style={{ flexShrink: 0 }} />
               <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL, lineHeight: 1.4 }}>
-                {isEditMode
-                  ? (isRTL
-                      ? `تعديل طلب ${loc(meal.label)} — التوصيل ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`
-                      : `Editing ${loc(meal.label)} order — Delivery ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`)
-                  : (isRTL
-                      ? `طلب مسبق — ${loc(meal.label)} ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`
-                      : `Pre-order — ${loc(meal.label)} ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`)}
+                {isRTL
+                  ? `طلب مسبق — ${loc(meal.label)} ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`
+                  : `Pre-order — ${loc(meal.label)} ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`}
               </span>
             </div>
           );
@@ -2250,14 +2317,14 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
  * STEP 4: CONFIRM
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, room, dietLabel, allergiesLabel, fontFamily, isRTL, isEditMode, onEdit, meals, orders, onOrderMeal }: {
+function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, room, dietLabel, allergiesLabel, fontFamily, isRTL, meals, orders, onOrderMeal, submitted }: {
   orderNumber: string; meal: MealPeriod; selections: Selections;
   orderFor: OrderFor; patientName: string; room: string | null; dietLabel: string; allergiesLabel: string;
   fontFamily: string; isRTL: boolean;
-  isEditMode?: boolean; onEdit?: () => void;
   meals?: MealPeriod[]; orders?: any[]; onOrderMeal?: (mealId: MealId) => void;
+  /** Everything sent in this submission, across the rolling window. */
+  submitted?: { dayOffset: number; mealId: MealId }[];
 }) {
-  const canStillEdit = isMealOrderable(meal);
   const isGuest = orderFor === "guest";
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
   const required = getRequiredGroups(meal);
@@ -2269,10 +2336,11 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
   });
   const includedItems = included.flatMap((g) => g.items).map((i) => loc(i.name));
 
-  // Delivery is for tomorrow
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const deliveryDate = tomorrow.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  // The headline meal is the last one built; the summary below lists them all.
+  const summary = submitted && submitted.length ? submitted : [];
+  const headlineOffset = summary.find((e) => e.mealId === meal.id)?.dayOffset ?? ORDER_DAY_OFFSETS[0];
+  const deliveryDate = formatDayLong(headlineOffset, isRTL);
+  const dayCount = new Set(summary.map((e) => e.dayOffset)).size;
 
   return (
     <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}
@@ -2286,7 +2354,7 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
         overflow: "hidden",
       }}>
 
-        {/* ── LEFT — Success message + Edit Order ── */}
+        {/* ── LEFT — Success message ── */}
         <div style={{ padding: "36px 32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "18px" }}>
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 220, damping: 18, delay: 0.1 }}
             style={{ width: "72px", height: "72px", borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 8px 22px ${GREEN}50` }}>
@@ -2294,126 +2362,53 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
           </motion.div>
           <div className="text-center">
             <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1.2 }}>
-              {isEditMode
-                ? (isRTL ? "تم تحديث طلب الوجبة" : "Meal Order Updated")
-                : (isRTL ? "تم تأكيد طلب الوجبة" : "Meal Order Confirmed")}
+              {isRTL ? "تم تأكيد طلب الوجبة" : "Meal Order Confirmed"}
             </h2>
             <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.5, marginTop: "12px", maxWidth: "360px" }}>
-              {isEditMode
-                ? (isRTL
-                    ? `تم تحديث طلب ${loc(meal.label).toLowerCase()} بنجاح وسيتم توصيله في الوقت المحدد.`
-                    : `Your ${loc(meal.label).toLowerCase()} order has been updated and will be delivered during the scheduled time.`)
-                : (isRTL
-                    ? `تم إرسال طلب ${loc(meal.label).toLowerCase()} إلى المطبخ وسيتم توصيله في الوقت المحدد.`
-                    : `Your ${loc(meal.label).toLowerCase()} order has been sent to the kitchen and will be delivered during the scheduled time.`)}
+              {isRTL
+                ? `تم إرسال طلبك إلى المطبخ وسيتم توصيله في الوقت المحدد.`
+                : `Your order has been sent to the kitchen and will be delivered during the scheduled time.`}
             </p>
           </div>
 
-          {/* Edit Order button — only if ordering window still open */}
-          {canStillEdit && onEdit && (
-            <button onClick={onEdit}
-              className="active:scale-95 transition-transform cursor-pointer"
-              style={{ marginTop: "4px", height: "44px", padding: "0 28px", borderRadius: "10px", backgroundColor: "#fff", border: `1.5px solid ${TEAL}`, outline: "none", display: "flex", alignItems: "center", gap: "8px" }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-              <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL }}>
-                {isRTL ? "تعديل الطلب" : "Edit Order"}
-              </span>
-            </button>
-          )}
-
-          {/* ── Meal Shortcut Buttons ── */}
-          {meals && meals.length > 0 && (
+          {/* ── What was sent, across the rolling window ── */}
+          {summary.length > 0 && meals && meals.length > 0 && (
             <div style={{ marginTop: "8px", width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column", gap: "10px" }}>
               <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "center", marginBottom: "2px" }}>
-                {isRTL ? "وجبات الغد" : "Tomorrow's Meals"}
+                {isRTL
+                  ? `وجباتك المطلوبة (${summary.length}) · ${dayCount} ${dayCount === 1 ? "يوم" : "أيام"}`
+                  : `Meals In This Order (${summary.length}) · ${dayCount} ${dayCount === 1 ? "day" : "days"}`}
               </p>
-              {meals.map((m) => {
-                const isCurrent = m.id === meal.id;
-                const todayStr = new Date().toDateString();
-                const hasOrder = !isCurrent && orders?.some((o) => {
-                  const d = o.placedAt instanceof Date ? o.placedAt : new Date(o.placedAt);
-                  return d.toDateString() === todayStr && o.mealId === m.id;
-                });
-                const orderable = isMealOrderable(m);
+              {summary.map((entry) => {
+                const m = meals.find((mm) => mm.id === entry.mealId);
+                if (!m) return null;
                 const MealIcon = m.icon;
-
-                // Determine status
-                let statusLabel: string;
-                let statusColor: string;
-                let bgColor: string;
-                let borderColor: string;
-                let clickable = false;
-
-                if (isCurrent) {
-                  // Just confirmed
-                  statusLabel = isRTL ? "تم الإرسال ✓" : "Submitted ✓";
-                  statusColor = GREEN;
-                  bgColor = `${GREEN}12`;
-                  borderColor = `${GREEN}40`;
-                } else if (hasOrder) {
-                  // Already submitted earlier
-                  statusLabel = isRTL ? "تم الإرسال ✓" : "Submitted ✓";
-                  statusColor = GREEN;
-                  bgColor = `${GREEN}12`;
-                  borderColor = `${GREEN}40`;
-                  clickable = false;
-                } else if (orderable) {
-                  // Available to order
-                  statusLabel = isRTL ? "اطلب الآن" : "Order Now";
-                  statusColor = TEAL;
-                  bgColor = "#fff";
-                  borderColor = TEAL;
-                  clickable = true;
-                } else {
-                  // Window closed
-                  statusLabel = isRTL ? "انتهى الوقت" : "Closed";
-                  statusColor = "#9CA3AF";
-                  bgColor = "#F9FAFB";
-                  borderColor = "rgba(0,0,0,0.08)";
-                }
-
                 return (
-                  <motion.button
-                    key={m.id}
-                    whileTap={clickable ? { scale: 0.97 } : {}}
-                    onClick={clickable && onOrderMeal ? () => onOrderMeal(m.id) : undefined}
+                  <div
+                    key={`${entry.dayOffset}-${entry.mealId}`}
                     style={{
-                      width: "100%", padding: "14px 18px", borderRadius: "14px",
-                      backgroundColor: bgColor, border: `1.5px solid ${borderColor}`,
+                      width: "100%", padding: "12px 16px", borderRadius: "14px",
+                      backgroundColor: `${GREEN}12`, border: `1.5px solid ${GREEN}40`,
                       display: "flex", alignItems: "center", gap: "14px",
-                      cursor: clickable ? "pointer" : "default",
-                      opacity: (!clickable && !isCurrent && !hasOrder) ? 0.55 : 1,
-                      outline: "none",
-                      transition: "all 0.2s",
                     }}
                   >
                     <div style={{
-                      width: "40px", height: "40px", borderRadius: "12px",
-                      backgroundColor: isCurrent || hasOrder ? `${GREEN}15` : clickable ? TEAL_15 : "#F3F4F6",
+                      width: "38px", height: "38px", borderRadius: "12px",
+                      backgroundColor: `${GREEN}15`,
                       display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                     }}>
-                      <MealIcon size={20} color={isCurrent || hasOrder ? GREEN : clickable ? TEAL : "#9CA3AF"} />
+                      <MealIcon size={19} color={GREEN} />
                     </div>
                     <div style={{ flex: 1, textAlign: isRTL ? "right" : "left" }}>
                       <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1.2 }}>
                         {loc(m.label)}
                       </p>
                       <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: "#6B7280", marginTop: "2px" }}>
-                        {locTimeRange(m.timeRange, isRTL)}
+                        {`${formatDayWeekday(entry.dayOffset, isRTL)} · ${locTimeRange(m.timeRange, isRTL)}`}
                       </p>
                     </div>
-                    <div style={{
-                      padding: "5px 14px", borderRadius: "100px",
-                      backgroundColor: isCurrent || hasOrder ? `${GREEN}15` : clickable ? TEAL_15 : "#F3F4F6",
-                    }}>
-                      <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: statusColor, whiteSpace: "nowrap" }}>
-                        {statusLabel}
-                      </span>
-                    </div>
-                  </motion.button>
+                    <Check size={18} color={GREEN} strokeWidth={3} />
+                  </div>
                 );
               })}
             </div>
@@ -2571,7 +2566,7 @@ function BottomBar({ step, canContinue, onBack, showBack, onContinue, leftAction
             outline: "none",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           }}>
-          {backLabel === "Exit" || backLabel === "خروج" || backLabel === "Cancel Edit" || backLabel === "إلغاء التعديل" ? (
+          {backLabel === "Exit" || backLabel === "خروج" ? (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
@@ -2662,9 +2657,9 @@ function scheduledFor(order: any, isRTL: boolean): string {
   return dayLabel;
 }
 
-function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL, meals, onEdit }: {
+function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL, meals }: {
   activeOrders: any[]; pastOrders: any[]; fontFamily: string; isRTL: boolean;
-  meals?: MealPeriod[]; onEdit?: (orderId: string) => void;
+  meals?: MealPeriod[];
 }) {
   const [tab, setTab] = useState<"all" | "patient" | "companion">("all");
   const all = [...activeOrders, ...pastOrders];
@@ -2716,10 +2711,10 @@ function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL, meals, onEdi
             const isToday = orderDate.toDateString() === new Date().toDateString();
             const mealId = order.mealId || order.mealType?.toLowerCase();
             const mealDef = meals?.find((m) => m.id === mealId);
-            const canEdit = isToday && mealDef && isMealOrderable(mealDef);
+
             return (
               <OrderCard key={order.id} order={order} fontFamily={fontFamily} isRTL={isRTL} formatDate={formatDate}
-                canEdit={!!canEdit} onEdit={onEdit ? () => onEdit(order.id) : undefined} mealDef={mealDef} />
+                mealDef={mealDef} />
             );
           })
         )}
@@ -2728,9 +2723,9 @@ function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL, meals, onEdi
   );
 }
 
-function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, mealDef }: {
+function OrderCard({ order, fontFamily, isRTL, formatDate, mealDef }: {
   order: any; fontFamily: string; isRTL: boolean; formatDate: (d: Date) => string;
-  canEdit?: boolean; onEdit?: () => void; mealDef?: MealPeriod;
+  mealDef?: MealPeriod;
 }) {
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
   const [open, setOpen] = useState(false);
@@ -2799,9 +2794,10 @@ function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, meal
                   <Calendar size={14} color="#9CA3AF" />
                   <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#6B7280" }}>
                     {(() => {
-                      const tmrw = new Date();
-                      tmrw.setDate(tmrw.getDate() + 1);
-                      return tmrw.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long" });
+                      // Orders span a three-day window; fall back to tomorrow
+                      // only for records placed before deliveryDate existed.
+                      const d = order.deliveryDate ? new Date(order.deliveryDate) : dayForOffset(1);
+                      return d.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long" });
                     })()}
                   </span>
                 </div>
@@ -2809,26 +2805,6 @@ function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, meal
             )}
           </div>
         </div>
-        {/* Edit button — only when ordering window is still open */}
-        {canEdit && onEdit && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="shrink-0 flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
-            style={{
-              padding: "8px 16px", borderRadius: "10px",
-              backgroundColor: "#fff", border: `1.5px solid ${TEAL}`,
-              outline: "none",
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
-            <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL }}>
-              {isRTL ? "تعديل الطلب" : "Edit Order"}
-            </span>
-          </button>
-        )}
         <div className="flex items-center justify-center gap-2 shrink-0" style={{
           width: "185px", padding: "8px 16px", borderRadius: "10px",
           backgroundColor: isGuest ? `rgba(var(--fo-secondary-rgb),0.08)` : TEAL_BG_TINT,

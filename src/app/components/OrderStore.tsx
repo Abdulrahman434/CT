@@ -30,8 +30,11 @@ export interface PlacedOrder {
   orderFor?: "patient" | "guest";
   /** Which meal period this order belongs to (for edit matching) */
   mealId?: string;
-  /** Saved item selections for pre-filling during edit */
+  /** Saved item selections */
   selections?: Record<string, string[]>;
+  /** ISO date this order is to be delivered on. Orders cover a rolling
+   *  three-day window, so "tomorrow" is no longer a safe assumption. */
+  deliveryDate?: string;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
