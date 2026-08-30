@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, LEADING } from "./ThemeContext";
 import { useLocale, type Locale } from "./i18n";
 import {
@@ -213,6 +213,8 @@ export function PatientPreferenceForm({
     name: "", relationship: "", accepted: false, acceptedAt: null,
   });
   const [index, setIndex] = useState(0);
+  /* Time inputs, so the icon and the field itself can open the native picker. */
+  const timeRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [submitted, setSubmitted] = useState(false);
 
   const wantsCarePartner = answers[CARE_PARTNER_TRIGGER]?.value === "yes";
@@ -254,6 +256,22 @@ export function PatientPreferenceForm({
    *  so tag them with the locale they were written in. */
   const setTagged = (id: string, field: "note" | "text", raw: string) =>
     patch(id, { [field]: raw.trim() ? { text: raw, lang: locale } : undefined });
+
+  /* The native picker indicator is hidden (see the stylesheet in renderShell)
+   * because it is an unthemeable dark glyph that duplicated the themed Clock.
+   * The themed icon takes over as the picker affordance.
+   *
+   * Deliberately NOT wired to the input's own onClick: that would open the
+   * picker on every tap and the hour/minute segments could never be focused or
+   * typed into. Tapping the field keeps its native behaviour (and Android
+   * WebView opens its time dialog on focus anyway); the icon is the explicit
+   * way to summon the picker. showPicker() needs a user gesture and is missing
+   * from older WebViews, so it falls back to focus(). */
+  const openTimePicker = (id: string) => {
+    const el = timeRefs.current[id];
+    if (!el) return;
+    try { el.showPicker(); } catch { el.focus(); }
+  };
 
   const goNext = () => (isLast ? handleSubmit() : setIndex(safeIndex + 1));
   const goBack = () => setIndex(Math.max(0, safeIndex - 1));
@@ -363,13 +381,22 @@ export function PatientPreferenceForm({
       case "time":
         return (
           <div className="flex items-center justify-center gap-3" style={{ direction: "ltr" }}>
-            <Clock size={26} style={{ color: iconColor }} />
+            <button
+              type="button"
+              onClick={() => openTimePicker(q.id)}
+              aria-label={t("ppf.time.label")}
+              className="flex items-center justify-center cursor-pointer active:scale-[0.96]"
+              style={{ background: "none", border: "none", outline: "none", padding: 0 }}
+            >
+              <Clock size={26} style={{ color: iconColor }} />
+            </button>
             <input
+              ref={(el) => { timeRefs.current[q.id] = el; }}
               type="time"
               value={answers[q.id]?.value ?? ""}
               onChange={(e) => patch(q.id, { value: e.target.value || undefined })}
               aria-label={t("ppf.time.label")}
-              className="ppf-field"
+              className="ppf-field ppf-time"
               style={{
                 ...fieldStyle("60px"),
                 width: "220px",
@@ -663,6 +690,10 @@ export function PatientPreferenceForm({
 
       <style>{`
         .ppf-field:focus { border-color: ${theme.accent} !important; }
+        /* Drop Chromium's built-in clock glyph — it is a fixed dark icon that
+           cannot follow the hospital theme and duplicated the themed one. */
+        .ppf-time::-webkit-calendar-picker-indicator { display: none; }
+        .ppf-time { cursor: pointer; }
         .ppf-field::placeholder { color: ${theme.textDisabled}; }
       `}</style>
 
