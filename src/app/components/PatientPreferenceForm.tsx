@@ -38,12 +38,12 @@ import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
  * bed. If a future translation stops fitting, widen the body or cut words —
  * do not go under it.
  *
- * COLOUR — no hex literals. Every content icon is the per-hospital secondary
- * on a theme.accentSubtle chip, so icons re-brand with the active hospital.
- * See iconColor below for why the exact token depends on light/dark mode.
- * The one deliberate exception is the favourite-colour question: the hue rail
- * and NEUTRALS below are the *answer options*, not styling — theming them
- * would make the question unanswerable.
+ * COLOUR — no hex literals anywhere. Every content icon is the per-hospital
+ * secondary on a theme.accentSubtle chip, so icons re-brand with the active
+ * hospital. See iconColor below for why the exact token depends on light/dark
+ * mode. (The favourite-colour question used to be the one exception, holding
+ * raw swatches as answer options; it is a free-text field now, so the rule has
+ * no exceptions left.)
  *
  * Sub-views are plain render functions, not nested components: a nested
  * component is a new type on every keystroke and the notes field would lose
@@ -66,13 +66,9 @@ export type YesNo = "yes" | "no";
 /** Every answer value is language-neutral except `note` / `text`. */
 export interface PreferenceAnswer {
   /** "yes" | "no" for yes/no questions, an option id for choices, a 24-hour
-   *  "HH:MM" string for times, a "#RRGGBB" hex for the colour picker, or
-   *  NO_PREFERENCE when the patient deliberately declined to choose. */
+   *  "HH:MM" string for times, or NO_PREFERENCE when the patient deliberately
+   *  declined to choose. */
   value?: string;
-  /** Language-neutral word for a value that is otherwise only machine
-   *  readable — currently the colour name ("red") behind the stored hex, so
-   *  the staff-side view can print the word they read on the paper form. */
-  label?: string;
   /** Free text that IS the answer (Other section) — language-tagged. */
   text?: NoteValue;
   /** Optional note column from the paper form — never blocks progress. */
@@ -100,7 +96,7 @@ export interface PreferenceFormRecord {
  *  distinct from an unanswered question, which is what Next now blocks on. */
 export const NO_PREFERENCE = "no-preference";
 
-type ControlKind = "yesno" | "time" | "choice" | "text" | "color";
+type ControlKind = "yesno" | "time" | "choice" | "text";
 
 interface QuestionDef {
   /** Stable, language-neutral question id — this is what gets stored. */
@@ -115,74 +111,6 @@ interface SectionDef {
   icon: any;
   questions: readonly QuestionDef[];
 }
-
-/* ── Favourite colour ─────────────────────────────────────────────────
- * THE ONE PLACE raw colours are legitimate: these are the answers the patient
- * picks between, not theme styling. A patient's favourite colour has to be
- * red, not "the active hospital's red".
- *
- * There is no <input type="color"> here on purpose. It delegates to the OS
- * colour dialog, which the Android kiosk WebView either suppresses outright or
- * renders as an unthemed desktop-sized panel, and it carries the same
- * unstyleable native swatch button that duplicated the themed icon on the time
- * question. The rail below is plain DOM: a continuous hue gradient the patient
- * touches anywhere, plus the neutrals a hue rail cannot express. */
-
-/** Fixed saturation/lightness for the rail, so a touch anywhere along it
- *  lands on a colour vivid enough to name. */
-const HUE_SAT = 0.68;
-const HUE_LIGHT = 0.52;
-
-/** Greys and brown are unreachable on a hue rail but are real answers. */
-const NEUTRALS = [
-  { name: "white", css: "#FFFFFF" },
-  { name: "grey",  css: "#8A9099" },
-  { name: "black", css: "#1F272E" },
-  { name: "brown", css: "#8A5A34" },
-] as const;
-
-/** Hue bucket -> the colour word staff read off the paper form today. The
- *  stored record carries both the exact hex and this name. */
-const HUE_NAMES: readonly { max: number; name: string }[] = [
-  { max: 18,  name: "red" },
-  { max: 42,  name: "orange" },
-  { max: 64,  name: "yellow" },
-  { max: 160, name: "green" },
-  { max: 200, name: "teal" },
-  { max: 255, name: "blue" },
-  { max: 300, name: "purple" },
-  { max: 344, name: "pink" },
-  { max: 360, name: "red" },
-];
-const hueName = (h: number) => HUE_NAMES.find((b) => h <= b.max)!.name;
-
-/** hsl -> "#RRGGBB". The record stores hex so the exact colour survives. */
-function hslHex(h: number, s: number, l: number) {
-  const k = (n: number) => (n + h / 30) % 12;
-  const a = s * Math.min(l, 1 - l);
-  const channel = (n: number) => {
-    const v = l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
-    return Math.round(v * 255).toString(16).padStart(2, "0");
-  };
-  return `#${channel(0)}${channel(8)}${channel(4)}`.toUpperCase();
-}
-
-/** Hue back out of a stored hex, to place the rail's marker. Null for the
- *  neutrals, which sit off the rail. */
-function hexHue(hex: string): number | null {
-  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
-  if (!m) return null;
-  const [r, g, b] = m.slice(1).map((v) => parseInt(v, 16) / 255);
-  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
-  if (d < 0.04) return null;
-  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
-  return (Math.round(h * 60) + 360) % 360;
-}
-
-/** Rail background — 13 stops read as continuous at this width. */
-const HUE_GRADIENT = `linear-gradient(to right, ${
-  Array.from({ length: 13 }, (_, i) => hslHex(i * 30, HUE_SAT, HUE_LIGHT)).join(", ")
-})`;
 
 /* ── Time ─────────────────────────────────────────────────────────────
  * Every choice is a button already on screen. The native <input type="time">
@@ -242,7 +170,7 @@ const SECTIONS: readonly SectionDef[] = [
     questions: [
       { id: "other.otherPreference", kind: "text" },
       { id: "other.virtualRoom", kind: "yesno" },
-      { id: "other.favouriteColour", kind: "color" },
+      { id: "other.favouriteColour", kind: "text" },
     ],
   },
 ] as const;
@@ -321,12 +249,12 @@ export function PatientPreferenceForm({
 
   /** Every vertical measurement the constraint moves, in one place. */
   const M = dense
-    ? { progressTop: "10px", progressGap: "8px", chip: 40, chipIcon: 20, chipGap: "10px",
-        qGap: "12px", stackGap: "8px", notesTop: "10px", notesH: "52px",
-        footerY: "12px", railH: "68px", swatch: 52, reserved: "48px", timeH: "50px" }
+    ? { progressTop: "10px", progressGap: "8px", chip: 40, chipIcon: 20, chipGap: "8px",
+        qGap: "12px", stackGap: "6px", notesTop: "10px", notesH: "48px",
+        footerY: "12px", reserved: "46px", timeH: "46px", pillY: "10px" }
     : { progressTop: "24px", progressGap: "14px", chip: 48, chipIcon: 24, chipGap: "14px",
         qGap: "20px", stackGap: "12px", notesTop: "16px", notesH: "64px",
-        footerY: "20px", railH: "88px", swatch: 64, reserved: "56px", timeH: "56px" };
+        footerY: "20px", reserved: "56px", timeH: "56px", pillY: "14px" };
 
   const wantsCarePartner = answers[CARE_PARTNER_TRIGGER]?.value === "yes";
 
@@ -361,10 +289,8 @@ export function PatientPreferenceForm({
 
   /** Tapping the selected pill again clears it. Next then blocks again, which
    *  is the point: an answer is only recorded when the patient chose it. */
-  const setValue = (id: string, value: string, label?: string) =>
-    patch(id, answers[id]?.value === value
-      ? { value: undefined, label: undefined }
-      : { value, label });
+  const setValue = (id: string, value: string) =>
+    patch(id, { value: answers[id]?.value === value ? undefined : value });
 
   /** Notes and free text are the only place a raw language string is stored,
    *  so tag them with the locale they were written in. */
@@ -437,7 +363,7 @@ export function PatientPreferenceForm({
       data-ppf-pill={key}
       className="transition-transform duration-200 active:scale-[0.96] cursor-pointer"
       style={{
-        padding: "14px 40px",
+        padding: `${M.pillY} 40px`,
         borderRadius: theme.radiusLg,
         border: selected ? `2px solid ${theme.accent}` : `1.5px solid ${theme.borderDefault}`,
         backgroundColor: selected ? theme.accentSubtle : theme.surface,
@@ -480,6 +406,14 @@ export function PatientPreferenceForm({
   const renderNoPreference = (id: string) =>
     renderPill(NO_PREFERENCE, answers[id]?.value === NO_PREFERENCE,
       () => setValue(id, NO_PREFERENCE), t("ppf.noPreference"));
+
+  /** Free-text questions share one control; only the prompt differs. Falls
+   *  back to the generic placeholder for questions that need no special one. */
+  const placeholderFor = (id: string) => {
+    const key = `ppf.placeholder.${id}`;
+    const localized = t(key);
+    return localized === key ? t("ppf.freeText.placeholder") : localized;
+  };
 
   /** "6:00 AM" / "٦:٠٠ ص" — the display form of a stored "HH:MM". */
   const timeLabel = (h24: number, minutes: string) =>
@@ -585,7 +519,7 @@ export function PatientPreferenceForm({
                   setTagged(q.id, "text", e.target.value);
                   if (e.target.value.trim()) patch(q.id, { value: undefined });
                 }}
-                placeholder={t("ppf.freeText.placeholder")}
+                placeholder={placeholderFor(q.id)}
                 className="ppf-field"
                 style={fieldStyle(M.notesH)}
               />
@@ -601,111 +535,6 @@ export function PatientPreferenceForm({
             )}
           </div>
         );
-
-      case "color": {
-        const value = answers[q.id]?.value;
-        const chosen = value && value !== NO_PREFERENCE ? value : undefined;
-        const chosenName = answers[q.id]?.label;
-        const railHue = chosen ? hexHue(chosen) : null;
-        /* The rail is a hue axis, so it always runs 0->360 left to right —
-           mirroring it under RTL would only make the same axis harder to
-           learn. Everything else on the screen still follows dir. */
-        const pickHue = (clientX: number, el: HTMLElement) => {
-          const r = el.getBoundingClientRect();
-          const x = Math.min(Math.max(clientX - r.left, 0), r.width);
-          const h = Math.round((x / Math.max(r.width, 1)) * 359);
-          patch(q.id, { value: hslHex(h, HUE_SAT, HUE_LIGHT), label: hueName(h) });
-        };
-        return (
-          <div className="flex flex-col items-center w-full" style={{ gap: M.stackGap }}>
-            <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium, color: theme.textMuted }}>
-              {t("ppf.color.pick")}
-            </span>
-
-            <div
-              role="slider"
-              aria-label={t("ppf.color.pick")}
-              aria-valuemin={0}
-              aria-valuemax={359}
-              aria-valuenow={railHue ?? 0}
-              data-ppf-hue-rail
-              onPointerDown={(e) => {
-                e.currentTarget.setPointerCapture(e.pointerId);
-                pickHue(e.clientX, e.currentTarget);
-              }}
-              onPointerMove={(e) => {
-                if (e.buttons === 1) pickHue(e.clientX, e.currentTarget);
-              }}
-              className="relative cursor-pointer touch-none"
-              style={{
-                width: "100%", maxWidth: "1280px", height: M.railH,
-                direction: "ltr",
-                background: HUE_GRADIENT,
-                borderRadius: theme.radiusLg,
-                border: `1.5px solid ${theme.borderDefault}`,
-                boxShadow: SHADOW.sm,
-              }}
-            >
-              {railHue !== null && (
-                <span
-                  className="absolute pointer-events-none"
-                  style={{
-                    top: "-6px", bottom: "-6px", width: "22px",
-                    left: `calc(${(railHue / 359) * 100}% - 11px)`,
-                    borderRadius: theme.radiusMd,
-                    border: `4px solid ${theme.surface}`,
-                    boxShadow: SHADOW.md,
-                  }}
-                />
-              )}
-            </div>
-
-            <div className="flex items-center justify-center gap-4">
-              {NEUTRALS.map((c) => {
-                const selected = chosen === c.css;
-                return (
-                  <button
-                    key={c.name}
-                    onClick={() => setValue(q.id, c.css, c.name)}
-                    aria-label={t(`ppf.color.${c.name}`)}
-                    className="flex items-center justify-center cursor-pointer transition-transform duration-200 active:scale-[0.96]"
-                    style={{
-                      width: M.swatch, height: M.swatch,
-                      borderRadius: theme.radiusFull,
-                      backgroundColor: c.css,
-                      border: selected ? `3px solid ${theme.accent}` : `1.5px solid ${theme.borderDefault}`,
-                      boxShadow: selected ? SHADOW.md : SHADOW.sm,
-                      outline: "none", padding: 0,
-                    }}
-                  >
-                    {selected && <Check size={26} color={c.name === "white" ? theme.textHeading : theme.textInverse} strokeWidth={3} />}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Height reserved so picking a colour never shifts the rail. */}
-            <div className="flex items-center justify-center gap-3" style={{ height: M.reserved }}>
-              {chosen && chosenName && (
-                <>
-                  <span
-                    style={{
-                      width: 44, height: 44, borderRadius: theme.radiusFull,
-                      backgroundColor: chosen, border: `1.5px solid ${theme.borderDefault}`,
-                      boxShadow: SHADOW.sm,
-                    }}
-                  />
-                  <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: theme.textHeading }}>
-                    {`${t("ppf.color.yourChoice")} · ${t(`ppf.color.${chosenName}`)}`}
-                  </span>
-                </>
-              )}
-            </div>
-
-            {renderNoPreference(q.id)}
-          </div>
-        );
-      }
     }
   };
 
@@ -1025,11 +854,23 @@ export function PatientPreferenceForm({
       <div
         key={safeIndex}
         data-ppf="body"
-        className="flex-1 min-h-0 overflow-hidden flex flex-col items-center justify-center px-16 pb-2"
+        className="flex-1 min-h-0 overflow-hidden flex flex-col px-16 pb-2"
       >
-        {screen.kind === "question" && renderQuestionScreen(screen.section, screen.q)}
-        {screen.kind === "carePartner" && renderCarePartnerScreen(screen.section)}
-        {screen.kind === "comments" && renderCommentsScreen()}
+        {/* Auto block margins, not justify-center. Centred while there is
+            room; collapsed to zero when there is not, so a question that wraps
+            to more lines than fit can only ever overflow downward — it can
+            never ride up over the badge and counter above it. This is the one
+            rule that keeps every screen off the header, at any card height and
+            any number of wrapped lines. */}
+        <div
+          data-ppf="content"
+          className="flex flex-col items-center w-full"
+          style={{ marginTop: "auto", marginBottom: "auto" }}
+        >
+          {screen.kind === "question" && renderQuestionScreen(screen.section, screen.q)}
+          {screen.kind === "carePartner" && renderCarePartnerScreen(screen.section)}
+          {screen.kind === "comments" && renderCommentsScreen()}
+        </div>
       </div>
 
       {/* ─── Footer ─── */}

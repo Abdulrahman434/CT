@@ -1253,6 +1253,7 @@ const translations: Record<string, TranslationEntry> = {
   "ppf.notes.label": { en: "Notes", ar: "ملاحظات", ur: "نوٹس" },
   "ppf.notes.placeholder": { en: "Add anything you'd like the team to know", ar: "أضف أي شيء تود أن يعرفه الفريق", ur: "کوئی بھی بات لکھیں جو آپ ٹیم کو بتانا چاہتے ہیں" },
   "ppf.freeText.placeholder": { en: "Type your answer here", ar: "اكتب إجابتك هنا", ur: "اپنا جواب یہاں لکھیں" },
+  "ppf.placeholder.other.favouriteColour": { en: "Type your favorite color", ar: "اكتب لونك المفضل", ur: "اپنا پسندیدہ رنگ لکھیں" },
   "ppf.time.label": { en: "Preferred time", ar: "الوقت المفضل", ur: "ترجیحی وقت" },
   "ppf.noPreference": { en: "No preference", ar: "لا يوجد تفضيل", ur: "کوئی ترجیح نہیں" },
   "ppf.time.hint": { en: "Choose the time that suits you", ar: "اختر الوقت المناسب لك", ur: "اپنی پسند کا وقت منتخب کریں" },
@@ -1302,22 +1303,6 @@ const translations: Record<string, TranslationEntry> = {
   "ppf.q.other.otherPreference": { en: "Is there any other preference not mentioned in this checklist that you would like to receive or request?", ar: "هل هناك أي تفضيل آخر غير مذكور في هذه القائمة المرجعية ترغب في الاستفادة منه أو طلبه؟", ur: "کیا کوئی اور ترجیح ہے جو اس فہرست میں شامل نہیں اور آپ اسے حاصل کرنا یا اس کی درخواست کرنا چاہیں گے؟" },
   "ppf.q.other.virtualRoom": { en: "Virtual Room Content (Patient Rights and Responsibilities – Important Contacts – Quiet Time)", ar: "محتويات الغرفة الافتراضية (حقوق ومسؤوليات المريض – أرقام تهمك – أوقات الراحة)", ur: "ورچوئل روم کا مواد (مریض کے حقوق و ذمہ داریاں – اہم رابطے – خاموشی کا وقت)" },
   "ppf.q.other.favouriteColour": { en: "What is your favorite color?", ar: "ما هو لونك المفضل؟", ur: "آپ کا پسندیدہ رنگ کون سا ہے؟" },
-
-  /* Favourite-colour swatch names (the colour id is what gets stored) */
-  "ppf.color.red": { en: "Red", ar: "أحمر", ur: "سرخ" },
-  "ppf.color.orange": { en: "Orange", ar: "برتقالي", ur: "نارنجی" },
-  "ppf.color.yellow": { en: "Yellow", ar: "أصفر", ur: "پیلا" },
-  "ppf.color.green": { en: "Green", ar: "أخضر", ur: "سبز" },
-  "ppf.color.teal": { en: "Teal", ar: "أزرق مخضر", ur: "فیروزی" },
-  "ppf.color.blue": { en: "Blue", ar: "أزرق", ur: "نیلا" },
-  "ppf.color.purple": { en: "Purple", ar: "بنفسجي", ur: "جامنی" },
-  "ppf.color.pink": { en: "Pink", ar: "وردي", ur: "گلابی" },
-  "ppf.color.brown": { en: "Brown", ar: "بني", ur: "بھورا" },
-  "ppf.color.white": { en: "White", ar: "أبيض", ur: "سفید" },
-  "ppf.color.grey": { en: "Grey", ar: "رمادي", ur: "سرمئی" },
-  "ppf.color.black": { en: "Black", ar: "أسود", ur: "سیاہ" },
-  "ppf.color.pick": { en: "Touch the colour you like", ar: "المس اللون الذي يعجبك", ur: "جو رنگ آپ کو پسند ہے اسے چھوئیں" },
-  "ppf.color.yourChoice": { en: "Your colour", ar: "لونك", ur: "آپ کا رنگ" },
 
   /* Care Partner Agreement — shown inline when the patient answers Yes */
   "ppf.partner.agreement.title": { en: "Care Partner Agreement", ar: "اتفاقية شريك الرعاية", ur: "کیئر پارٹنر معاہدہ" },
