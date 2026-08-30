@@ -12,6 +12,7 @@ if (typeof URL.parse !== "function") {
 import { createRoot } from "react-dom/client";
 import App from "./app/App.tsx";
 import PatientServicesPreview from "./preview/PatientServicesPreview.tsx";
+import PreferenceFormPreview from "./preview/PreferenceFormPreview.tsx";
 import { installMemoryPressureHandler } from "./app/lib/memoryPressure";
 import "./styles/index.css";
 
@@ -23,7 +24,10 @@ installMemoryPressureHandler();
 // Standalone UI-review routes. Only the exact preview path is diverted; every
 // other path renders the unchanged App, so normal app routing is untouched.
 const path = window.location.pathname.replace(/\/+$/, "");
-const Root = path === "/preview/patient-services" ? PatientServicesPreview : App;
+const Root =
+  path === "/preview/patient-services" ? PatientServicesPreview :
+  path === "/preview/preference-form" ? PreferenceFormPreview :
+  App;
 
 createRoot(document.getElementById("root")!).render(<Root />);
 
