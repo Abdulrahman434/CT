@@ -1,9 +1,9 @@
 import * as React from "react";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   ArrowLeft, ArrowRight, Sun, Sunrise, Coffee, Moon,
-  Check, Clock, Calendar, Utensils, Soup, ClipboardList, Bell, ChefHat,
+  Check, Clock, Calendar, Utensils, Soup, ClipboardList, ChefHat,
   Star, Heart, Droplets, Flame, Snowflake, Globe,
   Baby, User, FlaskConical, ChevronDown, ChevronRight, ChevronLeft, Home,
   AlertTriangle, X, Plus, ShieldAlert, Sparkles, CheckCircle2, Circle, SlidersHorizontal, Trash2,
@@ -121,14 +121,19 @@ function getEnforceOrderTime() { return _enforceOrderTime; }
 
 /* ── Ordering rules ───────────────────────────────────────────────────
  * The kitchen takes orders in one window each afternoon, 4:00 PM - 8:00 PM,
- * covering a rolling three-day menu: tomorrow and the two days after it. One
- * window for all three meals, replacing the old per-meal orderCutoff, so the
- * patient has a single time to remember rather than three.
+ * and that window buys exactly one day: tomorrow. One window for all three
+ * meals, replacing the old per-meal orderCutoff, so the patient has a single
+ * time to remember rather than three.
+ *
+ * The two days after tomorrow stay on screen and their menus open and read
+ * like any other day's — they just cannot be ordered yet, because their own
+ * window has not come round. That is a wait, not a lockout, and every surface
+ * here says so: no padlock, no greyed-out day, only "Menu preview".
  *
  * A missed cutoff is not a missed meal: the kitchen sends a standard meal for
- * anything not ordered. Every surface that mentions the window says so too,
- * because the patient most likely to miss the cutoff is the one who most needs
- * to know they will still be fed. */
+ * anything not ordered. The meal cards carry that promise, because the patient
+ * most likely to miss the cutoff is the one who most needs to know they will
+ * still be fed. */
 const ORDER_WINDOW_START = 16;
 const ORDER_WINDOW_END = 20;
 
@@ -136,12 +141,47 @@ const ORDER_WINDOW_END = 20;
  *  hands by the time this window opens, so the run starts at +1. */
 const ORDER_DAY_OFFSETS = [1, 2, 3] as const;
 
-/** Is the daily ordering window open right now? */
-function isOrderWindowOpen(): boolean {
-  if (!_enforceOrderTime) return true;
+/** The one day this evening's window can actually buy. */
+const ORDERABLE_DAY_OFFSET = 1;
+const isOrderableDay = (offset: number) => offset === ORDERABLE_DAY_OFFSET;
+
+/** Where tomorrow's meal stands in today's cycle.
+ *
+ *  "before"  the menu is readable, nothing can be chosen yet
+ *  "open"    4-8 PM: choose, or change what was already chosen
+ *  "closed"  8 PM onwards: whatever stands is final, and anything not chosen
+ *            has been ordered as a standard meal (see OrderStore)
+ *
+ *  Only ever asked about ORDERABLE_DAY_OFFSET. The days behind it are preview
+ *  regardless of the clock — their own window has not come round. */
+export type OrderWindowState = "before" | "open" | "closed";
+
+function orderWindowState(): OrderWindowState {
+  if (!_enforceOrderTime) return "open";
   const now = new Date();
   const nowHours = now.getHours() + now.getMinutes() / 60;
-  return nowHours >= ORDER_WINDOW_START && nowHours < ORDER_WINDOW_END;
+  if (nowHours < ORDER_WINDOW_START) return "before";
+  if (nowHours < ORDER_WINDOW_END) return "open";
+  return "closed";
+}
+
+function isOrderWindowOpen(): boolean {
+  return orderWindowState() === "open";
+}
+
+/** The state, re-read as the clock crosses 4 PM and 8 PM, so a screen left
+ *  open through either boundary changes with it instead of going stale. */
+function useOrderWindowState(): OrderWindowState {
+  const [state, setState] = React.useState<OrderWindowState>(orderWindowState);
+  React.useEffect(() => {
+    const tick = () => setState((prev) => {
+      const next = orderWindowState();
+      return next === prev ? prev : next;
+    });
+    const timer = setInterval(tick, 20_000);
+    return () => clearInterval(timer);
+  }, []);
+  return state;
 }
 
 /** Format a decimal hour (e.g. 11.5) as "11:30 AM" */
@@ -178,6 +218,16 @@ function formatDayWeekday(offset: number, isRTL: boolean): string {
 /** Day + month, shown under the weekday in the day tabs. */
 function formatDayShort(offset: number, isRTL: boolean): string {
   return dayForOffset(offset).toLocaleDateString(isRTL ? "ar-SA" : "en-US", { day: "numeric", month: "short" });
+}
+
+/** The date under a day tab's name. Tomorrow's tab is named for its relation
+ *  to today rather than its weekday, so its date carries the weekday too; the
+ *  other tabs are already named for theirs and only need the date. */
+function formatDayTabDate(offset: number, isRTL: boolean): string {
+  const locale = isRTL ? "ar-SA" : "en-US";
+  return isOrderableDay(offset)
+    ? dayForOffset(offset).toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric" })
+    : dayForOffset(offset).toLocaleDateString(locale, { month: "short", day: "numeric" });
 }
 
 function locTimeRange(tr: string, isRTL: boolean): string {
@@ -272,6 +322,33 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
   const [pendingMeals, setPendingMeals] = useState<PendingMeal[]>([]);
   /** Meals sent in the last submission — the confirmation screen lists them. */
   const [submittedSummary, setSubmittedSummary] = useState<PendingMeal[]>([]);
+
+  /* Already with the kitchen, keyed day + meal. Read back off the placed
+     orders rather than kept alongside them, so it survives leaving this
+     screen and coming back. */
+  const patientChoseForTomorrow = useMemo(() => {
+    const tomorrow = dayForOffset(ORDERABLE_DAY_OFFSET).toDateString();
+    const sent = (orders as any[]).some((o) =>
+      !o.autoStandard && o.deliveryDate && new Date(o.deliveryDate).toDateString() === tomorrow);
+    return sent || pendingMeals.some((e) => isOrderableDay(e.dayOffset));
+  }, [orders, pendingMeals]);
+
+  const placedKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const o of orders as any[]) {
+      const mealId = o.mealId || o.mealType?.toLowerCase();
+      if (!mealId || !o.deliveryDate) continue;
+      const d = new Date(o.deliveryDate);
+      if (Number.isNaN(d.getTime())) continue;
+      for (const off of ORDER_DAY_OFFSETS) {
+        if (d.toDateString() === dayForOffset(off).toDateString()) keys.add(pendingKey(off, mealId));
+      }
+    }
+    return keys;
+  }, [orders]);
+
+  /* Tomorrow's window state, live across the 4 PM and 8 PM boundaries. */
+  const windowState = useOrderWindowState();
 
   const [showHistoryOverlay, setShowHistoryOverlay] = useState(initialView === "my-orders");
 
@@ -384,6 +461,26 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
     setStep("select-meal");
   }, [currentMeal, selections, selectedDayOffset, buildOrderData]);
 
+  /* A basket left unsent when the window shuts is still a choice the patient
+     made, and the rules say a choice is kept. So it is submitted here rather
+     than dropped — which also stops OrderStore's fallback from treating those
+     meals as unchosen. Meals already with the kitchen are skipped, so this can
+     never place a second order for the same meal. */
+  useEffect(() => {
+    if (windowState !== "closed") return;
+    const due = pendingMeals.filter(
+      (e) => isOrderableDay(e.dayOffset) && !placedKeys.has(pendingKey(e.dayOffset, e.mealId)),
+    );
+    if (due.length === 0) {
+      if (pendingMeals.some((e) => isOrderableDay(e.dayOffset))) {
+        setPendingMeals((prev) => prev.filter((e) => !isOrderableDay(e.dayOffset)));
+      }
+      return;
+    }
+    due.forEach((entry) => placeOrder(entry.orderData));
+    setPendingMeals((prev) => prev.filter((e) => !isOrderableDay(e.dayOffset)));
+  }, [windowState, pendingMeals, placedKeys, placeOrder]);
+
   /** The explicit submit. Everything in the basket goes to the kitchen now —
    *  nothing was sent while the patient was still choosing. */
   const handleSubmitOrder = useCallback(() => {
@@ -440,7 +537,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
 
   const canContinue =
     step === "select-type" ? (isNpo && orderFor === "patient" ? false : true) :
-    step === "select-meal" ? selectedMealId !== null :
+    step === "select-meal" ? isOrderableDay(selectedDayOffset) && windowState === "open" && selectedMealId !== null :
     step === "kids-breakfast-type" ? kidsBreakfastType !== null :
     step === "build-meal"  ? (currentMeal ? isOrderComplete(currentMeal, selections) : false) :
     false;
@@ -591,7 +688,11 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
                         .filter((e) => e.dayOffset === selectedDayOffset)
                         .map((e) => e.mealId),
                     )}
-                    pendingCount={pendingMeals.length}
+                    placedMealIds={new Set(
+                      meals.filter((m) => placedKeys.has(pendingKey(selectedDayOffset, m.id))).map((m) => m.id),
+                    )}
+                    hasSelection={patientChoseForTomorrow}
+                    windowState={windowState}
                   />
                 )}
                 {step === "kids-breakfast-type" && (
@@ -722,7 +823,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
           secondaryAction={
             // The basket can only be sent from the meal list — the one screen
             // where the patient can see what is in it across all three days.
-            step === "select-meal" && pendingMeals.length > 0
+            step === "select-meal" && windowState === "open" && pendingMeals.length > 0
               ? {
                   label: isRTL
                     ? `إرسال الطلب (${pendingMeals.length})`
@@ -1728,131 +1829,126 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
  * STEP 2: CHOOSE MEALS (rolling three-day window)
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-/** The ordering-window reminder is shown once per visit. Repeating it on every
- *  return to this screen turns it into wallpaper, and the one thing it has to
- *  land — that a missed cutoff still gets you a meal — is the thing a patient
- *  stops reading first. sessionStorage, so a new visit sees it again. */
-const MEAL_REMINDER_KEY = "careinn-meal-window-reminder-seen";
-
-function useOncePerVisitReminder(): [boolean, () => void] {
-  const [show, setShow] = React.useState(() => {
-    try { return sessionStorage.getItem(MEAL_REMINDER_KEY) !== "true"; } catch { return true; }
-  });
-  const dismiss = React.useCallback(() => {
-    setShow(false);
-    try { sessionStorage.setItem(MEAL_REMINDER_KEY, "true"); } catch { /* private mode — just don't repeat this render */ }
-  }, []);
-  React.useEffect(() => {
-    if (!show) return;
-    try { sessionStorage.setItem(MEAL_REMINDER_KEY, "true"); } catch { /* ignore */ }
-  }, [show]);
-  return [show, dismiss];
-}
-
-function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamily, isRTL, selectedDayOffset, onSelectDay, pendingMealIds, pendingCount }: {
-  meals: MealPeriod[]; selectedMealId: MealId | null; onSelect: (id: MealId) => void; onDeselect?: () => void; fontFamily: string; isRTL: boolean;
-  /** Which day of the rolling window is being chosen for. */
+function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamily, isRTL, selectedDayOffset, onSelectDay, pendingMealIds, placedMealIds, hasSelection, windowState }: {
+  meals: MealPeriod[]; selectedMealId: MealId | null; onSelect: (id: MealId) => void;
+  /** Open a meal's menu to read on a day that cannot be ordered yet. */
+  onDeselect?: () => void; fontFamily: string; isRTL: boolean;
+  /** Which day of the run is on screen. Only ORDERABLE_DAY_OFFSET can be bought. */
   selectedDayOffset: number;
   onSelectDay: (offset: number) => void;
   /** Meals already in the basket for the selected day. */
   pendingMealIds: Set<MealId>;
-  /** Basket size across all days — drives the "you have N waiting" line. */
-  pendingCount: number;
+  /** Meals already sent to the kitchen for the selected day. */
+  placedMealIds: Set<MealId>;
+  /** Has the patient chosen anything for TOMORROW — whichever day's tab is on
+   *  screen? The notice always speaks about tomorrow, so it cannot be read off
+   *  the visible day. A standard meal placed on their behalf is not a choice. */
+  hasSelection: boolean;
+  /** Where tomorrow's meal stands in today's cycle. */
+  windowState: OrderWindowState;
 }) {
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
-  const [blockedMeal, setBlockedMeal] = React.useState<MealPeriod | null>(null);
-  const [showReminder, dismissReminder] = useOncePerVisitReminder();
-  const windowOpen = isOrderWindowOpen();
+  /* The meal whose menu is being read. Reading never leaves this screen: the
+     patient is browsing, not part-way through an order, and a full screen with
+     a back button would tell them otherwise. */
+  const [menuMeal, setMenuMeal] = React.useState<MealPeriod | null>(null);
   const windowStr = orderWindowLabel(isRTL);
+  const windowStartStr = formatHour(ORDER_WINDOW_START, isRTL);
+  const windowEndStr = formatHour(ORDER_WINDOW_END, isRTL);
+  const dayOrderable = isOrderableDay(selectedDayOffset);
+  /* A meal is choosable only on tomorrow's tab, and only inside the window.
+     Outside it the same card opens the same menu to read. */
+  const canOrder = dayOrderable && windowState === "open";
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
-      className="h-full flex flex-col px-[40px] pt-[32px] pb-[20px] gap-[16px]">
+      className="h-full flex flex-col px-[40px] pt-[32px] pb-[20px] gap-[16px] relative">
       {/* Centered heading */}
       <div className="shrink-0 text-center flex flex-col items-center gap-[10px]">
         <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
           {isRTL ? "اختر وجباتك" : "Choose Your Meals"}
         </h2>
 
-        {/* Reminder — once per visit, above the day tabs where it is read
-            before anything is chosen rather than after. */}
-        {showReminder && (
-          <div
-            className="shrink-0 flex items-start gap-3 px-6 py-3 rounded-2xl max-w-[980px] mx-auto"
-            style={{
-              backgroundColor: "#FEF3C7",
-              border: "1.5px solid #F59E0B",
-              color: "#92400E",
-              boxShadow: "0 2px 8px rgba(245, 158, 11, 0.12)",
-              textAlign: isRTL ? "right" : "left",
-            }}
-          >
-            <Bell size={20} color="#D97706" className="shrink-0" style={{ marginTop: "2px" }} />
-            <p style={{ fontFamily, fontSize: "14.5px", fontWeight: WEIGHT.medium, margin: 0, lineHeight: 1.5, flex: 1 }}>
-              {isRTL ? (
-                <>
-                  باب الطلب مفتوح الآن من <b>{windowStr}</b>. اختر وجباتك للأيام الثلاثة القادمة ثم اضغط <b>إرسال الطلب</b>. في حال عدم اختيار أي وجبة قبل الساعة 8:00 مساءً، سيتم تقديم وجبة قياسية.
-                </>
-              ) : (
-                <>
-                  Ordering is open <b>{windowStr}</b>. Choose your meals for the next three days, then press <b>Place order</b> to send them. If you don't choose anything before 8:00 PM, a standard meal will be provided.
-                </>
-              )}
-            </p>
-            <button
-              onClick={dismissReminder}
-              aria-label={isRTL ? "إغلاق" : "Dismiss"}
-              className="shrink-0 active:scale-90 transition-transform cursor-pointer"
-              style={{ background: "none", border: "none", outline: "none", padding: "2px", lineHeight: 0 }}
-            >
-              <X size={18} color="#92400E" />
-            </button>
-          </div>
-        )}
-
-        {/* Day tabs — the rolling three-day window */}
+        {/* Day tabs — a day and its date, nothing else. Every tab is live:
+            switching to one shows that day's menu. Which day can be ordered
+            is said by the cards below (their badge) and by the notice, so the
+            tabs stay a plain row of dates rather than repeating it a third
+            time in smaller type. */}
         <div className="flex items-center justify-center gap-3" dir={isRTL ? "rtl" : "ltr"}>
           {ORDER_DAY_OFFSETS.map((offset) => {
             const active = offset === selectedDayOffset;
+            const orderable = isOrderableDay(offset);
+            const name = orderable
+              ? (isRTL ? "غداً" : "Tomorrow")
+              : formatDayWeekday(offset, isRTL);
             return (
               <button
                 key={offset}
                 onClick={() => onSelectDay(offset)}
                 data-fo-day={offset}
+                data-fo-day-orderable={orderable ? "true" : "false"}
                 className="active:scale-[0.97] transition-transform cursor-pointer"
                 style={{
-                  minWidth: "180px", padding: "10px 22px", borderRadius: "16px",
-                  backgroundColor: active ? TEAL : "#fff",
-                  border: active ? `2px solid ${TEAL}` : "1.5px solid rgba(0,0,0,0.10)",
+                  minWidth: "190px", padding: "10px 20px", borderRadius: "16px",
+                  backgroundColor: active ? TEAL_15 : "#fff",
+                  /* Constant 2px, colour only — otherwise the active tab is
+                     two pixels taller than its neighbours and the row of
+                     dates stops sitting on one baseline. */
+                  border: `2px solid ${active ? TEAL : "rgba(0,0,0,0.10)"}`,
                   outline: "none",
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: "2px",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: "1px",
                 }}
               >
-                <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: active ? "#fff" : "#171717" }}>
-                  {formatDayWeekday(offset, isRTL)}
+                <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: active ? TEAL : "#171717" }}>
+                  {name}
                 </span>
-                <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: active ? "rgba(255,255,255,0.85)" : "#6B7280" }}>
-                  {formatDayShort(offset, isRTL)}
+                {/* The date lives inside the tab it belongs to, and on the
+                    active tab it takes the day name's colour rather than a
+                    greyed-down one — it is part of the same answer. */}
+                <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: active ? TEAL : "#6B7280" }}>
+                  {formatDayTabDate(offset, isRTL)}
                 </span>
               </button>
             );
           })}
         </div>
 
-        {/* Window + basket status */}
-        <div className="flex items-center justify-center gap-2" style={{
-          padding: "8px 18px", borderRadius: "100px",
-          backgroundColor: TEAL_15, border: `1px solid ${TEAL_20}`,
-        }}>
-          <Clock size={16} color={TEAL} />
-          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL }}>
-            {isRTL
-              ? `الطلب متاح يومياً ${windowStr}`
-              : `Ordering ${windowStr} daily`}
-            {pendingCount > 0 && (isRTL
-              ? ` · ${pendingCount} في طلبك`
-              : ` · ${pendingCount} in your order`)}
-          </span>
+        {/* The one thing said about the window anywhere on this screen, and
+            it says which of the three states tomorrow is actually in. */}
+        {/* The amber the rest of this screen already uses for anything to do
+            with the clock — the "Opens 4:00 PM" badge is the same palette. */}
+        <div data-fo-notice data-fo-window-state={windowState}
+          className="flex items-center gap-3"
+          style={{
+            maxWidth: "900px",
+            padding: "14px 26px",
+            borderRadius: "18px",
+            backgroundColor: "#FEF3C7",
+            border: "1.5px solid #F59E0B",
+          }}>
+          <Clock size={20} color="#D97706" className="shrink-0" />
+          {/* One sentence for each situation the patient can actually be in.
+              Nothing here explains the rules — it says where they stand. */}
+          <p style={{
+            fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#92400E",
+            margin: 0, lineHeight: 1.5, textAlign: isRTL ? "right" : "left",
+          }}>
+            {windowState === "before" && (isRTL
+              ? `يفتح باب طلب الوجبات الساعة ${windowStartStr}.`
+              : `Meal ordering opens at ${windowStartStr}.`)}
+            {windowState === "open" && !hasSelection && (isRTL
+              ? `باب طلب وجبات الغد مفتوح الآن، ويُغلق الساعة ${windowEndStr}.`
+              : `Tomorrow's meal ordering is open now, closing at ${windowEndStr}.`)}
+            {windowState === "open" && hasSelection && (isRTL
+              ? `وجبات الغد جاهزة. لا يزال بإمكانك التعديل حتى الساعة ${windowEndStr}.`
+              : `Your meals for tomorrow are set. You can still make changes until ${windowEndStr}.`)}
+            {windowState === "closed" && hasSelection && (isRTL
+              ? `تم تأكيد طلبك لوجبات الغد.`
+              : `Your order for tomorrow is confirmed.`)}
+            {windowState === "closed" && !hasSelection && (isRTL
+              ? `سيتم تقديم وجبة قياسية غداً.`
+              : `A standard meal will be served tomorrow.`)}
+          </p>
         </div>
       </div>
 
@@ -1861,28 +1957,62 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
         {meals.map((meal) => {
           /* In the basket for the day on screen — not sent to the kitchen. */
           const inOrder = pendingMealIds.has(meal.id);
-          const selected = selectedMealId === meal.id;
+          const placed = dayOrderable && placedMealIds.has(meal.id);
+          const selected = dayOrderable && selectedMealId === meal.id;
+          const chosen = dayOrderable && (selected || inOrder);
 
           // Icon mapping
           const Icon = meal.id === "breakfast" ? Sun : meal.id === "lunch" ? Sunrise : Moon;
           const iconBg = meal.id === "breakfast" ? "#FEF3C7" : meal.id === "lunch" ? "#E0F2FE" : "#EDE9FE";
           const iconColor = meal.id === "breakfast" ? "#F59E0B" : meal.id === "lunch" ? TEAL : "#7C3AED";
 
-          /* One badge on every card, whatever the day or the basket says.
-             The cards are a menu preview; what is actually in the order is
-             shown by the check mark and the basket count in the header. */
-          const statusBg = "#F1F5F9";
-          const statusColor = "#475569";
-          const statusText = isRTL ? "للاطلاع فقط" : "Preview Only";
+          /* Tomorrow's cards report what is actually true of the order. Every
+             other day gets one badge, the same on all three cards, because on
+             those days there is nothing per-meal to report yet. */
+          let statusBg = "#F1F5F9";
+          let statusColor = "#475569";
+          let statusText = isRTL ? "للاطلاع فقط" : "Preview only";
+          /* Choosing a meal does NOT restyle the card. The badge keeps saying
+             what the day is doing — the window is open, or it opens at four,
+             or it has shut — and the tick in the corner is the whole of what
+             changes. A card that rewrote its own badge and footer on tap made
+             the three cards stop reading as one row of equals. Only an order
+             already with the kitchen earns a different badge, because that is
+             a different fact about the day, not a selection. */
+          if (dayOrderable) {
+            if (placed) {
+              statusBg = GREEN; statusColor = "#fff";
+              statusText = isRTL ? "تم إرسال الطلب" : "Order placed";
+            } else if (windowState === "open") {
+              statusBg = `${GREEN}1F`; statusColor = GREEN;
+              statusText = isRTL ? "متاح للطلب" : "Open for ordering";
+            } else if (windowState === "before") {
+              statusBg = "#FEF3C7"; statusColor = "#B45309";
+              statusText = isRTL ? `يفتح ${windowStartStr}` : `Opens ${windowStartStr}`;
+            } else {
+              statusText = isRTL ? "انتهى وقت الطلب" : "Ordering closed";
+            }
+          }
 
-          const handleClick = () => {
-            if (windowOpen) onSelect(meal.id);
-            else setBlockedMeal(meal);
-          };
+          /* The line under the divider is the card's action, not a button of
+             its own: the whole card has always been the tap target. It stays
+             put when a meal is chosen — see the note above. */
+          const actionLabel = !canOrder
+            ? (isRTL ? "عرض القائمة" : "View menu")
+            : placed
+              ? (isRTL ? "تغيير الاختيار" : "Change selection")
+              : (isRTL ? `أرسل قبل ${windowEndStr}` : `Submit before ${windowEndStr}`);
+
+          /* Outside the window the card still opens — to read, not to pick. */
+          const handleClick = () => canOrder ? onSelect(meal.id) : setMenuMeal(meal);
 
           return (
-            <motion.button key={meal.id}
+            <motion.div key={meal.id}
+              role="button"
+              tabIndex={0}
               onClick={handleClick}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleClick(); } }}
+              data-fo-meal={meal.id}
               whileTap={{ scale: 0.97 }}
               whileHover={{ y: -2 }}
               dir={isRTL ? "rtl" : "ltr"}
@@ -1890,20 +2020,23 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                 width: "390px",
                 borderRadius: "24px",
                 backgroundColor: "#fff",
-                border: selected ? `3px solid ${TEAL}` : "1.5px solid rgba(0,0,0,0.08)",
+                /* A chosen card is framed as well as ticked. The width is the
+                   same 2px in every state and only the colour moves, so the
+                   card cannot change size under the patient's finger — the
+                   three cards stay on the same baseline whichever is picked. */
+                border: `2px solid ${(chosen || placed) ? (placed ? GREEN : TEAL) : "rgba(0,0,0,0.08)"}`,
                 boxShadow: "none",
                 cursor: "pointer", outline: "none",
-                opacity: windowOpen ? 1 : 0.9,
-                transition: "border 0.2s, box-shadow 0.2s, transform 0.2s",
+                transition: "border-color 0.2s, box-shadow 0.2s, transform 0.2s",
                 display: "flex", flexDirection: "column", alignItems: "center",
                 padding: "40px 28px 28px",
-                gap: "20px",
+                gap: "18px",
                 position: "relative",
                 justifyContent: "space-between",
               }}>
-              {/* Selected now, or already sitting in the order for this day */}
-              {(selected || inOrder) && (
-                <div className="absolute pop-in" style={{ top: "16px", [isRTL ? "left" : "right"]: "16px", width: "36px", height: "36px", borderRadius: "50%", backgroundColor: TEAL, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 12px ${TEAL_50}` }}>
+              {/* Chosen, or already with the kitchen */}
+              {(chosen || placed) && (
+                <div className="absolute pop-in" style={{ top: "16px", [isRTL ? "left" : "right"]: "16px", width: "36px", height: "36px", borderRadius: "50%", backgroundColor: placed ? GREEN : TEAL, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 12px ${TEAL_50}` }}>
                   <Check size={20} color="#fff" strokeWidth={3} />
                 </div>
               )}
@@ -1922,8 +2055,8 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                 {loc(meal.label)}
               </span>
 
-              {/* Unified badge — identical on all three cards */}
-              <div className="flex items-center gap-2" style={{
+              {/* Status */}
+              <div className="flex items-center gap-2" data-fo-status style={{
                 padding: "9px 18px", borderRadius: "100px",
                 backgroundColor: statusBg,
               }}>
@@ -1932,72 +2065,153 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                 </span>
               </div>
 
-              {/* Divider + the daily ordering window */}
+              {/* Divider + the card's action */}
               <div className="w-full flex flex-col items-center" style={{ marginTop: "auto" }}>
                 <div style={{ width: "100%", height: "1px", backgroundColor: "rgba(0,0,0,0.06)", marginBottom: "16px" }} />
-                <div className="flex flex-col items-center gap-1">
-                  <div className="flex items-center justify-center gap-2">
-                    <Clock size={16} color={windowOpen ? "#D97706" : "#9CA3AF"} />
-                    <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: windowOpen ? "#D97706" : "#9CA3AF" }}>
-                      {windowOpen
-                        ? (isRTL ? `الطلب ${windowStr}` : `Ordering ${windowStr}`)
-                        : (isRTL ? "انتهى وقت الطلب" : "Ordering window closed")}
-                    </span>
-                  </div>
-                  <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: "#9CA3AF", textAlign: "center" }}>
-                    {isRTL
-                      ? "بدون اختيار، سيتم تقديم وجبة قياسية"
-                      : "No choice? A standard meal is provided"}
-                  </span>
-                </div>
+                <span data-fo-action={meal.id} style={{
+                  fontFamily, fontSize: "16px",
+                  fontWeight: (placed || !canOrder) ? WEIGHT.bold : WEIGHT.medium,
+                  color: (placed || !canOrder) ? TEAL : "#6B7280",
+                  textAlign: "center",
+                }}>
+                  {actionLabel}
+                </span>
               </div>
-            </motion.button>
+            </motion.div>
           );
         })}
       </div>
 
-      {/* Blocked meal modal */}
+      {/* ─── Menu reader ───────────────────────────────────────────────────
+          Everything on this day's menu for one meal, and no way to act on it.
+          There is deliberately no control in here but the close: the card that
+          opened it could not be ordered from, and a picker inside a preview
+          would be a promise the kitchen cannot keep. */}
       <AnimatePresence>
-        {blockedMeal && (
+        {menuMeal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ backgroundColor: "rgba(0,0,0,0.45)", zIndex: 50 }}
-            onClick={() => setBlockedMeal(null)}
+            transition={{ duration: 0.18 }}
+            /* Fixed, not absolute: anchored to the step it would only get
+               88% of a ~660px band and the menu would still scroll. The kiosk
+               scales the whole app with a transform, so "fixed" resolves to
+               that canvas rather than the browser window. */
+            className="fixed inset-0 flex items-center justify-center"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 60 }}
+            onClick={() => setMenuMeal(null)}
+            data-fo-menu-overlay
           >
             <motion.div
-              initial={{ scale: 0.92, y: 16 }}
+              initial={{ scale: 0.94, y: 14 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.92 }}
+              exit={{ scale: 0.94, opacity: 0 }}
+              transition={{ duration: 0.18 }}
               onClick={(e) => e.stopPropagation()}
-              style={{ width: "540px", padding: "32px 28px", backgroundColor: "#fff", borderRadius: "24px", boxShadow: "0 16px 48px rgba(0,0,0,0.25)" }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={`${loc(menuMeal.label)} — ${formatDayLong(selectedDayOffset, isRTL)}`}
+              data-fo-menu-modal
+              dir={isRTL ? "rtl" : "ltr"}
+              className="flex flex-col"
+              style={{
+                /* A day's menu is five groups of two to four dishes with long
+                   names. At the old 880px it was a scrollbar with a window
+                   around it; this fits most days whole. */
+                width: "1240px", maxHeight: "86%",
+                backgroundColor: "#fff", borderRadius: "24px",
+                boxShadow: "0 16px 48px rgba(0,0,0,0.25)",
+                overflow: "hidden",
+              }}
             >
-              <div className="flex flex-col items-center gap-4 text-center">
-                <div style={{ width: "72px", height: "72px", borderRadius: "50%", backgroundColor: "#FEF3C7", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Clock size={36} color="#D97706" />
+              {/* Header — which meal, which day, and the way out */}
+              <div className="shrink-0 flex items-center gap-5 px-10 py-7" style={{ borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
+                <div style={{
+                  width: "56px", height: "56px", borderRadius: "50%",
+                  backgroundColor: menuMeal.id === "breakfast" ? "#FEF3C7" : menuMeal.id === "lunch" ? "#E0F2FE" : "#EDE9FE",
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>
+                  {(() => {
+                    const I = menuMeal.id === "breakfast" ? Sun : menuMeal.id === "lunch" ? Sunrise : Moon;
+                    return <I size={28} color={menuMeal.id === "breakfast" ? "#F59E0B" : menuMeal.id === "lunch" ? TEAL : "#7C3AED"} />;
+                  })()}
                 </div>
-                <h3 style={{ fontFamily, fontSize: "24px", fontWeight: WEIGHT.bold, color: "#171717" }}>
-                  {isRTL ? "أُغلق وقت الطلب" : "Ordering Closed"}
-                </h3>
-                <p style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.5 }}>
-                  {isRTL
-                    ? `الطلب متاح يومياً ${windowStr}. خارج هذا الوقت سيتم تحضير وجبة قياسية وتوصيلها وفقاً لخطة الحمية المخصصة لك.`
-                    : `Ordering is open ${windowStr} each day. Outside that window a standard meal is prepared and delivered according to your assigned diet plan.`}
-                </p>
-                <button onClick={() => setBlockedMeal(null)}
-                  className="active:scale-95 transition-transform"
-                  style={{ marginTop: "8px", height: "52px", padding: "0 36px", borderRadius: "100px", backgroundColor: TEAL, border: "none", outline: "none", cursor: "pointer" }}>
-                  <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: "#fff" }}>
-                    {isRTL ? "حسناً" : "Got it"}
-                  </span>
+                <div className="flex-1 min-w-0" style={{ textAlign: isRTL ? "right" : "left" }}>
+                  <p style={{ fontFamily, fontSize: "24px", fontWeight: WEIGHT.bold, color: "#171717", margin: 0, lineHeight: 1.2 }}>
+                    {loc(menuMeal.label)}
+                  </p>
+                  <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: "#6B7280", margin: "3px 0 0" }}>
+                    {`${formatDayLong(selectedDayOffset, isRTL)} · ${locTimeRange(menuMeal.timeRange, isRTL)}`}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setMenuMeal(null)}
+                  aria-label={isRTL ? "إغلاق" : "Close"}
+                  data-fo-menu-close
+                  className="shrink-0 flex items-center justify-center active:scale-90 transition-transform cursor-pointer"
+                  style={{
+                    width: "48px", height: "48px", borderRadius: "14px",
+                    backgroundColor: "rgba(0,0,0,0.05)", border: "none", outline: "none",
+                  }}
+                >
+                  <X size={24} color="#6B7280" strokeWidth={2.5} />
                 </button>
+              </div>
+
+              {/* The menu itself — read, not chosen */}
+              <div className="flex-1 min-h-0 fo-scroll overflow-y-auto px-10 py-8 flex flex-col gap-8">
+                {menuMeal.groups.map((g) => (
+                  <div key={g.id}>
+                    <div className="flex items-center gap-2" style={{ marginBottom: "14px" }}>
+                      <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.4px", textTransform: "uppercase" }}>
+                        {loc(g.label)}
+                      </span>
+                      {g.mode === "included" && (
+                        <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.semibold, color: GREEN }}>
+                          {isRTL ? "يأتي مع وجبتك" : "Comes with your meal"}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px 40px" }}>
+                      {g.items.map((it) => (
+                        <div key={it.id} className="flex items-center gap-3">
+                          <div style={{
+                            width: "7px", height: "7px", borderRadius: "50%",
+                            backgroundColor: g.mode === "included" ? GREEN : TEAL, flexShrink: 0,
+                          }} />
+                          <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#171717", lineHeight: 1.4 }}>
+                            {loc(it.name)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Why it can only be read */}
+              <div className="shrink-0 flex items-center gap-3 px-10 py-6" style={{ borderTop: "1px solid rgba(0,0,0,0.08)", backgroundColor: "#FEF3C7" }}>
+                <Clock size={20} color="#D97706" className="shrink-0" />
+                <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#92400E", lineHeight: 1.45 }}>
+                  {/* Named for the day it is, and answering the only question
+                      a preview raises: when can I order this? */}
+                  {!isOrderableDay(selectedDayOffset)
+                    ? (isRTL
+                        ? `هذه معاينة لقائمة ${formatDayWeekday(selectedDayOffset, isRTL)}. ستتمكن من الطلب منها في اليوم السابق.`
+                        : `This is a preview of ${formatDayWeekday(selectedDayOffset, isRTL)}'s menu. You'll be able to order it the day before.`)
+                    : windowState === "before"
+                      ? (isRTL
+                          ? `هذه معاينة لقائمة الغد. يفتح باب الطلب الساعة ${windowStartStr}.`
+                          : `This is a preview of tomorrow's menu. You'll be able to order it from ${windowStartStr}.`)
+                      : (isRTL
+                          ? "أُغلق باب الطلب لوجبات الغد. اختياراتك نهائية."
+                          : "Ordering for tomorrow has closed. Your choices are final.")}
+                </span>
               </div>
             </motion.div>
           </motion.div>
         )}
-
       </AnimatePresence>
     </motion.div>
   );
@@ -2119,10 +2333,15 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, dayOffse
   const includedGroups = meal.groups.filter((g) => g.mode === "included");
   const totalSelectedReq = requiredGroups.reduce((sum, g) => sum + (selections[g.id] || []).length, 0);
 
+  /* The tray is a running total of an order being built, so it belongs only to
+     the day that can actually be ordered. On any other day this screen is a
+     menu being read and the groups take the full width. */
+  const showTray = isOrderableDay(dayOffset);
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
-      className="h-full flex gap-[20px] px-[28px] pt-[16px] pb-[16px]">
-      {/* LEFT: unified banner + groups container */}
+      className={`h-full flex px-[28px] pt-[16px] pb-[16px] ${showTray ? "gap-[20px]" : ""}`}>
+      {/* The groups. Full width when there is no tray beside them. */}
       <div className="flex-1 min-w-0 flex flex-col relative" style={{
         borderRadius: "20px",
         border: "1.5px solid rgba(0,0,0,0.08)",
@@ -2149,92 +2368,115 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, dayOffse
           {requiredGroups.map((g, idx) => (
             <BuildGroup key={g.id} group={g} index={idx + 1} selections={selections[g.id] || []} onToggle={(itemId) => onToggle(g.id, itemId, g)} fontFamily={fontFamily} isRTL={isRTL} />
           ))}
+
+          {includedGroups.length > 0 && (
+            <div style={{ padding: "14px 20px", borderRadius: "20px", border: "1.5px solid rgba(0,0,0,0.08)", backgroundColor: "#F9FAFB" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Check size={18} color={GREEN} />
+                <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                  {isRTL ? "مشمول مع وجبتك" : "Included with Your Meal"}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-x-6 gap-y-1.5">
+                {includedGroups.flatMap((g) => g.items).map((it) => (
+                  <div key={it.id} className="flex items-center gap-2">
+                    <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: GREEN }} />
+                    <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: "#4B5563" }}>
+                      {loc(it.name)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div style={{ height: "16px" }} />
         </div>
         {/* Bottom fade hint */}
         <div className="pointer-events-none absolute left-0 right-0 bottom-0" style={{ height: "32px", background: "linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.95) 100%)" }} />
       </div>
 
-      {/* RIGHT: meal tray */}
-      <div className="shrink-0 flex flex-col" style={{ width: "440px", borderRadius: "20px", backgroundColor: "#fff", border: "1.5px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
-        {/* Header */}
-        <div className="shrink-0 flex items-center gap-3 px-5 py-4" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: `${TEAL_15}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <ChefHat size={22} color={TEAL} />
-          </div>
-          <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.3px" }}>
-            {isRTL ? "طبقي" : "Your Meal Tray"}
-          </span>
-          <div className="ml-auto" style={{ padding: "5px 14px", borderRadius: "100px", backgroundColor: totalSelectedReq > 0 ? "#F0FDF4" : "#F3F4F6" }}>
-            <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.bold, color: totalSelectedReq > 0 ? GREEN : "#6B7280" }}>
-              {totalSelectedReq} {isRTL ? "عنصر" : "items"}
-            </span>
-          </div>
-        </div>
-
-        {/* Items list */}
-        <div className="flex-1 min-h-0 fo-scroll overflow-y-auto px-5 py-4 flex flex-col gap-4">
-          {totalSelectedReq === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-3" style={{ minHeight: "180px" }}>
-              <Utensils size={40} color="#D1D5DB" />
-              <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#9CA3AF" }}>
-                {isRTL ? "لم يتم اختيار أي عنصر" : "No item is selected"}
-              </p>
+      {/* RIGHT: meal tray — only for the day being ordered (see showTray) */}
+      {showTray && (
+        <div className="shrink-0 flex flex-col" style={{ width: "440px", borderRadius: "20px", backgroundColor: "#fff", border: "1.5px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
+          {/* Header */}
+          <div className="shrink-0 flex items-center gap-3 px-5 py-4" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+            <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: `${TEAL_15}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <ChefHat size={22} color={TEAL} />
             </div>
-          ) : (
-            <>
-              {requiredGroups.map((g) => {
-                const sel = selections[g.id] || [];
-                const items = g.items.filter((i) => sel.includes(i.id));
-                if (items.length === 0) return null;
-                return (
-                  <div key={g.id} className="flex items-start gap-3">
-                    <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "2px" }}>
-                      <Check size={15} color="#fff" strokeWidth={2.5} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", marginBottom: "3px", letterSpacing: "0.3px", textTransform: "uppercase" }}>
-                        {loc(g.label)}
-                      </div>
-                      {items.map((it) => (
-                        <p key={it.id} style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>
-                          {loc(it.name)}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </>
-          )}
-        </div>
-
-        {/* Included with your meal — pinned to bottom */}
-        {includedGroups.length > 0 && (
-          <div className="shrink-0" style={{ borderTop: "1px solid rgba(0,0,0,0.06)", backgroundColor: "#F9FAFB", borderRadius: "0 0 18px 18px", padding: "16px 20px" }}>
-            <div className="flex items-center gap-2 mb-2">
-              <Check size={18} color={GREEN} />
-              <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.3px", textTransform: "uppercase" }}>
-                {isRTL ? "مشمول مع وجبتك" : "Included with Your Meal"}
+            <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.3px" }}>
+              {isRTL ? "طبقي" : "Your Meal Tray"}
+            </span>
+            <div className="ml-auto" style={{ padding: "5px 14px", borderRadius: "100px", backgroundColor: totalSelectedReq > 0 ? "#F0FDF4" : "#F3F4F6" }}>
+              <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.bold, color: totalSelectedReq > 0 ? GREEN : "#6B7280" }}>
+                {totalSelectedReq} {isRTL ? "عنصر" : "items"}
               </span>
             </div>
-            {includedGroups.map((g) => (
-              <div key={g.id} style={{ marginBottom: "4px" }}>
-                <div className="flex flex-col gap-1.5">
-                  {g.items.map((it) => (
-                    <div key={it.id} className="flex items-center gap-2">
-                      <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: GREEN }} />
-                      <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: "#4B5563" }}>
-                        {loc(it.name)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
           </div>
-        )}
-      </div>
+
+          {/* Items list */}
+          <div className="flex-1 min-h-0 fo-scroll overflow-y-auto px-5 py-4 flex flex-col gap-4">
+            {totalSelectedReq === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-3" style={{ minHeight: "180px" }}>
+                <Utensils size={40} color="#D1D5DB" />
+                <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#9CA3AF" }}>
+                  {isRTL ? "لم يتم اختيار أي عنصر" : "No item is selected"}
+                </p>
+              </div>
+            ) : (
+              <>
+                {requiredGroups.map((g) => {
+                  const sel = selections[g.id] || [];
+                  const items = g.items.filter((i) => sel.includes(i.id));
+                  if (items.length === 0) return null;
+                  return (
+                    <div key={g.id} className="flex items-start gap-3">
+                      <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "2px" }}>
+                        <Check size={15} color="#fff" strokeWidth={2.5} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", marginBottom: "3px", letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                          {loc(g.label)}
+                        </div>
+                        {items.map((it) => (
+                          <p key={it.id} style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>
+                            {loc(it.name)}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+          </div>
+
+          {/* Included with your meal — pinned to bottom */}
+          {includedGroups.length > 0 && (
+            <div className="shrink-0" style={{ borderTop: "1px solid rgba(0,0,0,0.06)", backgroundColor: "#F9FAFB", borderRadius: "0 0 18px 18px", padding: "16px 20px" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Check size={18} color={GREEN} />
+                <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                  {isRTL ? "مشمول مع وجبتك" : "Included with Your Meal"}
+                </span>
+              </div>
+              {includedGroups.map((g) => (
+                <div key={g.id} style={{ marginBottom: "4px" }}>
+                  <div className="flex flex-col gap-1.5">
+                    {g.items.map((it) => (
+                      <div key={it.id} className="flex items-center gap-2">
+                        <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: GREEN }} />
+                        <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: "#4B5563" }}>
+                          {loc(it.name)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -2274,7 +2516,7 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
           const sel = selections.includes(item.id);
           return (
             <button key={item.id} onClick={() => onToggle(item.id)}
-              className="flex items-center gap-3 active:scale-95 transition-transform w-full"
+              className="flex items-center gap-3 w-full active:scale-95 transition-transform"
               style={{
                 padding: "14px 18px",
                 minHeight: "56px",

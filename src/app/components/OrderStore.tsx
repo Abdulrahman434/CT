@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import { MEAL_WINDOWS } from "./menuData";
-import type { MealId } from "./menuData";
+import { MEAL_WINDOWS, getMenuGroups } from "./menuData";
+import type { MealId, DietType } from "./menuData";
+import { nurseActions } from "./NurseDataStore";
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * ORDER TYPES
@@ -35,6 +36,8 @@ export interface PlacedOrder {
   /** ISO date this order is to be delivered on. Orders cover a rolling
    *  three-day window, so "tomorrow" is no longer a safe assumption. */
   deliveryDate?: string;
+  /** Placed by the standing fallback rather than by the patient. */
+  autoStandard?: boolean;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -42,6 +45,55 @@ export interface PlacedOrder {
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 const ORDER_STORE_KEY = "careinn-meal-orders";
+
+/* ── The kitchen's standing fallback ──────────────────────────────────
+ * A patient who orders nothing still eats. When the evening ordering window
+ * shuts, every one of tomorrow's meals that was not ordered is ordered here as
+ * a standard meal — so the promise the meal cards make is kept by the system,
+ * not by the patient remembering to act on it.
+ *
+ * It lives in the provider, which App.tsx mounts at the root, so it does not
+ * depend on anyone having opened the meal screen that evening.
+ *
+ * The dates already handled are remembered, so re-opening the app after 8 PM
+ * cannot order a second dinner. */
+const ORDER_WINDOW_END_HOUR = 20;
+const AUTO_ORDER_KEY = "careinn-auto-standard-orders";
+const AUTO_MEAL_IDS: MealId[] = ["breakfast", "lunch", "dinner"];
+
+function autoOrderedDates(): string[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(AUTO_ORDER_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  } catch { return []; }
+}
+
+function rememberAutoOrdered(dateStr: string) {
+  try {
+    const done = autoOrderedDates();
+    if (done.includes(dateStr)) return;
+    localStorage.setItem(AUTO_ORDER_KEY, JSON.stringify([...done, dateStr].slice(-14)));
+  } catch { /* private mode — the in-list check below still prevents duplicates */ }
+}
+
+/** What the kitchen sends when nobody chose: everything that comes with the
+ *  meal anyway, plus the first option of each group the patient would have
+ *  picked from. It is a real, complete meal, not an empty order. */
+function standardMeal(diet: DietType, mealId: MealId, day: Date) {
+  const groups = getMenuGroups(diet, mealId, day.getDay());
+  const selections: Record<string, string[]> = {};
+  for (const g of groups) {
+    selections[g.id] = g.mode === "included"
+      ? g.items.map((i) => i.id)
+      : g.items.slice(0, g.mode === "choose-2" ? 2 : 1).map((i) => i.id);
+  }
+  const items = groups
+    .filter((g) => g.mode !== "included")
+    .flatMap((g) => g.items.filter((i) => selections[g.id]?.includes(i.id)))
+    .map((i) => ({ id: i.id, name: i.name, quantity: 1, calories: 0, image: (i as any).image || "" }));
+  const comesWith = groups.filter((g) => g.mode === "included").flatMap((g) => g.items.map((i) => i.name));
+  return { selections, items, comesWith };
+}
 
 function serializeOrders(orders: PlacedOrder[]): string {
   return JSON.stringify(orders.map((o) => ({
@@ -241,6 +293,60 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     }, 60000);
 
     return newOrder;
+  }, []);
+
+  /* Standing fallback — see the note above standardMeal. Checked on mount and
+     every minute, so an app left open across 8 PM acts at 8 PM. */
+  useEffect(() => {
+    const run = () => {
+      /* The demo switch that makes every meal always orderable also turns off
+         the deadline, and with it the thing this reacts to. */
+      try { if (localStorage.getItem("fo_enforceTime") === "false") return; } catch { /* keep going */ }
+      if (new Date().getHours() < ORDER_WINDOW_END_HOUR) return;
+
+      const target = new Date();
+      target.setDate(target.getDate() + 1);
+      const dateStr = target.toDateString();
+      if (autoOrderedDates().includes(dateStr)) return;
+
+      setOrders((prev) => {
+        const already = new Set(
+          prev
+            .filter((o) => o.deliveryDate && new Date(o.deliveryDate).toDateString() === dateStr)
+            .map((o) => o.mealId || o.mealType?.toLowerCase()),
+        );
+        const missing = AUTO_MEAL_IDS.filter((m) => !already.has(m));
+        rememberAutoOrdered(dateStr);
+        if (missing.length === 0) return prev;
+
+        const diet = (nurseActions.get().patientDiet || "regular") as DietType;
+        const placed: PlacedOrder[] = missing.map((mealId) => {
+          const { selections, items, comesWith } = standardMeal(diet, mealId, target);
+          const w = MEAL_WINDOWS[mealId];
+          return {
+            id: `order-auto-${dateStr}-${mealId}`,
+            orderNumber: `#${Math.floor(1000 + Math.random() * 9000)}`,
+            placedAt: new Date(),
+            status: "preparing",
+            items,
+            totalCalories: 0,
+            estimatedDelivery: `${w.label.en} delivery`,
+            mealType: w.label.en,
+            mealWindow: w.timeRange,
+            comesWith,
+            orderFor: "patient",
+            mealId,
+            selections,
+            deliveryDate: target.toISOString(),
+            autoStandard: true,
+          };
+        });
+        return [...placed, ...prev];
+      });
+    };
+    run();
+    const timer = setInterval(run, 60_000);
+    return () => clearInterval(timer);
   }, []);
 
   const getOrder = useCallback((id: string) => orders.find((o) => o.id === id), [orders]);
