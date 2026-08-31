@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, LEADING } from "./ThemeContext";
+import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, LEADING, type ThemeConfig } from "./ThemeContext";
 import { useLocale, type Locale } from "./i18n";
 import {
   ClipboardList, UtensilsCrossed, Users, Clock, HeartHandshake,
@@ -113,14 +113,39 @@ interface SectionDef {
 }
 
 /* ── Time ─────────────────────────────────────────────────────────────
- * Every choice is a button already on screen. The native <input type="time">
- * was a dropdown with minute-by-minute scrolling — the wrong control for a
- * bedside panel — and its calendar-picker glyph was the duplicate clock icon.
- * Both are gone with the native control.
+ * A wheel, not a grid of pills. The grid spent two rows on sixteen hour
+ * buttons and still only reached the half hour; the wheel reaches any quarter
+ * hour of the day in one column, and a scroll is an easier gesture from a bed
+ * than aiming at one pill among sixteen.
  *
- * 6 AM - 9 PM covers doctors' rounds and the daily bath; the half hour is one
- * further tap, so every offered time is at most two taps away. */
-const TIME_HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] as const;
+ * The STORED value is unchanged — a 24-hour "HH:MM" string — so a record
+ * written by the old grid loads straight into the wheels. */
+const WHEEL_HOURS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] as const;
+const WHEEL_MINUTES = ["00", "15", "30", "45"] as const;
+
+interface WheelState { hour: number; minute: string; pm: boolean }
+
+/** Where the wheels start when the question has no answer yet. */
+const WHEEL_REST: WheelState = { hour: 7, minute: "00", pm: false };
+
+/** "HH:MM" (24h) → wheel position. The old grid could only store :00 and :30,
+ *  but any minute off the wheel is pulled to the nearest quarter rather than
+ *  dropped, so no previously stored answer is silently lost. */
+const toWheel = (hhmm: string): WheelState => {
+  const h24 = Number(hhmm.slice(0, 2));
+  const mins = Number(hhmm.slice(3));
+  if (!Number.isFinite(h24) || !Number.isFinite(mins)) return WHEEL_REST;
+  const minute = WHEEL_MINUTES.reduce((best, m) =>
+    Math.abs(Number(m) - mins) < Math.abs(Number(best) - mins) ? m : best);
+  return { hour: ((h24 + 11) % 12) + 1, minute, pm: h24 >= 12 };
+};
+
+const fromWheel = (w: WheelState) =>
+  `${String((w.hour % 12) + (w.pm ? 12 : 0)).padStart(2, "0")}:${w.minute}`;
+
+/** Three rows: the chosen value plus the one either side of it. Any more and
+ *  the wheel outgrows the body budget documented at the top of this file. */
+const WHEEL_ROWS = 3;
 
 const SECTIONS: readonly SectionDef[] = [
   {
@@ -182,6 +207,273 @@ type Screen =
   | { kind: "question"; section: SectionDef; q: QuestionDef }
   | { kind: "carePartner"; section: SectionDef }
   | { kind: "comments" };
+
+/** One scroll-snapping column.
+ *
+ *  It is UNCONTROLLED while the finger is down: the browser's own snap and
+ *  momentum decide where it lands, and the parent is only told afterwards.
+ *  The parent pushes a position back in one case only — the value changed
+ *  somewhere else (a quick-pick chip) — which `reported` tells apart from
+ *  this column's own landing echoing back through props. */
+function WheelColumn({
+  items, index, onIndex, itemH, width, ariaLabel, theme, fontFamily, activeColor,
+}: {
+  items: readonly string[];
+  index: number;
+  onIndex: (i: number) => void;
+  itemH: number;
+  width: number;
+  ariaLabel: string;
+  theme: ThemeConfig;
+  fontFamily: string;
+  activeColor: string;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const settle = useRef<number | undefined>(undefined);
+  const reported = useRef(index);
+  const [centre, setCentre] = useState(index);
+
+  const scrollToIndex = (i: number, smooth: boolean) =>
+    ref.current?.scrollTo({ top: i * itemH, behavior: smooth ? "smooth" : "auto" });
+
+  useEffect(() => {
+    scrollToIndex(index, false);
+    return () => window.clearTimeout(settle.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (index === reported.current) return;
+    reported.current = index;
+    setCentre(index);
+    scrollToIndex(index, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
+
+  const nearestIndex = () => {
+    const el = ref.current;
+    if (!el) return index;
+    return Math.max(0, Math.min(items.length - 1, Math.round(el.scrollTop / itemH)));
+  };
+
+  /* Styling follows the scroll live; the answer is written only once the wheel
+     has come to rest, so a flick past six values records one, not six. */
+  const handleScroll = () => {
+    setCentre(nearestIndex());
+    window.clearTimeout(settle.current);
+    settle.current = window.setTimeout(() => {
+      const i = nearestIndex();
+      if (i === reported.current) return;
+      reported.current = i;
+      onIndex(i);
+    }, 140);
+  };
+
+  const pad = ((WHEEL_ROWS - 1) / 2) * itemH;
+
+  return (
+    <div
+      ref={ref}
+      onScroll={handleScroll}
+      role="listbox"
+      aria-label={ariaLabel}
+      className="ppf-wheel"
+      style={{
+        position: "relative", zIndex: 1,
+        width, height: itemH * WHEEL_ROWS,
+        overflowY: "auto",
+        scrollSnapType: "y mandatory",
+        overscrollBehavior: "contain",
+        WebkitOverflowScrolling: "touch",
+        scrollbarWidth: "none",
+        direction: "ltr",
+      }}
+    >
+      <div aria-hidden style={{ height: pad }} />
+      {items.map((item, i) => {
+        const active = i === centre;
+        return (
+          <div
+            key={item}
+            role="option"
+            aria-selected={active}
+            onClick={() => {
+              reported.current = i;
+              setCentre(i);
+              scrollToIndex(i, true);
+              onIndex(i);
+            }}
+            className="flex items-center justify-center cursor-pointer"
+            style={{
+              height: itemH,
+              scrollSnapAlign: "center",
+              fontFamily,
+              fontSize: active ? TYPE_SCALE.xl : TYPE_SCALE.md,
+              fontWeight: active ? WEIGHT.bold : WEIGHT.medium,
+              color: active ? activeColor : theme.textMuted,
+              opacity: active ? 1 : 0.5,
+              fontVariantNumeric: "tabular-nums",
+              transition: "font-size 140ms ease, opacity 140ms ease",
+            }}
+          >
+            {item}
+          </div>
+        );
+      })}
+      <div aria-hidden style={{ height: pad }} />
+    </div>
+  );
+}
+
+/** Hour and minute wheels with an AM/PM toggle beside them. Every path — a
+ *  scroll, a tap on a visible row, the toggle — writes the same single stored
+ *  value, so the wheels and the toggle can never disagree with the record. */
+function TimeWheelPicker({
+  value, onPickTime, theme, t, fontFamily, iconColor, itemH, gap,
+}: {
+  /** The stored answer: a 24-hour "HH:MM", or nothing yet. */
+  value: string | undefined;
+  onPickTime: (hhmm: string) => void;
+  theme: ThemeConfig;
+  t: (key: string, ...args: (string | number)[]) => string;
+  fontFamily: string;
+  iconColor: string;
+  itemH: number;
+  gap: string;
+}) {
+  /* Anything that is not a time reaching this control — nothing stored yet, or
+     a record from when this question still offered a "no preference" answer —
+     starts the wheels at their resting value instead. */
+  const stored = value && /^\d{2}:\d{2}$/.test(value) ? value : undefined;
+
+  const [draft, setDraft] = useState<WheelState>(() => (stored ? toWheel(stored) : WHEEL_REST));
+
+  const commit = (next: WheelState) => {
+    setDraft(next);
+    onPickTime(fromWheel(next));
+  };
+
+  /* A wheel always reads as a chosen time, so it is one. Without a way to
+     decline, leaving the resting value uncommitted would gate Next on a
+     gesture the patient has no reason to make. */
+  useEffect(() => {
+    if (!stored) onPickTime(fromWheel(draft));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const period = (pm: boolean) => t(pm ? "ppf.time.pm" : "ppf.time.am");
+  const readout = `${draft.hour}:${draft.minute} ${period(draft.pm)}`;
+
+  const periodPill = (pm: boolean) => {
+    const on = draft.pm === pm;
+    return (
+      <button
+        key={pm ? "pm" : "am"}
+        onClick={() => commit({ ...draft, pm })}
+        data-ppf-period={pm ? "pm" : "am"}
+        className="flex-1 flex items-center justify-center transition-transform duration-200 active:scale-[0.96] cursor-pointer"
+        style={{
+          minHeight: itemH,
+          padding: "0 18px",
+          borderRadius: theme.radiusMd,
+          border: on ? `3px solid ${theme.accent}` : `1.5px solid ${theme.borderDefault}`,
+          backgroundColor: on ? theme.accentSubtle : theme.surface,
+          fontFamily,
+          fontSize: TYPE_SCALE.md,
+          fontWeight: on ? WEIGHT.bold : WEIGHT.medium,
+          color: on ? iconColor : theme.textBody,
+          outline: "none",
+        }}
+      >
+        {period(pm)}
+      </button>
+    );
+  };
+
+  return (
+    <div className="flex flex-col items-center w-full" style={{ gap, maxWidth: "760px" }}>
+      <span
+        data-ppf-readout=""
+        style={{
+          fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.semibold,
+          color: iconColor, lineHeight: LEADING.snug,
+        }}
+      >
+        {`${t("ppf.time.selected")}: ${readout}`}
+      </span>
+
+      {/* Wheels, plus an AM/PM toggle that deliberately does not scroll with them. */}
+      <div className="flex items-center justify-center" style={{ gap: "16px" }}>
+        <div
+          className="flex items-center justify-center relative"
+          style={{
+            padding: "0 18px",
+            borderRadius: theme.radiusLg,
+            border: `1.5px solid ${theme.borderDefault}`,
+            /* The wheel sits on the dimmed surface and the band on the plain
+               one, so the selected row is the brightest thing in the control
+               even before its border is read. */
+            backgroundColor: theme.tileInactiveBg,
+            /* Arabic and Urdu write a clock time hour-first like English, so
+               the two columns must not mirror with the rest of the page. */
+            direction: "ltr",
+          }}
+        >
+          {/* Fixed selection band — the wheels move behind it, it does not move. */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute", left: "8px", right: "8px", top: "50%",
+              height: itemH, transform: "translateY(-50%)",
+              borderRadius: theme.radiusMd,
+              backgroundColor: theme.surface,
+              border: `3px solid ${theme.accent}`,
+              boxShadow: SHADOW.md,
+              pointerEvents: "none", zIndex: 0,
+            }}
+          />
+          <WheelColumn
+            items={WHEEL_HOURS}
+            index={draft.hour - 1}
+            onIndex={(i) => commit({ ...draft, hour: i + 1 })}
+            itemH={itemH}
+            width={Math.round(itemH * 1.9)}
+            ariaLabel={t("ppf.time.hour")}
+            theme={theme}
+            fontFamily={fontFamily}
+            activeColor={iconColor}
+          />
+          <span
+            aria-hidden
+            style={{
+              position: "relative", zIndex: 1, padding: "0 4px",
+              fontFamily, fontSize: TYPE_SCALE.xl, fontWeight: WEIGHT.bold,
+              color: iconColor,
+            }}
+          >
+            :
+          </span>
+          <WheelColumn
+            items={WHEEL_MINUTES}
+            index={Math.max(0, WHEEL_MINUTES.indexOf(draft.minute as (typeof WHEEL_MINUTES)[number]))}
+            onIndex={(i) => commit({ ...draft, minute: WHEEL_MINUTES[i] })}
+            itemH={itemH}
+            width={Math.round(itemH * 1.9)}
+            ariaLabel={t("ppf.time.minute")}
+            theme={theme}
+            fontFamily={fontFamily}
+            activeColor={iconColor}
+          />
+        </div>
+
+        <div className="flex flex-col" style={{ gap: "8px", height: itemH * WHEEL_ROWS, width: "112px" }}>
+          {periodPill(false)}
+          {periodPill(true)}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function PatientPreferenceForm({
   onClose,
@@ -250,11 +542,11 @@ export function PatientPreferenceForm({
   /** Every vertical measurement the constraint moves, in one place. */
   const M = dense
     ? { progressTop: "10px", progressGap: "8px", chip: 40, chipIcon: 20, chipGap: "8px",
-        qGap: "12px", stackGap: "6px", notesTop: "10px", notesH: "48px",
-        footerY: "12px", reserved: "46px", timeH: "46px", pillY: "10px" }
+        qGap: "12px", stackGap: "6px", notesH: "48px",
+        footerY: "12px", reserved: "46px", wheelItem: 46, pillY: "10px" }
     : { progressTop: "24px", progressGap: "14px", chip: 48, chipIcon: 24, chipGap: "14px",
-        qGap: "20px", stackGap: "12px", notesTop: "16px", notesH: "64px",
-        footerY: "20px", reserved: "56px", timeH: "56px", pillY: "14px" };
+        qGap: "20px", stackGap: "12px", notesH: "64px",
+        footerY: "20px", reserved: "56px", wheelItem: 56, pillY: "14px" };
 
   const wantsCarePartner = answers[CARE_PARTNER_TRIGGER]?.value === "yes";
 
@@ -292,17 +584,17 @@ export function PatientPreferenceForm({
   const setValue = (id: string, value: string) =>
     patch(id, { value: answers[id]?.value === value ? undefined : value });
 
-  /** Notes and free text are the only place a raw language string is stored,
-   *  so tag them with the locale they were written in. */
+  /** Free text is the only place a raw language string is stored, so tag it
+   *  with the locale it was written in. */
   const setTagged = (id: string, field: "note" | "text", raw: string) =>
     patch(id, { [field]: raw.trim() ? { text: raw, lang: locale } : undefined });
 
   /* ── Can this screen be left? ─────────────────────────────────────────
    * Next is gated on a real answer so nothing is recorded as "skipped" that
    * the patient never saw. That only works if every screen HAS an answer the
-   * patient can give, so every control that cannot be satisfied by tapping an
-   * option — both time questions and the free-text one — carries an explicit
-   * "No preference". Notes are never consulted: they stay optional. */
+   * patient can give: the free-text question carries an explicit "No
+   * preference", and a time question is answered by the wheels themselves,
+   * which always read as a time. */
   const canAdvance = (() => {
     if (screen.kind === "comments") return true;          // closing screen, optional by design
     if (screen.kind === "carePartner") return partner.accepted;
@@ -378,35 +670,6 @@ export function PatientPreferenceForm({
     </button>
   );
 
-  /** Compact notes field — the "Notes / ملاحظات" column from the paper form.
-   *  Two rows: it is the last thing in the body, so any growth here is what
-   *  reaches the footer first. Never gates Next. */
-  const renderNotesField = (id: string) => (
-    <div className="shrink-0" style={{ width: "100%", maxWidth: "760px", marginTop: M.notesTop }}>
-      <span style={{
-        fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium,
-        color: theme.textMuted, display: "block", marginBottom: "6px",
-        textAlign: isRTL ? "right" : "left",
-      }}>
-        {`${t("ppf.notes.label")} · ${t("ppf.optional")}`}
-      </span>
-      <textarea
-        rows={2}
-        value={answers[id]?.note?.text ?? ""}
-        onChange={(e) => setTagged(id, "note", e.target.value)}
-        placeholder={t("ppf.notes.placeholder")}
-        className="ppf-field"
-        style={fieldStyle(M.notesH)}
-      />
-    </div>
-  );
-
-  /** The deliberate way out of a question with nothing to enter. Same pill as
-   *  every other option, so it reads as an answer and not as a skip link. */
-  const renderNoPreference = (id: string) =>
-    renderPill(NO_PREFERENCE, answers[id]?.value === NO_PREFERENCE,
-      () => setValue(id, NO_PREFERENCE), t("ppf.noPreference"));
-
   /** Free-text questions share one control; only the prompt differs. Falls
    *  back to the generic placeholder for questions that need no special one. */
   const placeholderFor = (id: string) => {
@@ -414,32 +677,6 @@ export function PatientPreferenceForm({
     const localized = t(key);
     return localized === key ? t("ppf.freeText.placeholder") : localized;
   };
-
-  /** "6:00 AM" / "٦:٠٠ ص" — the display form of a stored "HH:MM". */
-  const timeLabel = (h24: number, minutes: string) =>
-    `${((h24 + 11) % 12) + 1}:${minutes} ${t(h24 < 12 ? "ppf.time.am" : "ppf.time.pm")}`;
-
-  /** Big, always-visible time button. */
-  const renderTimeButton = (key: string, selected: boolean, onClick: () => void, label: string, width?: string) => (
-    <button
-      key={key}
-      onClick={onClick}
-      data-ppf-time={key}
-      className="transition-transform duration-200 active:scale-[0.96] cursor-pointer"
-      style={{
-        height: M.timeH, width, padding: "0 12px",
-        borderRadius: theme.radiusLg,
-        border: selected ? `2px solid ${theme.accent}` : `1.5px solid ${theme.borderDefault}`,
-        backgroundColor: selected ? theme.accentSubtle : theme.surface,
-        fontFamily, fontSize: TYPE_SCALE.md,
-        fontWeight: selected ? WEIGHT.bold : WEIGHT.medium,
-        color: selected ? iconColor : theme.textBody,
-        outline: "none",
-      }}
-    >
-      {label}
-    </button>
-  );
 
   const renderControl = (q: QuestionDef) => {
     switch (q.kind) {
@@ -460,50 +697,19 @@ export function PatientPreferenceForm({
           </div>
         );
 
-      case "time": {
-        /* Tap 1 picks the hour (and answers the question at ":00"); tap 2 is
-           the optional half hour. The minute row only exists once an hour is
-           chosen, so it can never be a control that does nothing — but its
-           height is reserved either way, so nothing below it moves. */
-        const value = answers[q.id]?.value;
-        const picked = value && value !== NO_PREFERENCE ? value : undefined;
-        const pickedHour = picked ? Number(picked.slice(0, 2)) : undefined;
-        const pickedMinutes = picked ? picked.slice(3) : "00";
+      case "time":
         return (
-          <div className="flex flex-col items-center w-full" style={{ gap: M.stackGap }}>
-            <span style={{ fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium, color: theme.textMuted }}>
-              {t("ppf.time.hint")}
-            </span>
-            <div
-              style={{
-                display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: "10px",
-                width: "100%", maxWidth: "1400px",
-              }}
-            >
-              {TIME_HOURS.map((h) =>
-                renderTimeButton(
-                  String(h),
-                  pickedHour === h,
-                  () => setValue(q.id, `${String(h).padStart(2, "0")}:${pickedHour === h ? pickedMinutes : "00"}`),
-                  timeLabel(h, pickedHour === h ? pickedMinutes : "00")
-                )
-              )}
-            </div>
-            <div className="flex items-center justify-center gap-3" style={{ height: M.reserved }}>
-              {pickedHour !== undefined && ["00", "30"].map((mm) =>
-                renderTimeButton(
-                  `m${mm}`,
-                  pickedMinutes === mm,
-                  () => patch(q.id, { value: `${String(pickedHour).padStart(2, "0")}:${mm}` }),
-                  timeLabel(pickedHour, mm),
-                  "170px"
-                )
-              )}
-            </div>
-            {renderNoPreference(q.id)}
-          </div>
+          <TimeWheelPicker
+            value={answers[q.id]?.value}
+            onPickTime={(hhmm) => patch(q.id, { value: hhmm })}
+            theme={theme}
+            t={t}
+            fontFamily={fontFamily}
+            iconColor={iconColor}
+            itemH={M.wheelItem}
+            gap={M.stackGap}
+          />
         );
-      }
 
       case "text":
         /* Typing is the answer here, so a patient with nothing to add would
@@ -571,7 +777,6 @@ export function PatientPreferenceForm({
         {t(`ppf.q.${q.id}`, appName)}
       </h2>
       {renderControl(q)}
-      {renderNotesField(q.id)}
     </>
   );
 
@@ -699,9 +904,8 @@ export function PatientPreferenceForm({
   /* ── navigation ─────────────────────────────────────────────────────────
    * Next waits for an answer, so nothing is stored as answered that the
    * patient never chose. Every screen has an answer they can give — see
-   * canAdvance — so waiting can never become being stuck. Notes are not part
-   * of it. Back is present on every screen but the first, so an answer can
-   * always be revised. */
+   * canAdvance — so waiting can never become being stuck. Back is present on
+   * every screen but the first, so an answer can always be revised. */
 
   const navButton = (
     label: string,
@@ -771,6 +975,11 @@ export function PatientPreferenceForm({
       />
 
       <style>{`
+        .ppf-wheel::-webkit-scrollbar { display: none; }
+        .ppf-wheel {
+          -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 76%, transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 76%, transparent 100%);
+        }
         .ppf-field:focus { border-color: ${theme.accent} !important; }
         .ppf-field::placeholder { color: ${theme.textDisabled}; }
       `}</style>
