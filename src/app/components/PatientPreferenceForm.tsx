@@ -16,7 +16,7 @@ import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
  *
  * LAYOUT — ONE QUESTION PER SCREEN, IN A CONTAINED DIALOG.
  * The form is a centred card on a dimmed backdrop, never a page: capped at
- * 680px wide and 85% of the height it is given, floored at 540px so it does
+ * 760px wide and 88% of the height it is given, floored at 600px so it does
  * not resize under the patient between questions, and otherwise as tall as
  * the screen it is showing. Opened from the home screen it mounts inside the
  * kiosk's transformed 1920×1080 canvas (DESIGN_W / DESIGN_H in App.tsx), so
@@ -25,14 +25,15 @@ import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
  * Vertical budget, measured at 1920×1080:
  *
  *   header row                    ~62px
- *   progress block (shared,dense) ~124px
- *   question body                 ~290px on the ordinary screens
- *   footer (Back / Next)          ~62px
+ *   progress block (shared)       ~191px
+ *   question body                 ~346px on the ordinary screens
+ *   footer (Back / Next)          ~97px
  *
  * The body scrolls rather than clips: at the design size nothing needs to
- * (the tallest screen is 788px against a 918px cap), but the wizard that
- * opens this renders outside the scaled canvas, so on a short panel the cap
- * binds and the content has to stay reachable.
+ * (the tallest screen is the English care-partner agreement at 886px, against
+ * a 908px cap), but a panel shorter than the design canvas gives the card
+ * proportionally less, so the cap binds there and the content has to stay
+ * reachable.
  *
  * Arabic and Urdu run longer than English, so every size below is chosen for
  * the longest of the three, not for English. The tallest screen is the
@@ -649,26 +650,37 @@ export function PatientPreferenceForm({
 
   /* ── THE layout constraint ────────────────────────────────────────────
    * The card is pinned to the viewport and never scrolls, so its content has
-   * to fit whatever height the card is given. That height is not always the
-   * 1920x1080 design budget: this form is opened by the onboarding wizard,
-   * which App.tsx renders OUTSIDE the scaled design canvas, so on a panel
-   * shorter than 1080 CSS px the card gets correspondingly less.
+   * to fit whatever height the card is given. Both entry points — the home
+   * screen and the onboarding wizard — now mount inside App.tsx's scaled
+   * design canvas, so that height is the 1920x1080 budget in the kiosk; what
+   * follows is the safety net for a panel that gives the card less.
    *
-   * So the card measures itself, and below the design height every vertical
-   * gap on every screen tightens together — one rule, no per-question
-   * exceptions. Font sizes are deliberately NOT part of it: 26px question
-   * text is the floor for a bedside screen, not a starting point. */
-  const cardRef = useRef<HTMLDivElement | null>(null);
-  const [cardHeight, setCardHeight] = useState(0);
+   * So the card measures the room it is given, and below the design height
+   * every vertical gap on every screen tightens together — one rule, no
+   * per-question exceptions. Font sizes are deliberately NOT part of it: 22px
+   * question text is the floor for a bedside screen, not a starting point.
+   *
+   * What is measured is the room the card is ALLOWED, not the room its content
+   * happens to take. The card is content-sized (height:auto between
+   * MODAL_MIN_H and MODAL_MAX_H), so its own box says nothing about how much
+   * the panel is giving it — measuring that held every screen to the dense set
+   * even on a full-size panel, which is what made the dialog feel tight. The
+   * overlay is `fixed inset-0`, so it is the panel itself. */
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  const [panelH, setPanelH] = useState(0);
   useEffect(() => {
-    const el = cardRef.current;
+    const el = overlayRef.current;
     if (!el || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(([entry]) => setCardHeight(entry.contentRect.height));
+    const ro = new ResizeObserver(([entry]) => setPanelH(entry.contentRect.height));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  /* 920px is the card at the design canvas; below that, tighten. */
-  const dense = cardHeight > 0 && cardHeight < 900;
+  /* The panel less the backdrop margin the overlay keeps on all four sides —
+     the box MODAL_MAX_H is a percentage of. It measures 1032 on the 1920×1080
+     design canvas; below that the card is given less than the budget every
+     screen was measured against, so every gap tightens together. The tolerance
+     is wide enough that rounding cannot flip the rule at the design size. */
+  const dense = panelH > 0 && panelH < 1000;
 
   /** Every vertical measurement the constraint moves, in one place. */
   const M = dense
@@ -1223,15 +1235,17 @@ export function PatientPreferenceForm({
      App.tsx's transformed 1920×1080 canvas, so the fixed overlay it sits on is
      that canvas and not the window — vh would measure the wrong box. A percent
      of the overlay is the dialog's share of the screen either way. */
-  const MODAL_MAX_W = "680px";
-  const MODAL_MAX_H = "85%";
-  /* A floor as well as a cap. Twelve of the sixteen screens land within 40px
-     of this, so holding them all at one height stops the dialog resizing under
-     the patient between questions; the four that need more still grow. */
-  const MODAL_MIN_H = "540px";
+  const MODAL_MAX_W = "760px";
+  const MODAL_MAX_H = "88%";
+  /* A floor as well as a cap. Most of the sixteen screens land within 40px of
+     it, so holding them all at one height stops the dialog resizing under the
+     patient between questions; the taller ones still grow. It follows the
+     density rule for the same reason the gaps do: on a short panel a 600px
+     floor would be taller than the room the card is given. */
+  const MODAL_MIN_H = dense ? "540px" : "600px";
 
-  /* Body, header and footer gutters — sized for a 680px card. */
-  const padX = "28px";
+  /* Body, header and footer gutters — sized for a 760px card. */
+  const padX = "32px";
 
   const renderShell = (body: React.ReactNode) => {
     const fieldCss = (
@@ -1252,6 +1266,7 @@ export function PatientPreferenceForm({
 
     return (
       <div
+        ref={overlayRef}
         className="fixed inset-0 flex items-center justify-center"
         style={{
           zIndex: 8600, // above the onboarding wizard (z-8000) that opens it
@@ -1333,13 +1348,10 @@ export function PatientPreferenceForm({
             </button>
           </div>
 
-          {/* The form itself. This is the region the layout budget is
-              measured against, so it — not the whole card — is what cardRef
-              watches. "flex: 1 1 auto", not flex-1: the card's height is
-              content-driven, and a zero flex-basis in an auto-height column
+          {/* The form itself. "flex: 1 1 auto", not flex-1: the card's height
+              is content-driven, and a zero flex-basis in an auto-height column
               would collapse this to nothing. */}
           <div
-            ref={cardRef}
             className="min-h-0 flex flex-col overflow-hidden relative"
             style={{ flex: "1 1 auto" }}
           >
