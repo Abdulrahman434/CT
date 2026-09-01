@@ -29,8 +29,31 @@ import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
  *   footer (Back / Next)          ~104px
  *
  * Arabic and Urdu run longer than English, so every size below is chosen for
- * the longest of the three, not for English. The tallest screen is Q6
- * (bedside handover): 4 lines of question text in English, 3 in Arabic/Urdu.
+ * the longest of the three, not for English. The tallest screen is a wrapped
+ * question with its optional note open — measure that case, not a one-line
+ * English question, before trusting a change to the budget.
+ *
+ * ANSWERS — one shape for the whole form. Every question is yes/no with an
+ * optional note, except the favourite-colour question, which is free text.
+ * The note is not a reveal: on every yes/no question but the two timing ones
+ * it is on screen from the moment the question is, in a fixed place under the
+ * pills, so tapping Yes or No changes the pills and nothing else. That makes
+ * the note-open case the ONLY case to measure — there is no shorter variant
+ * of those screens to fall back on.
+ * There is no time picker and no multi-option control any more: a question
+ * that used to ask "what time would you prefer?" now states the standard time
+ * and asks whether it suits, and the note carries the alternative. That keeps
+ * the answer language-neutral and the screen the same height everywhere.
+ * TimeWheelPicker and the `choice` branch are still wired into renderControl
+ * but no question reaches them — restoring one is a change to the question
+ * list alone.
+ *
+ * TYPOGRAPHY — one hierarchy, one source. Section chip (TYPE_SCALE.base,
+ * semibold) sits under the question (TYPE_SCALE.lg, semibold), which sits
+ * over the answer pills (TYPE_SCALE.md). Every question heading on every
+ * screen reads its style from the single `questionHeading` object below;
+ * nothing sets question type per screen, so no screen can drift from the
+ * rest.
  *
  * Question text is TYPE_SCALE.lg (26px) at the 1920x1080 design scale, and
  * that is the floor for this screen rather than a starting point: patients
@@ -92,8 +115,11 @@ export interface PreferenceFormRecord {
   carePartner?: CarePartnerAgreement;
 }
 
-/** Stored when the patient taps "No preference". A real, deliberate answer —
- *  distinct from an unanswered question, which is what Next now blocks on. */
+/** Was stored when the patient tapped "No preference". Nothing writes it any
+ *  more — the last question that offered that pill (favourite colour) is
+ *  free-text only now — but records written before that change still carry it,
+ *  so the value stays defined and documented rather than becoming a bare
+ *  string nobody can trace. */
 export const NO_PREFERENCE = "no-preference";
 
 type ControlKind = "yesno" | "time" | "choice" | "text";
@@ -104,6 +130,20 @@ interface QuestionDef {
   kind: ControlKind;
   /** Option ids for `choice` questions (stored verbatim, translated for display). */
   options?: readonly string[];
+  /** Set ONLY on a question whose note is conditional: the box appears when
+   *  the answer is this one, and stays away otherwise.
+   *
+   *  Left unset — every yes/no question but the two timing ones — the note is
+   *  always on screen, in the same place under the pills, whichever pill is
+   *  chosen and even before either is. A box that appears and vanishes as the
+   *  patient taps moves the ground under them and reads as a demand to justify
+   *  the answer they just gave; a box that is simply always there reads as an
+   *  invitation, and the screen keeps one height instead of two.
+   *
+   *  The two timing questions ("rounds are 8-12, does that suit you?") keep the
+   *  conditional form on purpose: their note IS the alternative time, so it has
+   *  nothing to hold until the patient has said "no". */
+  noteWhen?: YesNo;
 }
 
 interface SectionDef {
@@ -168,8 +208,8 @@ const SECTIONS: readonly SectionDef[] = [
     id: "handover",
     icon: Clock,
     questions: [
-      { id: "handover.roundTime", kind: "time" },
-      { id: "handover.presence", kind: "choice", options: ["present", "summary"] },
+      { id: "handover.roundTime", kind: "yesno", noteWhen: "no" },
+      { id: "handover.presence", kind: "yesno" },
     ],
   },
   {
@@ -185,7 +225,7 @@ const SECTIONS: readonly SectionDef[] = [
     icon: ShieldCheck,
     questions: [
       { id: "comfort.grooming", kind: "yesno" },
-      { id: "comfort.bathingTime", kind: "time" },
+      { id: "comfort.bathingTime", kind: "yesno", noteWhen: "no" },
       { id: "comfort.rights", kind: "yesno" },
     ],
   },
@@ -193,8 +233,10 @@ const SECTIONS: readonly SectionDef[] = [
     id: "other",
     icon: MessageSquarePlus,
     questions: [
-      { id: "other.otherPreference", kind: "text" },
+      { id: "other.otherPreference", kind: "yesno" },
       { id: "other.virtualRoom", kind: "yesno" },
+      /* The one question left as free text — no yes/no, and deliberately no
+         "No preference" pill beside it. See canAdvance for what that costs. */
       { id: "other.favouriteColour", kind: "text" },
     ],
   },
@@ -598,9 +640,12 @@ export function PatientPreferenceForm({
   const canAdvance = (() => {
     if (screen.kind === "comments") return true;          // closing screen, optional by design
     if (screen.kind === "carePartner") return partner.accepted;
-    const a = answers[screen.q.id];
-    if (screen.q.kind === "text") return a?.value === NO_PREFERENCE || !!a?.text?.text.trim();
-    return !!a?.value;
+    /* Free text is not gated. It used to be, because a "No preference" pill
+       gave a patient with nothing to say a way past it; that pill is gone, so
+       gating it now would leave one screen a patient could be stuck on. The
+       optional note is never gated either — only the yes/no is. */
+    if (screen.q.kind === "text") return true;
+    return !!answers[screen.q.id]?.value;
   })();
 
   const goNext = () => {
@@ -647,6 +692,30 @@ export function PatientPreferenceForm({
     textAlign: isRTL ? ("right" as const) : ("left" as const),
   });
 
+  /** THE question typography, for every screen in the form — all fourteen
+   *  questions, the care-partner agreement and the closing comments screen.
+   *  It lives here, not at each call site, so the questionnaire can only ever
+   *  have one question type: change this object and every screen moves with
+   *  it.
+   *
+   *  Semibold rather than bold: at TYPE_SCALE.lg the question is already the
+   *  largest thing on the card, and 700 on top of that read as a banner
+   *  shouting over its own answers. 600 keeps the question clearly dominant
+   *  over the section chip above it (TYPE_SCALE.base) and the answer pills
+   *  below it (TYPE_SCALE.md) without borrowing weight the hierarchy does not
+   *  need. Snug leading is what holds a question wrapping to three or four
+   *  lines to the same rhythm as a one-line one, so long and short screens
+   *  sit at the same visual density. */
+  const questionHeading = {
+    fontFamily,
+    fontSize: TYPE_SCALE.lg,
+    fontWeight: WEIGHT.semibold,
+    color: theme.textHeading,
+    lineHeight: LEADING.snug,
+    textAlign: "center" as const,
+    maxWidth: "1180px",
+  };
+
   /** Selectable pill — same geometry as the concern "area" chips. */
   const renderPill = (key: string, selected: boolean, onClick: () => void, label: string) => (
     <button
@@ -678,13 +747,71 @@ export function PatientPreferenceForm({
     return localized === key ? t("ppf.freeText.placeholder") : localized;
   };
 
+  /** The optional note every yes/no question carries.
+   *
+   *  It sits in one fixed place — directly under the pills, same width, same
+   *  height — and on all but the two timing questions it is there from the
+   *  moment the screen opens, before either pill is tapped and whichever one
+   *  is. Nothing below it moves when the answer changes, so a patient who
+   *  taps Yes then No sees the pills swap highlight and nothing else. See
+   *  `noteWhen` on QuestionDef for why the timing pair still reveals.
+   *
+   *  A field that is always present has to say what it is, so it carries a
+   *  visible "Notes · Optional" label; a conditional one is explained by the
+   *  answer that opened it and keeps its placeholder alone.
+   *
+   *  Optional in the strict sense: it is not part of canAdvance, so leaving it
+   *  empty can never hold the patient on the screen. Each question gets its own
+   *  prompt, falling back to the generic one, so the box always says what
+   *  belongs in it. */
+  const renderNote = (q: QuestionDef) => {
+    if (q.noteWhen && answers[q.id]?.value !== q.noteWhen) return null;
+    const key = `ppf.note.${q.id}`;
+    const prompt = t(key);
+    const fieldId = `ppf-note-${q.id}`;
+    return (
+      <div style={{ width: "100%", maxWidth: "760px" }}>
+        {!q.noteWhen && (
+          <label
+            htmlFor={fieldId}
+            style={{
+              display: "block",
+              marginBottom: "6px",
+              fontFamily,
+              fontSize: TYPE_SCALE.sm,
+              fontWeight: WEIGHT.semibold,
+              color: theme.textMuted,
+              letterSpacing: "0.02em",
+              textAlign: isRTL ? "right" : "left",
+            }}
+          >
+            {t("ppf.notes.optionalLabel")}
+          </label>
+        )}
+        <textarea
+          id={fieldId}
+          rows={2}
+          value={answers[q.id]?.note?.text ?? ""}
+          onChange={(e) => setTagged(q.id, "note", e.target.value)}
+          placeholder={prompt === key ? t("ppf.notes.placeholder") : prompt}
+          aria-label={t("ppf.notes.label")}
+          className="ppf-field"
+          style={fieldStyle(M.notesH)}
+        />
+      </div>
+    );
+  };
+
   const renderControl = (q: QuestionDef) => {
     switch (q.kind) {
       case "yesno":
         return (
-          <div className="flex flex-wrap justify-center gap-4">
-            {renderPill("yes", answers[q.id]?.value === "yes", () => setValue(q.id, "yes"), t("ppf.yes"))}
-            {renderPill("no", answers[q.id]?.value === "no", () => setValue(q.id, "no"), t("ppf.no"))}
+          <div className="flex flex-col items-center w-full" style={{ gap: M.stackGap }}>
+            <div className="flex flex-wrap justify-center gap-4">
+              {renderPill("yes", answers[q.id]?.value === "yes", () => setValue(q.id, "yes"), t("ppf.yes"))}
+              {renderPill("no", answers[q.id]?.value === "no", () => setValue(q.id, "no"), t("ppf.no"))}
+            </div>
+            {renderNote(q)}
           </div>
         );
 
@@ -712,33 +839,21 @@ export function PatientPreferenceForm({
         );
 
       case "text":
-        /* Typing is the answer here, so a patient with nothing to add would
-           have no way forward without the pill. Typing clears it, and picking
-           it clears what was typed — the record never holds both. */
+        /* The field and nothing else — no pill, no alternate option under it.
+           Typing is the whole answer, and typing nothing is a valid outcome
+           (see canAdvance), so there is nothing for a second control to say. */
         return (
           <div className="flex flex-col items-center w-full" style={{ gap: M.stackGap }}>
             <div style={{ width: "100%", maxWidth: "760px" }}>
               <textarea
                 rows={2}
                 value={answers[q.id]?.text?.text ?? ""}
-                onChange={(e) => {
-                  setTagged(q.id, "text", e.target.value);
-                  if (e.target.value.trim()) patch(q.id, { value: undefined });
-                }}
+                onChange={(e) => setTagged(q.id, "text", e.target.value)}
                 placeholder={placeholderFor(q.id)}
                 className="ppf-field"
                 style={fieldStyle(M.notesH)}
               />
             </div>
-            {renderPill(
-              NO_PREFERENCE,
-              answers[q.id]?.value === NO_PREFERENCE,
-              () => {
-                const on = answers[q.id]?.value === NO_PREFERENCE;
-                patch(q.id, { value: on ? undefined : NO_PREFERENCE, text: on ? answers[q.id]?.text : undefined });
-              },
-              t("ppf.noPreference")
-            )}
           </div>
         );
     }
@@ -769,11 +884,7 @@ export function PatientPreferenceForm({
   const renderQuestionScreen = (section: SectionDef, q: QuestionDef) => (
     <>
       {renderSectionBadge(section)}
-      <h2 style={{
-        fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold,
-        color: theme.textHeading, lineHeight: LEADING.snug,
-        textAlign: "center", maxWidth: "1180px", margin: `0 0 ${M.qGap}`,
-      }}>
+      <h2 style={{ ...questionHeading, margin: `0 0 ${M.qGap}` }}>
         {t(`ppf.q.${q.id}`, appName)}
       </h2>
       {renderControl(q)}
@@ -785,11 +896,7 @@ export function PatientPreferenceForm({
   const renderCarePartnerScreen = (section: SectionDef) => (
     <>
       {renderSectionBadge(section)}
-      <h2 style={{
-        fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold,
-        color: theme.textHeading, lineHeight: LEADING.snug,
-        textAlign: "center", margin: "0 0 12px",
-      }}>
+      <h2 style={{ ...questionHeading, margin: "0 0 12px" }}>
         {t("ppf.partner.agreement.title")}
       </h2>
       <p style={{
@@ -875,11 +982,7 @@ export function PatientPreferenceForm({
           <ClipboardList size={M.chipIcon} style={{ color: iconColor }} />
         </div>
       </div>
-      <h2 style={{
-        fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold,
-        color: theme.textHeading, lineHeight: LEADING.snug,
-        textAlign: "center", margin: "0 0 8px",
-      }}>
+      <h2 style={{ ...questionHeading, margin: "0 0 8px" }}>
         {t("ppf.comments.label")}
       </h2>
       <p style={{

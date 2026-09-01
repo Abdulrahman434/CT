@@ -1251,6 +1251,7 @@ const translations: Record<string, TranslationEntry> = {
   "ppf.no": { en: "No", ar: "لا", ur: "نہیں" },
   "ppf.optional": { en: "Optional", ar: "اختياري", ur: "اختیاری" },
   "ppf.notes.label": { en: "Notes", ar: "ملاحظات", ur: "نوٹس" },
+  "ppf.notes.optionalLabel": { en: "Notes · Optional", ar: "ملاحظات · اختياري", ur: "نوٹس · اختیاری" },
   "ppf.notes.placeholder": { en: "Add anything you'd like the team to know", ar: "أضف أي شيء تود أن يعرفه الفريق", ur: "کوئی بھی بات لکھیں جو آپ ٹیم کو بتانا چاہتے ہیں" },
   "ppf.freeText.placeholder": { en: "Type your answer here", ar: "اكتب إجابتك هنا", ur: "اپنا جواب یہاں لکھیں" },
   "ppf.placeholder.other.favouriteColour": { en: "Type your favorite color", ar: "اكتب لونك المفضل", ur: "اپنا پسندیدہ رنگ لکھیں" },
@@ -1280,7 +1281,7 @@ const translations: Record<string, TranslationEntry> = {
   "ppf.section.other.title": { en: "Other", ar: "أخرى", ur: "دیگر" },
 
   /* Questions */
-  "ppf.q.food.mealTiming": { en: "Inform the patient of the Breakfast, Lunch, and Dinner times. Do you have any preferred meal times?", ar: "إبلاغ المريض بوقت الإفطار والغداء والعشاء. هل لديك أي تفضيل لأوقات هذه الوجبات؟", ur: "مریض کو ناشتے، دوپہر اور رات کے کھانے کے اوقات سے آگاہ کریں۔ کیا کھانے کے اوقات کے بارے میں آپ کی کوئی ترجیح ہے؟" },
+  "ppf.q.food.mealTiming": { en: "Breakfast, lunch and dinner are served at set times. Are the standard meal times suitable for you?", ar: "يتم تقديم الإفطار والغداء والعشاء في أوقات محددة. هل أوقات الوجبات المعتادة مناسبة لك؟", ur: "ناشتہ، دوپہر اور رات کا کھانا مقررہ اوقات میں دیا جاتا ہے۔ کیا کھانے کے معمول کے اوقات آپ کے لیے مناسب ہیں؟" },
   "ppf.q.food.dietary": { en: "Do you have any dietary preferences?", ar: "هل لديك أي تفضيلات غذائية؟", ur: "کیا آپ کی کوئی غذائی ترجیحات ہیں؟" },
   "ppf.q.partner.participate": { en: "Would you like to participate in this program? Please refer to the Care Partner Program booklet or brochures.", ar: "هل ترغب في المشاركة في هذا البرنامج؟ يرجى الرجوع إلى منشور أو كتيب برنامج شركاء الرعاية.", ur: "کیا آپ اس پروگرام میں شرکت کرنا چاہیں گے؟ براہ کرم کیئر پارٹنر پروگرام کا کتابچہ یا بروشر ملاحظہ کریں۔" },
   "ppf.q.partner.appAccess": { en: "Do you or your care partner prefer to access your lab results and medical records through the {0} application?", ar: "هل تفضل أنت أو شريك الرعاية الخاص بك الاطلاع على نتائج التحاليل والتقارير الخاصة بحالتك الصحية بواسطة تطبيق {0}؟", ur: "کیا آپ یا آپ کا کیئر پارٹنر {0} ایپلیکیشن کے ذریعے اپنی لیب رپورٹس اور طبی ریکارڈ دیکھنا پسند کریں گے؟" },
@@ -1294,18 +1295,35 @@ const translations: Record<string, TranslationEntry> = {
   "ppf.appName.imc": { en: "IMC", ar: "المركز الطبي الدولي", ur: "آئی ایم سی" },
   "ppf.appName.prime": { en: "Prime", ar: "برايم", ur: "پرائم" },
   "ppf.appName.kauh": { en: "King Abdulaziz University Hospital", ar: "مستشفى جامعة الملك عبدالعزيز", ur: "کنگ عبدالعزیز یونیورسٹی ہسپتال" },
-  "ppf.q.handover.roundTime": { en: "Doctors usually make rounds between 8:00 AM and 12:00 PM. If this time is not suitable for you, what time would you prefer?", ar: "عادةً يتم مرور الأطباء على المرضى وأسرهم بين الساعة الثامنة صباحًا والثانية عشرة ظهرًا. إذا لم يكن هذا الوقت مناسبًا لك، فما الوقت الذي تفضله؟", ur: "ڈاکٹر عام طور پر صبح 8:00 سے دوپہر 12:00 بجے کے درمیان راؤنڈ کرتے ہیں۔ اگر یہ وقت آپ کے لیے مناسب نہ ہو تو آپ کون سا وقت پسند کریں گے؟" },
-  "ppf.q.handover.presence": { en: "Would you prefer to be present during the bedside handover at 7:00 AM and 7:00 PM with your care partner, either by waking up at the scheduled time or receiving a summary later if you prefer not to be awakened?", ar: "هل تفضل حضور تبديل التغطية الذي يتم عند الساعة السابعة صباحًا والسابعة مساءً مع شريك رعايتك، إما من خلال الاستيقاظ في الوقت المحدد أو استلام ملخص لاحقًا في حال كنت لا ترغب في الاستيقاظ؟", ur: "کیا آپ اپنے کیئر پارٹنر کے ساتھ صبح 7:00 اور شام 7:00 بجے بیڈ سائیڈ ہینڈ اوور کے دوران موجود رہنا پسند کریں گے، یا تو مقررہ وقت پر جاگ کر، یا اگر آپ جگایا جانا پسند نہ کریں تو بعد میں خلاصہ وصول کر کے؟" },
+  "ppf.q.handover.roundTime": { en: "Doctors usually make rounds between 8:00 AM and 12:00 PM. Is this time suitable for you?", ar: "عادةً يتم مرور الأطباء على المرضى وأسرهم بين الساعة الثامنة صباحًا والثانية عشرة ظهرًا. هل هذا الوقت مناسب لك؟", ur: "ڈاکٹر عام طور پر صبح 8:00 سے دوپہر 12:00 بجے کے درمیان راؤنڈ کرتے ہیں۔ کیا یہ وقت آپ کے لیے مناسب ہے؟" },
+  "ppf.q.handover.presence": { en: "The bedside handover takes place at 7:00 AM and 7:00 PM. Would you like to be present for it with your care partner?", ar: "يتم تبديل التغطية بجانب السرير عند الساعة السابعة صباحًا والسابعة مساءً. هل ترغب في الحضور مع شريك رعايتك؟", ur: "بیڈ سائیڈ ہینڈ اوور صبح 7:00 اور شام 7:00 بجے ہوتا ہے۔ کیا آپ اپنے کیئر پارٹنر کے ساتھ اس میں موجود رہنا چاہیں گے؟" },
   "ppf.option.handover.presence.present": { en: "Be present at the handover", ar: "الحضور أثناء التسليم", ur: "ہینڈ اوور کے وقت موجود رہوں" },
   "ppf.option.handover.presence.summary": { en: "Receive a summary later", ar: "استلام ملخص لاحقاً", ur: "بعد میں خلاصہ وصول کروں" },
   "ppf.q.religious.support": { en: "Would you like to request spiritual or religious support?", ar: "هل ترغب في الاستعانة بالدعم المعنوي أو الديني؟", ur: "کیا آپ روحانی یا مذہبی معاونت کی درخواست کرنا چاہیں گے؟" },
   "ppf.q.religious.interpreter": { en: "Do you need a translator or sign language service?", ar: "هل ترغب بالحصول على مترجم أو خدمة لغة الإشارة؟", ur: "کیا آپ کو مترجم یا اشاروں کی زبان کی سروس درکار ہے؟" },
   "ppf.q.comfort.grooming": { en: "Do you need grooming services?", ar: "هل ترغب بخدمات الحلاقة؟", ur: "کیا آپ کو حجامت کی خدمات درکار ہیں؟" },
-  "ppf.q.comfort.bathingTime": { en: "When would you prefer to have your daily bath?", ar: "ما هو وقتك المفضل للاستحمام اليومي؟", ur: "آپ روزانہ غسل کب کرنا پسند کریں گے؟" },
+  "ppf.q.comfort.bathingTime": { en: "Daily baths are usually given between 7:00 AM and 9:00 AM. Is this time suitable for you?", ar: "عادةً يتم الاستحمام اليومي بين الساعة السابعة والتاسعة صباحًا. هل هذا الوقت مناسب لك؟", ur: "روزانہ غسل عام طور پر صبح 7:00 سے 9:00 بجے کے درمیان کرایا جاتا ہے۔ کیا یہ وقت آپ کے لیے مناسب ہے؟" },
   "ppf.q.comfort.rights": { en: "Do you know about your rights and responsibilities?", ar: "هل تعرف حقوقك ومسؤولياتك؟", ur: "کیا آپ اپنے حقوق اور ذمہ داریوں کے بارے میں جانتے ہیں؟" },
   "ppf.q.other.otherPreference": { en: "Is there any other preference not mentioned in this checklist that you would like to receive or request?", ar: "هل هناك أي تفضيل آخر غير مذكور في هذه القائمة المرجعية ترغب في الاستفادة منه أو طلبه؟", ur: "کیا کوئی اور ترجیح ہے جو اس فہرست میں شامل نہیں اور آپ اسے حاصل کرنا یا اس کی درخواست کرنا چاہیں گے؟" },
   "ppf.q.other.virtualRoom": { en: "Virtual Room Content (Patient Rights and Responsibilities – Important Contacts – Quiet Time)", ar: "محتويات الغرفة الافتراضية (حقوق ومسؤوليات المريض – أرقام تهمك – أوقات الراحة)", ur: "ورچوئل روم کا مواد (مریض کے حقوق و ذمہ داریاں – اہم رابطے – خاموشی کا وقت)" },
   "ppf.q.other.favouriteColour": { en: "What is your favorite color?", ar: "ما هو لونك المفضل؟", ur: "آپ کا پسندیدہ رنگ کون سا ہے؟" },
+
+  /* Optional note prompts — shown under the answer named by `noteWhen` in
+     PatientPreferenceForm's question list. Keyed by question id; a question
+     with no entry here falls back to ppf.notes.placeholder. */
+  "ppf.note.food.mealTiming": { en: "Tell us the meal times you would prefer", ar: "أخبرنا بأوقات الوجبات التي تفضلها", ur: "ہمیں بتائیں کہ آپ کھانے کے کون سے اوقات پسند کریں گے" },
+  "ppf.note.food.dietary": { en: "Tell us about your dietary preferences", ar: "أخبرنا عن تفضيلاتك الغذائية", ur: "ہمیں اپنی غذائی ترجیحات کے بارے میں بتائیں" },
+  "ppf.note.partner.participate": { en: "Let us know if you would like to join later", ar: "أخبرنا إذا كنت ترغب في الانضمام لاحقاً", ur: "ہمیں بتائیں اگر آپ بعد میں شامل ہونا چاہیں" },
+  "ppf.note.partner.appAccess": { en: "Tell us how you would prefer to receive your results", ar: "أخبرنا بالطريقة التي تفضل استلام نتائجك بها", ur: "ہمیں بتائیں کہ آپ اپنے نتائج کس طرح وصول کرنا پسند کریں گے" },
+  "ppf.note.handover.roundTime": { en: "Tell us the time you would prefer", ar: "أخبرنا بالوقت الذي تفضله", ur: "ہمیں بتائیں کہ آپ کون سا وقت پسند کریں گے" },
+  "ppf.note.handover.presence": { en: "Tell us how you would prefer to receive the handover, for example a summary later", ar: "أخبرنا كيف تفضل استلام التسليم، مثلاً ملخص لاحقاً", ur: "ہمیں بتائیں کہ آپ ہینڈ اوور کس طرح وصول کرنا چاہیں گے، مثلاً بعد میں خلاصہ" },
+  "ppf.note.religious.support": { en: "Tell us the support you would like", ar: "أخبرنا بالدعم الذي ترغب فيه", ur: "ہمیں بتائیں کہ آپ کو کس قسم کی معاونت درکار ہے" },
+  "ppf.note.religious.interpreter": { en: "Tell us the language you need", ar: "أخبرنا باللغة التي تحتاجها", ur: "ہمیں بتائیں کہ آپ کو کون سی زبان درکار ہے" },
+  "ppf.note.comfort.grooming": { en: "Tell us the grooming services you need", ar: "أخبرنا بخدمات الحلاقة التي تحتاجها", ur: "ہمیں بتائیں کہ آپ کو حجامت کی کون سی خدمات درکار ہیں" },
+  "ppf.note.comfort.bathingTime": { en: "Tell us the time you would prefer", ar: "أخبرنا بالوقت الذي تفضله", ur: "ہمیں بتائیں کہ آپ کون سا وقت پسند کریں گے" },
+  "ppf.note.comfort.rights": { en: "Tell us what you would like explained", ar: "أخبرنا بما تود أن يتم شرحه لك", ur: "ہمیں بتائیں کہ آپ کو کیا سمجھایا جائے" },
+  "ppf.note.other.otherPreference": { en: "Tell us what you would like to receive or request", ar: "أخبرنا بما ترغب في الحصول عليه أو طلبه", ur: "ہمیں بتائیں کہ آپ کیا حاصل کرنا یا درخواست کرنا چاہیں گے" },
+  "ppf.note.other.virtualRoom": { en: "Tell us what you would like explained", ar: "أخبرنا بما تود أن يتم شرحه لك", ur: "ہمیں بتائیں کہ آپ کو کیا سمجھایا جائے" },
 
   /* Care Partner Agreement — shown inline when the patient answers Yes */
   "ppf.partner.agreement.title": { en: "Care Partner Agreement", ar: "اتفاقية شريك الرعاية", ur: "کیئر پارٹنر معاہدہ" },
