@@ -238,6 +238,39 @@ const SECTIONS: readonly SectionDef[] = [
 /** The question whose "yes" inserts the care-partner agreement screen. */
 const CARE_PARTNER_TRIGGER = "partner.participate";
 
+/** The last submitted record, or null when the form has never been finished.
+ *  Never throws: a blocked or corrupt store reads as "no record". */
+export function readPreferenceRecord(): PreferenceFormRecord | null {
+  try {
+    const raw = localStorage.getItem(PREFS_ANSWERS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PreferenceFormRecord;
+    return parsed && typeof parsed === "object" && parsed.answers ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The questions the form gates Next on. The free-text question and the
+ *  closing comments screen are optional by design (see canAdvance), so a
+ *  record without them is still a finished form; anything gated missing means
+ *  the patient never got through it. */
+const REQUIRED_QUESTION_IDS: readonly string[] = SECTIONS.flatMap((s) =>
+  s.questions.filter((q) => q.kind !== "text").map((q) => q.id));
+
+/** A record exists as soon as the patient submits, which is not the same as
+ *  having answered the form — so completion is measured from the answers
+ *  themselves, not from the presence of the record. */
+export function isPreferenceFormComplete(record: PreferenceFormRecord | null): boolean {
+  if (!record) return false;
+  const answers = record.answers ?? {};
+  const answered = (id: string) => !!answers[id]?.value;
+  if (!REQUIRED_QUESTION_IDS.every(answered)) return false;
+  /* The agreement screen is part of the form whenever its trigger is "yes". */
+  if (answers[CARE_PARTNER_TRIGGER]?.value === "yes" && !record.carePartner?.accepted) return false;
+  return true;
+}
+
 type Screen =
   | { kind: "question"; section: SectionDef; q: QuestionDef }
   | { kind: "carePartner"; section: SectionDef }
@@ -532,9 +565,14 @@ export function PatientPreferenceForm({
     return localized === key ? theme.hospitalName : localized;
   }, [activeConfigId, theme.hospitalName, t]);
 
-  const [answers, setAnswers] = useState<Record<string, PreferenceAnswer>>({});
-  const [comments, setComments] = useState("");
-  const [partner, setPartner] = useState<CarePartnerAgreement>({
+  /* Reopening the form is a review, not a fresh start: the last submitted
+     record is loaded back so every answer the patient gave is pre-filled and
+     visible. Read once, on mount — later edits belong to this session. */
+  const [saved] = useState<PreferenceFormRecord | null>(readPreferenceRecord);
+
+  const [answers, setAnswers] = useState<Record<string, PreferenceAnswer>>(() => saved?.answers ?? {});
+  const [comments, setComments] = useState(() => saved?.comments?.text ?? "");
+  const [partner, setPartner] = useState<CarePartnerAgreement>(() => saved?.carePartner ?? {
     name: "", relationship: "", accepted: false, acceptedAt: null,
   });
   const [index, setIndex] = useState(0);
@@ -1122,6 +1160,8 @@ export function PatientPreferenceForm({
         style={{
           zIndex: 8600, // above the onboarding wizard (z-8000) that opens it
           backgroundColor: "rgba(8,12,20,0.62)",
+          backdropFilter: "blur(4px)",
+          WebkitBackdropFilter: "blur(4px)",
           /* The inset is what makes it read as a modal; it is capped because
              the question screens clip rather than scroll. Measured at
              1920×1080: the tightest screen keeps ~90px of slack here. */

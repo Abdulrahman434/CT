@@ -2013,9 +2013,11 @@ function BedsideScreen() {
           <AboutUs onClose={() => setShowAboutUs(false)} />
         )}
 
-        {/* Patient Preferences Form — opened from the greeting card */}
+        {/* Patient Preferences Form — a modal over the current screen, never a
+            page the patient navigates away to, so closing it puts them back
+            exactly where they were. */}
         {showPreferenceForm && (
-          <PatientPreferenceForm onClose={() => setShowPreferenceForm(false)} />
+          <PatientPreferenceForm variant="modal" onClose={() => setShowPreferenceForm(false)} />
         )}
 
         {/* Settings Panel — slide-in from right */}
@@ -2327,6 +2329,10 @@ function BedsideScreen() {
           admitRef={currentAdmitRef}
           hidden={showTour}
           onComplete={() => setShowOnboarding(false)}
+          /* Home button: leaves setup and lands on the main screen. Nothing is
+             marked complete, so an unfinished setup still greets the patient
+             next session and stays reachable from My Preferences. */
+          onExit={() => setShowOnboarding(false)}
           onStartTour={() => setShowTour(true)}
         />
       )}

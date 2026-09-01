@@ -9,7 +9,9 @@ import {
 import { markOnboardingComplete } from "../lib/onboardingStore";
 import { isAccountSet } from "../lib/accountAuth";
 import { MyPreferencesDialog } from "./MyAccountDialog";
-import { PatientPreferenceForm, PREFS_ANSWERS_KEY } from "./PatientPreferenceForm";
+import {
+  PatientPreferenceForm, isPreferenceFormComplete, readPreferenceRecord,
+} from "./PatientPreferenceForm";
 
 import imgLockAppPages from "../../assets/lock app pages..jpg";
 import imgLanguage from "../../assets/language.jpg";
@@ -59,11 +61,14 @@ const readLS = (k: string): string | null => {
 export function OnboardingWizard({
   admitRef,
   onComplete,
+  onExit,
   onStartTour,
   hidden = false,
 }: {
   admitRef: string | null;
   onComplete: () => void;
+  /** Leaves the wizard for the home screen without finishing setup. */
+  onExit: () => void;
   onStartTour: () => void;
   /** Keeps the wizard mounted (state intact) but invisible — used while
    *  the welcome tour plays on top of it. */
@@ -94,8 +99,10 @@ export function OnboardingWizard({
   const [selLocale, setSelLocale] = useState<Locale>(() => (readLS("careinn-locale") as Locale) || locale || "en");
   /* Driven by the form's own saved answers, not by the wizard's completion
      flag — the flag is written for every finished onboarding, filled form
-     or not. */
-  const [prefsCompleted, setPrefsCompleted] = useState(() => !!readLS(PREFS_ANSWERS_KEY));
+     or not. A submitted record is not enough either: the step only reads as
+     completed once every gated question in it carries an answer. */
+  const [prefsCompleted, setPrefsCompleted] = useState(() =>
+    isPreferenceFormComplete(readPreferenceRecord()));
   const [termsAgreed, setTermsAgreed] = useState(() => !!readLS("careinn-consent-terms-agreed"));
 
   /* reused native flows rendered on top of the wizard */
@@ -439,14 +446,10 @@ export function OnboardingWizard({
 
       {/* ─── Page header (white on brand gradient) ─── */}
       <div className="shrink-0 flex items-center gap-5 px-10 pt-8 pb-5 relative z-10">
-        <HeaderButton
-          onClick={() => {
-            if (stepId !== "consent") {
-              setStepId("consent");
-            }
-          }}
-          ariaLabel={tr("general.close")}
-        >
+        {/* Home — leaves the wizard for the main screen from any step. Answers
+            already made are persisted as they are chosen, so setup can be
+            resumed later from My Preferences. */}
+        <HeaderButton onClick={onExit} ariaLabel={tr("general.home")}>
           <Home size={22} style={{ color: "#fff" }} />
         </HeaderButton>
         <div style={{ width: "1.5px", height: "32px", backgroundColor: "rgba(255,255,255,0.18)", borderRadius: "1px" }} />
@@ -637,7 +640,7 @@ export function OnboardingWizard({
         <PatientPreferenceForm
           variant="modal"
           onClose={() => setOverlay(null)}
-          onSubmitted={() => setPrefsCompleted(true)}
+          onSubmitted={(record) => setPrefsCompleted(isPreferenceFormComplete(record))}
         />
       )}
     </div>

@@ -34,6 +34,7 @@ const translations: Record<string, TranslationEntry> = {
   "general.aboutUs": { en: "About Us", ar: "عن المستشفى", ur: "ہمارے بارے میں" },
   "general.setPreferences": { en: "Set Preferences", ar: "ضبط التفضيلات", ur: "ترجیحات سیٹ کریں" },
   "general.close": { en: "Close", ar: "إغلاق", ur: "بند کریں" },
+  "general.home": { en: "Home", ar: "الرئيسية", ur: "ہوم" },
   "general.cancel": { en: "Cancel", ar: "إلغاء", ur: "منسوخ" },
   "general.logout": { en: "Logout", ar: "تسجيل الخروج", ur: "لاگ آؤٹ" },
   "general.confirm": { en: "Confirm", ar: "تأكيد", ur: "تصدیق کریں" },
