@@ -574,16 +574,22 @@ export function PatientPreferenceForm({
     return localized === key ? theme.hospitalName : localized;
   }, [activeConfigId, theme.hospitalName, t]);
 
-  /* The form always opens unanswered — no pill pre-selected, no note
-     pre-filled, on every screen. It used to load the last submitted record
-     back so a second visit read as a review, but that put a highlighted Yes
-     under a patient who had not chosen anything yet on this visit, which is
-     the one thing an answer control must never do. The record is still
-     written on submit and still readable (readPreferenceRecord), so the
-     wizard's "completed" check and anything downstream are unaffected. */
-  const [answers, setAnswers] = useState<Record<string, PreferenceAnswer>>({});
-  const [comments, setComments] = useState("");
-  const [partner, setPartner] = useState<CarePartnerAgreement>({
+  /* ── One saved record, three doors ───────────────────────────────────
+   * The onboarding step, the wizard's "Review answers" and the home
+   * screen's "Set Preferences" all mount THIS component, which reads and
+   * writes the one record under PREFS_ANSWERS_KEY. There is no per-entry
+   * answer state: what the patient answers behind one door is what the
+   * other two open on.
+   *
+   * So the form opens on whatever is stored — nothing when the patient has
+   * never filled it in (first completion), their own answers when they
+   * have (review/edit). Either way it opens on question 1; restoring picks
+   * up the answers, not the position. */
+  const saved = useMemo(() => readPreferenceRecord(), []);
+  const [answers, setAnswers] = useState<Record<string, PreferenceAnswer>>(
+    () => saved?.answers ?? {});
+  const [comments, setComments] = useState(() => saved?.comments?.text ?? "");
+  const [partner, setPartner] = useState<CarePartnerAgreement>(() => saved?.carePartner ?? {
     name: "", relationship: "", accepted: false, acceptedAt: null,
   });
   const [index, setIndex] = useState(0);
@@ -667,8 +673,8 @@ export function PatientPreferenceForm({
    * the patient never saw. That only works if every screen HAS an answer the
    * patient can give: a yes/no question has its two pills, and a time
    * question is answered by the wheels themselves, which always read as a
-   * time. Nothing is pre-selected, so the gate is what the patient chose on
-   * this visit and nothing else. */
+   * time. On a review the gate is already satisfied by the restored answer,
+   * which is the point: the patient can page through without re-answering. */
   const canAdvance = (() => {
     if (screen.kind === "comments") return true;          // closing screen, optional by design
     if (screen.kind === "carePartner") return partner.accepted;
@@ -685,21 +691,48 @@ export function PatientPreferenceForm({
   };
   const goBack = () => setIndex(Math.max(0, safeIndex - 1));
 
-  const handleSubmit = () => {
-    const record: PreferenceFormRecord = {
-      formVersion: "V12",
-      locale,
-      completedAt: new Date().toISOString(),
-      answers,
-      ...(comments.trim() ? { comments: { text: comments, lang: locale } } : {}),
-      ...(wantsCarePartner ? { carePartner: partner } : {}),
-    };
+  const buildRecord = (completedAt: string): PreferenceFormRecord => ({
+    formVersion: "V12",
+    locale,
+    completedAt,
+    answers,
+    ...(comments.trim() ? { comments: { text: comments, lang: locale } } : {}),
+    ...(wantsCarePartner ? { carePartner: partner } : {}),
+  });
+
+  /** Never throws: a blocked or full store must not trap the patient on a
+   *  screen, so a failed write is simply a lost save. */
+  const persist = (record: PreferenceFormRecord) => {
     try {
       localStorage.setItem(PREFS_ANSWERS_KEY, JSON.stringify(record));
     } catch {
-      /* Storage full / blocked — the patient still completed the form, so
-         never trap them on this screen because of it. */
+      /* ignored by design — see above */
     }
+  };
+
+  /* ── The running save ────────────────────────────────────────────────
+   * Every answer is written as it is given, not held until the last screen.
+   * Reaching the end is not what makes an answer real: the patient can close
+   * the form on question 3, or be pulled away by a nurse, and what they told
+   * us so far still has to be there when they come back.
+   *
+   * completedAt stays whatever the last SUBMITTED record carried — a partial
+   * save must not read as a finished form. Nothing downstream is fooled
+   * either way: isPreferenceFormComplete() measures the answers themselves,
+   * not the presence of a record. */
+  const completedAtRef = useRef(saved?.completedAt ?? "");
+  useEffect(() => {
+    if (submitted) return;   // handleSubmit already wrote the final record
+    const hasAnswer =
+      Object.keys(answers).length > 0 || comments.trim() !== "" || partner.accepted;
+    if (!hasAnswer) return;  // opening and closing an empty form saves nothing
+    persist(buildRecord(completedAtRef.current));
+  }, [answers, comments, partner, submitted]);
+
+  const handleSubmit = () => {
+    const record = buildRecord(new Date().toISOString());
+    completedAtRef.current = record.completedAt;
+    persist(record);
     setSubmitted(true);
     onSubmitted?.(record);
   };
