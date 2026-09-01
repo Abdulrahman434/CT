@@ -2147,6 +2147,26 @@ function BedsideScreen() {
             </div>
           </div>
         )}
+        {/* First-run onboarding wizard — hidden (not unmounted) while the
+            welcome tour plays on top of it. It lives inside the scaled
+            1920×1080 canvas, like the tour it hands over to: its own
+            `fixed inset-0` then resolves against that canvas rather than the
+            window, so the wizard and every dialog it opens (the preference
+            form, PIN setup) are laid out in design pixels and scale with the
+            rest of the screen instead of rendering at raw window size. */}
+        {showOnboarding && (
+          <OnboardingWizard
+            admitRef={currentAdmitRef}
+            hidden={showTour}
+            onComplete={() => setShowOnboarding(false)}
+            /* Home button: leaves setup and lands on the main screen. Nothing is
+               marked complete, so an unfinished setup still greets the patient
+               next session and stays reachable from My Preferences. */
+            onExit={() => setShowOnboarding(false)}
+            onStartTour={() => setShowTour(true)}
+          />
+        )}
+
         </ToastProvider>
       </div>
 
@@ -2321,21 +2341,6 @@ function BedsideScreen() {
           }
         `}</style>
       <RippleStyles />
-
-      {/* First-run onboarding wizard — hidden (not unmounted) while the
-          welcome tour plays on top of it */}
-      {showOnboarding && (
-        <OnboardingWizard
-          admitRef={currentAdmitRef}
-          hidden={showTour}
-          onComplete={() => setShowOnboarding(false)}
-          /* Home button: leaves setup and lands on the main screen. Nothing is
-             marked complete, so an unfinished setup still greets the patient
-             next session and stays reachable from My Preferences. */
-          onExit={() => setShowOnboarding(false)}
-          onStartTour={() => setShowTour(true)}
-        />
-      )}
 
       <Toaster position="bottom-center" />
     </div>
