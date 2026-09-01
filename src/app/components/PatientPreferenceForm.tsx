@@ -29,24 +29,25 @@ import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
  *   footer (Back / Next)          ~104px
  *
  * Arabic and Urdu run longer than English, so every size below is chosen for
- * the longest of the three, not for English. The tallest screen is a wrapped
- * question with its optional note open — measure that case, not a one-line
- * English question, before trusting a change to the budget.
+ * the longest of the three, not for English. The tallest screen is Q5, the
+ * doctors' rounds question: a wrapped question over the wheel picker, which
+ * is taller than a wrapped question over pills and an open note. Measure that
+ * one, not a one-line English question, before trusting a change to the
+ * budget.
  *
- * ANSWERS — one shape for the whole form. Every question is yes/no with an
- * optional note, except the favourite-colour question, which is free text.
- * The note is not a reveal: on every yes/no question but the two timing ones
- * it is on screen from the moment the question is, in a fixed place under the
- * pills, so tapping Yes or No changes the pills and nothing else. That makes
- * the note-open case the ONLY case to measure — there is no shorter variant
- * of those screens to fall back on.
- * There is no time picker and no multi-option control any more: a question
- * that used to ask "what time would you prefer?" now states the standard time
- * and asks whether it suits, and the note carries the alternative. That keeps
- * the answer language-neutral and the screen the same height everywhere.
- * TimeWheelPicker and the `choice` branch are still wired into renderControl
- * but no question reaches them — restoring one is a change to the question
- * list alone.
+ * ANSWERS — three shapes. Most questions are yes/no with an optional note;
+ * the favourite-colour question is free text; and the two timing questions
+ * (Q5 doctors' rounds, Q10 daily bath) are asked open-ended and answered on
+ * the wheel time picker alone — no pills, no note, the wheel on screen from
+ * the moment the question is. Their answer is a time, so a yes/no over a note
+ * would only ask the patient to write in words what the wheel records exactly.
+ * The note is not a reveal either: on every yes/no question it is on screen
+ * from the moment the question is, in a fixed place under the pills, so
+ * tapping Yes or No changes the pills and nothing else. That makes the
+ * note-open case the ONLY case to measure — there is no shorter variant of
+ * those screens to fall back on.
+ * The `choice` branch is still wired into renderControl but no question
+ * reaches it — restoring one is a change to the question list alone.
  *
  * TYPOGRAPHY — one hierarchy, one source. Section chip (TYPE_SCALE.base,
  * semibold) sits under the question (TYPE_SCALE.lg, semibold), which sits
@@ -130,20 +131,6 @@ interface QuestionDef {
   kind: ControlKind;
   /** Option ids for `choice` questions (stored verbatim, translated for display). */
   options?: readonly string[];
-  /** Set ONLY on a question whose note is conditional: the box appears when
-   *  the answer is this one, and stays away otherwise.
-   *
-   *  Left unset — every yes/no question but the two timing ones — the note is
-   *  always on screen, in the same place under the pills, whichever pill is
-   *  chosen and even before either is. A box that appears and vanishes as the
-   *  patient taps moves the ground under them and reads as a demand to justify
-   *  the answer they just gave; a box that is simply always there reads as an
-   *  invitation, and the screen keeps one height instead of two.
-   *
-   *  The two timing questions ("rounds are 8-12, does that suit you?") keep the
-   *  conditional form on purpose: their note IS the alternative time, so it has
-   *  nothing to hold until the patient has said "no". */
-  noteWhen?: YesNo;
 }
 
 interface SectionDef {
@@ -208,7 +195,7 @@ const SECTIONS: readonly SectionDef[] = [
     id: "handover",
     icon: Clock,
     questions: [
-      { id: "handover.roundTime", kind: "yesno", noteWhen: "no" },
+      { id: "handover.roundTime", kind: "time" },
       { id: "handover.presence", kind: "yesno" },
     ],
   },
@@ -225,7 +212,7 @@ const SECTIONS: readonly SectionDef[] = [
     icon: ShieldCheck,
     questions: [
       { id: "comfort.grooming", kind: "yesno" },
-      { id: "comfort.bathingTime", kind: "yesno", noteWhen: "no" },
+      { id: "comfort.bathingTime", kind: "time" },
       { id: "comfort.rights", kind: "yesno" },
     ],
   },
@@ -750,44 +737,42 @@ export function PatientPreferenceForm({
   /** The optional note every yes/no question carries.
    *
    *  It sits in one fixed place — directly under the pills, same width, same
-   *  height — and on all but the two timing questions it is there from the
-   *  moment the screen opens, before either pill is tapped and whichever one
-   *  is. Nothing below it moves when the answer changes, so a patient who
-   *  taps Yes then No sees the pills swap highlight and nothing else. See
-   *  `noteWhen` on QuestionDef for why the timing pair still reveals.
+   *  height — and it is there from the moment the screen opens, before either
+   *  pill is tapped and whichever one is. Nothing below it moves when the
+   *  answer changes, so a patient who taps Yes then No sees the pills swap
+   *  highlight and nothing else. Nothing reveals it and nothing hides it: a
+   *  box that appears and vanishes as the patient taps moves the ground under
+   *  them and reads as a demand to justify the answer they just gave, where a
+   *  box that is simply always there reads as an invitation.
    *
    *  A field that is always present has to say what it is, so it carries a
-   *  visible "Notes · Optional" label; a conditional one is explained by the
-   *  answer that opened it and keeps its placeholder alone.
+   *  visible "Notes · Optional" label.
    *
    *  Optional in the strict sense: it is not part of canAdvance, so leaving it
    *  empty can never hold the patient on the screen. Each question gets its own
    *  prompt, falling back to the generic one, so the box always says what
    *  belongs in it. */
   const renderNote = (q: QuestionDef) => {
-    if (q.noteWhen && answers[q.id]?.value !== q.noteWhen) return null;
     const key = `ppf.note.${q.id}`;
     const prompt = t(key);
     const fieldId = `ppf-note-${q.id}`;
     return (
       <div style={{ width: "100%", maxWidth: "760px" }}>
-        {!q.noteWhen && (
-          <label
-            htmlFor={fieldId}
-            style={{
-              display: "block",
-              marginBottom: "6px",
-              fontFamily,
-              fontSize: TYPE_SCALE.sm,
-              fontWeight: WEIGHT.semibold,
-              color: theme.textMuted,
-              letterSpacing: "0.02em",
-              textAlign: isRTL ? "right" : "left",
-            }}
-          >
-            {t("ppf.notes.optionalLabel")}
-          </label>
-        )}
+        <label
+          htmlFor={fieldId}
+          style={{
+            display: "block",
+            marginBottom: "6px",
+            fontFamily,
+            fontSize: TYPE_SCALE.sm,
+            fontWeight: WEIGHT.semibold,
+            color: theme.textMuted,
+            letterSpacing: "0.02em",
+            textAlign: isRTL ? "right" : "left",
+          }}
+        >
+          {t("ppf.notes.optionalLabel")}
+        </label>
         <textarea
           id={fieldId}
           rows={2}
