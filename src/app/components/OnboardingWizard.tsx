@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { useTheme, SHADOW, buildTheme } from "./ThemeContext";
+import { useTheme, SHADOW, SPACE, TYPE_SCALE, WEIGHT, LEADING, buildTheme } from "./ThemeContext";
 import { useLocale, type Locale } from "./i18n";
 import { toast } from "sonner";
 import {
@@ -53,6 +53,15 @@ const STEP_ICONS: Record<StepId, any> = {
   prefsForm: ClipboardList,
   consent: FileCheck2,
 };
+
+/* The welcome photo owns half the card; the text column centres in the half
+ * that is left, in both reading directions. */
+const HERO_SHARE = "50%";
+
+/* One measure for every step — the same 760px the preference form caps its
+ * questions at, so the two screens read as one design on the 1920×1080
+ * canvas the wizard now lays out in. */
+const CONTENT_MAX_W = "760px";
 
 const readLS = (k: string): string | null => {
   try { return localStorage.getItem(k); } catch { return null; }
@@ -136,6 +145,19 @@ export function OnboardingWizard({
 
   /* ═══════════════════ shared UI bits ═══════════════════ */
 
+  /** The descriptive paragraph on the intro-style steps (welcome, prefsForm,
+   *  the PIN note). It carries no margin of its own: the spacing between the
+   *  icon, the heading, this paragraph and the buttons is the column's single
+   *  gap, so no step can drift out of rhythm with the others. */
+  const INTRO_BODY: React.CSSProperties = {
+    fontFamily,
+    fontSize: TYPE_SCALE.md,
+    color: t.textBody,
+    textAlign: "center",
+    lineHeight: LEADING.relaxed,
+    margin: 0,
+  };
+
   /** Large, tappable answer card. */
   const OptionCard = ({
     selected, onClick, icon, label, sublabel,
@@ -200,14 +222,14 @@ export function OnboardingWizard({
       disabled={disabled}
       className="ob-primary flex items-center justify-center w-full"
       style={{
-        height: "58px",
+        height: SPACE[8],
         backgroundColor: t.primary,
         borderRadius: t.radiusLg,
         border: "none",
         color: "#FFFFFF",
         fontFamily,
-        fontWeight: 700,
-        fontSize: "17px",
+        fontWeight: WEIGHT.bold,
+        fontSize: TYPE_SCALE.base,
         boxShadow: disabled ? "none" : SHADOW.md,
         opacity: disabled ? 0.4 : 1,
         cursor: disabled ? "default" : "pointer",
@@ -222,14 +244,14 @@ export function OnboardingWizard({
       onClick={onClick}
       className="flex items-center justify-center w-full cursor-pointer active:scale-[0.98] transition-transform"
       style={{
-        height: "58px",
+        height: SPACE[8],
         backgroundColor: "transparent",
         borderRadius: t.radiusLg,
         border: `1.5px solid ${t.borderDefault}`,
         color: t.textMuted,
         fontFamily,
-        fontWeight: 600,
-        fontSize: "17px",
+        fontWeight: WEIGHT.semibold,
+        fontSize: TYPE_SCALE.base,
       }}
     >
       {label}
@@ -288,10 +310,9 @@ export function OnboardingWizard({
       case "welcome":
         return (
           <>
-            <p style={{ fontFamily, fontSize: "18px", color: t.textBody, textAlign: "center", lineHeight: 1.65, margin: "0 0 8px" }}>
+            <p style={INTRO_BODY}>
               {tr("onboarding.welcome.body")}
             </p>
-            <div style={{ height: "8px" }} />
             <PrimaryButton label={tr("onboarding.welcome.start")} onClick={() => goNext()} />
           </>
         );
@@ -299,7 +320,7 @@ export function OnboardingWizard({
       case "language":
         return (
           <>
-            <div className="grid grid-cols-2 gap-4 w-full" style={{ marginBottom: "8px" }}>
+            <div className="grid grid-cols-2 gap-4 w-full">
               <OptionCard
                 selected={selLocale === "en"}
                 onClick={() => applyLocale("en")}
@@ -326,7 +347,7 @@ export function OnboardingWizard({
         return (
           <>
             {isAccountSet() && (
-              <p style={{ fontFamily, fontSize: "15px", color: t.textMuted, textAlign: "center", margin: "0 0 8px" }}>
+              <p style={{ ...INTRO_BODY, fontSize: TYPE_SCALE.base, color: t.textMuted }}>
                 {tr("onboarding.pin.alreadySet")}
               </p>
             )}
@@ -343,7 +364,7 @@ export function OnboardingWizard({
       case "prefsForm":
         return (
           <>
-            <p style={{ fontFamily, fontSize: "18px", color: t.textBody, textAlign: "center", lineHeight: 1.65, margin: "0 0 8px" }}>
+            <p style={INTRO_BODY}>
               {tr("onboarding.prefsForm.body")}
             </p>
             {prefsCompleted && (
@@ -382,7 +403,7 @@ export function OnboardingWizard({
       case "consent":
         return (
           <>
-            <div className="flex flex-col gap-3 w-full" style={{ marginBottom: "8px" }}>
+            <div className="flex flex-col gap-3 w-full">
               <ConsentCheckbox
                 checked={termsAgreed}
                 onToggle={() => setTermsAgreed(!termsAgreed)}
@@ -401,6 +422,7 @@ export function OnboardingWizard({
   };
 
   const Icon = STEP_ICONS[stepId];
+  const isWelcome = stepId === "welcome";
   const totalSteps = STEP_SEQUENCE.length;
   const progress = totalSteps > 1 ? (stepIndex + 1) / totalSteps : 1;
 
@@ -497,35 +519,6 @@ export function OnboardingWizard({
             border: t.cardBorder,
           }}
         >
-          {/* Welcome step split hero image (fades out smoothly) */}
-          <div
-            className="absolute inset-y-0 w-1/2 overflow-hidden pointer-events-none z-0"
-            style={{
-              right: 0,
-              left: "auto",
-              opacity: stepId === "welcome" ? 1 : 0,
-              transition: "opacity 0.4s ease-in-out",
-            }}
-          >
-            <img
-              src={t.heroImageUrl}
-              alt="Hospital Hero"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                objectPosition: t.heroCropPosition || "50% 50%",
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: `linear-gradient(to left, transparent 0%, ${t.surface} 100%)`,
-              }}
-            />
-          </div>
-
           {/* Stacked background images for smooth cross-fade transition */}
           {Object.entries(STEP_BACKGROUNDS).map(([id, src]) => {
             const isActive = stepId === id;
@@ -555,7 +548,7 @@ export function OnboardingWizard({
               >
                 <ChevronLeft size={22} style={{ color: t.textHeading, transform: isRTL ? "rotate(180deg)" : "" }} />
               </button>
-            ) : <div style={{ width: "44px" }} />}
+            ) : <div className="shrink-0" style={{ width: "44px", height: "44px" }} />}
             <div className="flex-1">
               <div style={{ height: "8px", borderRadius: "100px", backgroundColor: t.tileInactiveBg, overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${progress * 100}%`, backgroundColor: t.primary, borderRadius: "100px", transition: "width 0.25s ease" }} />
@@ -568,32 +561,67 @@ export function OnboardingWizard({
 
           {/* centered step body */}
           <div
-            className="flex-1 min-h-0 flex flex-col justify-center px-10 py-8 relative z-10"
+            className="flex-1 min-h-0 flex flex-col justify-center items-center relative z-10"
             style={{
-              alignItems: stepId === "welcome" ? "flex-start" : "center",
-              paddingLeft: stepId === "welcome" ? "8%" : "2.5rem",
-              paddingRight: "2.5rem",
-              direction: stepId === "welcome" ? "ltr" : undefined,
+              paddingTop: SPACE[4],
+              paddingBottom: SPACE[4],
+              /* The welcome photo is pinned to the right edge in both reading
+                 directions, so the text panel is the half of the card the photo
+                 does not cover and the column centres inside that half rather
+                 than inside the whole card. */
+              paddingLeft: isWelcome ? 0 : SPACE[5],
+              paddingRight: isWelcome ? HERO_SHARE : SPACE[5],
             }}
           >
-            <div 
-              key={stepId} 
-              className="flex flex-col items-center w-full" 
-              style={{ 
-                maxWidth: "620px", 
+            {/* Welcome step photo panel. It sits in the body rather than the
+                card so it starts below the progress strip instead of running
+                under the step counter and swallowing it. */}
+            <div
+              className="absolute inset-y-0 w-1/2 overflow-hidden pointer-events-none z-0"
+              style={{
+                right: 0,
+                left: "auto",
+                opacity: isWelcome ? 1 : 0,
+                transition: "opacity 0.4s ease-in-out",
+              }}
+            >
+              <img
+                src={t.heroImageUrl}
+                alt="Hospital Hero"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: t.heroCropPosition || "50% 50%",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: `linear-gradient(to left, transparent 0%, ${t.surface} 100%)`,
+                }}
+              />
+            </div>
+
+            <div
+              key={stepId}
+              className="flex flex-col items-center w-full relative z-10"
+              style={{
+                maxWidth: CONTENT_MAX_W,
+                gap: SPACE[3],
                 animation: "obStepIn 0.25s ease-out",
-                direction: stepId === "welcome" && isRTL ? "rtl" : undefined,
               }}
             >
               <div
-                className="flex items-center justify-center"
-                style={{ width: "80px", height: "80px", borderRadius: t.radiusFull, backgroundColor: t.primarySubtle, marginBottom: "22px" }}
+                className="flex items-center justify-center shrink-0"
+                style={{ width: "96px", height: "96px", borderRadius: t.radiusFull, backgroundColor: t.primarySubtle }}
               >
                 {typeof Icon === "string" ? (
                   <div
                     style={{
-                      width: "38px",
-                      height: "38px",
+                      width: "44px",
+                      height: "44px",
                       backgroundColor: t.primary,
                       WebkitMaskImage: `url(${Icon})`,
                       maskImage: `url(${Icon})`,
@@ -606,15 +634,15 @@ export function OnboardingWizard({
                     }}
                   />
                 ) : (
-                  <Icon size={38} style={{ color: t.primary }} />
+                  <Icon size={44} style={{ color: t.primary }} />
                 )}
               </div>
               <h3
-                style={{ fontFamily, fontSize: "28px", fontWeight: 800, color: t.textHeading, textAlign: "center", lineHeight: "34px", marginBottom: "24px" }}
+                style={{ fontFamily, fontSize: TYPE_SCALE["2xl"], fontWeight: WEIGHT.extrabold, color: t.textHeading, textAlign: "center", lineHeight: LEADING.snug, margin: 0 }}
               >
                 {tr(`onboarding.${stepId}.title`)}
               </h3>
-              <div className="w-full flex flex-col gap-4">{renderStep()}</div>
+              <div className="w-full flex flex-col" style={{ gap: SPACE[3] }}>{renderStep()}</div>
             </div>
 
           </div>
