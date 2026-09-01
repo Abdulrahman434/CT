@@ -52,6 +52,10 @@ import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
  * tapping Yes or No changes the pills and nothing else. That makes the
  * note-open case the ONLY case to measure — there is no shorter variant of
  * those screens to fall back on.
+ * "In advance" covers sittings as well as screens: the saved record is scoped
+ * to the admission that wrote it, so a form filled in by an earlier stay — or
+ * by a demo before the device reached the ward — opens blank rather than
+ * pre-answered. See readPreferenceRecord().
  * The `choice` and `text` branches are still wired into renderControl but no
  * question reaches either — restoring one is a change to the question list
  * alone. `text` was last used by the favourite-colour question, removed from
@@ -124,9 +128,34 @@ export interface PreferenceFormRecord {
   /** Locale the form was presented and answered in. */
   locale: Locale;
   completedAt: string;
+  /** The admission these answers were given during — see admissionKey().
+   *  Records written before this field existed carry no admission, and are
+   *  treated as another stay's for exactly that reason. */
+  admission?: string;
   answers: Record<string, PreferenceAnswer>;
   comments?: NoteValue;
   carePartner?: CarePartnerAgreement;
+}
+
+/** Who the bed currently holds, as one comparable string.
+ *
+ *  MRN and admission reference are both written by App.tsx from the HL7 device
+ *  lookup on every poll; either alone identifies a stay, so both are used and
+ *  a change in either is a different patient. Where there is no HIS to ask — a
+ *  dev browser, or a kiosk with the API down — the key is empty for everyone,
+ *  which is the honest answer: with no patient identity available there is
+ *  nothing to tell two patients apart, so the record is kept rather than
+ *  discarded on a guess.
+ *
+ *  Never throws: a blocked store reads as "no admission". */
+export function admissionKey(): string {
+  try {
+    const mrn = (localStorage.getItem("careinn-last-mrn") ?? "").trim().toLowerCase();
+    const admitRef = (localStorage.getItem("careinn-last-admit-ref") ?? "").trim();
+    return mrn + "|" + admitRef;
+  } catch {
+    return "|";
+  }
 }
 
 /** Was stored when the patient tapped "No preference". Nothing writes it any
@@ -242,14 +271,34 @@ const SECTIONS: readonly SectionDef[] = [
 /** The question whose "yes" inserts the care-partner agreement screen. */
 const CARE_PARTNER_TRIGGER = "partner.participate";
 
-/** The last submitted record, or null when the form has never been finished.
+/** This admission's saved record, or null when there is none.
+ *
+ *  ONE STAY, ONE RECORD. The store holds a single record and the form seeds
+ *  itself from whatever it returns, so anything this function hands back is
+ *  shown to the patient as pills they appear to have already tapped. That is
+ *  right for the patient who tapped them — they closed the form at question 3,
+ *  or came back through "Review answers" — and wrong for everyone else: a
+ *  record left behind by the previous occupant of the bed, or by a demo or a
+ *  test run before the device was handed over, opened question 3 with "No"
+ *  already highlighted for a patient who had never seen the question. An
+ *  answer nobody gave reaches the care plan as a choice they made, which is
+ *  the same failure the time wheel was fixed for (see TimeWheelPicker).
+ *
+ *  So the record is scoped to the admission that wrote it. A different stay —
+ *  or a record from before this field existed, which cannot be shown to belong
+ *  to this one — reads as no record at all, and the form opens blank.
+ *
+ *  It is not deleted: it is the previous patient's data, and dropping it is
+ *  clearEverything()'s job on discharge, not a side effect of a read.
+ *
  *  Never throws: a blocked or corrupt store reads as "no record". */
 export function readPreferenceRecord(): PreferenceFormRecord | null {
   try {
     const raw = localStorage.getItem(PREFS_ANSWERS_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as PreferenceFormRecord;
-    return parsed && typeof parsed === "object" && parsed.answers ? parsed : null;
+    if (!parsed || typeof parsed !== "object" || !parsed.answers) return null;
+    return parsed.admission === admissionKey() ? parsed : null;
   } catch {
     return null;
   }
@@ -581,10 +630,13 @@ export function PatientPreferenceForm({
    * answer state: what the patient answers behind one door is what the
    * other two open on.
    *
-   * So the form opens on whatever is stored — nothing when the patient has
-   * never filled it in (first completion), their own answers when they
-   * have (review/edit). Either way it opens on question 1; restoring picks
-   * up the answers, not the position. */
+   * So the form opens on whatever THIS admission has stored — nothing when
+   * the patient has never filled it in (first completion), their own answers
+   * when they have (review/edit). "Their own" is the whole of it: a record
+   * belonging to an earlier stay is not this patient's answer to anything, and
+   * readPreferenceRecord() returns null for it, so the pills open unselected.
+   * Either way it opens on question 1; restoring picks up the answers, not the
+   * position. */
   const saved = useMemo(() => readPreferenceRecord(), []);
   const [answers, setAnswers] = useState<Record<string, PreferenceAnswer>>(
     () => saved?.answers ?? {});
@@ -695,6 +747,9 @@ export function PatientPreferenceForm({
     formVersion: "V12",
     locale,
     completedAt,
+    /* Stamped on every write, not read back from `saved`: the record belongs
+       to whoever is in the bed as it is written. */
+    admission: admissionKey(),
     answers,
     ...(comments.trim() ? { comments: { text: comments, lang: locale } } : {}),
     ...(wantsCarePartner ? { carePartner: partner } : {}),
