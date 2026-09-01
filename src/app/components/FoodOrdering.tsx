@@ -9,6 +9,7 @@ import {
   AlertTriangle, X, Plus, ShieldAlert, Sparkles, CheckCircle2, Circle, SlidersHorizontal, Trash2,
 } from "lucide-react";
 import { InternalPageHeader } from "./InternalPageHeader";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { useTheme, TYPE_SCALE, WEIGHT, TEXT_STYLE, SHADOW } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
@@ -300,7 +301,7 @@ function tintHex(hex: string, amount = 0.92): string {
 export function FoodOrdering({ onClose, initialView }: { onClose: () => void; initialView?: "order" | "my-orders" }) {
   const { theme } = useTheme();
 
-  const { isRTL, fontFamily } = useLocale();
+  const { t, isRTL, fontFamily } = useLocale();
   const { placeOrder, activeOrders, pastOrders, orders, clearOpenOrders } = useOrders();
   const { showToast } = useToast();
 
@@ -312,6 +313,9 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
   const [selections, setSelections] = useState<Selections>({});
   const [lastOrderNumber, setLastOrderNumber] = useState("");
   const [kidsBreakfastType, setKidsBreakfastType] = useState<KidsBreakfastType>(null);
+  /* Guards the one irreversible action in the flow: submitting sends the
+     basket to the kitchen and there is no way back from it. */
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   /* ── The three-day pending order ──────────────────────────────────────
    * Choosing meals fills a basket; nothing reaches the kitchen until the
@@ -484,6 +488,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
   /** The explicit submit. Everything in the basket goes to the kitchen now —
    *  nothing was sent while the patient was still choosing. */
   const handleSubmitOrder = useCallback(() => {
+    setShowSubmitConfirm(false);
     if (pendingMeals.length === 0) return;
     const ordered = [...pendingMeals].sort(
       (a, b) => a.dayOffset - b.dayOffset || a.mealId.localeCompare(b.mealId),
@@ -795,7 +800,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
                   {isRTL ? "طلباتي" : "View My Orders"}
                 </p>
                 <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: theme.textMuted, marginTop: 8 }}>
-                  {isRTL ? "عرض وتعديل طلباتك" : "View and edit your orders"}
+                  {isRTL ? "عرض طلباتك" : "View your orders"}
                 </p>
               </div>
             </button>
@@ -828,7 +833,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
                   label: isRTL
                     ? `إرسال الطلب (${pendingMeals.length})`
                     : `Place order (${pendingMeals.length})`,
-                  onClick: handleSubmitOrder,
+                  onClick: () => setShowSubmitConfirm(true),
                 }
               : undefined
           }
@@ -924,6 +929,16 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
         onClearAllergies={() => nurseActions.setAllergies([])}
         fontFamily={fontFamily}
         isRTL={isRTL}
+      />
+
+      {/* ─── SUBMIT CONFIRMATION ─── */}
+      {/* The last point at which the basket can still be changed. Confirming
+          sends it to the kitchen; from then on the order is final. */}
+      <ConfirmDialog
+        visible={showSubmitConfirm}
+        message={t("food.submitConfirm.message")}
+        onConfirm={handleSubmitOrder}
+        onCancel={() => setShowSubmitConfirm(false)}
       />
     </motion.div>
   );
@@ -2948,9 +2963,6 @@ function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL, meals }: {
           </div>
         ) : (
           display.map((order) => {
-            // Check if this order can be edited (today + window still open)
-            const orderDate = order.placedAt instanceof Date ? order.placedAt : new Date(order.placedAt);
-            const isToday = orderDate.toDateString() === new Date().toDateString();
             const mealId = order.mealId || order.mealType?.toLowerCase();
             const mealDef = meals?.find((m) => m.id === mealId);
 

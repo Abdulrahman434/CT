@@ -263,6 +263,15 @@ const translations: Record<string, TranslationEntry> = {
   "toast.meal.breakfast": { en: "Breakfast", ar: "الفطور", ur: "ناشتہ" },
   "toast.meal.lunch": { en: "Lunch", ar: "الغداء", ur: "دوپہر کا کھانا" },
 
+  /* ─── Meal Ordering ─── */
+  /* Shown when the patient taps "Place order". Submitting is final: the
+     kitchen has the order and there is no edit path anywhere in the flow. */
+  "food.submitConfirm.message": {
+    en: "Once you submit, you won't be able to change your order. Are you sure you want to continue?",
+    ar: "بمجرد الإرسال، لن تتمكن من تغيير طلبك. هل أنت متأكد أنك تريد المتابعة؟",
+    ur: "ایک بار جمع کرانے کے بعد، آپ اپنا آرڈر تبدیل نہیں کر سکیں گے۔ کیا آپ واقعی جاری رکھنا چاہتے ہیں؟",
+  },
+
   /* ─── Idle Screen ─── */
   "idle.welcome": { en: "Welcome to {0}", ar: "مرحباً بك في {0}", ur: "{0} میں خوش آمدید" },
   "idle.ready": { en: "This bedside terminal is ready for use.", ar: "هذه الشاشة جاهزة للاستخدام.", ur: "یہ بیڈ سائیڈ ٹرمینل استعمال کے لیے تیار ہے۔" },
