@@ -50,17 +50,23 @@ import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
  * reaches it — restoring one is a change to the question list alone.
  *
  * TYPOGRAPHY — one hierarchy, one source. Section chip (TYPE_SCALE.base,
- * semibold) sits under the question (TYPE_SCALE.lg, semibold), which sits
- * over the answer pills (TYPE_SCALE.md). Every question heading on every
+ * semibold) sits under the question (TYPE_SCALE.md, semibold), which sits
+ * over the answer pills (TYPE_SCALE.base). Every question heading on every
  * screen reads its style from the single `questionHeading` object below;
  * nothing sets question type per screen, so no screen can drift from the
  * rest.
  *
- * Question text is TYPE_SCALE.lg (26px) at the 1920x1080 design scale, and
+ * The steps between those three are deliberately one scale notch each. A
+ * questionnaire is not a poster: the reader already knows the big centred
+ * line is the question, so rank is all the size difference has to carry, and
+ * anything wider makes the short questions look shouted and the long ones
+ * look like a wall.
+ *
+ * Question text is TYPE_SCALE.md (22px) at the 1920x1080 design scale, and
  * that is the floor for this screen rather than a starting point: patients
  * here are elderly or unwell, so anything under ~20px is not readable from a
- * bed. If a future translation stops fitting, widen the body or cut words —
- * do not go under it.
+ * bed. If a future translation stops fitting, cut words or let it wrap — do
+ * not go under it.
  *
  * COLOUR — no hex literals anywhere. Every content icon is the per-hospital
  * secondary on a theme.accentSubtle chip, so icons re-brand with the active
@@ -670,22 +676,35 @@ export function PatientPreferenceForm({
    *  have one question type: change this object and every screen moves with
    *  it.
    *
-   *  Semibold rather than bold: at TYPE_SCALE.lg the question is already the
-   *  largest thing on the card, and 700 on top of that read as a banner
-   *  shouting over its own answers. 600 keeps the question clearly dominant
-   *  over the section chip above it (TYPE_SCALE.base) and the answer pills
-   *  below it (TYPE_SCALE.md) without borrowing weight the hierarchy does not
-   *  need. Snug leading is what holds a question wrapping to three or four
-   *  lines to the same rhythm as a one-line one, so long and short screens
-   *  sit at the same visual density. */
+   *  The four values are one set, and they are chosen for the *longest*
+   *  question rather than the shortest — anything sized to look right on
+   *  "What time do you usually wake up?" turns Q6 into a wall of text.
+   *
+   *  md, not lg: the question only has to out-rank the section chip above it
+   *  (base) and the answer pills below it (base). One step in each direction
+   *  reads as a hierarchy; past that the question stops being a question and
+   *  starts being a headline.
+   *
+   *  Semibold, not bold: at 600 the question is plainly the primary text on
+   *  the card without the shouting 700 adds at this size.
+   *
+   *  Normal leading, not snug: 1.3 is a display value, and it packs a
+   *  four-line question into a dense block. 1.5 gives every wrapped line the
+   *  air a one-line question already has, which is what makes a long screen
+   *  and a short one feel like the same form.
+   *
+   *  760px, not 1180px: it caps the measure at roughly 60 characters instead
+   *  of ~95, so a long question wraps to more, shorter lines rather than
+   *  spanning the card. It is also the width the note fields and free-text
+   *  boxes below already use, so question and answer share one column. */
   const questionHeading = {
     fontFamily,
-    fontSize: TYPE_SCALE.lg,
+    fontSize: TYPE_SCALE.md,
     fontWeight: WEIGHT.semibold,
     color: theme.textHeading,
-    lineHeight: LEADING.snug,
+    lineHeight: LEADING.normal,
     textAlign: "center" as const,
-    maxWidth: "1180px",
+    maxWidth: "760px",
   };
 
   /** Selectable pill — same geometry as the concern "area" chips. */
@@ -701,7 +720,10 @@ export function PatientPreferenceForm({
         border: selected ? `2px solid ${theme.accent}` : `1.5px solid ${theme.borderDefault}`,
         backgroundColor: selected ? theme.accentSubtle : theme.surface,
         fontFamily,
-        fontSize: TYPE_SCALE.md,
+        /* One step under the question, so the answers read as answers to it
+           rather than as a second heading. The pill's geometry is unchanged —
+           its padding, radius and border above are what size it. */
+        fontSize: TYPE_SCALE.base,
         fontWeight: selected ? WEIGHT.bold : WEIGHT.medium,
         color: selected ? iconColor : theme.textBody,
         outline: "none",
