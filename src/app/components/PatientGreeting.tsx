@@ -4,7 +4,7 @@ import { isAndroidApp, getDeviceInfo } from "../utils/androidBridge";
 import { useTheme, WEIGHT, SHADOW, TEXT_STYLE, SPACE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { useRipple } from "./useRipple";
-import { HelpCircle, LogOut } from "lucide-react";
+import { HelpCircle, LogOut, SlidersHorizontal } from "lucide-react";
 import { AutoCarousel } from "./AutoCarousel";
 import { useNurseStore } from "./NurseDataStore";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -18,7 +18,7 @@ function AboutUsIcon({ color }: { color?: string }) {
   const { theme } = useTheme();
   const iconColor = color || theme.primary;
   return (
-    <div className="relative shrink-0 size-[20px]">
+    <div className="relative shrink-0 size-[18px]">
       <svg className="block size-full" fill="none" viewBox="0 0 20 20">
         <g clipPath="url(#clip_about_greeting)">
           <path d={svgPaths.p14d24500} stroke={iconColor} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.66667" />
@@ -274,7 +274,7 @@ export function PatientGreeting({
         {showAboutUs && (
           <button
             data-nav="true"
-            className="flex flex-1 min-w-0 items-center justify-center gap-2 py-3 cursor-pointer transition-transform duration-150"
+            className="flex flex-1 min-w-0 items-center justify-center gap-1.5 py-3 cursor-pointer transition-transform duration-150"
             style={{
               backgroundColor: pressed ? theme.primaryDark : theme.primary,
               transform: pressed ? "scale(0.96)" : "scale(1)",
@@ -302,7 +302,9 @@ export function PatientGreeting({
                 fontFamily: fontFamily,
                 ...TEXT_STYLE.buttonSm,
                 color: theme.textInverse,
-                letterSpacing: "0.3px",
+                /* Latin only: letter-spacing pulls apart the joined forms of Arabic and
+                 Urdu, and the Urdu label needs every pixel beside the icon. */
+              letterSpacing: isRTL ? "0" : "0.3px",
                 whiteSpace: "nowrap",
               }}
             >
@@ -313,7 +315,7 @@ export function PatientGreeting({
 
         <button
           data-nav="true"
-          className="flex flex-1 min-w-0 items-center justify-center gap-2 py-3 cursor-pointer transition-transform duration-150"
+          className="flex flex-1 min-w-0 items-center justify-center gap-1.5 py-3 cursor-pointer transition-transform duration-150"
           style={{
             backgroundColor: theme.primarySubtle,
             transform: prefsPressed ? "scale(0.96)" : "scale(1)",
@@ -335,14 +337,20 @@ export function PatientGreeting({
           }}
           onPointerLeave={() => setPrefsPressed(false)}
         >
-          {/* No leading icon: with one, the Urdu label leaves 2px of slack in
-              the 400px column and would clip on a narrower panel. */}
+          {/* Paired with the info glyph on About Us: same 20px box, same
+              1.67 stroke, so the two buttons read as one row. The Urdu label
+              is the tight one — icon, gap and label together leave the least
+              slack in the 400px column, so measure ur before changing any of
+              the three. */}
+          <SlidersHorizontal size={18} strokeWidth={1.667} color={theme.primary} className="shrink-0" />
           <span
             style={{
               fontFamily: fontFamily,
               ...TEXT_STYLE.buttonSm,
               color: theme.primary,
-              letterSpacing: "0.3px",
+              /* Latin only: letter-spacing pulls apart the joined forms of Arabic and
+                 Urdu, and the Urdu label needs every pixel beside the icon. */
+              letterSpacing: isRTL ? "0" : "0.3px",
               whiteSpace: "nowrap",
             }}
           >

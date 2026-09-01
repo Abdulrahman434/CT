@@ -6,8 +6,6 @@ import {
   ShieldCheck, MessageSquarePlus, Check, CheckCircle2,
   ChevronLeft, ChevronRight, X,
 } from "lucide-react";
-import { InternalPageHeader } from "./InternalPageHeader";
-import { ApiImage } from "./ApiImage";
 import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -16,29 +14,37 @@ import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
  * Replaces the old welcome slideshow in the onboarding consent step. Filled
  * within 24 hours of admission so patient preferences reach the care plan.
  *
- * LAYOUT — ONE QUESTION PER SCREEN, NEVER SCROLLS.
- * Designed against the kiosk's fixed 1920×1080 canvas (DESIGN_W / DESIGN_H in
- * App.tsx), which useScreenScale() scales to the physical panel. The card body
- * is `overflow: hidden` on purpose: if a translation ever outgrows its screen
- * the content clips visibly instead of silently growing a scrollbar, so the
- * regression is caught rather than shipped. Vertical budget per screen:
+ * LAYOUT — ONE QUESTION PER SCREEN, IN A CONTAINED DIALOG.
+ * The form is a centred card on a dimmed backdrop, never a page: capped at
+ * 680px wide and 85% of the height it is given, floored at 540px so it does
+ * not resize under the patient between questions, and otherwise as tall as
+ * the screen it is showing. Opened from the home screen it mounts inside the
+ * kiosk's transformed 1920×1080 canvas (DESIGN_W / DESIGN_H in App.tsx), so
+ * its share of the panel is the same however useScreenScale() scales it.
  *
- *   header (InternalPageHeader)   ~120px
- *   progress block (shared)       ~185px
- *   question body (centered)      ~530px   ← all content must fit here
- *   footer (Back / Next)          ~104px
+ * Vertical budget, measured at 1920×1080:
+ *
+ *   header row                    ~62px
+ *   progress block (shared,dense) ~124px
+ *   question body                 ~290px on the ordinary screens
+ *   footer (Back / Next)          ~62px
+ *
+ * The body scrolls rather than clips: at the design size nothing needs to
+ * (the tallest screen is 788px against a 918px cap), but the wizard that
+ * opens this renders outside the scaled canvas, so on a short panel the cap
+ * binds and the content has to stay reachable.
  *
  * Arabic and Urdu run longer than English, so every size below is chosen for
- * the longest of the three, not for English. The tallest screen is Q5, the
- * doctors' rounds question: a wrapped question over the wheel picker, which
- * is taller than a wrapped question over pills and an open note. Measure that
- * one, not a one-line English question, before trusting a change to the
- * budget.
+ * the longest of the three, not for English. The tallest screen is the
+ * care-partner agreement, then Q5, the doctors' rounds question: a wrapped
+ * question over the wheel picker. Measure those, not a one-line English
+ * question, before trusting a change to the budget.
  *
- * ANSWERS — three shapes. Most questions are yes/no with an optional note;
- * the favourite-colour question is free text; and the two timing questions
- * (Q5 doctors' rounds, Q10 daily bath) are asked open-ended and answered on
- * the wheel time picker alone — no pills, no note, the wheel on screen from
+ * ANSWERS — two shapes. Most questions are yes/no with an optional note, and
+ * the two timing questions (Q5 doctors' rounds, Q10 daily bath) are asked
+ * open-ended and answered on the wheel time picker alone. Nothing on either
+ * shape is answered in advance: no pill is highlighted and no time is
+ * recorded until the patient taps or turns something — no pills, no note, the wheel on screen from
  * the moment the question is. Their answer is a time, so a yes/no over a note
  * would only ask the patient to write in words what the wheel records exactly.
  * The note is not a reveal either: on every yes/no question it is on screen
@@ -46,8 +52,10 @@ import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
  * tapping Yes or No changes the pills and nothing else. That makes the
  * note-open case the ONLY case to measure — there is no shorter variant of
  * those screens to fall back on.
- * The `choice` branch is still wired into renderControl but no question
- * reaches it — restoring one is a change to the question list alone.
+ * The `choice` and `text` branches are still wired into renderControl but no
+ * question reaches either — restoring one is a change to the question list
+ * alone. `text` was last used by the favourite-colour question, removed from
+ * the form; records written before that still carry its answer.
  *
  * TYPOGRAPHY — one hierarchy, one source. Section chip (TYPE_SCALE.base,
  * semibold) sits under the question (TYPE_SCALE.md, semibold), which sits
@@ -71,9 +79,8 @@ import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
  * COLOUR — no hex literals anywhere. Every content icon is the per-hospital
  * secondary on a theme.accentSubtle chip, so icons re-brand with the active
  * hospital. See iconColor below for why the exact token depends on light/dark
- * mode. (The favourite-colour question used to be the one exception, holding
- * raw swatches as answer options; it is a free-text field now, so the rule has
- * no exceptions left.)
+ * mode. (The favourite-colour question was the one exception, holding raw
+ * swatches as answer options; it is gone, so the rule has no exceptions.)
  *
  * Sub-views are plain render functions, not nested components: a nested
  * component is a new type on every keystroke and the notes field would lose
@@ -123,10 +130,10 @@ export interface PreferenceFormRecord {
 }
 
 /** Was stored when the patient tapped "No preference". Nothing writes it any
- *  more — the last question that offered that pill (favourite colour) is
- *  free-text only now — but records written before that change still carry it,
- *  so the value stays defined and documented rather than becoming a bare
- *  string nobody can trace. */
+ *  more — the last question that offered that pill (favourite colour) has been
+ *  removed from the form — but older records still carry it, so the value
+ *  stays defined and documented rather than becoming a bare string nobody can
+ *  trace. */
 export const NO_PREFERENCE = "no-preference";
 
 type ControlKind = "yesno" | "time" | "choice" | "text";
@@ -228,9 +235,6 @@ const SECTIONS: readonly SectionDef[] = [
     questions: [
       { id: "other.otherPreference", kind: "yesno" },
       { id: "other.virtualRoom", kind: "yesno" },
-      /* The one question left as free text — no yes/no, and deliberately no
-         "No preference" pill beside it. See canAdvance for what that costs. */
-      { id: "other.favouriteColour", kind: "text" },
     ],
   },
 ] as const;
@@ -251,10 +255,10 @@ export function readPreferenceRecord(): PreferenceFormRecord | null {
   }
 }
 
-/** The questions the form gates Next on. The free-text question and the
- *  closing comments screen are optional by design (see canAdvance), so a
- *  record without them is still a finished form; anything gated missing means
- *  the patient never got through it. */
+/** The questions the form gates Next on — every question now, since the one
+ *  free-text question is gone. The closing comments screen stays optional by
+ *  design (see canAdvance), so a record without it is still a finished form;
+ *  anything gated missing means the patient never got through it. */
 const REQUIRED_QUESTION_IDS: readonly string[] = SECTIONS.flatMap((s) =>
   s.questions.filter((q) => q.kind !== "text").map((q) => q.id));
 
@@ -423,13 +427,12 @@ function TimeWheelPicker({
     onPickTime(fromWheel(next));
   };
 
-  /* A wheel always reads as a chosen time, so it is one. Without a way to
-     decline, leaving the resting value uncommitted would gate Next on a
-     gesture the patient has no reason to make. */
-  useEffect(() => {
-    if (!stored) onPickTime(fromWheel(draft));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  /* Nothing is committed on mount. The wheel used to write its resting value
+     the moment the screen opened, so a patient who never touched it still had
+     "7:00 AM" recorded as their preference and Next already enabled — the same
+     thing a pre-selected pill does, and it reached the care plan as a choice
+     they never made. A scroll or a tap on any visible row commits; until one
+     of those happens the question is unanswered and Next stays shut. */
 
   const period = (pm: boolean) => t(pm ? "ppf.time.pm" : "ppf.time.am");
   const readout = `${draft.hour}:${draft.minute} ${period(draft.pm)}`;
@@ -441,9 +444,13 @@ function TimeWheelPicker({
     <div className="flex flex-col items-center w-full" style={{ gap, maxWidth: "760px" }}>
       <span
         data-ppf-readout=""
+        aria-hidden={!stored}
         style={{
           fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.semibold,
           color: iconColor, lineHeight: LEADING.snug,
+          /* Hidden, not removed: the line reserves its own height so the card
+             is the same size before and after the first turn of the wheel. */
+          visibility: stored ? "visible" : "hidden",
         }}
       >
         {`${t("ppf.time.selected")}: ${readout}`}
@@ -536,8 +543,10 @@ export function PatientPreferenceForm({
   onClose: () => void;
   /** Fired after a successful save — the consent checkbox ticks itself. */
   onSubmitted?: (record: PreferenceFormRecord) => void;
-  /** "page" fills the canvas; "modal" floats the same form over whatever
-   *  opened it, dimmed backdrop and an X in place of the home button. */
+  /** Legacy, accepted and ignored. The form is one shape now — a contained
+   *  dialog over whatever opened it. "page" used to mean a full-canvas
+   *  presentation under the tall brand header; that read as a second screen
+   *  rather than a dialog, so it is gone. */
   variant?: "page" | "modal";
 }) {
   const { theme, activeConfigId, darkMode } = useTheme();
@@ -565,14 +574,16 @@ export function PatientPreferenceForm({
     return localized === key ? theme.hospitalName : localized;
   }, [activeConfigId, theme.hospitalName, t]);
 
-  /* Reopening the form is a review, not a fresh start: the last submitted
-     record is loaded back so every answer the patient gave is pre-filled and
-     visible. Read once, on mount — later edits belong to this session. */
-  const [saved] = useState<PreferenceFormRecord | null>(readPreferenceRecord);
-
-  const [answers, setAnswers] = useState<Record<string, PreferenceAnswer>>(() => saved?.answers ?? {});
-  const [comments, setComments] = useState(() => saved?.comments?.text ?? "");
-  const [partner, setPartner] = useState<CarePartnerAgreement>(() => saved?.carePartner ?? {
+  /* The form always opens unanswered — no pill pre-selected, no note
+     pre-filled, on every screen. It used to load the last submitted record
+     back so a second visit read as a review, but that put a highlighted Yes
+     under a patient who had not chosen anything yet on this visit, which is
+     the one thing an answer control must never do. The record is still
+     written on submit and still readable (readPreferenceRecord), so the
+     wizard's "completed" check and anything downstream are unaffected. */
+  const [answers, setAnswers] = useState<Record<string, PreferenceAnswer>>({});
+  const [comments, setComments] = useState("");
+  const [partner, setPartner] = useState<CarePartnerAgreement>({
     name: "", relationship: "", accepted: false, acceptedAt: null,
   });
   const [index, setIndex] = useState(0);
@@ -604,10 +615,10 @@ export function PatientPreferenceForm({
   /** Every vertical measurement the constraint moves, in one place. */
   const M = dense
     ? { progressTop: "10px", progressGap: "8px", chip: 40, chipIcon: 20, chipGap: "8px",
-        qGap: "12px", stackGap: "6px", notesH: "48px",
+        qGap: "12px", stackGap: "6px", notesH: "84px",
         footerY: "12px", reserved: "46px", wheelItem: 46, pillY: "10px" }
     : { progressTop: "24px", progressGap: "14px", chip: 48, chipIcon: 24, chipGap: "14px",
-        qGap: "20px", stackGap: "12px", notesH: "64px",
+        qGap: "20px", stackGap: "12px", notesH: "92px",
         footerY: "20px", reserved: "56px", wheelItem: 56, pillY: "14px" };
 
   const wantsCarePartner = answers[CARE_PARTNER_TRIGGER]?.value === "yes";
@@ -654,16 +665,16 @@ export function PatientPreferenceForm({
   /* ── Can this screen be left? ─────────────────────────────────────────
    * Next is gated on a real answer so nothing is recorded as "skipped" that
    * the patient never saw. That only works if every screen HAS an answer the
-   * patient can give: the free-text question carries an explicit "No
-   * preference", and a time question is answered by the wheels themselves,
-   * which always read as a time. */
+   * patient can give: a yes/no question has its two pills, and a time
+   * question is answered by the wheels themselves, which always read as a
+   * time. Nothing is pre-selected, so the gate is what the patient chose on
+   * this visit and nothing else. */
   const canAdvance = (() => {
     if (screen.kind === "comments") return true;          // closing screen, optional by design
     if (screen.kind === "carePartner") return partner.accepted;
-    /* Free text is not gated. It used to be, because a "No preference" pill
-       gave a patient with nothing to say a way past it; that pill is gone, so
-       gating it now would leave one screen a patient could be stuck on. The
-       optional note is never gated either — only the yes/no is. */
+    /* Free text is not gated — no question uses it now, but a restored one
+       would have no answer to gate on. The optional note is never gated
+       either: only the yes/no is. */
     if (screen.q.kind === "text") return true;
     return !!answers[screen.q.id]?.value;
   })();
@@ -699,18 +710,32 @@ export function PatientPreferenceForm({
     width: "100%",
     height,
     padding: "14px 18px",
-    borderRadius: theme.radiusLg,
+    /* Rounder than the cards around it on purpose: at this size the field is
+       the only rectangle on the screen, and radiusLg still read as a box. */
+    borderRadius: theme.radiusXl,
     border: `1.5px solid ${theme.borderDefault}`,
     backgroundColor: theme.surface,
     fontFamily,
     fontSize: TYPE_SCALE.base,
     lineHeight: LEADING.normal,
     color: theme.textHeading,
+    /* No grip while the text still fits — an idle drag handle on an optional
+       note reads as something the patient is expected to deal with. The
+       handler below turns it on for the one field that outgrows itself; see
+       .ppf-field[data-grow] in the shell's stylesheet. */
     resize: "none" as const,
+    overflowY: "auto" as const,
     outline: "none",
     direction: isRTL ? ("rtl" as const) : ("ltr" as const),
     textAlign: isRTL ? ("right" as const) : ("left" as const),
   });
+
+  /** Shows the resize grip only once the text no longer fits. Called from
+   *  every field's onChange, so the rule is the same on all of them. */
+  const markGrown = (el: HTMLTextAreaElement) => {
+    if (el.scrollHeight > el.clientHeight + 1) el.dataset.grow = "true";
+    else delete el.dataset.grow;
+  };
 
   /** THE question typography, for every screen in the form — all fourteen
    *  questions, the care-partner agreement and the closing comments screen.
@@ -826,7 +851,7 @@ export function PatientPreferenceForm({
           id={fieldId}
           rows={2}
           value={answers[q.id]?.note?.text ?? ""}
-          onChange={(e) => setTagged(q.id, "note", e.target.value)}
+          onChange={(e) => { setTagged(q.id, "note", e.target.value); markGrown(e.currentTarget); }}
           placeholder={prompt === key ? t("ppf.notes.placeholder") : prompt}
           aria-label={t("ppf.notes.label")}
           className="ppf-field"
@@ -882,7 +907,7 @@ export function PatientPreferenceForm({
               <textarea
                 rows={2}
                 value={answers[q.id]?.text?.text ?? ""}
-                onChange={(e) => setTagged(q.id, "text", e.target.value)}
+                onChange={(e) => { setTagged(q.id, "text", e.target.value); markGrown(e.currentTarget); }}
                 placeholder={placeholderFor(q.id)}
                 className="ppf-field"
                 style={fieldStyle(M.notesH)}
@@ -1029,7 +1054,7 @@ export function PatientPreferenceForm({
         <textarea
           rows={3}
           value={comments}
-          onChange={(e) => setComments(e.target.value)}
+          onChange={(e) => { setComments(e.target.value); markGrown(e.currentTarget); }}
           placeholder={t("ppf.comments.placeholder")}
           className="ppf-field"
           style={fieldStyle("96px")}
@@ -1093,90 +1118,145 @@ export function PatientPreferenceForm({
       !canAdvance,
     );
 
-  /** Shared page chrome — gradient canvas, hero wash and the navy header.
-   *  In "modal" mode the same chrome is inset inside a floating card instead
-   *  of filling the canvas; the inset is kept small on purpose, because the
-   *  question screens are budgeted against the full 1080 height and clip
-   *  rather than scroll (see the layout note at the top of this file). */
-  const isModal = variant === "modal";
-  const renderShell = (body: React.ReactNode) => {
-    const shell = (
-    <div
-      className={`${isModal ? "absolute" : "fixed"} inset-0 flex flex-col overflow-hidden`}
-      style={{
-        background: `linear-gradient(160deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`,
-        zIndex: isModal ? undefined : 8500, // above the onboarding wizard (z-8000) that opens it
-        direction: isRTL ? "rtl" : "ltr",
-      }}
-    >
-      <ApiImage
-        src={theme.heroImageUrl}
-        alt=""
-        aria-hidden
-        className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
-        style={{ opacity: 0.08, mixBlendMode: "luminosity", userSelect: "none" }}
-      />
+  /* The chrome: one white card centred on a dimmed backdrop, under a compact
+   * header row (icon, title, subtitle, square close). It carries the same
+   * visual weight as the app's other dialogs — the menu reader in
+   * FoodOrdering, the welcome tour card — rather than reading as a second
+   * screen laid over the first.
+   *
+   * The card is sized by its content and capped: never wider than
+   * MODAL_MAX_W, never taller than MODAL_MAX_H, never shorter than
+   * MODAL_MIN_H, and otherwise no taller than the screen it is showing needs —
+   * so a short question makes a short dialog instead of padding itself out to
+   * fill a fixed frame. The screens that outgrow the cap scroll inside the
+   * card rather than clipping; see the layout note at the top of this file. */
 
+  /* Percentages, not vh: opened from the home screen the form mounts inside
+     App.tsx's transformed 1920×1080 canvas, so the fixed overlay it sits on is
+     that canvas and not the window — vh would measure the wrong box. A percent
+     of the overlay is the dialog's share of the screen either way. */
+  const MODAL_MAX_W = "680px";
+  const MODAL_MAX_H = "85%";
+  /* A floor as well as a cap. Twelve of the sixteen screens land within 40px
+     of this, so holding them all at one height stops the dialog resizing under
+     the patient between questions; the four that need more still grow. */
+  const MODAL_MIN_H = "540px";
+
+  /* Body, header and footer gutters — sized for a 680px card. */
+  const padX = "28px";
+
+  const renderShell = (body: React.ReactNode) => {
+    const fieldCss = (
       <style>{`
         .ppf-wheel::-webkit-scrollbar { display: none; }
         .ppf-wheel {
           -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 76%, transparent 100%);
           mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 76%, transparent 100%);
         }
+        .ppf-scroll::-webkit-scrollbar { width: 6px; }
+        .ppf-scroll::-webkit-scrollbar-thumb { background: ${theme.borderDefault}; border-radius: 3px; }
         .ppf-field:focus { border-color: ${theme.accent} !important; }
+        /* Beats the inline resize:none the field carries by default. */
+        .ppf-field[data-grow] { resize: vertical !important; }
         .ppf-field::placeholder { color: ${theme.textDisabled}; }
       `}</style>
-
-      <InternalPageHeader
-        title={t("ppf.title")}
-        subtitle={theme.hospitalName}
-        icon={<ClipboardList size={24} />}
-        onClose={onClose}
-        closeIcon={isModal ? <X size={22} style={{ color: "#fff" }} /> : undefined}
-      />
-
-      <div className="flex-1 min-h-0 px-12 pt-2 pb-6 relative z-10 flex flex-col">
-        <div
-          ref={cardRef}
-          className="flex-1 min-h-0 flex flex-col overflow-hidden relative"
-          style={{
-            backgroundColor: theme.surface,
-            borderRadius: theme.radiusXl,
-            boxShadow: SHADOW.xl,
-            border: theme.cardBorder,
-          }}
-        >
-          {body}
-        </div>
-      </div>
-    </div>
     );
-
-    if (!isModal) return shell;
 
     return (
       <div
         className="fixed inset-0 flex items-center justify-center"
         style={{
           zIndex: 8600, // above the onboarding wizard (z-8000) that opens it
-          backgroundColor: "rgba(8,12,20,0.62)",
+          padding: "24px", // the backdrop stays visible on all four sides
+          backgroundColor: theme.overlay,
           backdropFilter: "blur(4px)",
           WebkitBackdropFilter: "blur(4px)",
-          /* The inset is what makes it read as a modal; it is capped because
-             the question screens clip rather than scroll. Measured at
-             1920×1080: the tightest screen keeps ~90px of slack here. */
-          padding: "48px 72px",
+          direction: isRTL ? "rtl" : "ltr",
           animation: "ppfModalIn 0.2s ease-out",
         }}
       >
         <style>{`
           @keyframes ppfModalIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes ppfCardIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
         `}</style>
+        {fieldCss}
+
         <div
-          className="relative w-full h-full overflow-hidden"
-          style={{ borderRadius: theme.radiusXl, boxShadow: SHADOW.xl }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("ppf.title")}
+          data-ppf="modal-card"
+          className="flex flex-col overflow-hidden"
+          style={{
+            width: "100%",
+            maxWidth: MODAL_MAX_W,
+            /* Content-driven, so there is no empty space to fill: the card is
+               as tall as the screen it shows, up to the cap. */
+            height: "auto",
+            minHeight: MODAL_MIN_H,
+            maxHeight: MODAL_MAX_H,
+            backgroundColor: theme.surface,
+            borderRadius: theme.radiusXl,
+            boxShadow: SHADOW.xl,
+            border: theme.cardBorder,
+            animation: "ppfCardIn 0.2s ease-out",
+          }}
         >
-          {shell}
+          {/* Header — what the form is, whose it is, and the way out. One
+              row on the card itself: at dialog size a full-bleed brand bar
+              would take the top eighth of the card to repeat what the
+              patient just tapped to open. */}
+          <div
+            className="shrink-0 flex items-center gap-3"
+            style={{ padding: `12px ${padX}`, borderBottom: `1px solid ${theme.borderSubtle}` }}
+            data-ppf="modal-header"
+          >
+            <div
+              className="flex items-center justify-center shrink-0"
+              style={{ width: "36px", height: "36px", borderRadius: theme.radiusSm, backgroundColor: theme.accentSubtle }}
+            >
+              <ClipboardList size={18} style={{ color: iconColor }} />
+            </div>
+            <div className="flex-1 min-w-0" style={{ textAlign: isRTL ? "right" : "left" }}>
+              <h2 style={{
+                fontFamily, fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.bold,
+                color: theme.textHeading, margin: 0, lineHeight: LEADING.tight,
+              }}>
+                {t("ppf.title")}
+              </h2>
+              <p style={{
+                fontFamily, fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium,
+                color: theme.textMuted, margin: "1px 0 0", lineHeight: LEADING.none,
+              }}>
+                {theme.hospitalName}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              aria-label={t("general.close")}
+              data-ppf="close"
+              className="shrink-0 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+              style={{
+                width: "34px", height: "34px", borderRadius: theme.radiusSm,
+                backgroundColor: theme.tileInactiveBg, border: "none", outline: "none",
+              }}
+            >
+              <X size={18} style={{ color: theme.textMuted }} />
+            </button>
+          </div>
+
+          {/* The form itself. This is the region the layout budget is
+              measured against, so it — not the whole card — is what cardRef
+              watches. "flex: 1 1 auto", not flex-1: the card's height is
+              content-driven, and a zero flex-basis in an auto-height column
+              would collapse this to nothing. */}
+          <div
+            ref={cardRef}
+            className="min-h-0 flex flex-col overflow-hidden relative"
+            style={{ flex: "1 1 auto" }}
+          >
+            {body}
+          </div>
         </div>
       </div>
     );
@@ -1186,26 +1266,33 @@ export function PatientPreferenceForm({
 
   if (submitted) {
     return renderShell(
-      <div className="flex-1 flex flex-col items-center justify-center text-center px-16">
-        <div className="flex items-center justify-center mb-8"
-          style={{ width: 72, height: 72, borderRadius: theme.radiusFull, backgroundColor: theme.accentSubtle }}>
-          <CheckCircle2 size={36} style={{ color: iconColor }} />
+      <div
+        className="flex-1 flex flex-col items-center justify-center text-center"
+        style={{ padding: `32px ${padX}` }}
+      >
+        <div className="flex items-center justify-center"
+          style={{
+            width: 56, height: 56,
+            marginBottom: "16px",
+            borderRadius: theme.radiusFull, backgroundColor: theme.accentSubtle,
+          }}>
+          <CheckCircle2 size={28} style={{ color: iconColor }} />
         </div>
-        <h2 style={{ fontFamily, fontSize: TYPE_SCALE["2xl"], fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "16px" }}>
+        <h2 style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "10px" }}>
           {t("ppf.done.title")}
         </h2>
-        <p style={{ fontFamily, fontSize: TYPE_SCALE.md, color: theme.textMuted, maxWidth: "620px", lineHeight: LEADING.relaxed, marginBottom: "32px" }}>
+        <p style={{ fontFamily, fontSize: TYPE_SCALE.base, color: theme.textMuted, maxWidth: "620px", lineHeight: LEADING.relaxed, marginBottom: "20px" }}>
           {t("ppf.done.body")}
         </p>
         <button
           onClick={onClose}
           className="transition-transform duration-200 active:scale-[0.96] cursor-pointer"
           style={{
-            padding: "16px 52px", borderRadius: theme.radiusMd,
+            padding: "12px 36px", borderRadius: theme.radiusMd,
             backgroundColor: theme.primary, border: "none", boxShadow: SHADOW.md,
           }}
         >
-          <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: theme.textInverse }}>
+          <span style={{ fontFamily, fontSize: TYPE_SCALE.base, fontWeight: WEIGHT.bold, color: theme.textInverse }}>
             {t("ppf.done.close")}
           </span>
         </button>
@@ -1233,11 +1320,18 @@ export function PatientPreferenceForm({
         />
       </div>
 
-      {/* ─── Question body — centered, never scrolls (see header comment) ─── */}
+      {/* ─── Question body ───────────────────────────────────────────────
+          The card is only as tall as this content, so there is nothing to
+          centre in; it scrolls only on the screens that hit the height cap. */}
       <div
         key={safeIndex}
         data-ppf="body"
-        className="flex-1 min-h-0 overflow-hidden flex flex-col px-16 pb-2"
+        className="ppf-scroll min-h-0 flex flex-col overflow-y-auto"
+        style={{
+          flex: "1 1 auto",
+          paddingLeft: padX, paddingRight: padX,
+          paddingBottom: "4px",
+        }}
       >
         {/* Auto block margins, not justify-center. Centred while there is
             room; collapsed to zero when there is not, so a question that wraps
@@ -1258,8 +1352,12 @@ export function PatientPreferenceForm({
 
       {/* ─── Footer ─── */}
       <div
-        className="shrink-0 flex items-center justify-between px-16"
-        style={{ paddingTop: M.footerY, paddingBottom: M.footerY, borderTop: `1.5px solid ${theme.borderSubtle}` }}
+        className="shrink-0 flex items-center justify-between"
+        style={{
+          paddingLeft: padX, paddingRight: padX,
+          paddingTop: M.footerY, paddingBottom: M.footerY,
+          borderTop: `1.5px solid ${theme.borderSubtle}`,
+        }}
         data-ppf="footer"
       >
         {renderBack()}
