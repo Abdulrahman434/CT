@@ -354,9 +354,11 @@ function WheelColumn({
   );
 }
 
-/** Hour and minute wheels with an AM/PM toggle beside them. Every path — a
- *  scroll, a tap on a visible row, the toggle — writes the same single stored
- *  value, so the wheels and the toggle can never disagree with the record. */
+/** Three wheels — hour, minute, AM/PM — reading and snapping the same way, so
+ *  the whole time is set with one gesture rather than a scroll plus a tap on a
+ *  differently-shaped control. Every path — a scroll or a tap on a visible row
+ *  — writes the same single stored value, so no two columns can disagree with
+ *  the record. */
 function TimeWheelPicker({
   value, onPickTime, theme, t, fontFamily, iconColor, itemH, gap,
 }: {
@@ -393,31 +395,8 @@ function TimeWheelPicker({
   const period = (pm: boolean) => t(pm ? "ppf.time.pm" : "ppf.time.am");
   const readout = `${draft.hour}:${draft.minute} ${period(draft.pm)}`;
 
-  const periodPill = (pm: boolean) => {
-    const on = draft.pm === pm;
-    return (
-      <button
-        key={pm ? "pm" : "am"}
-        onClick={() => commit({ ...draft, pm })}
-        data-ppf-period={pm ? "pm" : "am"}
-        className="flex-1 flex items-center justify-center transition-transform duration-200 active:scale-[0.96] cursor-pointer"
-        style={{
-          minHeight: itemH,
-          padding: "0 18px",
-          borderRadius: theme.radiusMd,
-          border: on ? `3px solid ${theme.accent}` : `1.5px solid ${theme.borderDefault}`,
-          backgroundColor: on ? theme.accentSubtle : theme.surface,
-          fontFamily,
-          fontSize: TYPE_SCALE.md,
-          fontWeight: on ? WEIGHT.bold : WEIGHT.medium,
-          color: on ? iconColor : theme.textBody,
-          outline: "none",
-        }}
-      >
-        {period(pm)}
-      </button>
-    );
-  };
+  /* AM before PM, so the column reads in clock order like the two beside it. */
+  const periodItems = [period(false), period(true)];
 
   return (
     <div className="flex flex-col items-center w-full" style={{ gap, maxWidth: "760px" }}>
@@ -431,8 +410,7 @@ function TimeWheelPicker({
         {`${t("ppf.time.selected")}: ${readout}`}
       </span>
 
-      {/* Wheels, plus an AM/PM toggle that deliberately does not scroll with them. */}
-      <div className="flex items-center justify-center" style={{ gap: "16px" }}>
+      <div className="flex items-center justify-center">
         <div
           className="flex items-center justify-center relative"
           style={{
@@ -493,11 +471,18 @@ function TimeWheelPicker({
             fontFamily={fontFamily}
             activeColor={iconColor}
           />
-        </div>
-
-        <div className="flex flex-col" style={{ gap: "8px", height: itemH * WHEEL_ROWS, width: "112px" }}>
-          {periodPill(false)}
-          {periodPill(true)}
+          <div aria-hidden style={{ width: "10px" }} />
+          <WheelColumn
+            items={periodItems}
+            index={draft.pm ? 1 : 0}
+            onIndex={(i) => commit({ ...draft, pm: i === 1 })}
+            itemH={itemH}
+            width={Math.round(itemH * 1.9)}
+            ariaLabel={t("ppf.time.period")}
+            theme={theme}
+            fontFamily={fontFamily}
+            activeColor={iconColor}
+          />
         </div>
       </div>
     </div>
