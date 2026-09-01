@@ -32,6 +32,7 @@ const translations: Record<string, TranslationEntry> = {
   "general.hello": { en: "Hello", ar: "مرحباً", ur: "ہیلو" },
   "general.welcome": { en: "Welcome to {0}. We wish you a comfortable and speedy recovery!", ar: "مرحباً بك في {0}. نتمنى لك الشفاء العاجل!", ur: "{0} میں خوش آمدید۔ ہم آپ کی آرام دہ اور جلد صحت یابی کے خواہاں ہیں!" },
   "general.aboutUs": { en: "About Us", ar: "عن المستشفى", ur: "ہمارے بارے میں" },
+  "general.setPreferences": { en: "Set Preferences", ar: "ضبط التفضيلات", ur: "ترجیحات سیٹ کریں" },
   "general.close": { en: "Close", ar: "إغلاق", ur: "بند کریں" },
   "general.cancel": { en: "Cancel", ar: "إلغاء", ur: "منسوخ" },
   "general.logout": { en: "Logout", ar: "تسجيل الخروج", ur: "لاگ آؤٹ" },
@@ -1206,6 +1207,12 @@ const translations: Record<string, TranslationEntry> = {
   "onboarding.pin.title": { en: "Would you like to set a PIN for your safety?", ar: "هل ترغب في تعيين رمز PIN لحمايتك؟", ur: "کیا آپ اپنی حفاظت کے لیے PIN سیٹ کرنا چاہیں گے؟" },
   "onboarding.pin.alreadySet": { en: "A PIN is already set on this screen.", ar: "تم تعيين رمز PIN بالفعل على هذه الشاشة.", ur: "اس اسکرین پر پہلے سے PIN سیٹ ہے۔" },
   "onboarding.pin.skipToast": { en: "You can set this anytime from My Preferences.", ar: "يمكنك تعيينه في أي وقت من تفضيلاتي.", ur: "آپ اسے کسی بھی وقت میری ترجیحات سے سیٹ کر سکتے ہیں۔" },
+
+  "onboarding.prefsForm.title": { en: "Your Patient Preference Form", ar: "نموذج تفضيلات المريض الخاص بك", ur: "آپ کا مریض ترجیحات فارم" },
+  "onboarding.prefsForm.body": { en: "A few short questions about your meals, sleep, prayer and daily care. Your answers reach the teams looking after you, so your stay follows your preferences.", ar: "أسئلة قصيرة عن وجباتك ونومك وصلاتك ورعايتك اليومية. تصل إجاباتك إلى الفرق التي ترعاك لتكون إقامتك وفق تفضيلاتك.", ur: "آپ کے کھانے، نیند، نماز اور روزمرہ نگہداشت کے بارے میں چند مختصر سوالات۔ آپ کے جوابات آپ کی دیکھ بھال کرنے والی ٹیموں تک پہنچتے ہیں، تاکہ آپ کا قیام آپ کی ترجیحات کے مطابق ہو۔" },
+  "onboarding.prefsForm.open": { en: "Open the form", ar: "افتح النموذج", ur: "فارم کھولیں" },
+  "onboarding.prefsForm.review": { en: "Review answers", ar: "مراجعة الإجابات", ur: "جوابات دیکھیں" },
+  "onboarding.prefsForm.completed": { en: "You've completed the form.", ar: "لقد أكملت النموذج.", ur: "آپ نے فارم مکمل کر لیا ہے۔" },
 
   "onboarding.prayer.title": { en: "Would you like us to remind you at prayer times?", ar: "هل ترغب أن نذكّرك بأوقات الصلاة؟", ur: "کیا آپ چاہیں گے کہ ہم آپ کو نماز کے اوقات پر یاد دلائیں؟" },
 

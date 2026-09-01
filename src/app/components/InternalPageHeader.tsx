@@ -8,9 +8,12 @@ interface InternalPageHeaderProps {
   icon: React.ReactNode;
   onClose: () => void;
   rightAction?: React.ReactNode;
+  /** Replaces the home glyph on the close button — an X when the page is
+   *  presented as a modal, since it dismisses rather than navigates home. */
+  closeIcon?: React.ReactNode;
 }
 
-export function InternalPageHeader({ title, subtitle, icon, onClose, rightAction }: InternalPageHeaderProps) {
+export function InternalPageHeader({ title, subtitle, icon, onClose, rightAction, closeIcon }: InternalPageHeaderProps) {
   const { theme } = useTheme();
   const { isRTL, fontFamily } = useLocale();
   return (
@@ -30,7 +33,7 @@ export function InternalPageHeader({ title, subtitle, icon, onClose, rightAction
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        <Home size={22} style={{ color: "#fff" }} />
+        {closeIcon ?? <Home size={22} style={{ color: "#fff" }} />}
       </button>
       {/* Divider */}
       <div style={{ width: "1.5px", height: "32px", backgroundColor: "rgba(255,255,255,0.18)", borderRadius: "1px" }} />

@@ -35,20 +35,23 @@ function AboutUsIcon({ color }: { color?: string }) {
   );
 }
 
-export function PatientGreeting({ 
-  onOpenAboutUs, 
-  onOpenTour, 
+export function PatientGreeting({
+  onOpenAboutUs,
+  onOpenPreferences,
+  onOpenTour,
   fillImage,
   showAboutUs = true,
   onImageTap
-}: { 
-  onOpenAboutUs?: () => void; 
-  onOpenTour?: () => void; 
+}: {
+  onOpenAboutUs?: () => void;
+  onOpenPreferences?: () => void;
+  onOpenTour?: () => void;
   fillImage?: boolean;
   showAboutUs?: boolean;
   onImageTap?: (url: string) => void;
 }) {
   const [pressed, setPressed] = useState(false);
+  const [prefsPressed, setPrefsPressed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { theme } = useTheme();
   const { t, isRTL, fontFamily } = useLocale();
@@ -266,12 +269,12 @@ export function PatientGreeting({
         />
       </div>
 
-      {/* About Us — pill below image */}
-      {showAboutUs && (
-        <div className="mx-4 mb-4" style={{ position: "relative", zIndex: 10 }}>
+      {/* About Us + Set Preferences — equal-width pills below image */}
+      <div className="mx-4 mb-4 flex items-stretch gap-2.5" style={{ position: "relative", zIndex: 10 }}>
+        {showAboutUs && (
           <button
             data-nav="true"
-            className="flex items-center justify-center gap-2.5 w-full py-3 cursor-pointer transition-transform duration-150"
+            className="flex flex-1 min-w-0 items-center justify-center gap-2 py-3 cursor-pointer transition-transform duration-150"
             style={{
               backgroundColor: pressed ? theme.primaryDark : theme.primary,
               transform: pressed ? "scale(0.96)" : "scale(1)",
@@ -300,13 +303,53 @@ export function PatientGreeting({
                 ...TEXT_STYLE.buttonSm,
                 color: theme.textInverse,
                 letterSpacing: "0.3px",
+                whiteSpace: "nowrap",
               }}
             >
               {t("general.aboutUs")}
             </span>
           </button>
-        </div>
-      )}
+        )}
+
+        <button
+          data-nav="true"
+          className="flex flex-1 min-w-0 items-center justify-center gap-2 py-3 cursor-pointer transition-transform duration-150"
+          style={{
+            backgroundColor: theme.primarySubtle,
+            transform: prefsPressed ? "scale(0.96)" : "scale(1)",
+            border: `1px solid ${theme.primary}`,
+            outline: "none",
+            borderRadius: theme.radiusMd,
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenPreferences?.();
+          }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            setPrefsPressed(true);
+          }}
+          onPointerUp={(e) => {
+            e.stopPropagation();
+            setPrefsPressed(false);
+          }}
+          onPointerLeave={() => setPrefsPressed(false)}
+        >
+          {/* No leading icon: with one, the Urdu label leaves 2px of slack in
+              the 400px column and would clip on a narrower panel. */}
+          <span
+            style={{
+              fontFamily: fontFamily,
+              ...TEXT_STYLE.buttonSm,
+              color: theme.primary,
+              letterSpacing: "0.3px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {t("general.setPreferences")}
+          </span>
+        </button>
+      </div>
 
       <ConfirmDialog
         visible={showLogoutConfirm}

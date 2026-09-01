@@ -4,7 +4,7 @@ import { useLocale, type Locale } from "./i18n";
 import {
   ClipboardList, UtensilsCrossed, Users, Clock, HeartHandshake,
   ShieldCheck, MessageSquarePlus, Check, CheckCircle2,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, X,
 } from "lucide-react";
 import { InternalPageHeader } from "./InternalPageHeader";
 import { ApiImage } from "./ApiImage";
@@ -498,10 +498,14 @@ function TimeWheelPicker({
 export function PatientPreferenceForm({
   onClose,
   onSubmitted,
+  variant = "page",
 }: {
   onClose: () => void;
   /** Fired after a successful save — the consent checkbox ticks itself. */
   onSubmitted?: (record: PreferenceFormRecord) => void;
+  /** "page" fills the canvas; "modal" floats the same form over whatever
+   *  opened it, dimmed backdrop and an X in place of the home button. */
+  variant?: "page" | "modal";
 }) {
   const { theme, activeConfigId, darkMode } = useTheme();
   const { t, locale, isRTL, fontFamily } = useLocale();
@@ -1051,13 +1055,19 @@ export function PatientPreferenceForm({
       !canAdvance,
     );
 
-  /** Shared page chrome — gradient canvas, hero wash and the navy header. */
-  const renderShell = (body: React.ReactNode) => (
+  /** Shared page chrome — gradient canvas, hero wash and the navy header.
+   *  In "modal" mode the same chrome is inset inside a floating card instead
+   *  of filling the canvas; the inset is kept small on purpose, because the
+   *  question screens are budgeted against the full 1080 height and clip
+   *  rather than scroll (see the layout note at the top of this file). */
+  const isModal = variant === "modal";
+  const renderShell = (body: React.ReactNode) => {
+    const shell = (
     <div
-      className="fixed inset-0 flex flex-col overflow-hidden"
+      className={`${isModal ? "absolute" : "fixed"} inset-0 flex flex-col overflow-hidden`}
       style={{
         background: `linear-gradient(160deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`,
-        zIndex: 8500, // above the onboarding wizard (z-8000) that opens it
+        zIndex: isModal ? undefined : 8500, // above the onboarding wizard (z-8000) that opens it
         direction: isRTL ? "rtl" : "ltr",
       }}
     >
@@ -1084,6 +1094,7 @@ export function PatientPreferenceForm({
         subtitle={theme.hospitalName}
         icon={<ClipboardList size={24} />}
         onClose={onClose}
+        closeIcon={isModal ? <X size={22} style={{ color: "#fff" }} /> : undefined}
       />
 
       <div className="flex-1 min-h-0 px-12 pt-2 pb-6 relative z-10 flex flex-col">
@@ -1101,7 +1112,35 @@ export function PatientPreferenceForm({
         </div>
       </div>
     </div>
-  );
+    );
+
+    if (!isModal) return shell;
+
+    return (
+      <div
+        className="fixed inset-0 flex items-center justify-center"
+        style={{
+          zIndex: 8600, // above the onboarding wizard (z-8000) that opens it
+          backgroundColor: "rgba(8,12,20,0.62)",
+          /* The inset is what makes it read as a modal; it is capped because
+             the question screens clip rather than scroll. Measured at
+             1920×1080: the tightest screen keeps ~90px of slack here. */
+          padding: "48px 72px",
+          animation: "ppfModalIn 0.2s ease-out",
+        }}
+      >
+        <style>{`
+          @keyframes ppfModalIn { from { opacity: 0; } to { opacity: 1; } }
+        `}</style>
+        <div
+          className="relative w-full h-full overflow-hidden"
+          style={{ borderRadius: theme.radiusXl, boxShadow: SHADOW.xl }}
+        >
+          {shell}
+        </div>
+      </div>
+    );
+  };
 
   /* ═══════════════════ thank-you screen ═══════════════════ */
 

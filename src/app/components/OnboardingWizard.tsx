@@ -3,35 +3,20 @@ import { useTheme, SHADOW, buildTheme } from "./ThemeContext";
 import { useLocale, type Locale } from "./i18n";
 import { toast } from "sonner";
 import {
-  Hand, Globe, UserRound, Shield, BellRing, SlidersHorizontal,
-  Moon, Sun, DatabaseZap, Volume2, VolumeX, Bluetooth, MonitorPause,
+  Hand, Globe, Shield, SlidersHorizontal, ClipboardList,
   FileCheck2, Check, ChevronLeft, Home,
 } from "lucide-react";
-import { useNurseStore } from "./NurseDataStore";
 import { markOnboardingComplete } from "../lib/onboardingStore";
 import { isAccountSet } from "../lib/accountAuth";
 import { MyPreferencesDialog } from "./MyAccountDialog";
-import { BluetoothDialog } from "./SettingsPanel";
-import { PatientPreferenceForm } from "./PatientPreferenceForm";
-import { bluetooth as bluetoothBridge, isAndroidApp } from "../utils/androidBridge";
+import { PatientPreferenceForm, PREFS_ANSWERS_KEY } from "./PatientPreferenceForm";
 
-import imgDataStorage from "../../assets/data storage.jpg";
-import imgDarkLightMode from "../../assets/Dark and light mode.jpg";
 import imgLockAppPages from "../../assets/lock app pages..jpg";
-import imgPrayerTimesPage from "../../assets/prayer times page.jpg";
-import imgWelcomeImage from "../../assets/Welcome Image.jpg";
 import imgLanguage from "../../assets/language.jpg";
-import imgNotificationSet from "../../assets/notificationset.jpg";
-import imgMosque from "../../assets/b51acb5e2ec4a2c930572c53103b020b12e76ee2.png";
 
 const STEP_BACKGROUNDS: Record<string, string> = {
   language: imgLanguage,
-  displayName: imgWelcomeImage,
   pin: imgLockAppPages,
-  prayer: imgPrayerTimesPage,
-  theme: imgDarkLightMode,
-  dataClear: imgDataStorage,
-  notifications: imgNotificationSet,
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -44,48 +29,26 @@ const STEP_BACKGROUNDS: Record<string, string> = {
  * tappable answer cards.
  *
  * Data-driven step machine: STEP_SEQUENCE is the single source of truth for
- * order and branching. Steps marked extendedOnly appear only on the
- * "Yes, continue setup" branch; both branches end on the shared Consent step.
+ * order, the progress bar and the step counter. The flow asks two questions
+ * only — language and PIN — then introduces the Patient Preference Form and
+ * ends on the consent step.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-type StepId =
-  | "welcome" | "language" | "displayName" | "pin" | "prayer" | "decision"
-  | "theme" | "dataClear" | "notifications" | "bluetooth" | "screensaver"
-  | "consent";
+type StepId = "welcome" | "language" | "pin" | "prefsForm" | "consent";
 
-interface StepDef {
-  id: StepId;
-  /** Only shown on the "Yes, continue setup" branch. */
-  extendedOnly?: boolean;
-}
-
-const STEP_SEQUENCE: StepDef[] = [
-  { id: "welcome" },
-  { id: "language" },
-  { id: "displayName" },
-  { id: "pin" },
-  { id: "prayer" },
-  { id: "decision" },
-  { id: "theme", extendedOnly: true },
-  { id: "dataClear", extendedOnly: true },
-  { id: "notifications", extendedOnly: true },
-  { id: "bluetooth", extendedOnly: true },
-  { id: "screensaver", extendedOnly: true },
-  { id: "consent" },
+const STEP_SEQUENCE: StepId[] = [
+  "welcome",
+  "language",
+  "pin",
+  "prefsForm",
+  "consent",
 ];
 
 const STEP_ICONS: Record<StepId, any> = {
   welcome: Hand,
   language: Globe,
-  displayName: UserRound,
   pin: Shield,
-  prayer: imgMosque,
-  decision: SlidersHorizontal,
-  theme: Moon,
-  dataClear: DatabaseZap,
-  notifications: Volume2,
-  bluetooth: Bluetooth,
-  screensaver: MonitorPause,
+  prefsForm: ClipboardList,
   consent: FileCheck2,
 };
 
@@ -107,8 +70,7 @@ export function OnboardingWizard({
   hidden?: boolean;
 }) {
   const {
-    theme: activeTheme, allConfigs, activeConfigId, locale, darkMode,
-    setLocale, setDarkMode, setPrayerAlarm,
+    theme: activeTheme, allConfigs, activeConfigId, locale, setLocale,
   } = useTheme();
   const { t: tr, isRTL, dir } = useLocale();
 
@@ -125,49 +87,27 @@ export function OnboardingWizard({
   }, [allConfigs, activeConfigId, activeTheme, locale]);
 
   const fontFamily = t.fontFamily;
-  const nurseStore = useNurseStore();
 
   const [stepId, setStepId] = useState<StepId>("welcome");
-  const [extended, setExtended] = useState(() => readLS("careinn-data-clear-policy") != null);
 
   /* per-step answers — pre-filled from storage so re-opening shows current choices */
   const [selLocale, setSelLocale] = useState<Locale>(() => (readLS("careinn-locale") as Locale) || locale || "en");
-  const [useFileName, setUseFileName] = useState(() => readLS("careinn-display-name-mode") === "auto");
-  const [nameEn, setNameEn] = useState(() => readLS("careinn-display-name") || "");
-  const [nameAr, setNameAr] = useState(() => readLS("careinn-display-name-ar") || "");
-  const [selDark, setSelDark] = useState(() => {
-    const v = readLS("careinn-theme-mode");
-    return v ? v === "dark" : darkMode;
-  });
-  const [selPolicy, setSelPolicy] = useState<"daily" | "24h-idle" | "discharge" | null>(
-    () => (readLS("careinn-data-clear-policy") as any) || null
-  );
-  const [selSound, setSelSound] = useState<"sound" | "silent" | null>(
-    () => (readLS("careinn-notification-sound") as any) || null
-  );
-  const [selSaver, setSelSaver] = useState<"30s" | "1m" | "5m" | null>(
-    () => (readLS("careinn-screensaver-timeout") as any) || null
-  );
-  const [prefsCompleted, setPrefsCompleted] = useState(() => !!readLS("careinn-prefs-completed"));
+  /* Driven by the form's own saved answers, not by the wizard's completion
+     flag — the flag is written for every finished onboarding, filled form
+     or not. */
+  const [prefsCompleted, setPrefsCompleted] = useState(() => !!readLS(PREFS_ANSWERS_KEY));
   const [termsAgreed, setTermsAgreed] = useState(() => !!readLS("careinn-consent-terms-agreed"));
 
   /* reused native flows rendered on top of the wizard */
-  const [overlay, setOverlay] = useState<"pin" | "bluetooth" | "prefs" | null>(null);
-  const [btDevice, setBtDevice] = useState<string | null>(null);
+  const [overlay, setOverlay] = useState<"pin" | "prefs" | null>(null);
 
-  const visibleSteps = useMemo(
-    () => STEP_SEQUENCE.filter(s => !s.extendedOnly || extended),
-    [extended]
-  );
-  const stepIndex = visibleSteps.findIndex(s => s.id === stepId);
+  const stepIndex = STEP_SEQUENCE.indexOf(stepId);
 
-  const goNext = (fromSteps?: StepDef[]) => {
-    const steps = fromSteps ?? visibleSteps;
-    const i = steps.findIndex(s => s.id === stepId);
-    if (i >= 0 && i < steps.length - 1) setStepId(steps[i + 1].id);
+  const goNext = () => {
+    if (stepIndex >= 0 && stepIndex < STEP_SEQUENCE.length - 1) setStepId(STEP_SEQUENCE[stepIndex + 1]);
   };
   const goBack = () => {
-    if (stepIndex > 0) setStepId(visibleSteps[stepIndex - 1].id);
+    if (stepIndex > 0) setStepId(STEP_SEQUENCE[stepIndex - 1]);
   };
 
   /* ── answer handlers (write storage + apply via existing setters) ── */
@@ -176,48 +116,6 @@ export function OnboardingWizard({
     setSelLocale(l);
     setLocale(l); // existing ThemeContext setter — persists under active-locale
     localStorage.setItem("careinn-locale", l);
-  };
-  const toggleLanguage = () => applyLocale(locale === "en" ? "ar" : "en");
-
-  const saveDisplayName = (mode: "auto" | "custom" | "skipped") => {
-    localStorage.setItem("careinn-display-name-mode", mode);
-    if (mode === "custom") {
-      localStorage.setItem("careinn-display-name", nameEn.trim());
-      localStorage.setItem("careinn-display-name-ar", nameAr.trim());
-    } else {
-      localStorage.removeItem("careinn-display-name");
-      localStorage.removeItem("careinn-display-name-ar");
-    }
-    window.dispatchEvent(new CustomEvent("display-name-changed"));
-    goNext();
-  };
-
-  const savePrayer = (on: boolean) => {
-    setPrayerAlarm(on); // existing "Alarm me" toggle — persists under prayer-alarm
-    localStorage.setItem("careinn-prayer-alarm", on ? "true" : "false");
-    goNext();
-  };
-
-  const applyTheme = (dark: boolean) => {
-    setSelDark(dark);
-    setDarkMode(dark); // applies immediately via ThemeContext
-    localStorage.setItem("careinn-theme-mode", dark ? "dark" : "light");
-  };
-
-  const savePolicy = (p: "daily" | "24h-idle" | "discharge") => {
-    setSelPolicy(p);
-    localStorage.setItem("careinn-data-clear-policy", p);
-    if (p === "daily") {
-      // anchor the daily cycle now so it doesn't fire on the next tick
-      localStorage.setItem("careinn-last-scheduled-clear", String(Date.now()));
-    }
-  };
-
-  const saveSaver = (v: "30s" | "1m" | "5m") => {
-    setSelSaver(v);
-    localStorage.setItem("careinn-screensaver-timeout", v);
-    // picked up by the existing idle timer in App.tsx
-    window.dispatchEvent(new CustomEvent("screensaver-timeout-changed"));
   };
 
   const finish = (withTour: boolean) => {
@@ -417,61 +315,6 @@ export function OnboardingWizard({
           </>
         );
 
-      case "displayName": {
-        const filePatient = nurseStore.patient;
-        const fileName = isRTL && filePatient.nameAr ? filePatient.nameAr : filePatient.name;
-        return (
-          <>
-            <div className="flex flex-col gap-4 w-full" style={{ marginBottom: "8px" }}>
-              <div className="grid grid-cols-2 gap-4 w-full">
-                <OptionCard
-                  selected={useFileName}
-                  onClick={() => setUseFileName(true)}
-                  icon={<UserRound size={22} style={{ color: t.primary }} />}
-                  label={tr("onboarding.displayName.useFile")}
-                  sublabel={fileName || undefined}
-                />
-                <OptionCard
-                  selected={!useFileName}
-                  onClick={() => setUseFileName(false)}
-                  icon={<UserRound size={22} style={{ color: t.primary }} />}
-                  label={tr("onboarding.displayName.custom")}
-                />
-              </div>
-              {!useFileName && (
-                <div className="flex flex-col gap-3 w-full">
-                  <input
-                    type="text"
-                    dir="ltr"
-                    value={nameEn}
-                    onChange={(e) => setNameEn(e.target.value)}
-                    placeholder={tr("onboarding.displayName.nameEn")}
-                    style={{
-                      width: "100%", padding: "16px", borderRadius: t.radiusMd,
-                      border: `1.5px solid ${t.borderDefault}`, backgroundColor: t.surfaceElevated,
-                      color: t.textBody, fontFamily, fontSize: "16px", outline: "none",
-                    }}
-                  />
-                  <input
-                    type="text"
-                    dir="rtl"
-                    value={nameAr}
-                    onChange={(e) => setNameAr(e.target.value)}
-                    placeholder={tr("onboarding.displayName.nameAr")}
-                    style={{
-                      width: "100%", padding: "16px", borderRadius: t.radiusMd,
-                      border: `1.5px solid ${t.borderDefault}`, backgroundColor: t.surfaceElevated,
-                      color: t.textBody, fontFamily, fontSize: "16px", outline: "none",
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-            <PrimaryButton label={tr("onboarding.next")} onClick={() => saveDisplayName(useFileName ? "auto" : "custom")} />
-          </>
-        );
-      }
-
       case "pin":
         return (
           <>
@@ -487,96 +330,45 @@ export function OnboardingWizard({
           </>
         );
 
-      case "prayer":
-        return (
-          <div className="flex items-center gap-3 w-full">
-            <div className="flex-1"><GhostButton label={tr("onboarding.no")} onClick={() => savePrayer(false)} /></div>
-            <div className="flex-1"><PrimaryButton label={tr("onboarding.yes")} onClick={() => savePrayer(true)} /></div>
-          </div>
-        );
-
-      case "decision":
-        return (
-          <div className="flex items-center gap-3 w-full">
-            <div className="flex-1"><GhostButton label={tr("onboarding.decision.no")} onClick={() => { setExtended(false); goNext(STEP_SEQUENCE.filter(s => !s.extendedOnly)); }} /></div>
-            <div className="flex-1"><PrimaryButton label={tr("onboarding.yes")} onClick={() => { setExtended(true); goNext(STEP_SEQUENCE); }} /></div>
-          </div>
-        );
-
-      case "theme":
+      /* The form opens as a modal on top of the wizard, so closing or
+         submitting it lands the patient back on this step with the flow
+         and the progress bar untouched. */
+      case "prefsForm":
         return (
           <>
-            <div className="grid grid-cols-2 gap-4 w-full" style={{ marginBottom: "8px" }}>
-              <OptionCard
-                selected={!selDark}
-                onClick={() => applyTheme(false)}
-                icon={<Sun size={22} style={{ color: t.primary }} />}
-                label={tr("onboarding.theme.light")}
-              />
-              <OptionCard
-                selected={selDark}
-                onClick={() => applyTheme(true)}
-                icon={<Moon size={22} style={{ color: t.primary }} />}
-                label={tr("onboarding.theme.dark")}
-              />
-            </div>
-            <PrimaryButton label={tr("onboarding.next")} onClick={() => goNext()} />
-          </>
-        );
-
-      case "dataClear":
-        return (
-          <>
-            <div className="grid grid-cols-3 gap-4 w-full" style={{ marginBottom: "8px" }}>
-              <OptionCard selected={selPolicy === "daily"} onClick={() => savePolicy("daily")} icon={<DatabaseZap size={22} style={{ color: t.primary }} />} label={tr("onboarding.dataClear.daily")} />
-              <OptionCard selected={selPolicy === "24h-idle"} onClick={() => savePolicy("24h-idle")} icon={<DatabaseZap size={22} style={{ color: t.primary }} />} label={tr("onboarding.dataClear.idle")} />
-              <OptionCard selected={selPolicy === "discharge"} onClick={() => savePolicy("discharge")} icon={<DatabaseZap size={22} style={{ color: t.primary }} />} label={tr("onboarding.dataClear.discharge")} />
-            </div>
-            <p style={{ fontFamily, fontSize: "14px", color: t.textMuted, textAlign: "center", margin: "0 0 4px" }}>
-              {tr("onboarding.dataClear.note")}
+            <p style={{ fontFamily, fontSize: "18px", color: t.textBody, textAlign: "center", lineHeight: 1.65, margin: "0 0 8px" }}>
+              {tr("onboarding.prefsForm.body")}
             </p>
-            <PrimaryButton label={tr("onboarding.next")} disabled={!selPolicy} onClick={() => goNext()} />
-          </>
-        );
-
-      case "notifications":
-        return (
-          <>
-            <div className="grid grid-cols-2 gap-4 w-full" style={{ marginBottom: "8px" }}>
-              <OptionCard
-                selected={selSound === "sound"}
-                onClick={() => { setSelSound("sound"); localStorage.setItem("careinn-notification-sound", "sound"); }}
-                icon={<Volume2 size={22} style={{ color: t.primary }} />}
-                label={tr("onboarding.notifications.sound")}
-              />
-              <OptionCard
-                selected={selSound === "silent"}
-                onClick={() => { setSelSound("silent"); localStorage.setItem("careinn-notification-sound", "silent"); }}
-                icon={<VolumeX size={22} style={{ color: t.primary }} />}
-                label={tr("onboarding.notifications.silent")}
-              />
+            {prefsCompleted && (
+              <div
+                className="flex items-center justify-center gap-2.5 w-full"
+                style={{ padding: "12px 18px", borderRadius: t.radiusLg, backgroundColor: t.primarySubtle }}
+              >
+                <div
+                  className="flex items-center justify-center shrink-0"
+                  style={{ width: "24px", height: "24px", borderRadius: t.radiusFull, backgroundColor: t.primary }}
+                >
+                  <Check size={15} color="#FFFFFF" strokeWidth={3} />
+                </div>
+                <span style={{ fontFamily, fontSize: "16px", fontWeight: 600, color: t.primary }}>
+                  {tr("onboarding.prefsForm.completed")}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center gap-3 w-full">
+              <div className="flex-1">
+                <GhostButton
+                  label={prefsCompleted ? tr("onboarding.prefsForm.review") : tr("onboarding.skip")}
+                  onClick={() => (prefsCompleted ? setOverlay("prefs") : goNext())}
+                />
+              </div>
+              <div className="flex-1">
+                <PrimaryButton
+                  label={prefsCompleted ? tr("onboarding.next") : tr("onboarding.prefsForm.open")}
+                  onClick={() => (prefsCompleted ? goNext() : setOverlay("prefs"))}
+                />
+              </div>
             </div>
-            <PrimaryButton label={tr("onboarding.next")} disabled={!selSound} onClick={() => goNext()} />
-          </>
-        );
-
-      case "bluetooth":
-        return (
-          <div className="flex items-center gap-3 w-full">
-            <div className="flex-1"><GhostButton label={tr("onboarding.no")} onClick={() => goNext()} /></div>
-            <div className="flex-1"><PrimaryButton label={tr("onboarding.yes")} onClick={() => setOverlay("bluetooth")} /></div>
-          </div>
-        );
-
-      case "screensaver":
-        return (
-          <>
-            <div className="grid grid-cols-3 gap-4 w-full" style={{ marginBottom: "8px" }}>
-              <OptionCard selected={selSaver === "30s"} onClick={() => saveSaver("30s")} label={tr("onboarding.screensaver.30s")} />
-              <OptionCard selected={selSaver === "1m"} onClick={() => saveSaver("1m")} label={tr("onboarding.screensaver.1m")} />
-              <OptionCard selected={selSaver === "5m"} onClick={() => saveSaver("5m")} label={tr("onboarding.screensaver.5m")} />
-            </div>
-            <PrimaryButton label={tr("onboarding.next")} disabled={!selSaver} onClick={() => goNext()} />
           </>
         );
 
@@ -584,14 +376,6 @@ export function OnboardingWizard({
         return (
           <>
             <div className="flex flex-col gap-3 w-full" style={{ marginBottom: "8px" }}>
-              <ConsentCheckbox
-                checked={prefsCompleted}
-                onToggle={() => setPrefsCompleted(!prefsCompleted)}
-                before={tr("onboarding.consent.prefs.before")}
-                link={tr("onboarding.consent.prefs.link")}
-                after={tr("onboarding.consent.prefs.after")}
-                onLinkClick={() => setOverlay("prefs")}
-              />
               <ConsentCheckbox
                 checked={termsAgreed}
                 onToggle={() => setTermsAgreed(!termsAgreed)}
@@ -601,35 +385,17 @@ export function OnboardingWizard({
               />
             </div>
             <div className="flex items-center gap-3 w-full">
-              <div className="flex-1"><GhostButton label={tr("onboarding.consent.startWithTour")} onClick={() => (prefsCompleted && termsAgreed) && finish(true)} /></div>
-              <div className="flex-1"><PrimaryButton label={tr("onboarding.consent.startNow")} disabled={!prefsCompleted || !termsAgreed} onClick={() => finish(false)} /></div>
+              <div className="flex-1"><GhostButton label={tr("onboarding.consent.startWithTour")} onClick={() => termsAgreed && finish(true)} /></div>
+              <div className="flex-1"><PrimaryButton label={tr("onboarding.consent.startNow")} disabled={!termsAgreed} onClick={() => finish(false)} /></div>
             </div>
           </>
         );
     }
   };
 
-  const skipConfig = useMemo(() => {
-    switch (stepId) {
-      case "displayName":
-        return {
-          label: tr("onboarding.skip"),
-          onClick: () => saveDisplayName("skipped"),
-        };
-      case "screensaver":
-        return {
-          label: tr("onboarding.skip"),
-          onClick: () => goNext(),
-        };
-      default:
-        return null;
-    }
-  }, [stepId, tr]);
-
   const Icon = STEP_ICONS[stepId];
-  const stepIndexInFull = STEP_SEQUENCE.findIndex(s => s.id === stepId);
   const totalSteps = STEP_SEQUENCE.length;
-  const progress = totalSteps > 1 ? (stepIndexInFull + 1) / totalSteps : 1;
+  const progress = totalSteps > 1 ? (stepIndex + 1) / totalSteps : 1;
 
   const HeaderButton = ({ onClick, children, ariaLabel }: { onClick: () => void; children: React.ReactNode; ariaLabel: string }) => (
     <button
@@ -793,7 +559,7 @@ export function OnboardingWizard({
               </div>
             </div>
             <span className="shrink-0" style={{ fontFamily, fontSize: "14px", fontWeight: 700, color: t.textMuted, minWidth: "72px", textAlign: isRTL ? "left" : "right" }}>
-              {tr("onboarding.progress", stepIndexInFull + 1, totalSteps)}
+              {tr("onboarding.progress", stepIndex + 1, totalSteps)}
             </span>
           </div>
 
@@ -848,33 +614,6 @@ export function OnboardingWizard({
               <div className="w-full flex flex-col gap-4">{renderStep()}</div>
             </div>
 
-            {skipConfig && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "24px",
-                  left: "40px",
-                }}
-              >
-                <button
-                  onClick={skipConfig.onClick}
-                  className="flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
-                  style={{
-                    height: "44px",
-                    padding: "0 22px",
-                    backgroundColor: "transparent",
-                    borderRadius: t.radiusMd,
-                    border: `1.5px solid ${t.borderDefault}`,
-                    color: t.textMuted,
-                    fontFamily,
-                    fontWeight: 700,
-                    fontSize: "15px",
-                  }}
-                >
-                  {skipConfig.label}
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -891,26 +630,14 @@ export function OnboardingWizard({
         />
       )}
 
-      {/* Patient Preferences Form — opened from the consent checkbox link.
-          Submitting it ticks the checkbox; closing without submitting leaves
-          the checkbox as the patient left it. */}
+      {/* Patient Preferences Form — a modal over the wizard, not a page the
+          patient navigates away to. Closing it (X) or finishing it returns to
+          the step it was opened from, wizard state and progress intact. */}
       {overlay === "prefs" && (
         <PatientPreferenceForm
+          variant="modal"
           onClose={() => setOverlay(null)}
           onSubmitted={() => setPrefsCompleted(true)}
-        />
-      )}
-
-      {/* Reused Bluetooth pairing flow (existing SettingsPanel dialog) */}
-      {overlay === "bluetooth" && (
-        <BluetoothDialog
-          onClose={() => { setOverlay(null); goNext(); }}
-          connectedId={btDevice}
-          onConnect={(id) => setBtDevice(id)}
-          onDisconnect={() => {
-            if (isAndroidApp() && btDevice) bluetoothBridge.disconnect(btDevice);
-            setBtDevice(null);
-          }}
         />
       )}
     </div>

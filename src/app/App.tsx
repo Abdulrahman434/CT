@@ -22,6 +22,7 @@ import { PdfReaderModal } from "./components/PdfReaderModal";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { MediaViewerModal } from "./components/MediaViewerModal";
 import { AboutUs } from "./components/AboutUs";
+import { PatientPreferenceForm } from "./components/PatientPreferenceForm";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { NotificationsPanel } from "./components/NotificationsPanel";
 import { AppTour } from "./components/AppTour";
@@ -219,6 +220,7 @@ function BedsideScreen() {
     setOpenCategory(null);
     setShowSurvey(false);
     setShowAboutUs(false);
+    setShowPreferenceForm(false);
     setShowSettings(false);
     setShowNotifications(false);
     setShowTasbih(false);
@@ -351,6 +353,7 @@ function BedsideScreen() {
   const [ctaPdfConfig, setCtaPdfConfig] = useState<{ url: string; title: string } | null>(null);
   const [ctaMediaConfig, setCtaMediaConfig] = useState<{ type: "image" | "video"; url: string; title: string } | null>(null);
   const [showAboutUs, setShowAboutUs] = useState(false);
+  const [showPreferenceForm, setShowPreferenceForm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifTrigger, setNotifTrigger] = useState(0);
@@ -461,6 +464,7 @@ function BedsideScreen() {
     !showCall &&
     !showSurvey &&
     !showAboutUs &&
+    !showPreferenceForm &&
     !showSettings &&
     !showNotifications &&
     !showTasbih &&
@@ -709,7 +713,7 @@ function BedsideScreen() {
   }, [activeBroadcast]);
 
   const anyOtherOverlayOpen = !!(
-    openCategory || showSurvey || showAboutUs || showSettings ||
+    openCategory || showSurvey || showAboutUs || showPreferenceForm || showSettings ||
     showNotifications || showTour || showConfigurator ||
     showCareMeExpanded || showCall || showFoodOrder || showNeedSomething || activeBroadcast ||
     showIptv || showCareMePinDialog || lockMenuApp ||
@@ -747,6 +751,7 @@ function BedsideScreen() {
     setOpenCategory(null);
     setShowSurvey(false);
     setShowAboutUs(false);
+    setShowPreferenceForm(false);
     setShowSettings(false);
     setShowNotifications(false);
     setShowTour(false);
@@ -1499,6 +1504,7 @@ function BedsideScreen() {
         if (showTour) { setShowTour(false); setTourDismissed(true); return; }
         if (showNotifications) { setShowNotifications(false); return; }
         if (showSettings) { setShowSettings(false); return; }
+        if (showPreferenceForm) { setShowPreferenceForm(false); return; }
         if (showAboutUs) { setShowAboutUs(false); return; }
         if (showSurvey) { setShowSurvey(false); return; }
         if (openCategory) { setOpenCategory(null); return; }
@@ -1582,7 +1588,7 @@ function BedsideScreen() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [openCategory, showSurvey, showAboutUs, showSettings,
+  }, [openCategory, showSurvey, showAboutUs, showPreferenceForm, showSettings,
     showNotifications, showTour, showTasbih, showConfigurator,
     showCareMeExpanded, showCall, showFoodOrder, showNeedSomething, activeBroadcast,
     activeGame, activeTool, showIptv, matchBinding]);
@@ -1746,6 +1752,7 @@ function BedsideScreen() {
                           ) : (
                             <PatientGreeting
                               onOpenAboutUs={() => setShowAboutUs(true)}
+                              onOpenPreferences={() => setShowPreferenceForm(true)}
                               onOpenTour={() => setShowTour(true)}
                               fillImage
                               showAboutUs={v.show_about_us}
@@ -1807,6 +1814,7 @@ function BedsideScreen() {
                         <>
                           <PatientGreeting
                             onOpenAboutUs={() => setShowAboutUs(true)}
+                            onOpenPreferences={() => setShowPreferenceForm(true)}
                             onOpenTour={() => setShowTour(true)}
                             showAboutUs={v.show_about_us}
                             onImageTap={(url) => setCtaMediaConfig({ type: "image", url, title: t("general.aboutUs") })}
@@ -1871,6 +1879,7 @@ function BedsideScreen() {
                         <>
                           <PatientGreeting
                             onOpenAboutUs={() => setShowAboutUs(true)}
+                            onOpenPreferences={() => setShowPreferenceForm(true)}
                             onOpenTour={() => setShowTour(true)}
                             onImageTap={(url) => setCtaMediaConfig({ type: "image", url, title: t("general.aboutUs") })}
                           />
@@ -2002,6 +2011,11 @@ function BedsideScreen() {
 
         {showAboutUs && (
           <AboutUs onClose={() => setShowAboutUs(false)} />
+        )}
+
+        {/* Patient Preferences Form — opened from the greeting card */}
+        {showPreferenceForm && (
+          <PatientPreferenceForm onClose={() => setShowPreferenceForm(false)} />
         )}
 
         {/* Settings Panel — slide-in from right */}
