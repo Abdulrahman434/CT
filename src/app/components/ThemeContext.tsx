@@ -533,7 +533,7 @@ export function primaryRgba(theme: ThemeConfig, alpha: number): string {
  * BUILT-IN CONFIGS — the default hospital(s) that ship with the system
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-import logoImage from "../../assets/28090400fb8eb3cdd61dbc2fa0cb3ac1b1f479a1.png";
+import logoImage from "../../assets/fakeeh-jeddah-logo.svg";
 import hospitalImg from "../../assets/6b12d49b8fdc59d4a31417b20fc4c1d9751cd530.png";
 
 import burjeelLogo from "../../assets/c8626cd3ed1ce90e9b3bab4a5f97a7315203f204.png";
