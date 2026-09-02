@@ -32,7 +32,6 @@ const translations: Record<string, TranslationEntry> = {
   "general.hello": { en: "Hello", ar: "مرحباً", ur: "ہیلو" },
   "general.welcome": { en: "Welcome to {0}. We wish you a comfortable and speedy recovery!", ar: "مرحباً بك في {0}. نتمنى لك الشفاء العاجل!", ur: "{0} میں خوش آمدید۔ ہم آپ کی آرام دہ اور جلد صحت یابی کے خواہاں ہیں!" },
   "general.aboutUs": { en: "About Us", ar: "عن المستشفى", ur: "ہمارے بارے میں" },
-  "general.setPreferences": { en: "Set Preferences", ar: "ضبط التفضيلات", ur: "ترجیحات سیٹ کریں" },
   "general.close": { en: "Close", ar: "إغلاق", ur: "بند کریں" },
   "general.home": { en: "Home", ar: "الرئيسية", ur: "ہوم" },
   "general.cancel": { en: "Cancel", ar: "إلغاء", ur: "منسوخ" },

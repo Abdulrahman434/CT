@@ -1752,7 +1752,6 @@ function BedsideScreen() {
                           ) : (
                             <PatientGreeting
                               onOpenAboutUs={() => setShowAboutUs(true)}
-                              onOpenPreferences={() => setShowPreferenceForm(true)}
                               onOpenTour={() => setShowTour(true)}
                               fillImage
                               showAboutUs={v.show_about_us}
@@ -1814,7 +1813,6 @@ function BedsideScreen() {
                         <>
                           <PatientGreeting
                             onOpenAboutUs={() => setShowAboutUs(true)}
-                            onOpenPreferences={() => setShowPreferenceForm(true)}
                             onOpenTour={() => setShowTour(true)}
                             showAboutUs={v.show_about_us}
                             onImageTap={(url) => setCtaMediaConfig({ type: "image", url, title: t("general.aboutUs") })}
@@ -1879,7 +1877,6 @@ function BedsideScreen() {
                         <>
                           <PatientGreeting
                             onOpenAboutUs={() => setShowAboutUs(true)}
-                            onOpenPreferences={() => setShowPreferenceForm(true)}
                             onOpenTour={() => setShowTour(true)}
                             onImageTap={(url) => setCtaMediaConfig({ type: "image", url, title: t("general.aboutUs") })}
                           />

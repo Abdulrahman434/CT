@@ -4,7 +4,7 @@ import { isAndroidApp, getDeviceInfo } from "../utils/androidBridge";
 import { useTheme, WEIGHT, SHADOW, TEXT_STYLE, SPACE } from "./ThemeContext";
 import { useLocale } from "./i18n";
 import { useRipple } from "./useRipple";
-import { HelpCircle, LogOut, SlidersHorizontal } from "lucide-react";
+import { HelpCircle, LogOut } from "lucide-react";
 import { AutoCarousel } from "./AutoCarousel";
 import { useNurseStore } from "./NurseDataStore";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -37,21 +37,18 @@ function AboutUsIcon({ color }: { color?: string }) {
 
 export function PatientGreeting({
   onOpenAboutUs,
-  onOpenPreferences,
   onOpenTour,
   fillImage,
   showAboutUs = true,
   onImageTap
 }: {
   onOpenAboutUs?: () => void;
-  onOpenPreferences?: () => void;
   onOpenTour?: () => void;
   fillImage?: boolean;
   showAboutUs?: boolean;
   onImageTap?: (url: string) => void;
 }) {
   const [pressed, setPressed] = useState(false);
-  const [prefsPressed, setPrefsPressed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { theme } = useTheme();
   const { t, isRTL, fontFamily } = useLocale();
@@ -269,12 +266,14 @@ export function PatientGreeting({
         />
       </div>
 
-      {/* About Us + Set Preferences — equal-width pills below image */}
-      <div className="mx-4 mb-4 flex items-stretch gap-2.5" style={{ position: "relative", zIndex: 10 }}>
-        {showAboutUs && (
+      {/* About Us — pill below image. It had the row to itself before the
+          Patient Preferences Form was given a second door here, and has it
+          again: that form is now opened from the CareMe preferences card. */}
+      {showAboutUs && (
+        <div className="mx-4 mb-4" style={{ position: "relative", zIndex: 10 }}>
           <button
             data-nav="true"
-            className="flex flex-1 min-w-0 items-center justify-center gap-1.5 py-3 cursor-pointer transition-transform duration-150"
+            className="flex items-center justify-center gap-2.5 w-full py-3 cursor-pointer transition-transform duration-150"
             style={{
               backgroundColor: pressed ? theme.primaryDark : theme.primary,
               transform: pressed ? "scale(0.96)" : "scale(1)",
@@ -302,62 +301,16 @@ export function PatientGreeting({
                 fontFamily: fontFamily,
                 ...TEXT_STYLE.buttonSm,
                 color: theme.textInverse,
-                /* Latin only: letter-spacing pulls apart the joined forms of Arabic and
-                 Urdu, and the Urdu label needs every pixel beside the icon. */
-              letterSpacing: isRTL ? "0" : "0.3px",
-                whiteSpace: "nowrap",
+                /* Latin only: letter-spacing pulls apart the joined forms of
+                   Arabic and Urdu. */
+                letterSpacing: isRTL ? "0" : "0.3px",
               }}
             >
               {t("general.aboutUs")}
             </span>
           </button>
-        )}
-
-        <button
-          data-nav="true"
-          className="flex flex-1 min-w-0 items-center justify-center gap-1.5 py-3 cursor-pointer transition-transform duration-150"
-          style={{
-            backgroundColor: theme.primarySubtle,
-            transform: prefsPressed ? "scale(0.96)" : "scale(1)",
-            border: `1px solid ${theme.primary}`,
-            outline: "none",
-            borderRadius: theme.radiusMd,
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenPreferences?.();
-          }}
-          onPointerDown={(e) => {
-            e.stopPropagation();
-            setPrefsPressed(true);
-          }}
-          onPointerUp={(e) => {
-            e.stopPropagation();
-            setPrefsPressed(false);
-          }}
-          onPointerLeave={() => setPrefsPressed(false)}
-        >
-          {/* Paired with the info glyph on About Us: same 20px box, same
-              1.67 stroke, so the two buttons read as one row. The Urdu label
-              is the tight one — icon, gap and label together leave the least
-              slack in the 400px column, so measure ur before changing any of
-              the three. */}
-          <SlidersHorizontal size={18} strokeWidth={1.667} color={theme.primary} className="shrink-0" />
-          <span
-            style={{
-              fontFamily: fontFamily,
-              ...TEXT_STYLE.buttonSm,
-              color: theme.primary,
-              /* Latin only: letter-spacing pulls apart the joined forms of Arabic and
-                 Urdu, and the Urdu label needs every pixel beside the icon. */
-              letterSpacing: isRTL ? "0" : "0.3px",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t("general.setPreferences")}
-          </span>
-        </button>
-      </div>
+        </div>
+      )}
 
       <ConfirmDialog
         visible={showLogoutConfirm}

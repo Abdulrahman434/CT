@@ -33,9 +33,9 @@ const STEP_BACKGROUNDS: Record<string, string> = {
  * — language and PIN — and ends on the consent step.
  *
  * The Patient Preference Form is NOT part of setup. It used to sit between
- * the PIN and consent steps as an introduction; it is now reached from the
- * home screen's "Set Preferences" pill and from the CareMe preferences card,
- * which is also where the answers are read back. Setup does not ask for it.
+ * the PIN and consent steps as an introduction; it is now opened from the
+ * CareMe preferences card, which is also where the answers are read back and
+ * the only place the form is reachable. Setup does not ask for it.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 type StepId = "welcome" | "language" | "pin" | "consent";

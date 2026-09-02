@@ -723,12 +723,13 @@ export function PatientPreferenceForm({
     () => preferenceAppName(t, activeConfigId, theme.hospitalName),
     [activeConfigId, theme.hospitalName, t]);
 
-  /* ── One saved record, three doors ───────────────────────────────────
-   * The onboarding step, the wizard's "Review answers" and the home
-   * screen's "Set Preferences" all mount THIS component, which reads and
-   * writes the one record under PREFS_ANSWERS_KEY. There is no per-entry
-   * answer state: what the patient answers behind one door is what the
-   * other two open on.
+  /* ── One saved record, one door ──────────────────────────────────────
+   * The CareMe preferences card mounts THIS component, which reads and
+   * writes the one record under PREFS_ANSWERS_KEY. It was three doors —
+   * an onboarding step, the wizard's "Review answers" and the home screen's
+   * "Set Preferences" — and the seeding below is what kept them agreeing
+   * with each other; it still earns its place with one, because a form left
+   * at question 3 has to reopen on the answers already given.
    *
    * So the form opens on whatever THIS admission has stored — nothing when
    * the patient has never filled it in (first completion), their own answers

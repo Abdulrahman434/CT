@@ -1839,15 +1839,21 @@ function SlideIcon({ slideKey }: { slideKey: string }) {
 }
 
 /* ─── Your Preferences ─────────────────────────────────────────────────────
- * A second door into the Patient Preferences Form, beside the home screen's
- * "Set Preferences" pill. Both open the ONE form App.tsx mounts, over the one
- * record it saves — this card only reads that record back, so what the
- * patient answers behind either door is what this shows.
+ * THE door into the Patient Preferences Form. The onboarding step that used
+ * to introduce it and the home screen's "Set Preferences" pill are both gone,
+ * so this card is where the patient meets the form — the one App.tsx mounts,
+ * over the one record it saves, which this card reads back.
+ *
+ * And only until they send it. The answered state carries no button by
+ * design: what the patient submitted is what the care team is working from,
+ * so the card shows it and nothing re-opens it. A change of mind is a word
+ * with a nurse, not a silent edit behind the plan.
  *
  * TWO STATES, TOLD APART BY completedAt. The form writes every answer as it
  * is given, so a stored record only means the patient started; a submit is
  * what stamps completedAt. A form abandoned at question 3 therefore still
- * shows the invitation here rather than a "Submitted" badge over half a form.
+ * shows the invitation here rather than a "Submitted" badge over half a form
+ * — and is still openable, which is the point of measuring the submit.
  *
  * The answers scroll INSIDE the card, under a badge that sits outside that
  * box and stays on screen however long the list runs. The card keeps the
