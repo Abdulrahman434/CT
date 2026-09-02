@@ -3,15 +3,12 @@ import { useTheme, SHADOW, SPACE, TYPE_SCALE, WEIGHT, LEADING, buildTheme } from
 import { useLocale, type Locale } from "./i18n";
 import { toast } from "sonner";
 import {
-  Hand, Globe, Shield, SlidersHorizontal, ClipboardList,
+  Hand, Globe, Shield, SlidersHorizontal,
   FileCheck2, Check, ChevronLeft, Home,
 } from "lucide-react";
 import { markOnboardingComplete } from "../lib/onboardingStore";
 import { isAccountSet } from "../lib/accountAuth";
 import { MyPreferencesDialog } from "./MyAccountDialog";
-import {
-  PatientPreferenceForm, isPreferenceFormComplete, readPreferenceRecord,
-} from "./PatientPreferenceForm";
 
 import imgLockAppPages from "../../assets/lock app pages..jpg";
 import imgLanguage from "../../assets/language.jpg";
@@ -31,18 +28,22 @@ const STEP_BACKGROUNDS: Record<string, string> = {
  * tappable answer cards.
  *
  * Data-driven step machine: STEP_SEQUENCE is the single source of truth for
- * order, the progress bar and the step counter. The flow asks two questions
- * only — language and PIN — then introduces the Patient Preference Form and
- * ends on the consent step.
+ * order, the progress bar and the step counter — nothing here counts steps by
+ * hand, so removing one re-numbers the whole flow. It asks two questions only
+ * — language and PIN — and ends on the consent step.
+ *
+ * The Patient Preference Form is NOT part of setup. It used to sit between
+ * the PIN and consent steps as an introduction; it is now reached from the
+ * home screen's "Set Preferences" pill and from the CareMe preferences card,
+ * which is also where the answers are read back. Setup does not ask for it.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-type StepId = "welcome" | "language" | "pin" | "prefsForm" | "consent";
+type StepId = "welcome" | "language" | "pin" | "consent";
 
 const STEP_SEQUENCE: StepId[] = [
   "welcome",
   "language",
   "pin",
-  "prefsForm",
   "consent",
 ];
 
@@ -50,7 +51,6 @@ const STEP_ICONS: Record<StepId, any> = {
   welcome: Hand,
   language: Globe,
   pin: Shield,
-  prefsForm: ClipboardList,
   consent: FileCheck2,
 };
 
@@ -106,16 +106,10 @@ export function OnboardingWizard({
 
   /* per-step answers — pre-filled from storage so re-opening shows current choices */
   const [selLocale, setSelLocale] = useState<Locale>(() => (readLS("careinn-locale") as Locale) || locale || "en");
-  /* Driven by the form's own saved answers, not by the wizard's completion
-     flag — the flag is written for every finished onboarding, filled form
-     or not. A submitted record is not enough either: the step only reads as
-     completed once every gated question in it carries an answer. */
-  const [prefsCompleted, setPrefsCompleted] = useState(() =>
-    isPreferenceFormComplete(readPreferenceRecord()));
   const [termsAgreed, setTermsAgreed] = useState(() => !!readLS("careinn-consent-terms-agreed"));
 
   /* reused native flows rendered on top of the wizard */
-  const [overlay, setOverlay] = useState<"pin" | "prefs" | null>(null);
+  const [overlay, setOverlay] = useState<"pin" | null>(null);
 
   const stepIndex = STEP_SEQUENCE.indexOf(stepId);
 
@@ -145,8 +139,8 @@ export function OnboardingWizard({
 
   /* ═══════════════════ shared UI bits ═══════════════════ */
 
-  /** The descriptive paragraph on the intro-style steps (welcome, prefsForm,
-   *  the PIN note). It carries no margin of its own: the spacing between the
+  /** The descriptive paragraph on the intro-style steps (welcome, the PIN
+   *  note). It carries no margin of its own: the spacing between the
    *  icon, the heading, this paragraph and the buttons is the column's single
    *  gap, so no step can drift out of rhythm with the others. */
   const INTRO_BODY: React.CSSProperties = {
@@ -354,48 +348,6 @@ export function OnboardingWizard({
             <div className="flex items-center gap-3 w-full">
               <div className="flex-1"><GhostButton label={tr("onboarding.skip")} onClick={() => { toast(tr("onboarding.pin.skipToast")); goNext(); }} /></div>
               <div className="flex-1"><PrimaryButton label={tr("onboarding.yes")} onClick={() => setOverlay("pin")} /></div>
-            </div>
-          </>
-        );
-
-      /* The form opens as a modal on top of the wizard, so closing or
-         submitting it lands the patient back on this step with the flow
-         and the progress bar untouched. */
-      case "prefsForm":
-        return (
-          <>
-            <p style={INTRO_BODY}>
-              {tr("onboarding.prefsForm.body")}
-            </p>
-            {prefsCompleted && (
-              <div
-                className="flex items-center justify-center gap-2.5 w-full"
-                style={{ padding: "12px 18px", borderRadius: t.radiusLg, backgroundColor: t.primarySubtle }}
-              >
-                <div
-                  className="flex items-center justify-center shrink-0"
-                  style={{ width: "24px", height: "24px", borderRadius: t.radiusFull, backgroundColor: t.primary }}
-                >
-                  <Check size={15} color="#FFFFFF" strokeWidth={3} />
-                </div>
-                <span style={{ fontFamily, fontSize: "16px", fontWeight: 600, color: t.primary }}>
-                  {tr("onboarding.prefsForm.completed")}
-                </span>
-              </div>
-            )}
-            <div className="flex items-center gap-3 w-full">
-              <div className="flex-1">
-                <GhostButton
-                  label={prefsCompleted ? tr("onboarding.prefsForm.review") : tr("onboarding.skip")}
-                  onClick={() => (prefsCompleted ? setOverlay("prefs") : goNext())}
-                />
-              </div>
-              <div className="flex-1">
-                <PrimaryButton
-                  label={prefsCompleted ? tr("onboarding.next") : tr("onboarding.prefsForm.open")}
-                  onClick={() => (prefsCompleted ? goNext() : setOverlay("prefs"))}
-                />
-              </div>
             </div>
           </>
         );
@@ -661,16 +613,6 @@ export function OnboardingWizard({
         />
       )}
 
-      {/* Patient Preferences Form — a modal over the wizard, not a page the
-          patient navigates away to. Closing it (X) or finishing it returns to
-          the step it was opened from, wizard state and progress intact. */}
-      {overlay === "prefs" && (
-        <PatientPreferenceForm
-          variant="modal"
-          onClose={() => setOverlay(null)}
-          onSubmitted={(record) => setPrefsCompleted(isPreferenceFormComplete(record))}
-        />
-      )}
     </div>
   );
 }
