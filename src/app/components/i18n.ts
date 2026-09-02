@@ -477,6 +477,13 @@ const translations: Record<string, TranslationEntry> = {
   "care.imaging.title": { en: "Scans & Imaging", ar: "الأشعة والتصوير", ur: "کین اور امیجنگ" },
   "care.observations.title": { en: "Observations", ar: "الملاحظات السريرية", ur: "مشاہدات" },
   "care.discharge.title": { en: "Discharge Plan", ar: "خطة الخروج", ur: "ڈسچارج پلان" },
+  /* CareMe preferences card — the panel's entry point into the Patient
+     Preferences Form. The answers themselves are labelled by the form's own
+     ppf.q.* keys, so nothing here repeats a question. */
+  "care.preferences.title": { en: "Your Preferences", ar: "تفضيلاتك", ur: "آپ کی ترجیحات" },
+  "care.preferences.description": { en: "A few short questions about your meals, sleep, prayer, and daily care — so your stay follows what works for you.", ar: "أسئلة قصيرة عن وجباتك ونومك وصلاتك ورعايتك اليومية — لتكون إقامتك على ما يناسبك.", ur: "آپ کے کھانے، نیند، نماز اور روزمرہ نگہداشت کے بارے میں چند مختصر سوالات — تاکہ آپ کا قیام آپ کی پسند کے مطابق ہو۔" },
+  "care.preferences.fill": { en: "Fill out preferences", ar: "تعبئة التفضيلات", ur: "ترجیحات پُر کریں" },
+  "care.preferences.submitted": { en: "Submitted", ar: "تم الإرسال", ur: "جمع کرا دیا گیا" },
   "care.extension": { en: "Extension", ar: "التحويلة", ur: "ایکسٹینشن" },
   "care.age": { en: "Age", ar: "العمر", ur: "عمر" },
   "care.ageUnits": { en: "{0} Yrs", ar: "{0} سنة", ur: "{0} سال" },
@@ -1325,6 +1332,27 @@ const translations: Record<string, TranslationEntry> = {
   "ppf.q.other.otherPreference": { en: "Is there any other preference not mentioned in this checklist that you would like to receive or request?", ar: "هل هناك أي تفضيل آخر غير مذكور في هذه القائمة المرجعية ترغب في الاستفادة منه أو طلبه؟", ur: "کیا کوئی اور ترجیح ہے جو اس فہرست میں شامل نہیں اور آپ اسے حاصل کرنا یا اس کی درخواست کرنا چاہیں گے؟" },
   "ppf.q.other.virtualRoom": { en: "Virtual Room Content (Patient Rights and Responsibilities – Important Contacts – Quiet Time)", ar: "محتويات الغرفة الافتراضية (حقوق ومسؤوليات المريض – أرقام تهمك – أوقات الراحة)", ur: "ورچوئل روم کا مواد (مریض کے حقوق و ذمہ داریاں – اہم رابطے – خاموشی کا وقت)" },
   "ppf.q.other.favouriteColour": { en: "What is your favorite color?", ar: "ما هو لونك المفضل؟", ur: "آپ کا پسندیدہ رنگ کون سا ہے؟" },
+
+  /* Short labels — the same questions named rather than asked, for the CareMe
+     preferences card, which lists all thirteen answers in a column the width
+     of one panel. A sentence-length question there is three wrapped lines
+     around a one-word answer, so the card reads as a wall of questions
+     instead of a list of what the patient chose. The form itself still asks
+     the full ppf.q.* question; a question with no short label here falls back
+     to it. */
+  "ppf.short.food.mealTiming": { en: "Meal times", ar: "أوقات الوجبات", ur: "کھانے کے اوقات" },
+  "ppf.short.food.dietary": { en: "Dietary preferences", ar: "التفضيلات الغذائية", ur: "غذائی ترجیحات" },
+  "ppf.short.partner.participate": { en: "Care Partner Program", ar: "برنامج شركاء الرعاية", ur: "کیئر پارٹنر پروگرام" },
+  "ppf.short.partner.appAccess": { en: "Results via the app", ar: "النتائج عبر التطبيق", ur: "ایپ کے ذریعے نتائج" },
+  "ppf.short.handover.roundTime": { en: "Doctors' rounds", ar: "وقت مرور الأطباء", ur: "ڈاکٹروں کا راؤنڈ" },
+  "ppf.short.handover.presence": { en: "Bedside handover", ar: "تسليم المناوبة", ur: "بیڈ سائیڈ ہینڈ اوور" },
+  "ppf.short.religious.support": { en: "Spiritual support", ar: "الدعم الديني", ur: "روحانی معاونت" },
+  "ppf.short.religious.interpreter": { en: "Interpreter", ar: "مترجم أو لغة الإشارة", ur: "مترجم" },
+  "ppf.short.comfort.grooming": { en: "Grooming services", ar: "خدمات الحلاقة", ur: "حجامت کی خدمات" },
+  "ppf.short.comfort.bathingTime": { en: "Daily bath", ar: "الاستحمام اليومي", ur: "روزانہ غسل" },
+  "ppf.short.comfort.rights": { en: "Rights & responsibilities", ar: "الحقوق والمسؤوليات", ur: "حقوق و ذمہ داریاں" },
+  "ppf.short.other.otherPreference": { en: "Other preference", ar: "تفضيل آخر", ur: "دیگر ترجیح" },
+  "ppf.short.other.virtualRoom": { en: "Virtual room content", ar: "محتوى الغرفة الافتراضية", ur: "ورچوئل روم کا مواد" },
 
   /* Optional note prompts — the always-visible note under each yes/no
      question in PatientPreferenceForm. Keyed by question id; a question with

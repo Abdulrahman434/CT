@@ -166,7 +166,7 @@ export function admissionKey(): string {
  *  trace. */
 export const NO_PREFERENCE = "no-preference";
 
-type ControlKind = "yesno" | "time" | "choice" | "text";
+export type ControlKind = "yesno" | "time" | "choice" | "text";
 
 interface QuestionDef {
   /** Stable, language-neutral question id — this is what gets stored. */
@@ -323,6 +323,109 @@ export function isPreferenceFormComplete(record: PreferenceFormRecord | null): b
   /* The agreement screen is part of the form whenever its trigger is "yes". */
   if (answers[CARE_PARTNER_TRIGGER]?.value === "yes" && !record.carePartner?.accepted) return false;
   return true;
+}
+
+/** Fired on every write to PREFS_ANSWERS_KEY, so anything showing the saved
+ *  answers outside this form (the CareMe preferences card) can re-read them.
+ *  `storage` events never fire in the tab that wrote them, and the form is a
+ *  modal over screens that stay mounted underneath it. */
+export const PREFS_SAVED_EVENT = "careinn-prefs-saved";
+
+/** Q4 names the hospital's app. ThemeConfig carries only an English
+ *  hospitalName, so the localized brand name is looked up by active config id
+ *  and falls back to the English name when that hospital has no entry. */
+export function preferenceAppName(
+  t: (key: string, ...args: (string | number)[]) => string,
+  activeConfigId: string,
+  hospitalName: string,
+): string {
+  const key = `ppf.appName.${activeConfigId}`;
+  const localized = t(key);
+  return localized === key ? hospitalName : localized;
+}
+
+/** One answered question, resolved to the strings a summary shows. */
+export interface PreferenceSummaryRow {
+  id: string;
+  /** The question named, not asked — see ppf.short.* */
+  label: string;
+  value: string;
+  /** What was asked, so a summary can mark a time answer as one. */
+  kind: ControlKind;
+  /** The patient's optional note, when they left one. */
+  note?: string;
+}
+
+/** The saved answers as label/value rows, in the order the form asks them.
+ *
+ *  Questions the patient has not answered are left out rather than shown
+ *  blank — a summary is what they told us, not a copy of the form. Formatting
+ *  lives here, beside the question list it reads, so a summary shown anywhere
+ *  else cannot drift from how the form itself reads an answer back. */
+export function preferenceSummaryRows(
+  record: PreferenceFormRecord | null,
+  t: (key: string, ...args: (string | number)[]) => string,
+  appName: string,
+): PreferenceSummaryRow[] {
+  if (!record) return [];
+  const answers = record.answers ?? {};
+  const rows: PreferenceSummaryRow[] = [];
+  for (const section of SECTIONS) {
+    for (const q of section.questions) {
+      const a = answers[q.id];
+      if (!a) continue;
+      const value = formatAnswer(q, a, t);
+      if (!value) continue;
+      const note = a.note?.text.trim();
+      rows.push({
+        id: q.id,
+        label: shortLabel(q.id, t, appName),
+        value,
+        kind: q.kind,
+        ...(note ? { note } : {}),
+      });
+    }
+  }
+  return rows;
+}
+
+/** The question named in a few words, falling back to the question itself for
+ *  anything with no short label yet. */
+function shortLabel(
+  id: string,
+  t: (key: string, ...args: (string | number)[]) => string,
+  appName: string,
+): string {
+  const key = `ppf.short.${id}`;
+  const short = t(key);
+  return short === key ? t(`ppf.q.${id}`, appName) : short;
+}
+
+/** "" when the question carries nothing to show. */
+function formatAnswer(
+  q: QuestionDef,
+  a: PreferenceAnswer,
+  t: (key: string, ...args: (string | number)[]) => string,
+): string {
+  if (q.kind === "text") return a.text?.text.trim() ?? "";
+  const value = a.value;
+  if (!value) return "";
+  if (value === NO_PREFERENCE) return t("ppf.noPreference");
+  switch (q.kind) {
+    case "yesno":
+      return t(value === "yes" ? "ppf.yes" : "ppf.no");
+    case "time": {
+      const w = toWheel(value);
+      return `${w.hour}:${w.minute} ${t(w.pm ? "ppf.time.pm" : "ppf.time.am")}`;
+    }
+    case "choice": {
+      const key = `ppf.option.${q.id}.${value}`;
+      const label = t(key);
+      return label === key ? value : label;
+    }
+    default:
+      return value;
+  }
 }
 
 type Screen =
@@ -615,14 +718,10 @@ export function PatientPreferenceForm({
    * decoration, not something the patient has to read. */
   const iconColor = darkMode ? theme.accent : theme.accentDark;
 
-  /* Q4 names the hospital's app. ThemeConfig carries only an English
-     hospitalName, so the localized brand name is looked up by active config id
-     and falls back to the English name when that hospital has no entry. */
-  const appName = useMemo(() => {
-    const key = `ppf.appName.${activeConfigId}`;
-    const localized = t(key);
-    return localized === key ? theme.hospitalName : localized;
-  }, [activeConfigId, theme.hospitalName, t]);
+  /* Q4 names the hospital's app — see preferenceAppName. */
+  const appName = useMemo(
+    () => preferenceAppName(t, activeConfigId, theme.hospitalName),
+    [activeConfigId, theme.hospitalName, t]);
 
   /* ── One saved record, three doors ───────────────────────────────────
    * The onboarding step, the wizard's "Review answers" and the home
@@ -775,6 +874,9 @@ export function PatientPreferenceForm({
     } catch {
       /* ignored by design — see above */
     }
+    /* Outside the try: a summary that re-reads a store which refused the
+       write is still correct — it reads back what is actually saved. */
+    window.dispatchEvent(new CustomEvent(PREFS_SAVED_EVENT));
   };
 
   /* ── The running save ────────────────────────────────────────────────

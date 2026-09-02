@@ -51,9 +51,14 @@ import {
   ChevronRight,
   ArrowLeftRight,
   Sparkles,
+  SlidersHorizontal,
 } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { InternalPageHeader } from "./InternalPageHeader";
+import {
+  PREFS_SAVED_EVENT, preferenceAppName, preferenceSummaryRows, readPreferenceRecord,
+  type PreferenceSummaryRow,
+} from "./PatientPreferenceForm";
 import svgPaths from "../../imports/svg-ca68x68c4i";
 
 /* ─── Assets ─── */
@@ -131,6 +136,7 @@ const ALL_SLIDES: SlideConfig[] = [
   { key: "imaging", title: "Scans & Imaging", titleKey: "care.imaging.title", icon: ImageIcon },
   { key: "baby", title: "Baby Camera", titleKey: "care.baby.title", icon: Baby },
   { key: "discharge", title: "Discharge Plan", titleKey: "care.discharge.title", icon: LogOut },
+  { key: "preferences", title: "Your Preferences", titleKey: "care.preferences.title", icon: SlidersHorizontal },
   { key: "billing", title: "Financial Summary", titleKey: "care.billing.title", icon: CreditCard },
 ];
 
@@ -1826,9 +1832,150 @@ function SlideIcon({ slideKey }: { slideKey: string }) {
     case "imaging": return <ImageIcon {...iconProps} style={{ color }} />;
     case "baby": return <Baby {...iconProps} style={{ color }} />;
     case "discharge": return <LogOut {...iconProps} style={{ color }} />;
+    case "preferences": return <SlidersHorizontal {...iconProps} style={{ color }} />;
     case "observations": return <Activity {...iconProps} style={{ color }} />;
     default: return <Heart {...iconProps} style={{ color }} />;
   }
+}
+
+/* ─── Your Preferences ─────────────────────────────────────────────────────
+ * A second door into the Patient Preferences Form, beside the home screen's
+ * "Set Preferences" pill. Both open the ONE form App.tsx mounts, over the one
+ * record it saves — this card only reads that record back, so what the
+ * patient answers behind either door is what this shows.
+ *
+ * TWO STATES, TOLD APART BY completedAt. The form writes every answer as it
+ * is given, so a stored record only means the patient started; a submit is
+ * what stamps completedAt. A form abandoned at question 3 therefore still
+ * shows the invitation here rather than a "Submitted" badge over half a form.
+ *
+ * The answers scroll INSIDE the card, under a badge that sits outside that
+ * box and stays on screen however long the list runs. The card keeps the
+ * height the panel gave it instead of growing past the column beside it.
+ *
+ * ONE ANSWER, ONE BLOCK, borrowing the shape of the Discharge Plan card
+ * beside it: what was asked on the left, what the patient chose in a pill on
+ * the right, one line each. The questions are named rather than asked (see
+ * ppf.short.*) because the full wording turned every answer into three
+ * wrapped lines over a one-word value — a wall of questions to read back
+ * through rather than a list of choices to scan. The form is where the
+ * questions are asked in full; this is where the answers are read. */
+function PreferencesSlide({ theme, isExpanded = false, onOpenForm }: {
+  theme: any;
+  isExpanded?: boolean;
+  onOpenForm?: () => void;
+}) {
+  const { t, fontFamily } = useLocale();
+  const { activeConfigId } = useTheme();
+  const [record, setRecord] = useState(() => readPreferenceRecord());
+
+  /* The form is a modal over this card, which stays mounted underneath it —
+     and a same-tab write fires no storage event. */
+  useEffect(() => {
+    const refresh = () => setRecord(readPreferenceRecord());
+    window.addEventListener(PREFS_SAVED_EVENT, refresh);
+    return () => window.removeEventListener(PREFS_SAVED_EVENT, refresh);
+  }, []);
+
+  const rows: PreferenceSummaryRow[] = preferenceSummaryRows(
+    record, t, preferenceAppName(t, activeConfigId, theme.hospitalName));
+  const submitted = !!record?.completedAt && rows.length > 0;
+
+  if (!submitted) {
+    return (
+      <div className="flex flex-col items-center justify-center text-center h-full gap-3" style={{ padding: isExpanded ? "24px 12px" : "16px 8px" }}>
+        <div
+          className="flex items-center justify-center rounded-full shrink-0"
+          style={{
+            width: isExpanded ? SPACE[8] : SPACE[6],
+            height: isExpanded ? SPACE[8] : SPACE[6],
+            backgroundColor: theme.primarySubtle,
+          }}
+        >
+          <SlidersHorizontal size={isExpanded ? 28 : 22} strokeWidth={1.8} style={{ color: theme.primary }} />
+        </div>
+        <span style={{ fontFamily, ...(isExpanded ? TEXT_STYLE.cardTitle : TEXT_STYLE.subtitle), color: theme.textHeading }}>
+          {t("care.preferences.title")}
+        </span>
+        <p style={{ fontFamily, ...(isExpanded ? TEXT_STYLE.body : TEXT_STYLE.caption), color: theme.textMuted, maxWidth: "340px" }}>
+          {t("care.preferences.description")}
+        </p>
+        <button
+          data-nav="true"
+          onClick={onOpenForm}
+          className="cursor-pointer active:scale-95 transition-transform mt-1"
+          style={{
+            backgroundColor: theme.primary,
+            borderRadius: theme.radiusMd,
+            border: "none",
+            outline: "none",
+            padding: "14px 22px",
+          }}
+        >
+          <span style={{ fontFamily, ...TEXT_STYLE.buttonSm, color: theme.textInverse }}>
+            {t("care.preferences.fill")}
+          </span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full min-h-0">
+      {/* The panel already titles the card — the slide's own title bar when it
+          is a slide, the header box above it when the row is expanded — so the
+          badge is all this row adds. Repeating "Your Preferences" under a line
+          that already says it is how a card starts looking bolted on. */}
+      <div
+        className="shrink-0 flex items-center justify-end py-2 mb-1 border-b"
+        style={{ borderColor: theme.borderSubtle }}
+      >
+        <div
+          className="flex items-center gap-1 rounded-full"
+          style={{ backgroundColor: theme.successSubtle, padding: "4px 10px" }}
+        >
+          <Check size={12} strokeWidth={3} style={{ color: theme.success }} />
+          <span style={{ fontFamily, ...TEXT_STYLE.micro, color: theme.success }}>
+            {t("care.preferences.submitted")}
+          </span>
+        </div>
+      </div>
+
+      <div
+        className="flex-1 min-h-0 overflow-y-auto careme-scroll flex flex-col gap-2"
+        style={{ paddingInlineEnd: "8px" }}
+      >
+        {rows.map((row) => (
+          <SectionContainer key={row.id} theme={theme} padding={isExpanded ? "16px 18px" : "13px 15px"}>
+            <div className="flex items-center gap-3">
+              <span className="flex-1 min-w-0" style={{ fontFamily, ...TEXT_STYLE.bodyEmphasis, color: theme.textHeading }}>
+                {row.label}
+              </span>
+              <span
+                className="flex items-center gap-1 shrink-0"
+                style={{
+                  backgroundColor: `${theme.primary}18`,
+                  borderRadius: "12px",
+                  padding: "6px 12px",
+                  ...TEXT_STYLE.pill,
+                  fontWeight: WEIGHT.bold,
+                  color: theme.primary,
+                }}
+              >
+                {row.kind === "time" && <Clock size={isExpanded ? 12 : 10} />}
+                {row.value}
+              </span>
+            </div>
+            {row.note && (
+              <p style={{ fontFamily, ...TEXT_STYLE.helper, color: theme.textMuted, marginTop: "8px" }}>
+                {row.note}
+              </p>
+            )}
+          </SectionContainer>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 /* ─── CareMe Heart SVG from Figma ─── */
@@ -1910,7 +2057,7 @@ function DateStrip() {
 
 /* ─── Main Component ─── */
 
-export function CareMe({ onExpand }: { onExpand?: () => void }) {
+export function CareMe({ onExpand, onOpenPreferences }: { onExpand?: () => void; onOpenPreferences?: () => void }) {
   const { theme } = useTheme();
   const { t, isRTL, dir } = useLocale();
   const nurseStore = useNurseStore();
@@ -2107,6 +2254,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
       case "billing": return <FinanceSlide theme={theme} />;
       case "baby": return <BabyCameraSlide />;
       case "discharge": return <TimelineSlide items={nurseStore.dischargePlan} theme={theme} completedLabel="2 of 6 Completed" type="discharge" />;
+      case "preferences": return <PreferencesSlide theme={theme} onOpenForm={onOpenPreferences} />;
       case "observations": return <ClinicalObservationsSlide theme={theme} />;
       default: return null;
     }
@@ -2328,12 +2476,13 @@ function ExpandedSlideIcon({ slideKey, size = 20 }: { slideKey: string; size?: n
     case "baby": return <Baby {...iconProps} />;
     case "billing": return <Wallet {...iconProps} />;
     case "discharge": return <LogOut {...iconProps} />;
+    case "preferences": return <SlidersHorizontal {...iconProps} />;
     case "observations": return <Activity {...iconProps} />;
     default: return <Heart {...iconProps} />;
   }
 }
 
-function renderExpandedSlideContent(key: string, theme: any, t: (k: string) => string, nurseStore: any) {
+function renderExpandedSlideContent(key: string, theme: any, t: (k: string) => string, nurseStore: any, onOpenPreferences?: () => void) {
   switch (key) {
     case "profile": return <PatientProfileSlide theme={theme} isExpanded />;
     case "overview": return <CareOverviewSlide theme={theme} isExpanded />;
@@ -2343,12 +2492,13 @@ function renderExpandedSlideContent(key: string, theme: any, t: (k: string) => s
     case "billing": return <FinanceSlide theme={theme} isExpanded />;
     case "baby": return <BabyCameraSlide isExpanded />;
     case "discharge": return <TimelineSlide items={nurseStore?.dischargePlan || []} theme={theme} completedLabel="2 of 6 Completed" isExpanded type="discharge" />;
+    case "preferences": return <PreferencesSlide theme={theme} isExpanded onOpenForm={onOpenPreferences} />;
     case "observations": return <ClinicalObservationsSlide theme={theme} isExpanded />;
     default: return null;
   }
 }
 
-export function CareMeExpanded({ onClose }: { onClose: () => void }) {
+export function CareMeExpanded({ onClose, onOpenPreferences }: { onClose: () => void; onOpenPreferences?: () => void }) {
   const { theme } = useTheme();
   const { t, isRTL } = useLocale();
   const nurseStore = useNurseStore();
@@ -2449,7 +2599,7 @@ export function CareMeExpanded({ onClose }: { onClose: () => void }) {
               >
                 {/* Column content */}
                 <div className="flex-1 min-h-0 overflow-y-auto careme-scroll" style={{ padding: "20px 12px 22px 12px" }}>
-                  {renderExpandedSlideContent(slide.key, theme, t, nurseStore)}
+                  {renderExpandedSlideContent(slide.key, theme, t, nurseStore, onOpenPreferences)}
                 </div>
               </div>
             </div>

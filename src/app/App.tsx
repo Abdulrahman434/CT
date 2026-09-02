@@ -1498,13 +1498,13 @@ function BedsideScreen() {
         if (showFoodOrder) { setShowFoodOrder(false); return; }
         if (showNeedSomething) { setShowNeedSomething(false); return; }
         if (showCall) { setShowCall(false); return; }
+        if (showPreferenceForm) { setShowPreferenceForm(false); return; }
         if (showCareMeExpanded) { setShowCareMeExpanded(false); return; }
         if (showConfigurator) { setShowConfigurator(false); return; }
         if (showTasbih) { setShowTasbih(false); return; }
         if (showTour) { setShowTour(false); setTourDismissed(true); return; }
         if (showNotifications) { setShowNotifications(false); return; }
         if (showSettings) { setShowSettings(false); return; }
-        if (showPreferenceForm) { setShowPreferenceForm(false); return; }
         if (showAboutUs) { setShowAboutUs(false); return; }
         if (showSurvey) { setShowSurvey(false); return; }
         if (openCategory) { setOpenCategory(null); return; }
@@ -1764,7 +1764,7 @@ function BedsideScreen() {
                           {guestSession ? (
                             <GuestPatientServices />
                           ) : (!isGuest || careMeUnlocked) ? (
-                            <CareMe onExpand={() => setShowCareMeExpanded(true)} />
+                            <CareMe onExpand={() => setShowCareMeExpanded(true)} onOpenPreferences={() => setShowPreferenceForm(true)} />
                           ) : (
                             <CareMeLockedPlaceholder onTap={() => setShowCareMePinDialog(true)} />
                           )}
@@ -1821,7 +1821,7 @@ function BedsideScreen() {
                           />
                           <div className="flex-1 min-h-0 flex flex-col">
                             {(!isGuest || careMeUnlocked) ? (
-                              <CareMe onExpand={() => setShowCareMeExpanded(true)} />
+                              <CareMe onExpand={() => setShowCareMeExpanded(true)} onOpenPreferences={() => setShowPreferenceForm(true)} />
                             ) : (
                               <CareMeLockedPlaceholder onTap={() => setShowCareMePinDialog(true)} />
                             )}
@@ -1885,7 +1885,7 @@ function BedsideScreen() {
                           />
                           <div className="flex-1 min-h-0 flex flex-col">
                             {(!isGuest || careMeUnlocked) ? (
-                              <CareMe onExpand={() => setShowCareMeExpanded(true)} />
+                              <CareMe onExpand={() => setShowCareMeExpanded(true)} onOpenPreferences={() => setShowPreferenceForm(true)} />
                             ) : (
                               <CareMeLockedPlaceholder onTap={() => setShowCareMePinDialog(true)} />
                             )}
@@ -2065,7 +2065,10 @@ function BedsideScreen() {
 
         {/* CareMe Expanded Overlay */}
         {showCareMeExpanded && (!isGuest || careMeUnlocked) && (
-          <CareMeExpanded onClose={() => setShowCareMeExpanded(false)} />
+          <CareMeExpanded
+            onClose={() => setShowCareMeExpanded(false)}
+            onOpenPreferences={() => setShowPreferenceForm(true)}
+          />
         )}
 
         {/* Call Screen Overlay */}
