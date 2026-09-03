@@ -82,6 +82,39 @@ const MEAL_BG_IMAGES: Record<MealId, string> = {
   dinner:    P.dinnerBg,
 };
 
+/* The photograph a meal is shown by. One file per meal serves the card's hero
+   and the menu banner alike; the two differ only in the crop their container
+   takes out of it. The card centres its crop; the banner is a far shallower
+   slice, so `menuCrop` names the point on the plate it should be taken from.
+   Mirrored horizontally in RTL, where the text — and so the gradient — swaps
+   sides. */
+const MEAL_CARD_PHOTOS: Record<MealId, { src: string; menuCrop: { x: number; y: number }; alt: { en: string; ar: string } }> = {
+  breakfast: {
+    src: "/assets/meals/breakfast.jpg",
+    menuCrop: { x: 62, y: 56 },
+    alt: {
+      en: "Breakfast tray: scrambled eggs, toast, fruit and juice",
+      ar: "صينية الفطور: بيض مخفوق وخبز محمص وفواكه وعصير",
+    },
+  },
+  lunch: {
+    src: "/assets/meals/lunch.jpg",
+    menuCrop: { x: 58, y: 72 },
+    alt: {
+      en: "Lunch tray: grilled chicken with rice, vegetables, salad and fruit",
+      ar: "صينية الغداء: دجاج مشوي مع أرز وخضار وسلطة وفواكه",
+    },
+  },
+  dinner: {
+    src: "/assets/meals/dinner.jpg",
+    menuCrop: { x: 45, y: 64 },
+    alt: {
+      en: "Dinner tray: baked salmon with mashed potato, vegetables and soup",
+      ar: "صينية العشاء: سمك سلمون بالفرن مع بطاطس مهروسة وخضار وشوربة",
+    },
+  },
+};
+
 function buildMeals(diet: DietType, dayOfWeek: number, kidsBreakfastType?: KidsBreakfastType): MealPeriod[] {
   const mealIds: MealId[] = ["breakfast", "lunch", "dinner"];
   return mealIds.map((mealId) => {
@@ -279,9 +312,18 @@ const TEAL_25 = "rgba(var(--fo-primary-rgb), 0.15)";
 const TEAL_20 = "rgba(var(--fo-primary-rgb), 0.12)";
 const TEAL_15 = "rgba(var(--fo-primary-rgb), 0.09)";
 const TEAL_DARK = "var(--fo-primary-dark)";
+/* Channels, not a colour: the menu banner fades this brand surface out over
+   the photograph and needs an alpha on it. */
+const TEAL_DARK_RGB = "var(--fo-primary-dark-rgb)";
 const SECONDARY = "var(--fo-secondary)";
 const GREEN = "#3FC168";
 const TEAL_BG_TINT = "var(--fo-bg-tint)";
+/* What the theme says text on a brand-coloured surface should be. */
+const TEXT_ON_BRAND = "var(--hbs-text-inverse, #fff)";
+/* Deliberately not a brand colour: a neutral scrim under text that sits on a
+   photograph. The lighter brand palettes (the orange and the greens) leave the
+   16px line short of AA against a pale plate without it. */
+const PHOTO_TEXT_SHADOW = "0 1px 3px rgba(0,0,0,0.5)";
 
 function hexToRgb(hex: string): string {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -601,6 +643,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
     "--fo-primary": theme.primary,
     "--fo-primary-rgb": hexToRgb(theme.primary),
     "--fo-primary-dark": theme.primaryDark,
+    "--fo-primary-dark-rgb": hexToRgb(theme.primaryDark),
     "--fo-secondary": theme.accent,
     "--fo-secondary-rgb": hexToRgb(theme.accent),
     "--fo-bg-tint": tintHex(theme.primary, 0.92),
@@ -1967,7 +2010,7 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
         </div>
       </div>
 
-      {/* Cards row — narrower, centered with whitespace, icon-led */}
+      {/* Cards row — narrower, centered with whitespace, photo-led */}
       <div className="flex-1 min-h-0 flex items-center justify-center gap-[28px]" dir={isRTL ? "rtl" : "ltr"}>
         {meals.map((meal) => {
           /* In the basket for the day on screen — not sent to the kitchen. */
@@ -1976,10 +2019,7 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
           const selected = dayOrderable && selectedMealId === meal.id;
           const chosen = dayOrderable && (selected || inOrder);
 
-          // Icon mapping
-          const Icon = meal.id === "breakfast" ? Sun : meal.id === "lunch" ? Sunrise : Moon;
-          const iconBg = meal.id === "breakfast" ? "#FEF3C7" : meal.id === "lunch" ? "#E0F2FE" : "#EDE9FE";
-          const iconColor = meal.id === "breakfast" ? "#F59E0B" : meal.id === "lunch" ? TEAL : "#7C3AED";
+          const photo = MEAL_CARD_PHOTOS[meal.id];
 
           /* Tomorrow's cards report what is actually true of the order. Every
              other day gets one badge, the same on all three cards, because on
@@ -2044,53 +2084,70 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                 cursor: "pointer", outline: "none",
                 transition: "border-color 0.2s, box-shadow 0.2s, transform 0.2s",
                 display: "flex", flexDirection: "column", alignItems: "center",
-                padding: "40px 28px 28px",
-                gap: "18px",
+                /* No padding: the photograph runs to the card's own edges and
+                   the card's radius is what rounds its top corners. */
+                padding: 0,
                 position: "relative",
-                justifyContent: "space-between",
+                overflow: "hidden",
               }}>
               {/* Chosen, or already with the kitchen */}
               {(chosen || placed) && (
-                <div className="absolute pop-in" style={{ top: "16px", [isRTL ? "left" : "right"]: "16px", width: "36px", height: "36px", borderRadius: "50%", backgroundColor: placed ? GREEN : TEAL, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 12px ${TEAL_50}` }}>
+                <div className="absolute pop-in" style={{ top: "16px", [isRTL ? "left" : "right"]: "16px", zIndex: 2, width: "36px", height: "36px", borderRadius: "50%", backgroundColor: placed ? GREEN : TEAL, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 12px ${TEAL_50}` }}>
                   <Check size={20} color="#fff" strokeWidth={3} />
                 </div>
               )}
 
-              {/* Icon circle */}
-              <div style={{
-                width: "104px", height: "104px", borderRadius: "50%",
-                backgroundColor: iconBg,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <Icon size={52} color={iconColor} strokeWidth={2} />
-              </div>
+              {/* The meal, photographed: full-bleed across the card and flush
+                  with its top edge. A fixed height rather than a ratio, so the
+                  three cards end on the same baseline whatever the crop does. */}
+              <ImageWithFallback
+                data-fo-hero={meal.id}
+                src={photo.src}
+                alt={loc(photo.alt)}
+                loading="lazy"
+                style={{
+                  display: "block", width: "100%",
+                  height: "clamp(150px, 14vw, 190px)",
+                  objectFit: "cover", objectPosition: "center",
+                  flexShrink: 0,
+                }}
+              />
 
-              {/* Meal name */}
-              <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1 }}>
-                {loc(meal.label)}
-              </span>
-
-              {/* Status */}
-              <div className="flex items-center gap-2" data-fo-status style={{
-                padding: "9px 18px", borderRadius: "100px",
-                backgroundColor: statusBg,
+              {/* Everything the card says, inset from the edges the photo owns */}
+              <div className="w-full flex-1 flex flex-col items-center" style={{
+                padding: "18px 28px 24px", gap: "12px", justifyContent: "space-between",
               }}>
-                <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: statusColor }}>
-                  {statusText}
+                {/* Meal name */}
+                <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1 }}>
+                  {loc(meal.label)}
                 </span>
-              </div>
 
-              {/* Divider + the card's action */}
-              <div className="w-full flex flex-col items-center" style={{ marginTop: "auto" }}>
-                <div style={{ width: "100%", height: "1px", backgroundColor: "rgba(0,0,0,0.06)", marginBottom: "16px" }} />
-                <span data-fo-action={meal.id} style={{
-                  fontFamily, fontSize: "16px",
-                  fontWeight: (placed || !canOrder) ? WEIGHT.bold : WEIGHT.medium,
-                  color: (placed || !canOrder) ? TEAL : "#6B7280",
-                  textAlign: "center",
+                {/* Status */}
+                <div className="flex items-center gap-2" data-fo-status style={{
+                  padding: "9px 18px", borderRadius: "100px",
+                  backgroundColor: statusBg,
                 }}>
-                  {actionLabel}
-                </span>
+                  <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: statusColor }}>
+                    {statusText}
+                  </span>
+                </div>
+
+                {/* Divider + the card's action */}
+                <div className="w-full flex flex-col items-center" style={{ marginTop: "auto" }}>
+                  <div style={{ width: "100%", height: "1px", backgroundColor: "rgba(0,0,0,0.06)", marginBottom: "16px" }} />
+                  <div className="flex items-center justify-center gap-2" data-fo-action={meal.id}>
+                    {/* The clock belongs to the deadline, not to "View menu". */}
+                    {canOrder && !placed && <Clock size={15} color="#6B7280" className="shrink-0" />}
+                    <span style={{
+                      fontFamily, fontSize: "16px",
+                      fontWeight: (placed || !canOrder) ? WEIGHT.bold : WEIGHT.medium,
+                      color: (placed || !canOrder) ? TEAL : "#6B7280",
+                      textAlign: "center",
+                    }}>
+                      {actionLabel}
+                    </span>
+                  </div>
+                </div>
               </div>
             </motion.div>
           );
@@ -2363,17 +2420,48 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, dayOffse
         backgroundColor: "#fff",
         overflow: "hidden",
       }}>
-        {/* Pre-order banner — top of the same container */}
+        {/* The menu's header: this meal photographed, with the day it is for
+            and the hour it is served written across it. The gradient runs from
+            the text's side so the words keep their contrast whatever the photo
+            is doing underneath, and the crop holds the food to the far side. */}
         {(() => {
-          const tmrwDate = dayForOffset(dayOffset).toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long" });
+          const dateStr = dayForOffset(dayOffset).toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long" });
+          const photo = MEAL_CARD_PHOTOS[meal.id];
           return (
-            <div className="shrink-0 flex items-center gap-2 px-5 py-3" style={{ backgroundColor: "#F2F9FB", borderBottom: `1px solid ${TEAL_20}` }}>
-              <Clock size={17} color={TEAL} style={{ flexShrink: 0 }} />
-              <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL, lineHeight: 1.4 }}>
-                {isRTL
-                  ? `طلب مسبق — ${loc(meal.label)} ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`
-                  : `Pre-order — ${loc(meal.label)} ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`}
-              </span>
+            <div data-fo-menu-banner={meal.id} className="shrink-0 relative" style={{
+              height: "clamp(120px, 13vw, 165px)", overflow: "hidden", backgroundColor: TEAL_DARK,
+            }}>
+              <ImageWithFallback
+                src={photo.src}
+                alt={loc(photo.alt)}
+                loading="lazy"
+                style={{
+                  display: "block", width: "100%", height: "100%",
+                  objectFit: "cover",
+                  objectPosition: `${isRTL ? 100 - photo.menuCrop.x : photo.menuCrop.x}% ${photo.menuCrop.y}%`,
+                }}
+              />
+              <div className="absolute inset-0" style={{
+                background: `linear-gradient(${isRTL ? 270 : 90}deg, rgba(${TEAL_DARK_RGB}, 0.94) 0%, rgba(${TEAL_DARK_RGB}, 0.85) 22%, rgba(${TEAL_DARK_RGB}, 0.45) 42%, rgba(${TEAL_DARK_RGB}, 0) 58%)`,
+              }} />
+              <div className="absolute inset-0 flex flex-col justify-center gap-1" style={{
+                padding: "0 28px",
+                /* The lines stretch the full width and are placed by text-align:
+                   in an RTL subtree a column flex-end resolves to the LEFT, which
+                   put the text off the gradient entirely. */
+                alignItems: "stretch",
+                textAlign: isRTL ? "right" : "left",
+              }}>
+                <span style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: TEXT_ON_BRAND, textShadow: PHOTO_TEXT_SHADOW, lineHeight: 1.15 }}>
+                  {isRTL ? `قائمة ${loc(meal.label)}` : `${loc(meal.label)} Menu`}
+                </span>
+                {/* Opacity rather than a white with alpha baked in, so the
+                    second line stays a shade of whatever the theme's inverse
+                    text is. */}
+                <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: TEXT_ON_BRAND, opacity: 0.88, textShadow: PHOTO_TEXT_SHADOW, lineHeight: 1.4 }}>
+                  {`${dateStr} · ${locTimeRange(meal.timeRange, isRTL)}`}
+                </span>
+              </div>
             </div>
           );
         })()}
