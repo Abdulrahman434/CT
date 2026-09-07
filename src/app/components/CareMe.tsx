@@ -1972,8 +1972,21 @@ function PreferencesSlide({ theme, isExpanded = false, onOpenForm }: {
                 {row.value}
               </span>
             </div>
+            {/* The patient's own words, set as a quote rather than as fine
+                print — at helper size in textMuted this read as disabled text
+                and was being skipped. Logical inline-start so the rule stays
+                on the reading edge in Arabic and Urdu. */}
             {row.note && (
-              <p style={{ fontFamily, ...TEXT_STYLE.helper, color: theme.textMuted, marginTop: "8px" }}>
+              <p
+                style={{
+                  fontFamily,
+                  ...TEXT_STYLE.body,
+                  color: theme.textBody,
+                  marginTop: SPACE[2],
+                  borderInlineStart: `3px solid ${theme.primary}`,
+                  paddingInlineStart: SPACE[2],
+                }}
+              >
                 {row.note}
               </p>
             )}
