@@ -305,6 +305,29 @@ export function readPreferenceRecord(): PreferenceFormRecord | null {
   }
 }
 
+/** Erase the stored preferences outright.
+ *
+ *  Every key the answers live under, not just the completedAt stamp: the
+ *  record holds dietary and religious-support answers, and this kiosk is
+ *  handed from one patient to the next, so a half-cleared record would show
+ *  the previous patient's answers back to whoever is in the bed now.
+ *
+ *  Callers must also reset whatever the form holds in React state — the
+ *  running save in PatientPreferenceForm re-persists from that state, and
+ *  would write the answers straight back.
+ *
+ *  Never throws: a blocked store reads and clears as "no record". */
+export function clearPreferenceRecord(): void {
+  try {
+    localStorage.removeItem(PREFS_ANSWERS_KEY);
+    /* Written by the onboarding wizard, and part of the same footprint. */
+    localStorage.removeItem("careinn-prefs-completed");
+  } catch {
+    /* ignored by design — see above */
+  }
+  window.dispatchEvent(new CustomEvent(PREFS_SAVED_EVENT));
+}
+
 /** The questions the form gates Next on — every question now, since the one
  *  free-text question is gone. The closing comments screen stays optional by
  *  design (see canAdvance), so a record without it is still a finished form;

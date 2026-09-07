@@ -52,13 +52,15 @@ import {
   ArrowLeftRight,
   Sparkles,
   SlidersHorizontal,
+  RotateCcw,
 } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { InternalPageHeader } from "./InternalPageHeader";
 import {
-  PREFS_SAVED_EVENT, preferenceAppName, preferenceSummaryRows, readPreferenceRecord,
-  type PreferenceSummaryRow,
+  PREFS_SAVED_EVENT, clearPreferenceRecord, preferenceAppName, preferenceSummaryRows,
+  readPreferenceRecord, type PreferenceSummaryRow,
 } from "./PatientPreferenceForm";
+import { useAuth } from "./AuthContext";
 import svgPaths from "../../imports/svg-ca68x68c4i";
 
 /* ─── Assets ─── */
@@ -1873,6 +1875,8 @@ function PreferencesSlide({ theme, isExpanded = false, onOpenForm }: {
 }) {
   const { t, fontFamily } = useLocale();
   const { activeConfigId } = useTheme();
+  /* Demo affordance, off on every branded device — see the reset button. */
+  const { isFullAccess } = useAuth();
   const [record, setRecord] = useState(() => readPreferenceRecord());
 
   /* The form is a modal over this card, which stays mounted underneath it —
@@ -1933,7 +1937,7 @@ function PreferencesSlide({ theme, isExpanded = false, onOpenForm }: {
           badge is all this row adds. Repeating "Your Preferences" under a line
           that already says it is how a card starts looking bolted on. */}
       <div
-        className="shrink-0 flex items-center justify-end py-2 mb-1 border-b"
+        className="shrink-0 flex items-center justify-end gap-2 py-2 mb-1 border-b"
         style={{ borderColor: theme.borderSubtle }}
       >
         <div
@@ -1945,6 +1949,25 @@ function PreferencesSlide({ theme, isExpanded = false, onOpenForm }: {
             {t("care.preferences.submitted")}
           </span>
         </div>
+        {/* Demo only, and deliberately on THIS header rather than the form's:
+            the answered state is the one a demo needs to get out of, and it is
+            the one state that never reopens the form. isFullAccess is the
+            CareInn credential, so this is absent on every branded device. */}
+        {isFullAccess && (
+          <button
+            onClick={() => clearPreferenceRecord()}
+            title={t("ppf.demo.reset")}
+            aria-label={t("ppf.demo.reset")}
+            data-careme="prefs-demo-reset"
+            className="shrink-0 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+            style={{
+              width: "28px", height: "28px", borderRadius: theme.radiusSm,
+              backgroundColor: theme.warningSubtle, border: "none", outline: "none",
+            }}
+          >
+            <RotateCcw size={14} style={{ color: theme.warning }} />
+          </button>
+        )}
       </div>
 
       <div

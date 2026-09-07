@@ -1292,6 +1292,7 @@ const translations: Record<string, TranslationEntry> = {
   "ppf.done.title": { en: "Thank you", ar: "شكراً لك", ur: "شکریہ" },
   "ppf.done.body": { en: "Your preferences have been saved and shared with the concerned teams.", ar: "تم حفظ تفضيلاتك ومشاركتها مع الجهات المعنية.", ur: "آپ کی ترجیحات محفوظ کر لی گئی ہیں اور متعلقہ ٹیموں کے ساتھ شیئر کر دی گئی ہیں۔" },
   "ppf.done.close": { en: "Close", ar: "إغلاق", ur: "بند کریں" },
+  "ppf.demo.reset": { en: "Reset preferences (Demo)", ar: "إعادة تعيين التفضيلات (عرض توضيحي)", ur: "ترجیحات ری سیٹ کریں (ڈیمو)" },
 
   /* Sections */
   "ppf.section.food.title": { en: "Catering / Food Preferences", ar: "تفضيلات الطعام / تقديم الطعام", ur: "کیٹرنگ / کھانے کی ترجیحات" },
