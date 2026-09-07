@@ -665,6 +665,53 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
     "--fo-bg-tint": tintHex(theme.primary, 0.92),
   } as React.CSSProperties;
 
+  /* The step navigation, built once and placed by the branch below: inside
+     the card on the stepper steps, on the page for landing and history. */
+  const bottomBar = showBottomBar ? (
+    <BottomBar
+      step={step}
+      canContinue={canContinue}
+      onBack={handleBack}
+      showBack={step !== "confirmed"}
+      onContinue={
+        step === "confirmed" ? onClose :
+        step === "history" ? () => { setStep("select-type"); setSelectedMealId(null); setOrderFor("patient"); } :
+        handleContinue
+      }
+      leftAction={
+        step === "confirmed"
+          ? { label: isRTL ? "طلباتي" : "View My Orders", onClick: () => setStep("history") }
+          : undefined
+      }
+      secondaryAction={
+        // The basket can only be sent from the meal list — the one screen
+        // where the patient can see what is in it across all three days.
+        step === "select-meal" && windowState === "open" && pendingMeals.length > 0
+          ? {
+              label: isRTL
+                ? `إرسال الطلب (${pendingMeals.length})`
+                : `Place order (${pendingMeals.length})`,
+              onClick: () => setShowSubmitConfirm(true),
+            }
+          : undefined
+      }
+      backLabel={
+        (isRTL ? "رجوع" : "Back")
+      }
+      continueLabel={
+        step === "build-meal" ? (isRTL ? "أضف إلى الطلب" : "Add to order") :
+        step === "confirmed"  ? (isRTL ? "خروج" : "Exit") :
+        step === "history" ? (isRTL ? "طلب جديد" : "New Order") :
+                                (isRTL ? "متابعة" : "Continue")
+      }
+      fontFamily={fontFamily}
+      isRTL={isRTL}
+      BackArrow={BackArrow}
+      ForwardArrow={ForwardArrow}
+      inCard={isFlow}
+    />
+  ) : null;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -690,6 +737,9 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
         .fo-scroll::-webkit-scrollbar-track { background: transparent; }
         .fo-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 100px; }
         .fo-scroll { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.15) transparent; }
+        /* A scroller that has hit its end does not hand the wheel to the page
+           behind it, so reading the menu never moves anything but the menu. */
+        .fo-scroll, .fo-scroll-strong { overscroll-behavior: contain; }
         .fo-scroll-strong::-webkit-scrollbar { width: 10px; }
         .fo-scroll-strong::-webkit-scrollbar-track { background: #F3F4F6; border-radius: 100px; margin: 4px 0; }
         .fo-scroll-strong::-webkit-scrollbar-thumb { background: var(--fo-primary); border-radius: 100px; border: 2px solid #F3F4F6; }
@@ -700,6 +750,15 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
         .fo-carousel:active { cursor: grabbing; }
         @keyframes popIn { 0%{transform:scale(0)} 60%{transform:scale(1.15)} 100%{transform:scale(1)} }
         .pop-in { animation: popIn 0.3s ease forwards; }
+        /* Narrow viewports: the menu and the tray stop being two columns and
+           become one, and the footer — flex: none inside the card — is still
+           the last thing on screen. */
+        @media (max-width: 900px) {
+          .fo-build-row { flex-direction: column; }
+          .fo-build-row > * { min-height: 0; }
+          .fo-build-tray { width: 100% !important; flex: 0 1 auto; max-height: 42%; }
+          .fo-footer { flex-wrap: wrap; row-gap: 12px; padding-left: 20px; padding-right: 20px; }
+        }
       `}</style>
 
       {/* ─── TOP BAR (translucent white strip) ─── */}
@@ -733,7 +792,13 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
         <div className="shrink-0" style={{ height: "96px" }} />
       ) : null}
 
-      {/* ─── MAIN CONTENT (white rounded card containing stepper + body) ─── */}
+      {/* ─── MAIN CONTENT (white rounded card: stepper + body + footer nav) ───
+          The card is a height-constrained flex column. Its ceiling is not a
+          vh calculation — the kiosk scales this whole 1920×1080 canvas with a
+          transform, so 100vh would resolve to the browser window rather than
+          the canvas. The page is a flex column instead: top bar and patient
+          bar are flex: none, this region is flex: 1 with min-height: 0, and
+          the card fills exactly what is left of the canvas. ─── */}
       <div className="flex-1 min-h-0 px-12 pt-5 pb-3 relative flex flex-col">
         {isFlow && (
           <div className="flex-1 min-h-0 flex flex-col rounded-[30px] overflow-hidden" style={{ backgroundColor: "#fff", boxShadow: "0 8px 32px rgba(0,0,0,0.15)" }}>
@@ -785,6 +850,11 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
                 )}
               </AnimatePresence>
             </div>
+
+            {/* ─── FOOTER NAV (inside the card) ───
+                flex: none — it holds the card's bottom edge while the step
+                body above it is the only thing that scrolls. */}
+            {bottomBar}
           </div>
         )}
 
@@ -867,50 +937,11 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
         )}
       </div>
 
-      {/* ─── BOTTOM NAV BAR ─── */}
-      {showBottomBar && (
-        <BottomBar
-          step={step}
-          canContinue={canContinue}
-          onBack={handleBack}
-          showBack={step !== "confirmed"}
-          onContinue={
-            step === "confirmed" ? onClose :
-            step === "history" ? () => { setStep("select-type"); setSelectedMealId(null); setOrderFor("patient"); } :
-            handleContinue
-          }
-          leftAction={
-            step === "confirmed"
-              ? { label: isRTL ? "طلباتي" : "View My Orders", onClick: () => setStep("history") }
-              : undefined
-          }
-          secondaryAction={
-            // The basket can only be sent from the meal list — the one screen
-            // where the patient can see what is in it across all three days.
-            step === "select-meal" && windowState === "open" && pendingMeals.length > 0
-              ? {
-                  label: isRTL
-                    ? `إرسال الطلب (${pendingMeals.length})`
-                    : `Place order (${pendingMeals.length})`,
-                  onClick: () => setShowSubmitConfirm(true),
-                }
-              : undefined
-          }
-          backLabel={
-            (isRTL ? "رجوع" : "Back")
-          }
-          continueLabel={
-            step === "build-meal" ? (isRTL ? "أضف إلى الطلب" : "Add to order") :
-            step === "confirmed"  ? (isRTL ? "خروج" : "Exit") :
-            step === "history" ? (isRTL ? "طلب جديد" : "New Order") :
-                                    (isRTL ? "متابعة" : "Continue")
-          }
-          fontFamily={fontFamily}
-          isRTL={isRTL}
-          BackArrow={BackArrow}
-          ForwardArrow={ForwardArrow}
-        />
-      )}
+      {/* ─── BOTTOM NAV BAR ───
+          On the four stepper steps the nav lives inside the white card (see
+          MAIN CONTENT above). Landing and history have no card, so there it
+          stays a page-level bar as before. */}
+      {!isFlow && bottomBar}
 
       {/* ─── HISTORY OVERLAY ─── */}
       <AnimatePresence>
@@ -2428,7 +2459,7 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, dayOffse
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
-      className={`h-full flex px-[28px] pt-[16px] pb-[16px] ${showTray ? "gap-[20px]" : ""}`}>
+      className={`fo-build-row h-full flex px-[28px] pt-[16px] pb-[16px] ${showTray ? "gap-[20px]" : ""}`}>
       {/* The groups. Full width when there is no tray beside them. */}
       <div className="flex-1 min-w-0 flex flex-col relative" style={{
         borderRadius: "20px",
@@ -2525,7 +2556,7 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, dayOffse
 
       {/* RIGHT: meal tray — only for the day being ordered (see showTray) */}
       {showTray && (
-        <div className="shrink-0 flex flex-col" style={{ width: "440px", borderRadius: "20px", backgroundColor: "#fff", border: "1.5px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
+        <div className="fo-build-tray shrink-0 flex flex-col" style={{ width: "440px", borderRadius: "20px", backgroundColor: "#fff", border: "1.5px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
           {/* Header */}
           <div className="shrink-0 flex items-center gap-3 px-5 py-4" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
             <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: `${TEAL_15}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -2914,18 +2945,32 @@ function ConfirmRow({ icon, label, children }: { icon: React.ReactNode; label: s
  * BOTTOM BAR
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function BottomBar({ step, canContinue, onBack, showBack, onContinue, leftAction, secondaryAction, backLabel, continueLabel, fontFamily, isRTL }: {
+function BottomBar({ step, canContinue, onBack, showBack, onContinue, leftAction, secondaryAction, backLabel, continueLabel, fontFamily, isRTL, inCard }: {
   step: Step; canContinue: boolean; onBack: () => void; showBack?: boolean; onContinue: () => void;
   leftAction?: { label: string; onClick: () => void };
   secondaryAction?: { label: string; onClick: () => void };
   backLabel: string; continueLabel: string;
   fontFamily: string; isRTL: boolean; BackArrow: any; ForwardArrow: any;
+  /** Rendered as the white card's footer row rather than as a bar on the
+   *  dark page: adds the card's own divider above it and an opaque band. */
+  inCard?: boolean;
 }) {
   const ChevBack = isRTL ? ChevronRight : ChevronLeft;
   const ChevForward = isRTL ? ChevronLeft : ChevronRight;
   const continueEnabled = canContinue || step === "confirmed" || step === "history";
   return (
-    <div className="shrink-0 flex items-center justify-between px-[40px] py-[20px] relative z-10">
+    <div
+      data-fo-footer={inCard ? "card" : "page"}
+      className="fo-footer shrink-0 flex items-center justify-between gap-[12px] px-[40px] py-[20px] relative z-10"
+      style={inCard ? {
+        /* flex: none — never absorbed by, and never scrolled with, the body */
+        flex: "0 0 auto",
+        /* The card's own white, so nothing can show through the band, and the
+           same hairline the Stepper draws under the card's header. */
+        backgroundColor: "#fff",
+        borderTop: "1px solid rgba(0,0,0,0.06)",
+      } : undefined}
+    >
       {showBack !== false ? (
         <button onClick={onBack} className="active:scale-95 transition-transform cursor-pointer"
           style={{
