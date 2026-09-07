@@ -85,13 +85,21 @@ const MEAL_BG_IMAGES: Record<MealId, string> = {
 /* The photograph a meal is shown by. One file per meal serves the card's hero
    and the menu banner alike; the two differ only in the crop their container
    takes out of it. The card centres its crop; the banner is a far shallower
-   slice, so `menuCrop` names the point on the plate it should be taken from.
-   Mirrored horizontally in RTL, where the text — and so the gradient — swaps
-   sides. */
-const MEAL_CARD_PHOTOS: Record<MealId, { src: string; menuCrop: { x: number; y: number }; alt: { en: string; ar: string } }> = {
+   slice, so `menuBand` names the height on the plate it should be taken from.
+
+   There is deliberately no horizontal figure here. The banner is ~1306×165 and
+   every photograph is 4:3, so `object-fit: cover` scales the image to the
+   banner's WIDTH and crops it top and bottom: the horizontal slack is exactly
+   0px, and an `object-position` X term cannot move the framing by a pixel. All
+   that decides which half of the banner the food lands in is which side of the
+   source frame it was shot on — recorded here as `foodSide` — so the banner
+   mirrors the photograph when the food would otherwise fall under the text's
+   gradient. */
+const MEAL_CARD_PHOTOS: Record<MealId, { src: string; menuBand: number; foodSide: "left" | "right"; alt: { en: string; ar: string } }> = {
   breakfast: {
     src: "/assets/meals/breakfast.jpg",
-    menuCrop: { x: 62, y: 56 },
+    /* Eggs and toast fill the right of the frame; the left is bare counter. */
+    menuBand: 56, foodSide: "right",
     alt: {
       en: "Breakfast tray: scrambled eggs, toast, fruit and juice",
       ar: "صينية الفطور: بيض مخفوق وخبز محمص وفواكه وعصير",
@@ -99,7 +107,8 @@ const MEAL_CARD_PHOTOS: Record<MealId, { src: string; menuCrop: { x: number; y: 
   },
   lunch: {
     src: "/assets/meals/lunch.jpg",
-    menuCrop: { x: 58, y: 72 },
+    /* Fruit bowl and plate sit right of centre, bare counter to the left. */
+    menuBand: 72, foodSide: "right",
     alt: {
       en: "Lunch tray: grilled chicken with rice, vegetables, salad and fruit",
       ar: "صينية الغداء: دجاج مشوي مع أرز وخضار وسلطة وفواكه",
@@ -107,7 +116,8 @@ const MEAL_CARD_PHOTOS: Record<MealId, { src: string; menuCrop: { x: number; y: 
   },
   dinner: {
     src: "/assets/meals/dinner.jpg",
-    menuCrop: { x: 45, y: 64 },
+    /* The plate is shot left of centre; the right is napkin and cutlery. */
+    menuBand: 64, foodSide: "left",
     alt: {
       en: "Dinner tray: baked salmon with mashed potato, vegetables and soup",
       ar: "صينية العشاء: سمك سلمون بالفرن مع بطاطس مهروسة وخضار وشوربة",
@@ -2423,10 +2433,18 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, dayOffse
         {/* The menu's header: this meal photographed, with the day it is for
             and the hour it is served written across it. The gradient runs from
             the text's side so the words keep their contrast whatever the photo
-            is doing underneath, and the crop holds the food to the far side. */}
+            is doing underneath, and the photograph is flipped when it has to be
+            so the food sits on the clear side rather than under the words. */}
         {(() => {
           const dateStr = dayForOffset(dayOffset).toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long" });
           const photo = MEAL_CARD_PHOTOS[meal.id];
+          /* The text, and so the gradient that carries it, takes the leading
+             side: the left in English, the right in Arabic. The food wants the
+             other one. Where the photograph was not shot that way round it is
+             mirrored — the only move available, since cover leaves no horizontal
+             slack at this banner's proportions (see MEAL_CARD_PHOTOS). */
+          const foodBelongs: "left" | "right" = isRTL ? "left" : "right";
+          const mirrored = photo.foodSide !== foodBelongs;
           return (
             <div data-fo-menu-banner={meal.id} className="shrink-0 relative" style={{
               height: "clamp(120px, 13vw, 165px)", overflow: "hidden", backgroundColor: TEAL_DARK,
@@ -2438,7 +2456,8 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, dayOffse
                 style={{
                   display: "block", width: "100%", height: "100%",
                   objectFit: "cover",
-                  objectPosition: `${isRTL ? 100 - photo.menuCrop.x : photo.menuCrop.x}% ${photo.menuCrop.y}%`,
+                  objectPosition: `50% ${photo.menuBand}%`,
+                  transform: mirrored ? "scaleX(-1)" : undefined,
                 }}
               />
               <div className="absolute inset-0" style={{
