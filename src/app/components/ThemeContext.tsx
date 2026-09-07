@@ -228,6 +228,8 @@ export interface ThemeConfig {
   heroOpacity: number;       // background photo opacity, percent 0–100 (default 40)
   location: string;
   country: string;
+  /** Bundled patient-guide PDF, served from /public. Unset for hospitals that have none. */
+  patientGuidePdf?: string;
 
   /* ── Brand Colors ── */
   primary: string;
@@ -319,6 +321,7 @@ function buildTheme(core: {
   heroCropPosition?: string;
   slideshowInterval?: number;
   heroOpacity?: number;
+  patientGuidePdf?: string;
   primary: string;
   primaryDark: string;
   primaryLight: string;
@@ -345,6 +348,7 @@ function buildTheme(core: {
     heroCropPosition: c.heroCropPosition || "50% 15%",
     slideshowInterval: c.slideshowInterval || 5,
     heroOpacity: c.heroOpacity ?? 40,
+    patientGuidePdf: c.patientGuidePdf,
     location: (c as any).location || "Riyadh",
     country: (c as any).country ||
       ({ "Jeddah": "Saudi Arabia", "Riyadh": "Saudi Arabia", "Abu Dhabi": "United Arab Emirates", "Dubai": "United Arab Emirates", "Beirut": "Lebanon" } as Record<string, string>)[(c as any).location || "Riyadh"] ||
@@ -587,6 +591,7 @@ export const DSFH_CORE: HospitalCoreConfig = {
   accentDark: "#A80037",
   accentLight: "#FDE8EF",
   location: "Jeddah",
+  patientGuidePdf: "/guides/fakeeh-patient-guide.pdf",
 };
 
 /* ── Additional Built-in Hospital Presets ── */
@@ -797,6 +802,8 @@ export interface HospitalCoreConfig {
   accentLight: string;
   location?: string;
   country?: string;
+  /** Bundled patient-guide PDF, served from /public. Unset for hospitals that have none. */
+  patientGuidePdf?: string;
   /**
    * Manual sign-in code, set only when the code derived from city + short-code
    * initials collides with another hospital. See lib/hospitalAccess.ts.

@@ -410,6 +410,8 @@ const translations: Record<string, TranslationEntry> = {
   "shortcut.academy": { en: "Academy", ar: "الأكاديمية", ur: "اکیڈمی" },
   "shortcut.adminPortal": { en: "Admin Portal", ar: "بوابة الإدارة", ur: "ایڈمن پورٹل" },
   "shortcut.roomControl": { en: "Room Control", ar: "التحكم بالغرفة", ur: "کمرے کا کنٹرول" },
+  "shortcut.patientGuide": { en: "Patient Guide", ar: "دليل المريض", ur: "مریض گائیڈ" },
+  "patientGuide.loading": { en: "Loading guide…", ar: "جارٍ تحميل الدليل…", ur: "گائیڈ لوڈ ہو رہی ہے…" },
 
   /* ─── Room Control ─── */
   "room.title": { en: "Room Control", ar: "التحكم بالغرفة", ur: "کمرے کا کنٹرول" },
