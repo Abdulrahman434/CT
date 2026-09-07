@@ -327,6 +327,12 @@ const TEAL_DARK = "var(--fo-primary-dark)";
 const TEAL_DARK_RGB = "var(--fo-primary-dark-rgb)";
 const SECONDARY = "var(--fo-secondary)";
 const GREEN = "#3FC168";
+/* The green a "you picked this" tick badge is filled with, everywhere in the
+   flow: Order For, Breakfast Type, and the meal cards. A tick means the same
+   thing on all three, so it is the same green on all three — GREEN above stays
+   the status colour, for pills and card borders. */
+const TICK_GREEN = "#2DCC06";
+const TICK_GREEN_SHADOW = "rgba(45,204,6,0.34)";
 const TEAL_BG_TINT = "var(--fo-bg-tint)";
 /* What the theme says text on a brand-coloured surface should be. */
 const TEXT_ON_BRAND = "var(--hbs-text-inverse, #fff)";
@@ -1833,7 +1839,7 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
                 {/* Checkmark badge */}
                 <div className="absolute" style={{ top: "32px", right: "32px",
                   width: "68px", height: "68px", borderRadius: "50%",
-                  backgroundColor: selected ? "#2DCC06" : "#fff",
+                  backgroundColor: selected ? TICK_GREEN : "#fff",
                   border: selected ? "none" : "2px solid #DADADA",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   boxShadow: selected ? "0 4px 6.5px rgba(0,138,171,0.38)" : "none",
@@ -2102,7 +2108,7 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
               }}>
               {/* Chosen, or already with the kitchen */}
               {(chosen || placed) && (
-                <div className="absolute pop-in" style={{ top: "16px", [isRTL ? "left" : "right"]: "16px", zIndex: 2, width: "36px", height: "36px", borderRadius: "50%", backgroundColor: placed ? GREEN : TEAL, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 12px ${TEAL_50}` }}>
+                <div className="absolute pop-in" style={{ top: "16px", [isRTL ? "left" : "right"]: "16px", zIndex: 2, width: "36px", height: "36px", borderRadius: "50%", backgroundColor: TICK_GREEN, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 12px ${TICK_GREEN_SHADOW}` }}>
                   <Check size={20} color="#fff" strokeWidth={3} />
                 </div>
               )}
@@ -2360,7 +2366,7 @@ function KidsBreakfastTypeStep({ selected, onSelect, fontFamily, isRTL }: {
                 {/* Checkmark badge */}
                 <div className="absolute" style={{ top: "32px", right: "32px",
                   width: "68px", height: "68px", borderRadius: "50%",
-                  backgroundColor: isActive ? "#2DCC06" : "#fff",
+                  backgroundColor: isActive ? TICK_GREEN : "#fff",
                   border: isActive ? "none" : "2px solid #DADADA",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   boxShadow: isActive ? "0 4px 6.5px rgba(0,138,171,0.38)" : "none",
