@@ -265,11 +265,61 @@ const translations: Record<string, TranslationEntry> = {
   /* ─── Meal Ordering ─── */
   /* Shown when the patient taps "Place order". Submitting is final: the
      kitchen has the order and there is no edit path anywhere in the flow. */
-  "food.submitConfirm.message": {
-    en: "Once you submit, you won't be able to change your order. Are you sure you want to continue?",
-    ar: "بمجرد الإرسال، لن تتمكن من تغيير طلبك. هل أنت متأكد أنك تريد المتابعة؟",
-    ur: "ایک بار جمع کرانے کے بعد، آپ اپنا آرڈر تبدیل نہیں کر سکیں گے۔ کیا آپ واقعی جاری رکھنا چاہتے ہیں؟",
+  "food.submitConfirm.title": {
+    en: "Place this order?",
+    ar: "تأكيد إرسال الطلب؟",
+    ur: "یہ آرڈر دینا ہے؟",
   },
+  "food.submitConfirm.message": {
+    en: "Please review your selection. Once placed, this order is final and cannot be changed.",
+    ar: "يرجى مراجعة اختيارك. بعد الإرسال يصبح هذا الطلب نهائيًا ولا يمكن تغييره.",
+    ur: "براہ کرم اپنے انتخاب پر نظرثانی کریں۔ ایک بار دینے کے بعد یہ آرڈر حتمی ہوگا اور اسے تبدیل نہیں کیا جا سکے گا۔",
+  },
+  "food.submitConfirm.confirm": {
+    en: "Place final order",
+    ar: "إرسال الطلب نهائيًا",
+    ur: "حتمی آرڈر دیں",
+  },
+  "food.submitConfirm.cancel": {
+    en: "Review selection",
+    ar: "مراجعة الاختيار",
+    ur: "انتخاب پر نظرثانی کریں",
+  },
+
+  /* The one notice under the day tabs. One whole sentence per state, with the
+     day and time interpolated — the Arabic and Urdu word order does not
+     survive being assembled from fragments. {0} is always the selected day. */
+  "food.notice.previewDay": {
+    en: "Ordering for {0} is not open yet — it opens on {1} at {2}.",
+    ar: "لم يُفتح باب الطلب ليوم {0} بعد — يفتح يوم {1} الساعة {2}.",
+    ur: "{0} کے لیے آرڈر ابھی نہیں کھلا — یہ {1} کو {2} بجے کھلے گا۔",
+  },
+  "food.notice.opensToday": {
+    en: "Ordering for {0} opens today at {1}.",
+    ar: "يفتح باب الطلب ليوم {0} اليوم الساعة {1}.",
+    ur: "{0} کے لیے آرڈر آج {1} بجے کھلے گا۔",
+  },
+  "food.notice.openUntil": {
+    en: "Ordering for {0} is open until {1}.",
+    ar: "باب الطلب ليوم {0} مفتوح حتى الساعة {1}.",
+    ur: "{0} کے لیے آرڈر {1} بجے تک کھلا ہے۔",
+  },
+  "food.notice.ordered": {
+    en: "Your order for {0} is confirmed and cannot be changed.",
+    ar: "تم تأكيد طلبك ليوم {0} ولا يمكن تغييره.",
+    ur: "{0} کے لیے آپ کا آرڈر تصدیق شدہ ہے اور اسے تبدیل نہیں کیا جا سکتا۔",
+  },
+  "food.notice.closed": {
+    en: "Ordering for {0} has closed — a standard meal will be served.",
+    ar: "أُغلق باب الطلب ليوم {0} — ستُقدَّم وجبة قياسية.",
+    ur: "{0} کے لیے آرڈر بند ہو چکا ہے — ایک معیاری کھانا پیش کیا جائے گا۔",
+  },
+
+  /* The line under the divider on a meal card. A placed order shares the
+     "View menu" wording: the card still opens its menu to read, and there is
+     nothing on it left to change. */
+  "food.card.viewMenu": { en: "View menu", ar: "عرض القائمة", ur: "مینو دیکھیں" },
+  "food.card.submitBefore": { en: "Submit before {0}", ar: "أرسل قبل {0}", ur: "{0} سے پہلے جمع کریں" },
 
   /* ─── Idle Screen ─── */
   "idle.welcome": { en: "Welcome to {0}", ar: "مرحباً بك في {0}", ur: "{0} میں خوش آمدید" },

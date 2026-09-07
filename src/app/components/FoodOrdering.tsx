@@ -7,11 +7,12 @@ import {
   Star, Heart, Droplets, Flame, Snowflake, Globe,
   Baby, User, FlaskConical, ChevronDown, ChevronRight, ChevronLeft, Home,
   AlertTriangle, X, Plus, ShieldAlert, Sparkles, CheckCircle2, Circle, SlidersHorizontal, Trash2,
+  Info,
 } from "lucide-react";
 import { InternalPageHeader } from "./InternalPageHeader";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { useTheme, TYPE_SCALE, WEIGHT, TEXT_STYLE, SHADOW } from "./ThemeContext";
-import { useLocale } from "./i18n";
+import { useLocale, type Locale } from "./i18n";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { ApiImage } from "./ApiImage";
 import { useOrders } from "./OrderStore";
@@ -228,13 +229,24 @@ function useOrderWindowState(): OrderWindowState {
   return state;
 }
 
+/** The BCP-47 tag for the active language.
+ *
+ *  The rest of this screen still picks its wording off `isRTL`, which cannot
+ *  tell Arabic from Urdu; passing the real locale is what lets a date or a
+ *  time land in Urdu rather than Arabic for a `ur` patient. Callers that have
+ *  only the boolean keep the old behaviour. */
+function localeTag(isRTL: boolean, locale?: Locale): string {
+  if (locale) return locale === "ar" ? "ar-SA" : locale === "ur" ? "ur-PK" : "en-US";
+  return isRTL ? "ar-SA" : "en-US";
+}
+
 /** Format a decimal hour (e.g. 11.5) as "11:30 AM" */
-function formatHour(h: number, isRTL: boolean): string {
+function formatHour(h: number, isRTL: boolean, locale?: Locale): string {
   const hh = Math.floor(h);
   const mm = Math.round((h - hh) * 60);
   const d = new Date();
   d.setHours(hh, mm, 0, 0);
-  return d.toLocaleTimeString(isRTL ? "ar-SA" : "en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return d.toLocaleTimeString(localeTag(isRTL, locale), { hour: "numeric", minute: "2-digit", hour12: true });
 }
 
 /** "4:00 PM – 8:00 PM" in the active language. */
@@ -255,8 +267,8 @@ function formatDayLong(offset: number, isRTL: boolean): string {
 }
 
 /** Weekday alone — the day tabs are narrow. */
-function formatDayWeekday(offset: number, isRTL: boolean): string {
-  return dayForOffset(offset).toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long" });
+function formatDayWeekday(offset: number, isRTL: boolean, locale?: Locale): string {
+  return dayForOffset(offset).toLocaleDateString(localeTag(isRTL, locale), { weekday: "long" });
 }
 
 /** Day + month, shown under the weekday in the day tabs. */
@@ -385,16 +397,20 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
   /** Meals sent in the last submission — the confirmation screen lists them. */
   const [submittedSummary, setSubmittedSummary] = useState<PendingMeal[]>([]);
 
+  /* Did the patient themselves order the day on screen? autoStandard orders
+     are the kitchen's fallback for anything left unordered at the cut-off —
+     they sit in `orders` like any other, so the notice has to skip them or it
+     would report a meal nobody chose as a confirmed order. */
+  const dayOrderedByPatient = useMemo(() => {
+    const dayStr = dayForOffset(selectedDayOffset).toDateString();
+    return (orders as any[]).some((o) =>
+      !o.autoStandard && o.deliveryDate &&
+      new Date(o.deliveryDate).toDateString() === dayStr);
+  }, [orders, selectedDayOffset]);
+
   /* Already with the kitchen, keyed day + meal. Read back off the placed
      orders rather than kept alongside them, so it survives leaving this
      screen and coming back. */
-  const patientChoseForTomorrow = useMemo(() => {
-    const tomorrow = dayForOffset(ORDERABLE_DAY_OFFSET).toDateString();
-    const sent = (orders as any[]).some((o) =>
-      !o.autoStandard && o.deliveryDate && new Date(o.deliveryDate).toDateString() === tomorrow);
-    return sent || pendingMeals.some((e) => isOrderableDay(e.dayOffset));
-  }, [orders, pendingMeals]);
-
   const placedKeys = useMemo(() => {
     const keys = new Set<string>();
     for (const o of orders as any[]) {
@@ -820,7 +836,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
                     placedMealIds={new Set(
                       meals.filter((m) => placedKeys.has(pendingKey(selectedDayOffset, m.id))).map((m) => m.id),
                     )}
-                    hasSelection={patientChoseForTomorrow}
+                    dayOrderedByPatient={dayOrderedByPatient}
                     windowState={windowState}
                   />
                 )}
@@ -1026,7 +1042,12 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
           sends it to the kitchen; from then on the order is final. */}
       <ConfirmDialog
         visible={showSubmitConfirm}
+        title={t("food.submitConfirm.title")}
         message={t("food.submitConfirm.message")}
+        /* Named for what it does, because it cannot be undone: "Continue"
+           reads like another step in the flow, and this is the last one. */
+        confirmLabel={t("food.submitConfirm.confirm")}
+        cancelLabel={t("food.submitConfirm.cancel")}
         onConfirm={handleSubmitOrder}
         onCancel={() => setShowSubmitConfirm(false)}
       />
@@ -1934,7 +1955,7 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
  * STEP 2: CHOOSE MEALS (rolling three-day window)
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamily, isRTL, selectedDayOffset, onSelectDay, pendingMealIds, placedMealIds, hasSelection, windowState }: {
+function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamily, isRTL, selectedDayOffset, onSelectDay, pendingMealIds, placedMealIds, dayOrderedByPatient, windowState }: {
   meals: MealPeriod[]; selectedMealId: MealId | null; onSelect: (id: MealId) => void;
   /** Open a meal's menu to read on a day that cannot be ordered yet. */
   onDeselect?: () => void; fontFamily: string; isRTL: boolean;
@@ -1945,25 +1966,46 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
   pendingMealIds: Set<MealId>;
   /** Meals already sent to the kitchen for the selected day. */
   placedMealIds: Set<MealId>;
-  /** Has the patient chosen anything for TOMORROW — whichever day's tab is on
-   *  screen? The notice always speaks about tomorrow, so it cannot be read off
-   *  the visible day. A standard meal placed on their behalf is not a choice. */
-  hasSelection: boolean;
+  /** Did the PATIENT order this day — the day on screen, not tomorrow? The
+   *  kitchen posts a standard meal for anything unordered once the window
+   *  shuts, and that is not a choice: it lands in `orders` like any other, so
+   *  the notice would call it "your order" if it read `placedMealIds`. */
+  dayOrderedByPatient: boolean;
   /** Where tomorrow's meal stands in today's cycle. */
   windowState: OrderWindowState;
 }) {
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
+  const { t, locale } = useLocale();
+  const { theme } = useTheme();
   /* The meal whose menu is being read. Reading never leaves this screen: the
      patient is browsing, not part-way through an order, and a full screen with
      a back button would tell them otherwise. */
   const [menuMeal, setMenuMeal] = React.useState<MealPeriod | null>(null);
   const windowStr = orderWindowLabel(isRTL);
-  const windowStartStr = formatHour(ORDER_WINDOW_START, isRTL);
-  const windowEndStr = formatHour(ORDER_WINDOW_END, isRTL);
+  const windowStartStr = formatHour(ORDER_WINDOW_START, isRTL, locale);
+  const windowEndStr = formatHour(ORDER_WINDOW_END, isRTL, locale);
   const dayOrderable = isOrderableDay(selectedDayOffset);
   /* A meal is choosable only on tomorrow's tab, and only inside the window.
      Outside it the same card opens the same menu to read. */
   const canOrder = dayOrderable && windowState === "open";
+
+  /* ── What the notice says about the day on screen ──────────────────────
+   * Read off the SELECTED day, never off tomorrow.
+   *
+   * A day the run cannot buy yet opens on the evening before it — that is the
+   * whole rule, so the day it opens is simply the day before this one. */
+  const dayName = formatDayWeekday(selectedDayOffset, isRTL, locale);
+  const noticeText =
+    !dayOrderable
+      ? t("food.notice.previewDay", dayName,
+          formatDayWeekday(selectedDayOffset - 1, isRTL, locale), windowStartStr)
+      : dayOrderedByPatient
+        ? t("food.notice.ordered", dayName)
+        : windowState === "before"
+          ? t("food.notice.opensToday", dayName, windowStartStr)
+          : windowState === "open"
+            ? t("food.notice.openUntil", dayName, windowEndStr)
+            : t("food.notice.closed", dayName);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
@@ -2018,41 +2060,32 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
           })}
         </div>
 
-        {/* The one thing said about the window anywhere on this screen, and
-            it says which of the three states tomorrow is actually in. */}
-        {/* The amber the rest of this screen already uses for anything to do
-            with the clock — the "Opens 4:00 PM" badge is the same palette. */}
+        {/* The one thing said about the window anywhere on this screen. It
+            speaks about the day whose tab is open — not always tomorrow —
+            because a notice that says "tomorrow" while Wednesday is selected
+            is answering a question nobody asked.
+
+            Informational, not amber: none of these five states is a warning,
+            and the clock icon this used to carry made a routine cut-off read
+            as something going wrong. */}
         <div data-fo-notice data-fo-window-state={windowState}
           className="flex items-center gap-3"
           style={{
             maxWidth: "900px",
             padding: "14px 26px",
             borderRadius: "18px",
-            backgroundColor: "#FEF3C7",
-            border: "1.5px solid #F59E0B",
+            backgroundColor: theme.infoSubtle,
+            border: `1.5px solid ${theme.info}`,
           }}>
-          <Clock size={20} color="#D97706" className="shrink-0" />
-          {/* One sentence for each situation the patient can actually be in.
-              Nothing here explains the rules — it says where they stand. */}
+          <Info size={20} color={theme.info} className="shrink-0" />
+          {/* One whole sentence per state, translated as a unit — see the
+              food.notice.* keys. Nothing here explains the rules; it says
+              where this day stands, and the order can never be changed. */}
           <p style={{
-            fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#92400E",
+            fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: theme.textBody,
             margin: 0, lineHeight: 1.5, textAlign: isRTL ? "right" : "left",
           }}>
-            {windowState === "before" && (isRTL
-              ? `يفتح باب طلب الوجبات الساعة ${windowStartStr}.`
-              : `Meal ordering opens at ${windowStartStr}.`)}
-            {windowState === "open" && !hasSelection && (isRTL
-              ? `باب طلب وجبات الغد مفتوح الآن، ويُغلق الساعة ${windowEndStr}.`
-              : `Tomorrow's meal ordering is open now, closing at ${windowEndStr}.`)}
-            {windowState === "open" && hasSelection && (isRTL
-              ? `وجبات الغد جاهزة. لا يزال بإمكانك التعديل حتى الساعة ${windowEndStr}.`
-              : `Your meals for tomorrow are set. You can still make changes until ${windowEndStr}.`)}
-            {windowState === "closed" && hasSelection && (isRTL
-              ? `تم تأكيد طلبك لوجبات الغد.`
-              : `Your order for tomorrow is confirmed.`)}
-            {windowState === "closed" && !hasSelection && (isRTL
-              ? `سيتم تقديم وجبة قياسية غداً.`
-              : `A standard meal will be served tomorrow.`)}
+            {noticeText}
           </p>
         </div>
       </div>
@@ -2098,15 +2131,18 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
 
           /* The line under the divider is the card's action, not a button of
              its own: the whole card has always been the tap target. It stays
-             put when a meal is chosen — see the note above. */
-          const actionLabel = !canOrder
-            ? (isRTL ? "عرض القائمة" : "View menu")
-            : placed
-              ? (isRTL ? "تغيير الاختيار" : "Change selection")
-              : (isRTL ? `أرسل قبل ${windowEndStr}` : `Submit before ${windowEndStr}`);
+             put when a meal is chosen — see the note above.
 
-          /* Outside the window the card still opens — to read, not to pick. */
-          const handleClick = () => canOrder ? onSelect(meal.id) : setMenuMeal(meal);
+             A placed order reads "View menu" like any other unbuyable card.
+             It used to offer "Change selection", which the kitchen cannot
+             honour: once an order is sent there is nothing left to change. */
+          const actionLabel = (placed || !canOrder)
+            ? t("food.card.viewMenu")
+            : t("food.card.submitBefore", windowEndStr);
+
+          /* Outside the window — and on anything already sent — the card still
+             opens, to read rather than to pick. */
+          const handleClick = () => (canOrder && !placed) ? onSelect(meal.id) : setMenuMeal(meal);
 
           return (
             <motion.div key={meal.id}
