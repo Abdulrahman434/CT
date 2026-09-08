@@ -415,11 +415,11 @@ export function WordSearchGame({ onClose, onBackToGames }: { onClose: () => void
       {isComplete && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", zIndex: 100 }}>
           <div className="flex flex-col items-center gap-6 px-12 py-10" style={{ backgroundColor: theme.surface, borderRadius: theme.radiusCard, boxShadow: SHADOW["2xl"], border: theme.cardBorder }}>
-            <Trophy size={80} color={theme.primary} strokeWidth={1.5} />
+            <Trophy size={80} color={theme.primaryOn} strokeWidth={1.5} />
             <h2 style={{ fontFamily: fontFamily, fontSize: TYPE_SCALE["2xl"], fontWeight: WEIGHT.bold, color: theme.textHeading }}>{gt.wsCongrats}</h2>
             <p style={{ fontFamily: fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.medium, color: theme.textMuted }}>{gt.wsAllFound}</p>
             <div className="flex gap-4 mt-4">
-              <button onClick={() => initializeGame()} className="px-8 py-4 cursor-pointer active:scale-95 transition-transform" style={{ backgroundColor: theme.primary, borderRadius: theme.radiusMd, border: "none", outline: "none", fontFamily: fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.semibold, color: theme.textInverse }}>{gt.playAgain}</button>
+              <button onClick={() => initializeGame()} className="px-8 py-4 cursor-pointer active:scale-95 transition-transform" style={{ backgroundColor: theme.primary, borderRadius: theme.radiusMd, border: "none", outline: "none", fontFamily: fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.semibold, color: theme.brandOnPrimary }}>{gt.playAgain}</button>
               <button 
                 onClick={onClose} 
                 className="px-8 py-4 cursor-pointer active:scale-95 transition-transform" 
@@ -463,7 +463,7 @@ export function WordSearchGame({ onClose, onBackToGames }: { onClose: () => void
             }}
           >
             <div className="w-24 h-24 rounded-full bg-primarySubtle flex items-center justify-center" style={{ backgroundColor: theme.primarySubtle }}>
-              <RotateCcw size={48} color={theme.primary} />
+              <RotateCcw size={48} color={theme.primaryOn} />
             </div>
             
             <div className="text-center gap-2 flex flex-col">
@@ -479,7 +479,7 @@ export function WordSearchGame({ onClose, onBackToGames }: { onClose: () => void
               <button
                 onClick={loadGameState}
                 className="w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-95"
-                style={{ backgroundColor: theme.primary, color: theme.textInverse, fontSize: TYPE_SCALE.md }}
+                style={{ backgroundColor: theme.primary, color: theme.brandOnPrimary, fontSize: TYPE_SCALE.md }}
               >
                 {gt.continuePlaying}
               </button>

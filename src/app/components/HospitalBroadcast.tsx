@@ -211,7 +211,7 @@ export function HospitalBroadcast({
                 boxShadow: `0 2px 8px ${cfg.glowColor}`,
               }}
             >
-              <PriorityIcon priority={notification.priority} type={notification.type} size={26} color={theme.primary} />
+              <PriorityIcon priority={notification.priority} type={notification.type} size={26} color={theme.primaryOn} />
             </div>
           </div>
 
@@ -222,7 +222,7 @@ export function HospitalBroadcast({
                 fontFamily,
                 fontSize: "18px",
                 fontWeight: WEIGHT.bold,
-                color: theme.primary,
+                color: theme.primaryOn,
                 letterSpacing: "1.2px",
                 textTransform: "uppercase" as const,
               }}

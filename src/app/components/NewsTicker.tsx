@@ -168,7 +168,7 @@ export function NewsTicker({ items }: NewsTickerProps = {}) {
             // to this element's style in the rAF loop above, not via React.
             transform: `translateX(${offsetRef.current}px)`,
             fontFamily: fontFamily,
-            color: theme.textInverse,
+            color: theme.brandOnPrimary,
             ...TEXT_STYLE.body,
           }}
         >

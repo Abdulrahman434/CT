@@ -344,7 +344,7 @@ export function SlidingPuzzleGame({ onClose, onBackToGames }: { onClose: () => v
           </select>
 
           <div className="flex flex-col items-end">
-            <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: theme.primary }}>{formatTime(timer)}</span>
+            <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: theme.primaryOn }}>{formatTime(timer)}</span>
           </div>
 
           <div
@@ -359,7 +359,7 @@ export function SlidingPuzzleGame({ onClose, onBackToGames }: { onClose: () => v
                 fontFamily: fontFamily,
                 fontSize: TYPE_SCALE.md,
                 fontWeight: WEIGHT.semibold,
-                color: theme.primary,
+                color: theme.primaryOn,
               }}
             >
               {gt.moves}: {moves}
@@ -484,7 +484,7 @@ export function SlidingPuzzleGame({ onClose, onBackToGames }: { onClose: () => v
                   fontFamily: fontFamily,
                   fontSize: TYPE_SCALE.base,
                   fontWeight: WEIGHT.semibold,
-                  color: theme.primary,
+                  color: theme.primaryOn,
                 }}
               >
                 {gt.solution}
@@ -561,7 +561,7 @@ export function SlidingPuzzleGame({ onClose, onBackToGames }: { onClose: () => v
             }}
           >
             <div className="w-24 h-24 rounded-full bg-primarySubtle flex items-center justify-center" style={{ backgroundColor: theme.primarySubtle }}>
-              <RotateCcw size={48} color={theme.primary} />
+              <RotateCcw size={48} color={theme.primaryOn} />
             </div>
 
             <div className="text-center gap-2 flex flex-col">
@@ -577,7 +577,7 @@ export function SlidingPuzzleGame({ onClose, onBackToGames }: { onClose: () => v
               <button
                 onClick={loadGameState}
                 className="w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-95"
-                style={{ backgroundColor: theme.primary, color: theme.textInverse, fontSize: TYPE_SCALE.md }}
+                style={{ backgroundColor: theme.primary, color: theme.brandOnPrimary, fontSize: TYPE_SCALE.md }}
               >
                 {gt.continuePlaying}
               </button>
@@ -612,7 +612,7 @@ export function SlidingPuzzleGame({ onClose, onBackToGames }: { onClose: () => v
               border: theme.cardBorder,
             }}
           >
-            <Trophy size={80} color={theme.primary} strokeWidth={1.5} />
+            <Trophy size={80} color={theme.primaryOn} strokeWidth={1.5} />
             <h2
               style={{
                 fontFamily: fontFamily,

@@ -314,7 +314,7 @@ export function UnitConverterTool({ onClose, onBackToTools }: { onClose: () => v
                 justifyContent: "center",
               }}
             >
-              <ArrowLeftRight size={28} color={theme.primary} />
+              <ArrowLeftRight size={28} color={theme.primaryOn} />
             </button>
           </div>
 
@@ -338,7 +338,7 @@ export function UnitConverterTool({ onClose, onBackToTools }: { onClose: () => v
                   fontFamily: fontFamily,
                   fontSize: TYPE_SCALE.xl,
                   fontWeight: WEIGHT.bold,
-                  color: theme.primary,
+                  color: theme.primaryOn,
                   backgroundColor: theme.background,
                   borderRadius: theme.radiusMd,
                   border: theme.cardBorder,
@@ -387,7 +387,7 @@ export function UnitConverterTool({ onClose, onBackToTools }: { onClose: () => v
               }}
             >
               {fromValue} {currentUnits[fromUnit].symbol} ={" "}
-              <span style={{ color: theme.primary, fontWeight: WEIGHT.bold }}>
+              <span style={{ color: theme.primaryOn, fontWeight: WEIGHT.bold }}>
                 {convertValue()} {currentUnits[toUnit].symbol}
               </span>
             </p>

@@ -531,7 +531,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
     <div
       className="absolute inset-0 z-50 flex flex-col"
       style={{
-        background: `linear-gradient(160deg, ${theme.primary} 0%, ${theme.primaryDark} 40%, #0a1628 100%)`,
+        background: theme.pageGradient,
         animation: "aboutUsIn 0.2s ease-out",
       }}
     >
@@ -708,7 +708,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                   fontFamily: theme.fontFamily,
                   fontSize: TYPE_SCALE["2xl"],
                   fontWeight: WEIGHT.bold,
-                  color: theme.primary,
+                  color: theme.primaryOn,
                   marginBottom: "24px",
                   letterSpacing: "-0.5px",
                   flexShrink: 0,
@@ -847,10 +847,10 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                 <div className="grid grid-cols-2 gap-6">
                   {theme.id === "kauh" ? (
                     [
-                      { icon: <Trophy size={28} color={theme.primary} />, title: locale === "ar" ? "اعتماد JCI الدولي" : "International JCI Accreditation", desc: locale === "ar" ? "اعتماد مستشفى جامعة الملك عبدالعزيز من قِبل المنظمة الدولية لاعتماد المستشفيات (JCI)، تأكيداً لأعلى معايير الجودة والسلامة." : "Accreditation of King Abdulaziz University Hospital by Joint Commission International (JCI), affirming the highest standards of quality and safety." },
-                      { icon: <Star size={28} color={theme.primary} />, title: locale === "ar" ? "مركز للتميز الأكاديمي" : "A Centre of Academic Excellence", desc: locale === "ar" ? "الحصول على تصنيف متقدم ضمن مراكز التميز الأكاديمي والطبي على مستوى المملكة العربية السعودية." : "Achieving an advanced ranking among centres of academic and medical excellence across the Kingdom of Saudi Arabia." },
-                      { icon: <Zap size={28} color={theme.primary} />, title: locale === "ar" ? "إنتاج بحثي دولي متميز" : "Distinguished International Research Output", desc: locale === "ar" ? "نشر مئات الأبحاث الطبية المحكّمة في مجلات دولية مرموقة سنوياً، ترسّخاً لمكانة المستشفى كمرجع علمي." : "Publishing hundreds of peer-reviewed medical papers in prestigious international journals each year, cementing the hospital's standing as a scientific reference." },
-                      { icon: <Medal size={28} color={theme.primary} />, title: locale === "ar" ? "ريادة الصحة الرقمية" : "Digital Health Leadership", desc: locale === "ar" ? "تطوير وتطبيق بوابة شفاء الرقمية لخدمة المرضى، ضمن مبادرات رؤية المملكة 2030 للتحول الرقمي في القطاع الصحي." : "Developing and deploying the Shifaa digital portal to serve patients, as part of Saudi Vision 2030 initiatives for digital transformation in the health sector." },
+                      { icon: <Trophy size={28} color={theme.primaryOn} />, title: locale === "ar" ? "اعتماد JCI الدولي" : "International JCI Accreditation", desc: locale === "ar" ? "اعتماد مستشفى جامعة الملك عبدالعزيز من قِبل المنظمة الدولية لاعتماد المستشفيات (JCI)، تأكيداً لأعلى معايير الجودة والسلامة." : "Accreditation of King Abdulaziz University Hospital by Joint Commission International (JCI), affirming the highest standards of quality and safety." },
+                      { icon: <Star size={28} color={theme.primaryOn} />, title: locale === "ar" ? "مركز للتميز الأكاديمي" : "A Centre of Academic Excellence", desc: locale === "ar" ? "الحصول على تصنيف متقدم ضمن مراكز التميز الأكاديمي والطبي على مستوى المملكة العربية السعودية." : "Achieving an advanced ranking among centres of academic and medical excellence across the Kingdom of Saudi Arabia." },
+                      { icon: <Zap size={28} color={theme.primaryOn} />, title: locale === "ar" ? "إنتاج بحثي دولي متميز" : "Distinguished International Research Output", desc: locale === "ar" ? "نشر مئات الأبحاث الطبية المحكّمة في مجلات دولية مرموقة سنوياً، ترسّخاً لمكانة المستشفى كمرجع علمي." : "Publishing hundreds of peer-reviewed medical papers in prestigious international journals each year, cementing the hospital's standing as a scientific reference." },
+                      { icon: <Medal size={28} color={theme.primaryOn} />, title: locale === "ar" ? "ريادة الصحة الرقمية" : "Digital Health Leadership", desc: locale === "ar" ? "تطوير وتطبيق بوابة شفاء الرقمية لخدمة المرضى، ضمن مبادرات رؤية المملكة 2030 للتحول الرقمي في القطاع الصحي." : "Developing and deploying the Shifaa digital portal to serve patients, as part of Saudi Vision 2030 initiatives for digital transformation in the health sector." },
                     ].map((item, idx) => (
                       <div
                         key={idx}
@@ -874,7 +874,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                               fontFamily: isRTL ? theme.fontFamilyAr : theme.fontFamily,
                               fontSize: TYPE_SCALE.lg,
                               fontWeight: 700,
-                              color: theme.primary,
+                              color: theme.primaryOnLight,
                               marginBottom: "8px",
                             }}
                           >
@@ -909,10 +909,10 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                       className="w-14 h-14 rounded-2xl flex items-center justify-center"
                       style={{ backgroundColor: theme.primaryLight }}
                     >
-                      {num === 1 && <Trophy size={28} color={theme.primary} />}
-                      {num === 2 && <Star size={28} color={theme.primary} />}
-                      {num === 3 && <Zap size={28} color={theme.primary} />}
-                      {num === 4 && <Medal size={28} color={theme.primary} />}
+                      {num === 1 && <Trophy size={28} color={theme.primaryOnLight} />}
+                      {num === 2 && <Star size={28} color={theme.primaryOnLight} />}
+                      {num === 3 && <Zap size={28} color={theme.primaryOnLight} />}
+                      {num === 4 && <Medal size={28} color={theme.primaryOnLight} />}
                     </div>
                     <div>
                       <h4
@@ -920,7 +920,7 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                           fontFamily: theme.fontFamily,
                           fontSize: TYPE_SCALE.lg,
                           fontWeight: 700,
-                          color: theme.primary,
+                          color: theme.primaryOn,
                           marginBottom: "8px"
                         }}
                       >
@@ -973,13 +973,13 @@ export function AboutUs({ onClose }: { onClose: () => void }) {
                   className="flex items-center gap-2"
                   style={{ textDecoration: "none" }}
                 >
-                  <Globe size={18} color={theme.primary} />
-                  <span style={{ fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.semibold, color: theme.primary }}>
+                  <Globe size={18} color={theme.primaryOn} />
+                  <span style={{ fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.semibold, color: theme.primaryOn }}>
                     {theme.hospitalWebsiteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}
                   </span>
                 </a>
                 <div className="flex items-center gap-2">
-                  <MapPin size={18} color={theme.primary} />
+                  <MapPin size={18} color={theme.primaryOn} />
                   <span style={{ fontSize: TYPE_SCALE.sm, fontWeight: WEIGHT.medium, color: "#4A5568" }}>
                     {theme.location}
                   </span>

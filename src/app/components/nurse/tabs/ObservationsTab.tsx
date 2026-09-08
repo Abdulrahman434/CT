@@ -104,7 +104,7 @@ export function ObservationsTab({ role }: { role: "nurse" | "doctor" }) {
             {/* Vitals */}
             <div className="grid grid-cols-4 gap-3 mb-5">
               {[
-                { key: "bp", label: "Blood Pressure", unit: "mmHg", icon: <Droplet size={14} color="#EF4444" />, placeholder: "120/80" },
+                { key: "bp", label: "Blood Pressure", unit: "mmHg", icon: <Droplet size={14} color={theme.errorOn} />, placeholder: "120/80" },
                 { key: "hr", label: "Heart Rate", unit: "BPM", icon: <Activity size={14} color="#F43F5E" />, placeholder: "72" },
                 { key: "temp", label: "Temperature", unit: "°C", icon: <Thermometer size={14} color="#F59E0B" />, placeholder: "37.0" },
                 { key: "spo2", label: "O₂ Saturation", unit: "%", icon: <Wind size={14} style={{ color: t.primary }} />, placeholder: "98" },
@@ -200,7 +200,7 @@ export function ObservationsTab({ role }: { role: "nurse" | "doctor" }) {
             {/* Vitals */}
             <div className="grid grid-cols-4 gap-3 mb-5">
               {[
-                { val: activeObs.vitals.bp, label: "BP", unit: "mmHg", icon: <Droplet size={14} color="#EF4444" /> },
+                { val: activeObs.vitals.bp, label: "BP", unit: "mmHg", icon: <Droplet size={14} color={theme.errorOn} /> },
                 { val: activeObs.vitals.hr, label: "HR", unit: "BPM", icon: <Activity size={14} color="#F43F5E" /> },
                 { val: activeObs.vitals.temp, label: "Temp", unit: "°C", icon: <Thermometer size={14} color="#F59E0B" /> },
                 { val: activeObs.vitals.spo2, label: "SpO₂", unit: "%", icon: <Wind size={14} style={{ color: t.primary }} /> },

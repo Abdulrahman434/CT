@@ -89,13 +89,13 @@ export function QuickServices() {
     <div className="flex gap-3 shrink-0">
       <CompactCard
         label={t("hub.education")}
-        icon={<EducationIcon color={theme.primary} />}
+        icon={<EducationIcon color={theme.primaryOn} />}
         accentColor={theme.primary}
         accentBg={theme.primarySubtle}
       />
       <CompactCard
         label={t("service.survey")}
-        icon={<SurveyIcon color={theme.accent} />}
+        icon={<SurveyIcon color={theme.accentOn} />}
         accentColor={theme.accent}
         accentBg={theme.accentSubtle}
       />

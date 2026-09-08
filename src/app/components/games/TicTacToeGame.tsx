@@ -302,7 +302,7 @@ export function TicTacToeGame({ onClose, onBackToGames }: { onClose: () => void;
                 fontFamily: fontFamily,
                 fontSize: TYPE_SCALE.md,
                 fontWeight: WEIGHT.semibold,
-                color: theme.primary,
+                color: theme.primaryOn,
               }}
             >
               {winner ? gt.winner(winner) : isDraw ? gt.itsADraw : gt.next(xIsNext ? "X" : "O")}
@@ -331,8 +331,8 @@ export function TicTacToeGame({ onClose, onBackToGames }: { onClose: () => void;
                   outline: "none",
                 }}
               >
-                {square === "X" && <X size={80} color={theme.primary} strokeWidth={3} />}
-                {square === "O" && <Circle size={80} color={theme.accent} strokeWidth={3} />}
+                {square === "X" && <X size={80} color={theme.primaryOn} strokeWidth={3} />}
+                {square === "O" && <Circle size={80} color={theme.accentOn} strokeWidth={3} />}
               </button>
             ))}
           </div>
@@ -395,7 +395,7 @@ export function TicTacToeGame({ onClose, onBackToGames }: { onClose: () => void;
               }}
             >
               <div className="flex items-center gap-3">
-                <X size={28} color={theme.primary} strokeWidth={3} />
+                <X size={28} color={theme.primaryOn} strokeWidth={3} />
                 <span
                   style={{
                     fontFamily: fontFamily,
@@ -412,7 +412,7 @@ export function TicTacToeGame({ onClose, onBackToGames }: { onClose: () => void;
                   fontFamily: fontFamily,
                   fontSize: TYPE_SCALE.lg,
                   fontWeight: WEIGHT.bold,
-                  color: theme.primary,
+                  color: theme.primaryOn,
                 }}
               >
                 {scores.X}
@@ -426,7 +426,7 @@ export function TicTacToeGame({ onClose, onBackToGames }: { onClose: () => void;
               }}
             >
               <div className="flex items-center gap-3">
-                <Circle size={28} color={theme.accent} strokeWidth={3} />
+                <Circle size={28} color={theme.accentOn} strokeWidth={3} />
                 <span
                   style={{
                     fontFamily: fontFamily,
@@ -443,7 +443,7 @@ export function TicTacToeGame({ onClose, onBackToGames }: { onClose: () => void;
                   fontFamily: fontFamily,
                   fontSize: TYPE_SCALE.lg,
                   fontWeight: WEIGHT.bold,
-                  color: theme.accent,
+                  color: theme.accentOn,
                 }}
               >
                 {scores.O}
@@ -529,7 +529,7 @@ export function TicTacToeGame({ onClose, onBackToGames }: { onClose: () => void;
             }}
           >
             <div className="w-24 h-24 rounded-full bg-primarySubtle flex items-center justify-center" style={{ backgroundColor: theme.primarySubtle }}>
-              <RotateCcw size={48} color={theme.primary} />
+              <RotateCcw size={48} color={theme.primaryOn} />
             </div>
             
             <div className="text-center gap-2 flex flex-col">
@@ -545,7 +545,7 @@ export function TicTacToeGame({ onClose, onBackToGames }: { onClose: () => void;
               <button
                 onClick={loadGameState}
                 className="w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-95"
-                style={{ backgroundColor: theme.primary, color: theme.textInverse, fontSize: TYPE_SCALE.md }}
+                style={{ backgroundColor: theme.primary, color: theme.brandOnPrimary, fontSize: TYPE_SCALE.md }}
               >
                 {gt.continuePlaying}
               </button>

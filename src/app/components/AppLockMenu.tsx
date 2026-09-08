@@ -127,7 +127,7 @@ export function AppLockMenu({
               }}
             >
               {isCurrentlyLocked ? (
-                <Unlock size={32} style={{ color: "#EF4444" }} />
+                <Unlock size={32} style={{ color: theme.errorOn }} />
               ) : (
                 <Lock size={32} style={{ color: t.primary }} />
               )}

@@ -153,7 +153,7 @@ export function GuestGreeting({ onOpenAboutUs, showAboutUs = true }: { onOpenAbo
             style={{
               fontFamily,
               ...TEXT_STYLE.buttonSm,
-              color: theme.primary,
+              color: theme.primaryOn,
               textDecoration: "underline",
               textUnderlineOffset: "3px",
             }}

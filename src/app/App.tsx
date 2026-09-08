@@ -1942,7 +1942,7 @@ function BedsideScreen() {
                             className="w-8 h-8 rounded-full"
                             style={{
                               border: `2px solid ${theme.primarySubtle}`,
-                              borderTopColor: theme.primary,
+                              borderTopColor: theme.primaryOn,
                               animation: "spin 2s linear infinite",
                             }}
                           />
@@ -2410,7 +2410,7 @@ function CareMeLockedPlaceholder({ onTap }: { onTap: () => void }) {
           backgroundColor: theme.primarySubtle,
         }}
       >
-        <Lock size={26} style={{ color: theme.primary }} />
+        <Lock size={26} style={{ color: theme.primaryOn }} />
       </div>
       <span style={{
         fontFamily, fontSize: "16px", fontWeight: 700,

@@ -116,7 +116,7 @@ export function InternetBrowser({ initialUrl, onClose }: InternetBrowserProps) {
               backgroundColor: theme.errorSubtle,
               borderRadius: theme.radiusMd,
               border: `1px solid ${theme.errorSubtle}`,
-              color: theme.error
+              color: theme.errorOn
             }}
           >
             <Shield size={18} />
@@ -160,7 +160,7 @@ export function InternetBrowser({ initialUrl, onClose }: InternetBrowserProps) {
         {showFallback ? (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-8 text-center" style={{ backgroundColor: theme.background }}>
             <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6" style={{ backgroundColor: theme.errorSubtle }}>
-              <Shield size={48} color={theme.error} />
+              <Shield size={48} color={theme.errorOn} />
             </div>
             <h3 className="mb-2" style={{ ...TEXT_STYLE.sectionTitle, color: theme.textHeading }}>
               {t("browser.connectionTrouble") || "Connection Trouble?"}
@@ -184,7 +184,7 @@ export function InternetBrowser({ initialUrl, onClose }: InternetBrowserProps) {
             <button
               onClick={() => setShowFallback(false)}
               className="mt-4 font-bold hover:underline"
-              style={{ color: theme.primary, backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+              style={{ color: theme.primaryOn, backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
             >
               {t("browser.waitLonger") || "Try waiting a bit longer"}
             </button>
@@ -193,7 +193,7 @@ export function InternetBrowser({ initialUrl, onClose }: InternetBrowserProps) {
           <>
             {isLoading && (
               <div className="absolute inset-0 z-10 flex flex-col items-center justify-center backdrop-blur-sm" style={{ backgroundColor: theme.overlay }}>
-                <div className="w-16 h-16 border-4 rounded-full animate-spin mb-4" style={{ borderTopColor: theme.primary, borderColor: theme.primarySubtle }} />
+                <div className="w-16 h-16 border-4 rounded-full animate-spin mb-4" style={{ borderTopColor: theme.primaryOn, borderColor: theme.primarySubtle }} />
                 <p className="font-bold animate-pulse" style={{ color: theme.textHeading }}>
                   {t("general.loading") || "Loading content..."}
                 </p>

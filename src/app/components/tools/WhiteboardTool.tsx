@@ -200,7 +200,7 @@ export function WhiteboardTool({ onClose, onBackToTools }: { onClose: () => void
                   justifyContent: "center",
                 }}
               >
-                <Pencil size={32} color={tool === "pen" ? theme.primary : theme.textMuted} />
+                <Pencil size={32} color={tool === "pen" ? theme.primaryOn : theme.textMuted} />
               </button>
               <button
                 onClick={() => setTool("eraser")}
@@ -217,7 +217,7 @@ export function WhiteboardTool({ onClose, onBackToTools }: { onClose: () => void
                   justifyContent: "center",
                 }}
               >
-                <Eraser size={32} color={tool === "eraser" ? theme.primary : theme.textMuted} />
+                <Eraser size={32} color={tool === "eraser" ? theme.primaryOn : theme.textMuted} />
               </button>
             </div>
           </div>
@@ -247,7 +247,7 @@ export function WhiteboardTool({ onClose, onBackToTools }: { onClose: () => void
                       height: "48px",
                       backgroundColor: c,
                       borderRadius: theme.radiusMd,
-                      border: color === c ? `3px solid ${theme.primary}` : "none",
+                      border: color === c ? `3px solid ${theme.primaryOn}` : "none",
                       outline: "none",
                       boxShadow: color === c ? `0 0 12px ${c}` : "none",
                     }}

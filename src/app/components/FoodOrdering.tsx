@@ -167,13 +167,42 @@ const DEMO_PATIENT = { name: { en: "Sara Saleh", ar: "سارة صالح" }, room
 
 /* ── Resolve CSS custom properties for theme-driven colors ── */
 const TEAL = "var(--fo-primary)";
+/** Foreground-safe brand colour — lifted in dark mode. Use for text/icons. */
+const TEAL_ON = "var(--fo-primary-on)";
 const TEAL_50 = "rgba(var(--fo-primary-rgb), 0.31)";
 const TEAL_25 = "rgba(var(--fo-primary-rgb), 0.15)";
 const TEAL_20 = "rgba(var(--fo-primary-rgb), 0.12)";
 const TEAL_15 = "rgba(var(--fo-primary-rgb), 0.09)";
 const TEAL_DARK = "var(--fo-primary-dark)";
 const SECONDARY = "var(--fo-secondary)";
+const SECONDARY_ON = "var(--fo-secondary-on)";
 const GREEN = "#3FC168";
+/* Neutral surfaces + ink. Values come from the theme via `foVars` below, so
+   this screen follows light/dark instead of being a fixed white sheet. */
+const SHEET = "var(--fo-sheet)";
+const SHEET_2 = "var(--fo-sheet-2)";
+const TINT_BG = "var(--fo-tint-bg)";
+const INK = "var(--fo-ink)";
+const INK_2 = "var(--fo-ink-2)";
+const INK_3 = "var(--fo-ink-3)";
+const LINE = "var(--fo-line)";
+/** Visible card/tile border — brand-tinted and contrast-solved per mode. */
+const CARD_LINE = "var(--fo-card-line)";
+const CARD_LINE_1 = `1.5px solid ${CARD_LINE}`;
+const CARD_LINE_2 = `2px solid ${CARD_LINE}`;
+const CARD_DASH_1 = `1.5px dashed ${CARD_LINE}`;
+const LINE_1 = `1px solid ${LINE}`;
+/* Pale status chips. In dark mode these resolve to a dark tint of the same hue
+   so the chip stops being a bright card floating on a dark sheet. */
+const CHIP_OK = "var(--fo-chip-ok)";
+const CHIP_WARN = "var(--fo-chip-warn)";
+const CHIP_ERR = "var(--fo-chip-err)";
+const CHIP_INFO = "var(--fo-chip-info)";
+/* Text/icons that sit on the status chips above — contrast-solved per mode. */
+const ON_OK = "var(--fo-on-ok)";
+const ON_WARN = "var(--fo-on-warn)";
+const ON_ERR = "var(--fo-on-err)";
+const ON_INFO = "var(--fo-on-info)";
 const TEAL_BG_TINT = "var(--fo-bg-tint)";
 
 function hexToRgb(hex: string): string {
@@ -192,7 +221,7 @@ function tintHex(hex: string, amount = 0.92): string {
 }
 
 export function FoodOrdering({ onClose, initialView }: { onClose: () => void; initialView?: "order" | "my-orders" }) {
-  const { theme } = useTheme();
+  const { theme, darkMode } = useTheme();
 
   const { isRTL, fontFamily } = useLocale();
   const { placeOrder, updateOrder, activeOrders, pastOrders, orders, clearOpenOrders } = useOrders();
@@ -414,11 +443,29 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
   /* ── Derive CSS custom property values from current theme ── */
   const foVars = {
     "--fo-primary": theme.primary,
+    "--fo-primary-on": theme.primaryOn,
     "--fo-primary-rgb": hexToRgb(theme.primary),
     "--fo-primary-dark": theme.primaryDark,
     "--fo-secondary": theme.accent,
+    "--fo-secondary-on": theme.accentOn,
     "--fo-secondary-rgb": hexToRgb(theme.accent),
-    "--fo-bg-tint": tintHex(theme.primary, 0.92),
+    "--fo-bg-tint": darkMode ? theme.primarySelected : tintHex(theme.primary, 0.92),
+    "--fo-sheet": darkMode ? theme.surface : "#FFFFFF",
+    "--fo-sheet-2": darkMode ? theme.surfaceElevated : "#F9FAFB",
+    "--fo-tint-bg": darkMode ? theme.surfaceElevated : "#F3F4F6",
+    "--fo-ink": theme.textHeading,
+    "--fo-ink-2": theme.textMuted,
+    "--fo-ink-3": theme.textDisabled,
+    "--fo-line": theme.borderDefault,
+    "--fo-card-line": theme.primaryBorder,
+    "--fo-chip-ok": darkMode ? "rgba(34,197,94,0.16)" : "#DCFCE7",
+    "--fo-chip-warn": darkMode ? "rgba(245,158,11,0.16)" : "#FEF3C7",
+    "--fo-chip-err": darkMode ? "rgba(239,68,68,0.16)" : "#FEE2E2",
+    "--fo-chip-info": darkMode ? "rgba(59,130,246,0.16)" : "#E0F2FE",
+    "--fo-on-ok": theme.successOn,
+    "--fo-on-warn": theme.warningOn,
+    "--fo-on-err": theme.errorOn,
+    "--fo-on-info": theme.infoOn,
   } as React.CSSProperties;
 
   return (
@@ -429,7 +476,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
       transition={{ duration: 0.25 }}
       className="absolute inset-0 z-50 flex flex-col overflow-hidden"
       style={{
-        background: `linear-gradient(160deg, ${theme.primary} 0%, ${theme.primaryDark} 40%, #0a1628 100%)`,
+        background: theme.pageGradient,
         ...foVars,
       }}
     >
@@ -447,10 +494,10 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
         .fo-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 100px; }
         .fo-scroll { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.15) transparent; }
         .fo-scroll-strong::-webkit-scrollbar { width: 10px; }
-        .fo-scroll-strong::-webkit-scrollbar-track { background: #F3F4F6; border-radius: 100px; margin: 4px 0; }
-        .fo-scroll-strong::-webkit-scrollbar-thumb { background: var(--fo-primary); border-radius: 100px; border: 2px solid #F3F4F6; }
+        .fo-scroll-strong::-webkit-scrollbar-track { background: var(--fo-tint-bg); border-radius: 100px; margin: 4px 0; }
+        .fo-scroll-strong::-webkit-scrollbar-thumb { background: var(--fo-primary); border-radius: 100px; border: 2px solid var(--fo-tint-bg); }
         .fo-scroll-strong::-webkit-scrollbar-thumb:hover { background: var(--fo-primary-dark); }
-        .fo-scroll-strong { scrollbar-width: thin; scrollbar-color: var(--fo-primary) #F3F4F6; }
+        .fo-scroll-strong { scrollbar-width: thin; scrollbar-color: var(--fo-primary) var(--fo-tint-bg); }
         .fo-carousel::-webkit-scrollbar { height: 0px; display: none; }
         .fo-carousel { scrollbar-width: none; -ms-overflow-style: none; cursor: grab; }
         .fo-carousel:active { cursor: grabbing; }
@@ -492,7 +539,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
       {/* ─── MAIN CONTENT (white rounded card containing stepper + body) ─── */}
       <div className="flex-1 min-h-0 px-12 pt-5 pb-3 relative flex flex-col">
         {isFlow && (
-          <div className="flex-1 min-h-0 flex flex-col rounded-[30px] overflow-hidden" style={{ backgroundColor: "#fff", boxShadow: "0 8px 32px rgba(0,0,0,0.15)" }}>
+          <div className="flex-1 min-h-0 flex flex-col rounded-[30px] overflow-hidden" style={{ backgroundColor: SHEET, boxShadow: "0 8px 32px rgba(0,0,0,0.15)" }}>
             <Stepper current={stepIndex} fontFamily={fontFamily} isRTL={isRTL} />
             <div className="flex-1 min-h-0 overflow-hidden">
               <AnimatePresence mode="wait">
@@ -596,9 +643,9 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
               className="flex flex-col items-center justify-center gap-8 cursor-pointer transition-transform active:scale-[0.97] hover:scale-[1.02]"
               style={{
                 width: "420px", height: "380px",
-                backgroundColor: "#fff", borderRadius: "30px",
+                backgroundColor: SHEET, borderRadius: "30px",
                 boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-                border: "1px solid rgba(0,0,0,0.06)",
+                border: CARD_LINE_1,
                 outline: "none",
               }}
             >
@@ -606,7 +653,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
                 width: 110, height: 110, borderRadius: "50%",
                 backgroundColor: TEAL_15, display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                <Utensils size={48} style={{ color: TEAL }} />
+                <Utensils size={48} style={{ color: TEAL_ON }} />
               </div>
               <div style={{ textAlign: "center" }}>
                 <p style={{ fontFamily, fontSize: "26px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>
@@ -624,9 +671,9 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
               className="flex flex-col items-center justify-center gap-8 cursor-pointer transition-transform active:scale-[0.97] hover:scale-[1.02]"
               style={{
                 width: "420px", height: "380px",
-                backgroundColor: "#fff", borderRadius: "30px",
+                backgroundColor: SHEET, borderRadius: "30px",
                 boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-                border: "1px solid rgba(0,0,0,0.06)",
+                border: CARD_LINE_1,
                 outline: "none",
               }}
             >
@@ -634,7 +681,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
                 width: 110, height: 110, borderRadius: "50%",
                 backgroundColor: `rgba(var(--fo-secondary-rgb), 0.12)`, display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                <ClipboardList size={48} style={{ color: SECONDARY }} />
+                <ClipboardList size={48} style={{ color: SECONDARY_ON }} />
               </div>
               <div style={{ textAlign: "center" }}>
                 <p style={{ fontFamily, fontSize: "26px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>
@@ -699,17 +746,17 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
           >
             <div
               className="flex-1 flex flex-col m-8 mt-4 rounded-[28px] overflow-hidden"
-              style={{ backgroundColor: "#fff", boxShadow: "0 12px 48px rgba(0,0,0,0.25)" }}
+              style={{ backgroundColor: SHEET, boxShadow: "0 12px 48px rgba(0,0,0,0.25)" }}
             >
               {/* Overlay header */}
-              <div className="shrink-0 flex items-center justify-between px-8 py-5" style={{ borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
+              <div className="shrink-0 flex items-center justify-between px-8 py-5" style={{ borderBottom: `1px solid ${CARD_LINE}` }}>
                 <div className="flex items-center gap-3">
                   <div style={{
                     width: 40, height: 40, borderRadius: 10,
                     backgroundColor: TEAL_15,
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
-                    <ClipboardList size={20} style={{ color: TEAL }} />
+                    <ClipboardList size={20} style={{ color: TEAL_ON }} />
                   </div>
                   <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>
                     {isRTL ? "طلباتي" : "My Orders"}
@@ -870,7 +917,7 @@ function PatientBar({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
       className="shrink-0 mx-12 mt-[12px] flex items-center justify-center gap-[16px]"
-      style={{ backgroundColor: "#fff", borderRadius: "24px", padding: "16px 22px", border: "1px solid rgba(0,0,0,0.1)" }}
+      style={{ backgroundColor: SHEET, borderRadius: "24px", padding: "16px 22px", border: `1px solid ${CARD_LINE}` }}
     >
       {/* Avatar */}
       <div className="shrink-0" style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: isGuest ? SECONDARY : TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -886,7 +933,7 @@ function PatientBar({
 
       {/* Name + Pills row */}
       <div className="flex-1 min-w-0 flex items-center justify-between">
-        <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.bold, color: "#212121", whiteSpace: "nowrap" }}>
+        <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.bold, color: INK, whiteSpace: "nowrap" }}>
           {name}
         </span>
         <div className="flex items-center gap-[14px]">
@@ -941,23 +988,23 @@ function Pill({
       {...(isInteractive ? { onClick, whileTap: { scale: 0.96 }, title: tooltip } : {})}
       className={`flex items-center gap-[8px] ${isInteractive ? "cursor-pointer group transition-all" : ""}`}
       style={{
-        backgroundColor: isInteractive ? "rgba(0, 138, 171, 0.08)" : "#F2F9FB",
+        backgroundColor: isInteractive ? "rgba(var(--fo-primary-rgb), 0.10)" : TINT_BG,
         borderRadius: "10px",
         padding: "9px 15px",
-        border: isInteractive ? "1.5px solid rgba(0, 138, 171, 0.25)" : "1px solid transparent",
+        border: isInteractive ? "1.5px solid rgba(var(--fo-primary-rgb), 0.28)" : "1px solid transparent",
         outline: "none",
       }}
     >
       {icon}
-      <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#303030", whiteSpace: "nowrap", lineHeight: 1.2 }}>{label}</span>
-      <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: isInteractive ? "#008AAB" : "#303030", whiteSpace: "nowrap", lineHeight: 1.2 }}>{value}</span>
+      <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: INK, whiteSpace: "nowrap", lineHeight: 1.2 }}>{label}</span>
+      <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: isInteractive ? TEAL_ON : INK, whiteSpace: "nowrap", lineHeight: 1.2 }}>{value}</span>
       {isInteractive && (
         <svg
           width="13"
           height="13"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#008AAB"
+          stroke={TEAL_ON}
           strokeWidth="2.4"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -989,7 +1036,7 @@ const ALL_DIET_OPTIONS: DietOptionItem[] = [
     id: "regular",
     label: { en: "Regular Diet", ar: "عادي" },
     desc: { en: "Standard balanced hospital meal plan", ar: "خطة وجبات قياسية متوازنة وصحية" },
-    color: "#0284C7",
+    color: ON_INFO,
     bg: "#F0F9FF",
     icon: Utensils,
   },
@@ -998,15 +1045,15 @@ const ALL_DIET_OPTIONS: DietOptionItem[] = [
     label: { en: "Diabetic", ar: "السكري" },
     desc: { en: "Controlled carbohydrates & low sugar", ar: "كربوهيدرات مقننة وسكريات منخفضة" },
     color: "#2563EB",
-    bg: "#EFF6FF",
+    bg: CHIP_INFO,
     icon: Droplets,
   },
   {
     id: "low-sodium",
     label: { en: "Low Sodium", ar: "قليل الصوديوم" },
     desc: { en: "Heart-healthy with restricted salt", ar: "صحي للقلب ومقيد الملح" },
-    color: "#059669",
-    bg: "#ECFDF5",
+    color: ON_OK,
+    bg: CHIP_OK,
     icon: Heart,
   },
   {
@@ -1021,7 +1068,7 @@ const ALL_DIET_OPTIONS: DietOptionItem[] = [
     id: "soft-diet",
     label: { en: "Soft Diet", ar: "نظام غذائي لين" },
     desc: { en: "Easy to chew and digest meals", ar: "وجبات سهلة المضغ والهضم والبلع" },
-    color: "#D97706",
+    color: ON_WARN,
     bg: "#FFFBEB",
     icon: Soup,
   },
@@ -1037,24 +1084,24 @@ const ALL_DIET_OPTIONS: DietOptionItem[] = [
     id: "ob",
     label: { en: "OB Patients", ar: "مرضى التوليد" },
     desc: { en: "Maternity & postpartum nutrition", ar: "تغذية للأمهات بعد الولادة وفترة الحمل" },
-    color: "#EA580C",
-    bg: "#FFF7ED",
+    color: ON_WARN,
+    bg: CHIP_WARN,
     icon: Star,
   },
   {
     id: "kids",
     label: { en: "Kids Menu", ar: "قائمة الأطفال" },
     desc: { en: "Child-friendly meals and fun choices", ar: "وجبات شهية ومناسبة للأطفال" },
-    color: "#059669",
-    bg: "#ECFDF5",
+    color: ON_OK,
+    bg: CHIP_OK,
     icon: Baby,
   },
   {
     id: "npo",
     label: { en: "NPO / Fasting", ar: "صائم (NPO)" },
     desc: { en: "Nothing by mouth (fasting for medical tests/surgery)", ar: "ممنوع تناول الطعام بالفم (صيام للفحوصات/الجراحة)" },
-    color: "#DC2626",
-    bg: "#FEF2F2",
+    color: ON_ERR,
+    bg: CHIP_ERR,
     icon: AlertTriangle,
   },
 ];
@@ -1142,7 +1189,7 @@ function DietAllergiesModal({
           onClick={(e) => e.stopPropagation()}
           className="w-full max-w-[840px] max-h-[90vh] flex flex-col rounded-[28px] overflow-hidden"
           style={{
-            backgroundColor: "#FFFFFF",
+            backgroundColor: SHEET,
             boxShadow: "0 20px 60px rgba(0, 0, 0, 0.25)",
             fontFamily,
           }}
@@ -1150,7 +1197,7 @@ function DietAllergiesModal({
           {/* ── Header ── */}
           <div
             className="shrink-0 flex items-center justify-between px-8 py-5"
-            style={{ borderBottom: "1px solid rgba(0,0,0,0.08)", backgroundColor: "#FAFCFD" }}
+            style={{ borderBottom: `1px solid ${CARD_LINE}`, backgroundColor: SHEET_2 }}
           >
             <div className="flex items-center gap-3.5">
               <div
@@ -1158,19 +1205,19 @@ function DietAllergiesModal({
                   width: 44,
                   height: 44,
                   borderRadius: "12px",
-                  backgroundColor: "rgba(0, 138, 171, 0.12)",
+                  backgroundColor: "rgba(var(--fo-primary-rgb), 0.12)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <SlidersHorizontal size={22} color="#008AAB" />
+                <SlidersHorizontal size={22} color={TEAL_ON} />
               </div>
               <div>
-                <h3 style={{ fontSize: "20px", fontWeight: WEIGHT.bold, color: "#171717", margin: 0 }}>
+                <h3 style={{ fontSize: "20px", fontWeight: WEIGHT.bold, color: INK, margin: 0 }}>
                   {isRTL ? "الحمية والحساسية للمريض" : "Patient Diet & Allergies"}
                 </h3>
-                <p style={{ fontSize: "13px", fontWeight: WEIGHT.medium, color: "#6B7280", margin: 0, marginTop: "2px" }}>
+                <p style={{ fontSize: "13px", fontWeight: WEIGHT.medium, color: INK_2, margin: 0, marginTop: "2px" }}>
                   {isRTL ? "اضبط الحمية الغذائية وسجل الحساسيات النشطة" : "Configure patient meal diet and allergy precautions"}
                 </p>
               </div>
@@ -1183,10 +1230,10 @@ function DietAllergiesModal({
                 width: 38,
                 height: 38,
                 borderRadius: "50%",
-                backgroundColor: "#F3F4F6",
+                backgroundColor: TINT_BG,
                 border: "none",
                 outline: "none",
-                color: "#6B7280",
+                color: INK_2,
               }}
             >
               <X size={20} />
@@ -1196,14 +1243,14 @@ function DietAllergiesModal({
           {/* ── Tabs (Diet vs Allergies) ── */}
           <div
             className="shrink-0 flex items-center gap-3 px-8 pt-4 pb-2"
-            style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}
+            style={{ borderBottom: CARD_LINE_1 }}
           >
             <button
               onClick={() => setActiveTab("diet")}
               className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-bold cursor-pointer transition-all active:scale-98"
               style={{
-                backgroundColor: activeTab === "diet" ? "#008AAB" : "#F3F4F6",
-                color: activeTab === "diet" ? "#FFFFFF" : "#4B5563",
+                backgroundColor: activeTab === "diet" ? TEAL : TINT_BG,
+                color: activeTab === "diet" ? "#FFFFFF" : INK_2,
                 fontSize: "15px",
                 border: "none",
                 outline: "none",
@@ -1216,8 +1263,8 @@ function DietAllergiesModal({
                   fontSize: "12px",
                   padding: "2px 8px",
                   borderRadius: "100px",
-                  backgroundColor: activeTab === "diet" ? "rgba(255,255,255,0.25)" : "#E5E7EB",
-                  color: activeTab === "diet" ? "#FFFFFF" : "#374151",
+                  backgroundColor: activeTab === "diet" ? "rgba(255,255,255,0.25)" : TINT_BG,
+                  color: activeTab === "diet" ? "#FFFFFF" : INK_2,
                 }}
               >
                 1
@@ -1228,8 +1275,8 @@ function DietAllergiesModal({
               onClick={() => setActiveTab("allergies")}
               className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-bold cursor-pointer transition-all active:scale-98"
               style={{
-                backgroundColor: activeTab === "allergies" ? "#E11D48" : "#F3F4F6",
-                color: activeTab === "allergies" ? "#FFFFFF" : "#4B5563",
+                backgroundColor: activeTab === "allergies" ? "#E11D48" : TINT_BG,
+                color: activeTab === "allergies" ? "#FFFFFF" : INK_2,
                 fontSize: "15px",
                 border: "none",
                 outline: "none",
@@ -1242,8 +1289,8 @@ function DietAllergiesModal({
                   fontSize: "12px",
                   padding: "2px 8px",
                   borderRadius: "100px",
-                  backgroundColor: activeTab === "allergies" ? "rgba(255,255,255,0.25)" : "#E5E7EB",
-                  color: activeTab === "allergies" ? "#FFFFFF" : "#374151",
+                  backgroundColor: activeTab === "allergies" ? "rgba(255,255,255,0.25)" : TINT_BG,
+                  color: activeTab === "allergies" ? "#FFFFFF" : INK_2,
                 }}
               >
                 {currentAllergies.length}
@@ -1267,8 +1314,8 @@ function DietAllergiesModal({
                         onClick={() => onSelectDiet(d.id)}
                         className="flex items-start gap-3.5 p-4 rounded-2xl text-left cursor-pointer transition-all"
                         style={{
-                          backgroundColor: isSelected ? d.bg : "#FFFFFF",
-                          border: isSelected ? `2px solid ${d.color}` : "1.5px solid #E5E7EB",
+                          backgroundColor: isSelected ? d.bg : SHEET,
+                          border: isSelected ? `2px solid ${d.color}` : CARD_LINE_1,
                           boxShadow: isSelected ? `0 4px 16px ${d.color}25` : "none",
                           outline: "none",
                           textAlign: isRTL ? "right" : "left",
@@ -1280,7 +1327,7 @@ function DietAllergiesModal({
                             width: "44px",
                             height: "44px",
                             borderRadius: "12px",
-                            backgroundColor: isSelected ? d.color : "#F3F4F6",
+                            backgroundColor: isSelected ? d.color : TINT_BG,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -1293,7 +1340,7 @@ function DietAllergiesModal({
                         {/* Label & Description */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <span style={{ fontSize: "16px", fontWeight: WEIGHT.bold, color: isSelected ? d.color : "#1F2937" }}>
+                            <span style={{ fontSize: "16px", fontWeight: WEIGHT.bold, color: isSelected ? d.color : INK }}>
                               {loc(d.label)}
                             </span>
                             {/* Single selection Radio indicator */}
@@ -1302,14 +1349,14 @@ function DietAllergiesModal({
                                 width: 22,
                                 height: 22,
                                 borderRadius: "50%",
-                                border: isSelected ? `6px solid ${d.color}` : "2px solid #D1D5DB",
-                                backgroundColor: "#FFFFFF",
+                                border: isSelected ? `6px solid ${d.color}` : CARD_LINE_2,
+                                backgroundColor: SHEET,
                                 flexShrink: 0,
                                 transition: "all 0.2s ease",
                               }}
                             />
                           </div>
-                          <p style={{ fontSize: "12.5px", fontWeight: WEIGHT.medium, color: "#6B7280", margin: 0, marginTop: "4px", lineHeight: 1.4 }}>
+                          <p style={{ fontSize: "12.5px", fontWeight: WEIGHT.medium, color: INK_2, margin: 0, marginTop: "4px", lineHeight: 1.4 }}>
                             {loc(d.desc)}
                           </p>
                         </div>
@@ -1322,14 +1369,14 @@ function DietAllergiesModal({
                 {currentDiet === "npo" && (
                   <div
                     className="flex items-start gap-3.5 p-4 rounded-2xl mt-2"
-                    style={{ backgroundColor: "#FEF2F2", border: "1.5px solid #FECACA" }}
+                    style={{ backgroundColor: CHIP_ERR, border: "1.5px solid #FECACA" }}
                   >
-                    <AlertTriangle size={22} color="#DC2626" className="shrink-0 mt-0.5" />
+                    <AlertTriangle size={22} color={ON_ERR} className="shrink-0 mt-0.5" />
                     <div>
-                      <p style={{ fontSize: "14px", fontWeight: WEIGHT.bold, color: "#991B1B", margin: 0 }}>
+                      <p style={{ fontSize: "14px", fontWeight: WEIGHT.bold, color: ON_ERR, margin: 0 }}>
                         {isRTL ? "تنبيه الصيام (NPO)" : "NPO Fasting Status"}
                       </p>
-                      <p style={{ fontSize: "13px", fontWeight: WEIGHT.medium, color: "#B91C1C", margin: 0, marginTop: "2px", lineHeight: 1.4 }}>
+                      <p style={{ fontSize: "13px", fontWeight: WEIGHT.medium, color: ON_ERR, margin: 0, marginTop: "2px", lineHeight: 1.4 }}>
                         {isRTL
                           ? "عند تفعيل وضع الصيام، سيتم تعطيل طلب الوجبات للمريض مع إمكانية طلب المرافقين."
                           : "When NPO is active, patient meal ordering is disabled while companion meal orders remain allowed."}
@@ -1344,7 +1391,7 @@ function DietAllergiesModal({
                 {/* Header info & clear button */}
                 <div className="flex items-center justify-between pb-1">
                   <div>
-                    <span style={{ fontSize: "14px", fontWeight: WEIGHT.bold, color: "#4B5563" }}>
+                    <span style={{ fontSize: "14px", fontWeight: WEIGHT.bold, color: INK_2 }}>
                       {isRTL ? "الحساسيات المحددة:" : "Selected Allergies:"}
                     </span>
                   </div>
@@ -1353,8 +1400,8 @@ function DietAllergiesModal({
                     onClick={onClearAllergies}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all active:scale-95"
                     style={{
-                      backgroundColor: currentAllergies.length === 0 ? "#E0F2FE" : "#FEE2E2",
-                      color: currentAllergies.length === 0 ? "#0369A1" : "#B91C1C",
+                      backgroundColor: currentAllergies.length === 0 ? CHIP_INFO : CHIP_ERR,
+                      color: currentAllergies.length === 0 ? ON_INFO : ON_ERR,
                       border: "none",
                       outline: "none",
                     }}
@@ -1380,9 +1427,9 @@ function DietAllergiesModal({
                         onClick={() => onToggleAllergy(allergyName)}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold cursor-pointer transition-all"
                         style={{
-                          backgroundColor: isSelected ? "#FEE2E2" : "#F9FAFB",
-                          border: isSelected ? "1.5px solid #EF4444" : "1.5px solid #E5E7EB",
-                          color: isSelected ? "#991B1B" : "#4B5563",
+                          backgroundColor: isSelected ? CHIP_ERR : "#F9FAFB",
+                          border: isSelected ? "1.5px solid #EF4444" : CARD_LINE_1,
+                          color: isSelected ? ON_ERR : INK_2,
                           fontSize: "14px",
                           outline: "none",
                           boxShadow: isSelected ? "0 2px 8px rgba(239, 68, 68, 0.18)" : "none",
@@ -1408,7 +1455,7 @@ function DietAllergiesModal({
                               width: 18,
                               height: 18,
                               borderRadius: "50%",
-                              border: "1.5px solid #D1D5DB",
+                              border: CARD_LINE_1,
                             }}
                           />
                         )}
@@ -1422,7 +1469,7 @@ function DietAllergiesModal({
                 <form
                   onSubmit={handleAddCustom}
                   className="flex items-center gap-2 p-3 rounded-2xl mt-2"
-                  style={{ backgroundColor: "#F9FAFB", border: "1.5px dashed #D1D5DB" }}
+                  style={{ backgroundColor: SHEET_2, border: CARD_DASH_1 }}
                 >
                   <Plus size={20} color="#6B7280" className="shrink-0" />
                   <input
@@ -1437,7 +1484,7 @@ function DietAllergiesModal({
                       outline: "none",
                       fontFamily,
                       fontSize: "14px",
-                      color: "#1F2937",
+                      color: INK,
                     }}
                   />
                   <button
@@ -1445,8 +1492,8 @@ function DietAllergiesModal({
                     disabled={!customAllergyInput.trim()}
                     className="px-4 py-2 rounded-xl text-xs font-bold transition-all"
                     style={{
-                      backgroundColor: customAllergyInput.trim() ? "#008AAB" : "#E5E7EB",
-                      color: customAllergyInput.trim() ? "#FFFFFF" : "#9CA3AF",
+                      backgroundColor: customAllergyInput.trim() ? TEAL : LINE,
+                      color: customAllergyInput.trim() ? "#FFFFFF" : INK_3,
                       border: "none",
                       outline: "none",
                       cursor: customAllergyInput.trim() ? "pointer" : "default",
@@ -1462,18 +1509,18 @@ function DietAllergiesModal({
           {/* ── Footer ── */}
           <div
             className="shrink-0 flex items-center justify-end px-8 py-4"
-            style={{ borderTop: "1px solid rgba(0,0,0,0.08)", backgroundColor: "#FAFCFD" }}
+            style={{ borderTop: `1px solid ${CARD_LINE}`, backgroundColor: SHEET_2 }}
           >
             <button
               onClick={onClose}
               className="px-8 py-2.5 rounded-xl font-bold cursor-pointer transition-transform active:scale-95"
               style={{
-                backgroundColor: "#008AAB",
+                backgroundColor: TEAL,
                 color: "#FFFFFF",
                 fontSize: "15px",
                 border: "none",
                 outline: "none",
-                boxShadow: "0 4px 14px rgba(0, 138, 171, 0.3)",
+                boxShadow: "0 4px 14px rgba(var(--fo-primary-rgb), 0.3)",
               }}
             >
               {isRTL ? "تم / تطبيق" : "Done / Apply"}
@@ -1521,7 +1568,7 @@ const STEP_LABELS = [
 
 function Stepper({ current, fontFamily, isRTL }: { current: 1 | 2 | 3 | 4; fontFamily: string; isRTL: boolean }) {
   return (
-    <div className="shrink-0 flex items-center justify-center px-[60px] pt-[18px] pb-[18px]" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+    <div className="shrink-0 flex items-center justify-center px-[60px] pt-[18px] pb-[18px]" style={{ borderBottom: CARD_LINE_1 }}>
       <div className="flex items-center" style={{ width: "100%", maxWidth: "1200px" }}>
         {STEP_LABELS.map((s, i) => {
           const num = i + 1;
@@ -1536,8 +1583,8 @@ function Stepper({ current, fontFamily, isRTL }: { current: 1 | 2 | 3 | 4; fontF
                 <motion.div
                   initial={false}
                   animate={{
-                    backgroundColor: filledTick ? GREEN : "#fff",
-                    borderColor: filledTick ? GREEN : active ? GREEN : "#E5E7EB",
+                    backgroundColor: filledTick ? GREEN : SHEET,
+                    borderColor: filledTick ? GREEN : active ? GREEN : CARD_LINE,
                   }}
                   transition={{ duration: 0.3 }}
                   style={{
@@ -1548,9 +1595,9 @@ function Stepper({ current, fontFamily, isRTL }: { current: 1 | 2 | 3 | 4; fontF
                 >
                   {filledTick
                     ? <Check size={20} color="#fff" strokeWidth={2.8} />
-                    : <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.bold, color: active ? GREEN : "#8C8C8C" }}>{num}</span>}
+                    : <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.bold, color: active ? ON_OK : INK_2 }}>{num}</span>}
                 </motion.div>
-                <span style={{ fontFamily, fontSize: "18px", fontWeight: active || done ? WEIGHT.bold : WEIGHT.medium, color: active || done ? "#2B2B2B" : "#8C8C8C", whiteSpace: "nowrap" }}>
+                <span style={{ fontFamily, fontSize: "18px", fontWeight: active || done ? WEIGHT.bold : WEIGHT.medium, color: active || done ? INK : INK_3, whiteSpace: "nowrap" }}>
                   {isRTL ? s.ar : s.en}
                 </span>
               </div>
@@ -1578,10 +1625,10 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
       className="h-full flex flex-col px-[40px] pt-[32px] pb-[16px] gap-[16px]">
       {/* Centered heading — matches Choose Meal placement */}
       <div className="shrink-0 text-center">
-        <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
+        <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: INK, letterSpacing: "0.4px", textTransform: "uppercase" }}>
           {isRTL ? "الطلب لـ" : "Order For"}
         </h2>
-        <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#565656", marginTop: "6px" }}>
+        <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: INK_2, marginTop: "6px" }}>
           {isRTL ? "حدد من سيتم الطلب له" : "Please select who you will order for"}
         </p>
       </div>
@@ -1594,8 +1641,8 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
               <motion.button key={type} onClick={() => onSelect(type)} whileTap={{ scale: 0.97 }}
                 style={{
                   width: "560px", height: "400px", borderRadius: "26px",
-                  backgroundColor: selected ? (type === "patient" ? TEAL : SECONDARY) : "#fff",
-                  border: selected ? "none" : "1.6px solid rgba(0,0,0,0.1)",
+                  backgroundColor: selected ? (type === "patient" ? TEAL : SECONDARY) : SHEET,
+                  border: selected ? "none" : `1.6px solid ${CARD_LINE}`,
                   position: "relative", cursor: "pointer", outline: "none",
                   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "36px",
                   transition: "all 0.22s ease",
@@ -1603,7 +1650,7 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
                 {/* Checkmark badge */}
                 <div className="absolute" style={{ top: "32px", right: "32px",
                   width: "68px", height: "68px", borderRadius: "50%",
-                  backgroundColor: selected ? "#2DCC06" : "#fff",
+                  backgroundColor: selected ? "#2DCC06" : SHEET,
                   border: selected ? "none" : "2px solid #DADADA",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   boxShadow: selected ? "0 4px 6.5px rgba(0,138,171,0.38)" : "none",
@@ -1614,7 +1661,7 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
                 {/* Icon circle */}
                 <div style={{
                   width: "120px", height: "120px", borderRadius: "60px",
-                  backgroundColor: selected ? "#fff" : "#F4F4F4",
+                  backgroundColor: selected ? "#fff" : TINT_BG,
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
                   {type === "patient"
@@ -1628,7 +1675,7 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
                 </div>
 
                 {/* Label */}
-                <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: selected ? "#fff" : "#171717" }}>
+                <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: selected ? "#fff" : INK }}>
                   {type === "patient" ? (isRTL ? "المريض" : "Patient") : (isRTL ? "المرافق" : "Companion")}
                 </span>
               </motion.button>
@@ -1643,15 +1690,15 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
             className="flex items-center gap-4 px-8 py-5 rounded-2xl"
-            style={{ backgroundColor: "#FEF2F2", border: "1.5px solid #FECACA", maxWidth: "700px" }}
+            style={{ backgroundColor: CHIP_ERR, border: "1.5px solid #FECACA", maxWidth: "700px" }}
           >
-            <div className="shrink-0 w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: "#FEE2E2" }}>
+            <div className="shrink-0 w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: CHIP_ERR }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
               </svg>
             </div>
-            <p style={{ fontFamily, fontSize: "17px", fontWeight: 600, color: "#991B1B", lineHeight: 1.5 }}>
+            <p style={{ fontFamily, fontSize: "17px", fontWeight: 600, color: ON_ERR, lineHeight: 1.5 }}>
               {isRTL
                 ? "طلب الوجبات للمريض غير متاح حالياً لأنك صائم حسب تعليمات فريق الرعاية الخاص بك."
                 : "Patient meal ordering is currently unavailable because you are fasting as instructed by your care team."}
@@ -1686,7 +1733,7 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
       className="h-full flex flex-col px-[40px] pt-[32px] pb-[20px] gap-[16px]">
       {/* Centered heading */}
       <div className="shrink-0 text-center flex flex-col items-center gap-[10px]">
-        <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
+        <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: INK, letterSpacing: "0.4px", textTransform: "uppercase" }}>
           {isRTL ? "اختر وجبة الغد" : "Choose Tomorrow's Meal"}
         </h2>
         {/* Date badge */}
@@ -1694,8 +1741,8 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
           padding: "8px 18px", borderRadius: "100px",
           backgroundColor: TEAL_15, border: `1px solid ${TEAL_20}`,
         }}>
-          <Calendar size={16} color={TEAL} />
-          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+          <Calendar size={16} color={TEAL_ON} />
+          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL_ON }}>
             {tomorrowStr}
           </span>
         </div>
@@ -1704,13 +1751,13 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
         <div
           className="shrink-0 flex items-center justify-center gap-3 px-6 py-3 rounded-2xl max-w-[860px] mx-auto text-center"
           style={{
-            backgroundColor: "#FEF3C7",
+            backgroundColor: CHIP_WARN,
             border: "1.5px solid #F59E0B",
-            color: "#92400E",
+            color: ON_WARN,
             boxShadow: "0 2px 8px rgba(245, 158, 11, 0.12)",
           }}
         >
-          <Clock size={20} color="#D97706" className="shrink-0" />
+          <Clock size={20} color={ON_WARN} className="shrink-0" />
           <p style={{ fontFamily, fontSize: "14.5px", fontWeight: WEIGHT.medium, margin: 0, lineHeight: 1.45 }}>
             {isRTL ? (
               <>
@@ -1740,8 +1787,8 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
           const iconColor = meal.id === "breakfast" ? "#F59E0B" : meal.id === "lunch" ? TEAL : "#7C3AED";
 
           // Status pill config
-          const statusBg = submitted ? "#E0F2FE" : orderable ? "#DCFCE7" : "#FFFBEB";
-          const statusColor = submitted ? "#0369A1" : orderable ? "#16A34A" : "#D97706";
+          const statusBg = submitted ? CHIP_INFO : orderable ? CHIP_OK : CHIP_WARN;
+          const statusColor = submitted ? ON_INFO : orderable ? ON_OK : ON_WARN;
           const statusText = submitted
             ? (isRTL ? "تم الطلب" : "Already ordered")
             : orderable
@@ -1763,8 +1810,8 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
               style={{
                 width: "390px",
                 borderRadius: "24px",
-                backgroundColor: "#fff",
-                border: selected ? `3px solid ${TEAL}` : "1.5px solid rgba(0,0,0,0.08)",
+                backgroundColor: SHEET,
+                border: selected ? `3px solid ${TEAL}` : `1.5px solid ${CARD_LINE}`,
                 boxShadow: "none",
                 cursor: "pointer", outline: "none",
                 opacity: orderable || submitted ? 1 : 0.9,
@@ -1792,7 +1839,7 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
               </div>
 
               {/* Meal name */}
-              <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1 }}>
+              <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: INK, lineHeight: 1 }}>
                 {loc(meal.label)}
               </span>
 
@@ -1811,10 +1858,10 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
 
               {/* Divider + Submit before deadline */}
               <div className="w-full flex flex-col items-center" style={{ marginTop: "auto" }}>
-                <div style={{ width: "100%", height: "1px", backgroundColor: "rgba(0,0,0,0.06)", marginBottom: "16px" }} />
+                <div style={{ width: "100%", height: "1px", backgroundColor: LINE, marginBottom: "16px" }} />
                 <div className="flex items-center justify-center gap-2">
                   <Clock size={16} color={timeOpen ? "#D97706" : "#9CA3AF"} />
-                  <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: timeOpen ? "#D97706" : "#9CA3AF" }}>
+                  <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: timeOpen ? ON_WARN : INK_3 }}>
                     {timeOpen
                       ? (isRTL ? `أرسل قبل ${cutoffStr}` : `Submit before ${cutoffStr}`)
                       : (isRTL ? "انتهى وقت الطلب" : "Ordering window closed")}
@@ -1842,16 +1889,16 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.92 }}
               onClick={(e) => e.stopPropagation()}
-              style={{ width: "540px", padding: "32px 28px", backgroundColor: "#fff", borderRadius: "24px", boxShadow: "0 16px 48px rgba(0,0,0,0.25)" }}
+              style={{ width: "540px", padding: "32px 28px", backgroundColor: SHEET, borderRadius: "24px", boxShadow: "0 16px 48px rgba(0,0,0,0.25)" }}
             >
               <div className="flex flex-col items-center gap-4 text-center">
-                <div style={{ width: "72px", height: "72px", borderRadius: "50%", backgroundColor: "#FEF3C7", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Clock size={36} color="#D97706" />
+                <div style={{ width: "72px", height: "72px", borderRadius: "50%", backgroundColor: CHIP_WARN, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Clock size={36} color={ON_WARN} />
                 </div>
-                <h3 style={{ fontFamily, fontSize: "24px", fontWeight: WEIGHT.bold, color: "#171717" }}>
+                <h3 style={{ fontFamily, fontSize: "24px", fontWeight: WEIGHT.bold, color: INK }}>
                   {isRTL ? "أُغلق وقت الطلب" : "Ordering Closed"}
                 </h3>
-                <p style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.5 }}>
+                <p style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: INK_2, lineHeight: 1.5 }}>
                   {isRTL
                     ? "انتهى وقت الطلب لهذه الوجبة. سيتم تحضير وجبتك الافتراضية وتوصيلها وفقاً لخطة الحمية المخصصة لك."
                     : "Ordering for this meal is now closed. Your default meal will still be prepared and delivered according to your assigned diet plan."}
@@ -1885,16 +1932,16 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.92 }}
               onClick={(e) => e.stopPropagation()}
-              style={{ width: "540px", padding: "32px 28px", backgroundColor: "#fff", borderRadius: "24px", boxShadow: "0 16px 48px rgba(0,0,0,0.25)" }}
+              style={{ width: "540px", padding: "32px 28px", backgroundColor: SHEET, borderRadius: "24px", boxShadow: "0 16px 48px rgba(0,0,0,0.25)" }}
             >
               <div className="flex flex-col items-center gap-4 text-center">
-                <div style={{ width: "72px", height: "72px", borderRadius: "50%", backgroundColor: "#E0F2FE", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Check size={36} color="#0369A1" strokeWidth={2.5} />
+                <div style={{ width: "72px", height: "72px", borderRadius: "50%", backgroundColor: CHIP_INFO, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Check size={36} color={ON_INFO} strokeWidth={2.5} />
                 </div>
-                <h3 style={{ fontFamily, fontSize: "24px", fontWeight: WEIGHT.bold, color: "#171717" }}>
+                <h3 style={{ fontFamily, fontSize: "24px", fontWeight: WEIGHT.bold, color: INK }}>
                   {isRTL ? "تم استلام طلبك بالفعل" : "Order Already Placed"}
                 </h3>
-                <p style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.5 }}>
+                <p style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: INK_2, lineHeight: 1.5 }}>
                   {isRTL
                     ? canEdit
                       ? `لقد قمت بطلب ${loc(submittedMeal.label)} مسبقاً اليوم. يمكنك تعديل طلبك أو مراجعة التفاصيل من "طلباتي".`
@@ -1907,8 +1954,8 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                   {canEdit && onEditOrder && (
                     <button onClick={() => { setSubmittedMeal(null); onEditOrder(submittedMeal.id); }}
                       className="active:scale-95 transition-transform"
-                      style={{ marginTop: "8px", height: "52px", padding: "0 36px", borderRadius: "100px", backgroundColor: "#fff", border: `2px solid ${TEAL}`, outline: "none", cursor: "pointer" }}>
-                      <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+                      style={{ marginTop: "8px", height: "52px", padding: "0 36px", borderRadius: "100px", backgroundColor: SHEET, border: `2px solid ${TEAL}`, outline: "none", cursor: "pointer" }}>
+                      <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: TEAL_ON }}>
                         {isRTL ? "تعديل الطلب" : "Edit Order"}
                       </span>
                     </button>
@@ -1944,19 +1991,19 @@ function KidsBreakfastTypeStep({ selected, onSelect, fontFamily, isRTL }: {
   const options: { id: KidsBreakfastType; icon: React.ReactNode; selectedIcon: React.ReactNode; label: { en: string; ar: string }; desc: { en: string; ar: string }; color: string }[] = [
     {
       id: "hot",
-      icon: <Flame size={60} color="#EF4444" strokeWidth={1.8} />,
-      selectedIcon: <Flame size={60} color="#EF4444" strokeWidth={1.8} />,
+      icon: <Flame size={60} color={theme.errorOn} strokeWidth={1.8} />,
+      selectedIcon: <Flame size={60} color={theme.errorOn} strokeWidth={1.8} />,
       label: { en: "Hot Breakfast", ar: "إفطار ساخن" },
       desc: { en: "Eggs, bacon, sausage, toast & more", ar: "بيض، بيكون، سجق، توست والمزيد" },
-      color: "#EF4444",
+      color: theme.errorOn,
     },
     {
       id: "cold",
-      icon: <Snowflake size={60} color="#3B82F6" strokeWidth={1.8} />,
-      selectedIcon: <Snowflake size={60} color="#3B82F6" strokeWidth={1.8} />,
+      icon: <Snowflake size={60} color={ON_INFO} strokeWidth={1.8} />,
+      selectedIcon: <Snowflake size={60} color={ON_INFO} strokeWidth={1.8} />,
       label: { en: "Cold Breakfast", ar: "إفطار بارد" },
       desc: { en: "Cold meats, dairy, cheese & more", ar: "لحوم باردة، ألبان، جبنة والمزيد" },
-      color: "#3B82F6",
+      color: ON_INFO,
     },
   ];
   const loc = (v: { en: string; ar: string }) => isRTL ? v.ar : v.en;
@@ -1966,10 +2013,10 @@ function KidsBreakfastTypeStep({ selected, onSelect, fontFamily, isRTL }: {
     >
       {/* Centered heading — same as Step 1 */}
       <div className="shrink-0 text-center">
-        <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.4px", textTransform: "uppercase" }}>
+        <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: INK, letterSpacing: "0.4px", textTransform: "uppercase" }}>
           {isRTL ? "نوع الإفطار" : "Breakfast Type"}
         </h2>
-        <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#565656", marginTop: "6px" }}>
+        <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: INK_2, marginTop: "6px" }}>
           {isRTL ? "اختر نوع إفطار طفلك" : "Choose your child's breakfast type"}
         </p>
       </div>
@@ -1983,8 +2030,8 @@ function KidsBreakfastTypeStep({ selected, onSelect, fontFamily, isRTL }: {
               <motion.button key={opt.id} onClick={() => onSelect(opt.id)} whileTap={{ scale: 0.97 }}
                 style={{
                   width: "560px", height: "400px", borderRadius: "26px",
-                  backgroundColor: isActive ? TEAL : "#fff",
-                  border: isActive ? "none" : "1.6px solid rgba(0,0,0,0.1)",
+                  backgroundColor: isActive ? TEAL : SHEET,
+                  border: isActive ? "none" : `1.6px solid ${CARD_LINE}`,
                   position: "relative", cursor: "pointer", outline: "none",
                   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "36px",
                   transition: "all 0.22s ease",
@@ -1992,7 +2039,7 @@ function KidsBreakfastTypeStep({ selected, onSelect, fontFamily, isRTL }: {
                 {/* Checkmark badge */}
                 <div className="absolute" style={{ top: "32px", right: "32px",
                   width: "68px", height: "68px", borderRadius: "50%",
-                  backgroundColor: isActive ? "#2DCC06" : "#fff",
+                  backgroundColor: isActive ? "#2DCC06" : SHEET,
                   border: isActive ? "none" : "2px solid #DADADA",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   boxShadow: isActive ? "0 4px 6.5px rgba(0,138,171,0.38)" : "none",
@@ -2003,19 +2050,19 @@ function KidsBreakfastTypeStep({ selected, onSelect, fontFamily, isRTL }: {
                 {/* Icon circle */}
                 <div style={{
                   width: "120px", height: "120px", borderRadius: "60px",
-                  backgroundColor: isActive ? "#fff" : "#F4F4F4",
+                  backgroundColor: isActive ? SHEET : TINT_BG,
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
                   {isActive ? opt.selectedIcon : opt.icon}
                 </div>
 
                 {/* Label */}
-                <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: isActive ? "#fff" : "#171717" }}>
+                <span style={{ fontFamily, fontSize: "32px", fontWeight: WEIGHT.bold, color: isActive ? "#fff" : INK }}>
                   {loc(opt.label)}
                 </span>
 
                 {/* Description */}
-                <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: isActive ? "rgba(255,255,255,0.75)" : "#888", textAlign: "center", maxWidth: "320px" }}>
+                <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.medium, color: isActive ? "rgba(255,255,255,0.75)" : INK_2, textAlign: "center", maxWidth: "320px" }}>
                   {loc(opt.desc)}
                 </span>
               </motion.button>
@@ -2052,8 +2099,8 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMo
       {/* LEFT: unified banner + groups container */}
       <div className="flex-1 min-w-0 flex flex-col relative" style={{
         borderRadius: "20px",
-        border: "1.5px solid rgba(0,0,0,0.08)",
-        backgroundColor: "#fff",
+        border: `1.5px solid ${CARD_LINE}`,
+        backgroundColor: SHEET,
         overflow: "hidden",
       }}>
         {/* Pre-order banner — top of the same container */}
@@ -2062,9 +2109,9 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMo
           tmrw.setDate(tmrw.getDate() + 1);
           const tmrwDate = tmrw.toLocaleDateString(isRTL ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long" });
           return (
-            <div className="shrink-0 flex items-center gap-2 px-5 py-3" style={{ backgroundColor: "#F2F9FB", borderBottom: `1px solid ${TEAL_20}` }}>
-              <Clock size={17} color={TEAL} style={{ flexShrink: 0 }} />
-              <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL, lineHeight: 1.4 }}>
+            <div className="shrink-0 flex items-center gap-2 px-5 py-3" style={{ backgroundColor: TINT_BG, borderBottom: `1px solid ${TEAL_20}` }}>
+              <Clock size={17} color={TEAL_ON} style={{ flexShrink: 0 }} />
+              <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL_ON, lineHeight: 1.4 }}>
                 {isEditMode
                   ? (isRTL
                       ? `تعديل طلب ${loc(meal.label)} — التوصيل ${tmrwDate} (${locTimeRange(meal.timeRange, isRTL)})`
@@ -2085,21 +2132,21 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMo
           <div style={{ height: "16px" }} />
         </div>
         {/* Bottom fade hint */}
-        <div className="pointer-events-none absolute left-0 right-0 bottom-0" style={{ height: "32px", background: "linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.95) 100%)" }} />
+        <div className="pointer-events-none absolute left-0 right-0 bottom-0" style={{ height: "32px", background: `linear-gradient(to bottom, transparent 0%, ${SHEET} 100%)` }} />
       </div>
 
       {/* RIGHT: meal tray */}
-      <div className="shrink-0 flex flex-col" style={{ width: "440px", borderRadius: "20px", backgroundColor: "#fff", border: "1.5px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
+      <div className="shrink-0 flex flex-col" style={{ width: "440px", borderRadius: "20px", backgroundColor: SHEET, border: `1.5px solid ${CARD_LINE}`, overflow: "hidden" }}>
         {/* Header */}
-        <div className="shrink-0 flex items-center gap-3 px-5 py-4" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: `${TEAL_15}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <ChefHat size={22} color={TEAL} />
+        <div className="shrink-0 flex items-center gap-3 px-5 py-4" style={{ borderBottom: CARD_LINE_1 }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: TEAL_15, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <ChefHat size={22} color={TEAL_ON} />
           </div>
-          <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold, color: "#171717", letterSpacing: "0.3px" }}>
+          <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold, color: INK, letterSpacing: "0.3px" }}>
             {isRTL ? "طبقي" : "Your Meal Tray"}
           </span>
           <div className="ml-auto" style={{ padding: "5px 14px", borderRadius: "100px", backgroundColor: totalSelectedReq > 0 ? "#F0FDF4" : "#F3F4F6" }}>
-            <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.bold, color: totalSelectedReq > 0 ? GREEN : "#6B7280" }}>
+            <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.bold, color: totalSelectedReq > 0 ? GREEN : INK_2 }}>
               {totalSelectedReq} {isRTL ? "عنصر" : "items"}
             </span>
           </div>
@@ -2110,7 +2157,7 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMo
           {totalSelectedReq === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-3" style={{ minHeight: "180px" }}>
               <Utensils size={40} color="#D1D5DB" />
-              <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: "#9CA3AF" }}>
+              <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: INK_3 }}>
                 {isRTL ? "لم يتم اختيار أي عنصر" : "No item is selected"}
               </p>
             </div>
@@ -2126,11 +2173,11 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMo
                       <Check size={15} color="#fff" strokeWidth={2.5} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", marginBottom: "3px", letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                      <div style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: INK_2, marginBottom: "3px", letterSpacing: "0.3px", textTransform: "uppercase" }}>
                         {loc(g.label)}
                       </div>
                       {items.map((it) => (
-                        <p key={it.id} style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>
+                        <p key={it.id} style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.semibold, color: INK, lineHeight: 1.4 }}>
                           {loc(it.name)}
                         </p>
                       ))}
@@ -2144,10 +2191,10 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMo
 
         {/* Included with your meal — pinned to bottom */}
         {includedGroups.length > 0 && (
-          <div className="shrink-0" style={{ borderTop: "1px solid rgba(0,0,0,0.06)", backgroundColor: "#F9FAFB", borderRadius: "0 0 18px 18px", padding: "16px 20px" }}>
+          <div className="shrink-0" style={{ borderTop: CARD_LINE_1, backgroundColor: SHEET_2, borderRadius: "0 0 18px 18px", padding: "16px 20px" }}>
             <div className="flex items-center gap-2 mb-2">
               <Check size={18} color={GREEN} />
-              <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.3px", textTransform: "uppercase" }}>
+              <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: INK_2, letterSpacing: "0.3px", textTransform: "uppercase" }}>
                 {isRTL ? "مشمول مع وجبتك" : "Included with Your Meal"}
               </span>
             </div>
@@ -2157,7 +2204,7 @@ function BuildMealStep({ meal, selections, onToggle, fontFamily, isRTL, isEditMo
                   {g.items.map((it) => (
                     <div key={it.id} className="flex items-center gap-2">
                       <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: GREEN }} />
-                      <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: "#4B5563" }}>
+                      <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: INK_2 }}>
                         {loc(it.name)}
                       </span>
                     </div>
@@ -2180,7 +2227,7 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
   const done = selections.length >= max;
 
   return (
-    <div style={{ padding: "16px 20px", borderRadius: "20px", border: "1.5px solid rgba(0,0,0,0.08)", backgroundColor: "#fff" }}>
+    <div style={{ padding: "16px 20px", borderRadius: "20px", border: `1.5px solid ${CARD_LINE}`, backgroundColor: SHEET }}>
       {/* Header: number circle + Item N + Choose only N */}
       <div className="flex items-center gap-3 mb-3">
         <div style={{ width: "40px", height: "40px", borderRadius: "50%",
@@ -2188,12 +2235,12 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
           display: "flex", alignItems: "center", justifyItems: "center", flexShrink: 0 }}>
           {done
             ? <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}><Check size={20} color="#fff" strokeWidth={2.5} /></div>
-            : <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}><span style={{ fontFamily, fontSize: "18px", fontWeight: WEIGHT.bold, color: TEAL }}>{index}</span></div>}
+            : <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}><span style={{ fontFamily, fontSize: "18px", fontWeight: WEIGHT.bold, color: TEAL_ON }}>{index}</span></div>}
         </div>
-        <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold, color: "#171717" }}>
+        <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold, color: INK }}>
           {loc(group.label)}
         </span>
-        <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#9CA3AF" }}>
+        <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: INK_3 }}>
           {group.mode === "choose-2"
             ? (isRTL ? `اختر 2 فقط (${selections.length}/2)` : `Choose only 2 (${selections.length}/2)`)
             : (isRTL ? "اختر 1 فقط" : "Choose only 1")}
@@ -2212,7 +2259,7 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
                 padding: "14px 18px",
                 minHeight: "56px",
                 borderRadius: "14px",
-                backgroundColor: "#fff",
+                backgroundColor: SHEET,
                 border: sel ? `2px solid ${TEAL}` : "1.5px solid rgba(0,0,0,0.12)",
                 boxShadow: sel ? `0 2px 8px ${TEAL_20}` : "none",
                 cursor: "pointer", outline: "none",
@@ -2221,7 +2268,7 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
               }}>
               <div style={{
                 width: "20px", height: "20px", borderRadius: "5px",
-                backgroundColor: sel ? TEAL : "#fff",
+                backgroundColor: sel ? TEAL : SHEET,
                 border: sel ? "none" : "1.8px solid #D1D5DB",
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
               }}>
@@ -2231,7 +2278,7 @@ function BuildGroup({ group, index, selections, onToggle, fontFamily, isRTL }: {
                 fontFamily,
                 fontSize: "15px",
                 fontWeight: WEIGHT.semibold,
-                color: sel ? TEAL : "#171717",
+                color: sel ? TEAL : INK,
                 whiteSpace: "normal",
                 wordBreak: "break-word",
                 lineHeight: "1.35",
@@ -2280,8 +2327,8 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
       {/* Single seamless card */}
       <div style={{
         width: "100%", maxWidth: "1080px",
-        borderRadius: "24px", backgroundColor: "#fff",
-        border: "1.5px solid rgba(0,0,0,0.08)",
+        borderRadius: "24px", backgroundColor: SHEET,
+        border: `1.5px solid ${CARD_LINE}`,
         display: "grid", gridTemplateColumns: "1fr 1fr",
         overflow: "hidden",
       }}>
@@ -2293,12 +2340,12 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
             <Check size={38} color="#fff" strokeWidth={3} />
           </motion.div>
           <div className="text-center">
-            <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1.2 }}>
+            <h2 style={{ fontFamily, fontSize: "28px", fontWeight: WEIGHT.bold, color: INK, lineHeight: 1.2 }}>
               {isEditMode
                 ? (isRTL ? "تم تحديث طلب الوجبة" : "Meal Order Updated")
                 : (isRTL ? "تم تأكيد طلب الوجبة" : "Meal Order Confirmed")}
             </h2>
-            <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.5, marginTop: "12px", maxWidth: "360px" }}>
+            <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.medium, color: INK_2, lineHeight: 1.5, marginTop: "12px", maxWidth: "360px" }}>
               {isEditMode
                 ? (isRTL
                     ? `تم تحديث طلب ${loc(meal.label).toLowerCase()} بنجاح وسيتم توصيله في الوقت المحدد.`
@@ -2313,12 +2360,12 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
           {canStillEdit && onEdit && (
             <button onClick={onEdit}
               className="active:scale-95 transition-transform cursor-pointer"
-              style={{ marginTop: "4px", height: "44px", padding: "0 28px", borderRadius: "10px", backgroundColor: "#fff", border: `1.5px solid ${TEAL}`, outline: "none", display: "flex", alignItems: "center", gap: "8px" }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              style={{ marginTop: "4px", height: "44px", padding: "0 28px", borderRadius: "10px", backgroundColor: SHEET, border: `1.5px solid ${TEAL}`, outline: "none", display: "flex", alignItems: "center", gap: "8px" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL_ON} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
-              <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+              <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL_ON }}>
                 {isRTL ? "تعديل الطلب" : "Edit Order"}
               </span>
             </button>
@@ -2327,7 +2374,7 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
           {/* ── Meal Shortcut Buttons ── */}
           {meals && meals.length > 0 && (
             <div style={{ marginTop: "8px", width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column", gap: "10px" }}>
-              <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "center", marginBottom: "2px" }}>
+              <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: INK_3, textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "center", marginBottom: "2px" }}>
                 {isRTL ? "وجبات الغد" : "Tomorrow's Meals"}
               </p>
               {meals.map((m) => {
@@ -2372,7 +2419,7 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
                   statusLabel = isRTL ? "انتهى الوقت" : "Closed";
                   statusColor = "#9CA3AF";
                   bgColor = "#F9FAFB";
-                  borderColor = "rgba(0,0,0,0.08)";
+                  borderColor = CARD_LINE;
                 }
 
                 return (
@@ -2398,10 +2445,10 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
                       <MealIcon size={20} color={isCurrent || hasOrder ? GREEN : clickable ? TEAL : "#9CA3AF"} />
                     </div>
                     <div style={{ flex: 1, textAlign: isRTL ? "right" : "left" }}>
-                      <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1.2 }}>
+                      <p style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: INK, lineHeight: 1.2 }}>
                         {loc(m.label)}
                       </p>
-                      <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: "#6B7280", marginTop: "2px" }}>
+                      <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: INK_2, marginTop: "2px" }}>
                         {locTimeRange(m.timeRange, isRTL)}
                       </p>
                     </div>
@@ -2424,7 +2471,7 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
         <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
           {/* Bordered container */}
           <div style={{
-            border: "1.5px solid rgba(0,0,0,0.1)", borderRadius: "16px",
+            border: `1.5px solid ${CARD_LINE}`, borderRadius: "16px",
             overflow: "hidden",
             display: "flex", flexDirection: "column",
           }}>
@@ -2437,19 +2484,19 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
                 <User size={19} color="#fff" strokeWidth={2.5} />
               </div>
               <div className="flex-1 min-w-0">
-                <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: "#171717", lineHeight: 1.2 }}>
+                <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: INK, lineHeight: 1.2 }}>
                   {isRTL ? "لـ" : "For "}{patientName}
                   {room && (
-                    <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.semibold, color: "#6B7280", marginLeft: "8px" }}>
+                    <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.semibold, color: INK_2, marginLeft: "8px" }}>
                       · {isRTL ? "غرفة" : "Room"} {room}
                     </span>
                   )}
                 </p>
-                <p style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.medium, color: "#6B7280", lineHeight: 1.4, marginTop: "3px" }}>
+                <p style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.medium, color: INK_2, lineHeight: 1.4, marginTop: "3px" }}>
                   {isRTL ? `الحمية: ${dietLabel} · الحساسية: ${allergiesLabel}` : `Diet: ${dietLabel} · Allergies: ${allergiesLabel}`}
                 </p>
               </div>
-              <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: isGuest ? SECONDARY : TEAL, whiteSpace: "nowrap", flexShrink: 0 }}>
+              <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: isGuest ? SECONDARY_ON : TEAL_ON, whiteSpace: "nowrap", flexShrink: 0 }}>
                 {isRTL ? "رقم الطلب:" : "Order ID:"} #{orderNumber}
               </span>
             </div>
@@ -2460,17 +2507,17 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
             <div className="flex items-start justify-between gap-4" style={{ padding: "10px 0" }}>
               <div className="flex items-center gap-2.5 shrink-0">
                 <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: TEAL_15, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Clock size={16} color={TEAL} />
+                  <Clock size={16} color={TEAL_ON} />
                 </div>
-                <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.5px", textTransform: "uppercase" as const }}>
+                <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.bold, color: INK_2, letterSpacing: "0.5px", textTransform: "uppercase" as const }}>
                   {isRTL ? "وقت التوصيل" : "Delivery Time"}
                 </span>
               </div>
               <div className="flex-1 min-w-0 flex flex-col items-end">
-                <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: TEAL }}>
+                <p style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: TEAL_ON }}>
                   {loc(meal.label)} ({locTimeRange(meal.timeRange, isRTL)})
                 </p>
-                <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: "#6B7280", marginTop: "2px" }}>
+                <p style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.medium, color: INK_2, marginTop: "2px" }}>
                   {deliveryDate}
                 </p>
               </div>
@@ -2482,16 +2529,16 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
             <div className="flex items-start justify-between gap-4" style={{ padding: "10px 0" }}>
               <div className="flex items-center gap-2.5 shrink-0" style={{ marginTop: "2px" }}>
                 <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: TEAL_15, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Utensils size={16} color={TEAL} />
+                  <Utensils size={16} color={TEAL_ON} />
                 </div>
-                <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.5px", textTransform: "uppercase" as const }}>
+                <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.bold, color: INK_2, letterSpacing: "0.5px", textTransform: "uppercase" as const }}>
                   {isRTL ? "وجباتك" : "Your Meal Items"}
                 </span>
               </div>
               <div className="flex-1 min-w-0 flex flex-col items-end">
                 <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column" as const, gap: "4px", textAlign: "right" as const }}>
                   {selectedItems.map((name, i) => (
-                    <li key={i} style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>{name}</li>
+                    <li key={i} style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: INK, lineHeight: 1.4 }}>{name}</li>
                   ))}
                 </ul>
               </div>
@@ -2505,14 +2552,14 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
                     <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: `${GREEN}18`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <Check size={16} color={GREEN} />
                     </div>
-                    <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.5px", textTransform: "uppercase" as const }}>
+                    <span style={{ fontFamily, fontSize: "12px", fontWeight: WEIGHT.bold, color: INK_2, letterSpacing: "0.5px", textTransform: "uppercase" as const }}>
                       {isRTL ? "يأتي مع وجبتك" : "Comes With Your Meal"}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col items-end">
                     <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column" as const, gap: "4px", textAlign: "right" as const }}>
                       {includedItems.map((name, i) => (
-                        <li key={i} style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: "#171717", lineHeight: 1.4 }}>{name}</li>
+                        <li key={i} style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: INK, lineHeight: 1.4 }}>{name}</li>
                       ))}
                     </ul>
                   </div>
@@ -2528,15 +2575,15 @@ function ConfirmStep({ orderNumber, meal, selections, orderFor, patientName, roo
 }
 
 function RowDivider() {
-  return <div style={{ height: "1px", backgroundColor: "rgba(0,0,0,0.06)" }} />;
+  return <div style={{ height: "1px", backgroundColor: LINE }} />;
 }
 
 function ConfirmRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3" style={{ padding: "12px 14px", borderRadius: "12px", backgroundColor: "#F9FAFB" }}>
+    <div className="flex items-start gap-3" style={{ padding: "12px 14px", borderRadius: "12px", backgroundColor: SHEET_2 }}>
       <div className="shrink-0" style={{ marginTop: "1px" }}>{icon}</div>
       <div className="flex-1 min-w-0 flex flex-col">
-        <span style={{ fontFamily: "inherit", fontSize: "12px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.4px", textTransform: "uppercase", marginBottom: "4px" }}>
+        <span style={{ fontFamily: "inherit", fontSize: "12px", fontWeight: WEIGHT.bold, color: INK_2, letterSpacing: "0.4px", textTransform: "uppercase", marginBottom: "4px" }}>
           {label}
         </span>
         <div className="flex flex-col">{children}</div>
@@ -2565,20 +2612,20 @@ function BottomBar({ step, canContinue, onBack, showBack, onContinue, leftAction
         <button onClick={onBack} className="active:scale-95 transition-transform cursor-pointer"
           style={{
             height: "60px", padding: "0 32px", borderRadius: "16px",
-            backgroundColor: "#fff",
+            backgroundColor: SHEET,
             display: "flex", alignItems: "center", gap: "10px",
             border: `1.5px solid ${TEAL}`,
             outline: "none",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           }}>
           {backLabel === "Exit" || backLabel === "خروج" || backLabel === "Cancel Edit" || backLabel === "إلغاء التعديل" ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL_ON} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           ) : (
-            <ChevBack size={22} color={TEAL} strokeWidth={2.5} />
+            <ChevBack size={22} color={TEAL_ON} strokeWidth={2.5} />
           )}
-          <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+          <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.semibold, color: TEAL_ON }}>
             {backLabel}
           </span>
         </button>
@@ -2586,13 +2633,13 @@ function BottomBar({ step, canContinue, onBack, showBack, onContinue, leftAction
         <button onClick={leftAction.onClick} className="active:scale-95 transition-transform cursor-pointer"
           style={{
             height: "60px", padding: "0 28px", borderRadius: "16px",
-            backgroundColor: "#fff",
+            backgroundColor: SHEET,
             display: "flex", alignItems: "center", gap: "10px",
             border: `1.5px solid ${TEAL}`,
             outline: "none",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           }}>
-          <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+          <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.semibold, color: TEAL_ON }}>
             {leftAction.label}
           </span>
         </button>
@@ -2604,13 +2651,13 @@ function BottomBar({ step, canContinue, onBack, showBack, onContinue, leftAction
           <button onClick={secondaryAction.onClick} className="active:scale-95 transition-transform cursor-pointer"
             style={{
               height: "60px", padding: "0 28px", borderRadius: "16px",
-              backgroundColor: "#fff",
+              backgroundColor: SHEET,
               display: "flex", alignItems: "center", gap: "10px",
               border: `1.5px solid ${TEAL}`,
               outline: "none",
               boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             }}>
-            <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+            <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.semibold, color: TEAL_ON }}>
               {secondaryAction.label}
             </span>
           </button>
@@ -2620,7 +2667,7 @@ function BottomBar({ step, canContinue, onBack, showBack, onContinue, leftAction
           whileTap={continueEnabled ? { scale: 0.97 } : {}}
           style={{
             height: "60px", padding: "0 32px", borderRadius: "16px",
-            backgroundColor: continueEnabled ? TEAL : "#fff",
+            backgroundColor: continueEnabled ? TEAL : SHEET,
             display: "flex", alignItems: "center", gap: "10px",
             border: `1px solid ${continueEnabled ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.3)"}`,
             outline: "none",
@@ -2634,7 +2681,7 @@ function BottomBar({ step, canContinue, onBack, showBack, onContinue, leftAction
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           )}
-          <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.bold, color: continueEnabled ? "#fff" : TEAL }}>
+          <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.bold, color: continueEnabled ? "#fff" : TEAL_ON }}>
             {continueLabel}
           </span>
           {step !== "confirmed" && (
@@ -2695,7 +2742,7 @@ function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL, meals, onEdi
           <HistoryTab active={tab === "patient"} onClick={() => setTab("patient")} label={isRTL ? "للمريض" : "Patient"} count={patientOrders.length} fontFamily={fontFamily} />
           <HistoryTab active={tab === "companion"} onClick={() => setTab("companion")} label={isRTL ? "للمرافق" : "Companion"} count={companionOrders.length} fontFamily={fontFamily} />
         </div>
-        <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.semibold, color: "#565656" }}>
+        <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.semibold, color: INK_2 }}>
           {display.length} {isRTL ? (display.length > 1 ? "طلبات" : "طلب") : "Orders"}
         </span>
       </div>
@@ -2705,7 +2752,7 @@ function HistoryView({ activeOrders, pastOrders, fontFamily, isRTL, meals, onEdi
         {display.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3 min-h-[300px]">
             <ClipboardList size={56} color="#D1D5DB" />
-            <p style={{ fontFamily, fontSize: "18px", fontWeight: WEIGHT.medium, color: "#9CA3AF" }}>
+            <p style={{ fontFamily, fontSize: "18px", fontWeight: WEIGHT.medium, color: INK_3 }}>
               {isRTL ? "لا توجد طلبات" : "No orders to show"}
             </p>
           </div>
@@ -2754,7 +2801,7 @@ function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, meal
 
   return (
     <div style={{
-      borderRadius: "20px", backgroundColor: "#fff", border: "1px solid rgba(0,0,0,0.1)",
+      borderRadius: "20px", backgroundColor: SHEET, border: `1px solid ${CARD_LINE}`,
     }}>
       {/* Header row — clickable */}
       <button
@@ -2767,37 +2814,37 @@ function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, meal
         }}
       >
         <div style={{ width: "60px", height: "60px", borderRadius: "50%", backgroundColor: isGuest ? "rgba(var(--fo-secondary-rgb,217,119,6),0.1)" : TEAL_15, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Utensils size={28} color={isGuest ? SECONDARY : TEAL} />
+          <Utensils size={28} color={isGuest ? SECONDARY_ON : TEAL_ON} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3">
-            <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.bold, color: "#000" }}>
+            <span style={{ fontFamily, fontSize: "22px", fontWeight: WEIGHT.bold, color: INK }}>
               {translatedMealType}
             </span>
-            <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.normal, color: "#565656" }}>
+            <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.normal, color: INK_2 }}>
               {order.orderNumber}
             </span>
           </div>
           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
             <div className="flex items-center gap-1.5">
               <Clock size={14} color="#9CA3AF" />
-              <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#6B7280" }}>
+              <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: INK_2 }}>
                 {isRTL ? "أُرسل" : "Placed"} {formatDate(order.placedAt)}
               </span>
             </div>
             {order.mealWindow && (
               <>
-                <span style={{ color: "#D1D5DB" }}>·</span>
+                <span style={{ color: INK_3 }}>·</span>
                 <div className="flex items-center gap-1.5">
                   <Utensils size={14} color="#9CA3AF" />
-                  <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#6B7280" }}>
+                  <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: INK_2 }}>
                     {isRTL ? "التوصيل" : "Delivery"} {locTimeRange(order.mealWindow, isRTL)}
                   </span>
                 </div>
-                <span style={{ color: "#D1D5DB" }}>·</span>
+                <span style={{ color: INK_3 }}>·</span>
                 <div className="flex items-center gap-1.5">
                   <Calendar size={14} color="#9CA3AF" />
-                  <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: "#6B7280" }}>
+                  <span style={{ fontFamily, fontSize: "14px", fontWeight: WEIGHT.medium, color: INK_2 }}>
                     {(() => {
                       const tmrw = new Date();
                       tmrw.setDate(tmrw.getDate() + 1);
@@ -2816,15 +2863,15 @@ function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, meal
             className="shrink-0 flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
             style={{
               padding: "8px 16px", borderRadius: "10px",
-              backgroundColor: "#fff", border: `1.5px solid ${TEAL}`,
+              backgroundColor: SHEET, border: `1.5px solid ${TEAL}`,
               outline: "none",
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL_ON} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
-            <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL }}>
+            <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: TEAL_ON }}>
               {isRTL ? "تعديل الطلب" : "Edit Order"}
             </span>
           </button>
@@ -2834,32 +2881,32 @@ function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, meal
           backgroundColor: isGuest ? `rgba(var(--fo-secondary-rgb),0.08)` : TEAL_BG_TINT,
           border: `1px solid ${isGuest ? `rgba(var(--fo-secondary-rgb),0.25)` : `${TEAL_25}`}`,
         }}>
-          <User size={16} color={isGuest ? SECONDARY : TEAL} />
-          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: isGuest ? SECONDARY : TEAL, whiteSpace: "nowrap" }}>
+          <User size={16} color={isGuest ? SECONDARY_ON : TEAL_ON} />
+          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: isGuest ? SECONDARY_ON : TEAL_ON, whiteSpace: "nowrap" }}>
             {isGuest ? (isRTL ? "للمرافق" : "For Companion") : (isRTL ? "للمريض" : "For Patient")}
           </span>
         </div>
-        <div className="shrink-0 flex items-center justify-center" style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "#F3F4F6" }}>
-          <ChevronIcon size={18} color="#6B7280" />
+        <div className="shrink-0 flex items-center justify-center" style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: TINT_BG }}>
+          <ChevronIcon size={18} color={INK_2} />
         </div>
       </button>
 
       {/* Expanded details — render unconditionally so siblings get natural layout */}
       {open && (
         <div>
-          <div style={{ padding: "0 26px 22px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+          <div style={{ padding: "0 26px 22px", borderTop: CARD_LINE_1 }}>
               <div className="grid grid-cols-2 gap-4" style={{ paddingTop: "18px" }}>
                 {/* Your meal items — dedupe against comesWith so auto-included items never appear twice */}
                 {(() => {
                   const includedSet = new Set((comesWith || []).map((it: any) => `${it.en}|${it.ar}`));
                   const mealItems = (order.items || []).filter((item: any) => !includedSet.has(`${item.name.en}|${item.name.ar}`));
                   return (
-                    <DetailBlock icon={<Utensils size={18} color={TEAL} />} label={isRTL ? "وجباتك" : "Your Meal Items"} count={mealItems.length} isRTL={isRTL} fontFamily={fontFamily} accentColor={TEAL} badgeBg={TEAL_15}>
+                    <DetailBlock icon={<Utensils size={18} color={TEAL_ON} />} label={isRTL ? "وجباتك" : "Your Meal Items"} count={mealItems.length} isRTL={isRTL} fontFamily={fontFamily} accentColor={TEAL} badgeBg={TEAL_15}>
                       <ul style={{ margin: 0, padding: 0, paddingLeft: "6px", listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
                         {mealItems.map((item: any, i: number) => (
                           <li key={i} className="flex items-center gap-2.5">
                             <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: TEAL, flexShrink: 0 }} />
-                            <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: "#171717" }}>
+                            <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: INK }}>
                               {item.quantity > 1 ? `${item.quantity}× ` : ""}{loc(item.name)}
                             </span>
                           </li>
@@ -2876,7 +2923,7 @@ function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, meal
                       {comesWith.map((it: any, i: number) => (
                         <li key={i} className="flex items-center gap-2.5">
                           <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: GREEN, flexShrink: 0 }} />
-                          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: "#171717" }}>
+                          <span style={{ fontFamily, fontSize: "15px", fontWeight: WEIGHT.semibold, color: INK }}>
                             {loc(it)}
                           </span>
                         </li>
@@ -2897,10 +2944,10 @@ function OrderCard({ order, fontFamily, isRTL, formatDate, canEdit, onEdit, meal
 function DetailBlock({ icon, label, count, isRTL, fontFamily, children, accentColor, badgeBg }: { icon: React.ReactNode; label: string; count?: number; isRTL?: boolean; fontFamily: string; children: React.ReactNode; accentColor?: string; badgeBg?: string }) {
   const badgeColor = accentColor || TEAL;
   return (
-    <div style={{ padding: "14px 18px", borderRadius: "12px", backgroundColor: "#F9FAFB" }}>
+    <div style={{ padding: "14px 18px", borderRadius: "12px", backgroundColor: SHEET_2 }}>
       <div className="flex items-center gap-2 mb-3">
         {icon}
-        <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: "#6B7280", letterSpacing: "0.4px", textTransform: "uppercase" }}>
+        <span style={{ fontFamily, fontSize: "13px", fontWeight: WEIGHT.bold, color: INK_2, letterSpacing: "0.4px", textTransform: "uppercase" }}>
           {label}
         </span>
         {count !== undefined && (
@@ -2929,11 +2976,11 @@ function HistoryTab({ active, onClick, label, count, fontFamily, primary }: {
     <button onClick={onClick} className="flex items-center gap-3 active:scale-95 transition-transform"
       style={{
         padding: "13px 22px", borderRadius: "30px",
-        backgroundColor: active ? TEAL : "#fff",
-        border: active ? "none" : "1px solid rgba(0,0,0,0.1)",
+        backgroundColor: active ? TEAL : SHEET,
+        border: active ? "none" : `1px solid ${CARD_LINE}`,
         outline: "none", cursor: "pointer",
       }}>
-      <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: active ? "#fff" : "#6B6B6B" }}>
+      <span style={{ fontFamily, fontSize: "17px", fontWeight: WEIGHT.semibold, color: active ? "#fff" : INK_2 }}>
         {label}
       </span>
       <div style={{

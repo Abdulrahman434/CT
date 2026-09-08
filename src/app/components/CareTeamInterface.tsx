@@ -281,7 +281,7 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
           maxHeight: "94vh",
           backgroundColor: "#FFFFFF",
           borderRadius: "24px",
-          border: "1px solid rgba(0,0,0,0.08)",
+          border: theme.borderInset,
           overflow: "hidden",
         }}
       >
@@ -411,13 +411,13 @@ export function CareTeamInterface({ role, onClose }: CareTeamInterfaceProps) {
             className="shrink-0 flex flex-col"
             style={{
               width: 360,
-              borderLeft: "1px solid rgba(0,0,0,0.07)",
+              borderLeft: `1px solid ${theme.borderDefault}`,
               backgroundColor: "#F8FAFC",
             }}
           >
             <div
               className="px-5 py-4 shrink-0 flex items-center justify-between"
-              style={{ borderBottom: "1px solid rgba(0,0,0,0.06)", backgroundColor: "#FFFFFF" }}
+              style={{ borderBottom: `1px solid ${theme.borderDefault}`, backgroundColor: "#FFFFFF" }}
             >
               <div className="flex items-center gap-2.5">
                 <History size={17} style={{ color: t.primary }} />
@@ -725,7 +725,7 @@ function NurseForm({ form, setForm, tr, t, onSave, onCancel, saved }: any) {
 
 function VitalsSection({ vitals, tr, t, readOnly, onChange }: any) {
   const fields = [
-    { key: "bp", label: tr("clinical.bp"), unit: "mmHg", icon: <Droplet size={14} color="#EF4444" /> },
+    { key: "bp", label: tr("clinical.bp"), unit: "mmHg", icon: <Droplet size={14} color={theme.errorOn} /> },
     { key: "hr", label: tr("clinical.hr"), unit: "BPM", icon: <Activity size={14} color="#F43F5E" /> },
     { key: "temp", label: tr("clinical.temp"), unit: "°C", icon: <Thermometer size={14} color="#F59E0B" /> },
     { key: "spo2", label: tr("clinical.spo2"), unit: "%", icon: <Wind size={14} color={t.primary} /> },
@@ -877,7 +877,7 @@ function RisksSection({ risks, otherRiskNotes, tr, t, readOnly, onChange, onOthe
           items.some((i) => risks[i.key]) ? (
             items.filter((i) => risks[i.key]).map(({ key, label }) => (
               <span key={key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-                style={{ fontSize: "13px", fontWeight: 700, color: "#EF4444", backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
+                style={{ fontSize: "13px", fontWeight: 700, color: theme.errorOn, backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
                 <AlertTriangle size={13} /> {label === tr("clinical.otherRisk") && otherRiskNotes ? `${label}: ${otherRiskNotes}` : label}
               </span>
             ))
@@ -988,7 +988,7 @@ function HistoryCard({ obs, isLatest, onDelete, onClick, t, tr }: any) {
         {/* Mini vitals */}
         <div className="grid grid-cols-4 gap-1 mb-3">
           {[
-            { val: obs.vitals.bp, icon: <Droplet size={9} color="#EF4444" /> },
+            { val: obs.vitals.bp, icon: <Droplet size={9} color={theme.errorOn} /> },
             { val: obs.vitals.hr, icon: <Activity size={9} color="#F43F5E" /> },
             { val: obs.vitals.temp + "°", icon: <Thermometer size={9} color="#F59E0B" /> },
             { val: obs.vitals.spo2 + "%", icon: <Wind size={9} color={t.primary} /> },

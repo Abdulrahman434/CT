@@ -435,7 +435,7 @@ export function TriviaQuizGame({ onClose, onBackToGames }: { onClose: () => void
                   className="group flex flex-col items-center gap-4 p-8 bg-white border-2 border-gray-100 hover:border-blue-500 hover:bg-blue-50 rounded-3xl transition-all shadow-md active:scale-95"
                 >
                   <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <HelpCircle size={32} color={theme.primary} />
+                    <HelpCircle size={32} color={theme.primaryOn} />
                   </div>
                   <span className="text-xl font-bold" style={{ color: theme.textHeading }}>{gt[`cat${cat}` as keyof typeof gt] as string}</span>
                 </button>
@@ -479,7 +479,7 @@ export function TriviaQuizGame({ onClose, onBackToGames }: { onClose: () => void
             <div className="text-center">
               <Trophy size={80} color="#FFD700" className="mx-auto mb-4" />
               <h2 className="text-4xl font-black mb-2" style={{ color: theme.textHeading }}>{gt.quizComplete}</h2>
-              <p className="text-2xl font-bold" style={{ color: theme.primary }}>{gt.youScored} {score} {gt.outOf} {questions.length}</p>
+              <p className="text-2xl font-bold" style={{ color: theme.primaryOn }}>{gt.youScored} {score} {gt.outOf} {questions.length}</p>
             </div>
 
             <div className="overflow-hidden rounded-[40px] border border-gray-100 bg-white shadow-xl flex flex-col" style={{ minHeight: 0, maxHeight: 'calc(100vh - 240px)' }}>
@@ -504,7 +504,7 @@ export function TriviaQuizGame({ onClose, onBackToGames }: { onClose: () => void
                         {userAnswers[i] === q.correctAnswer ? (
                           <CheckCircle2 color="#10B981" size={22} className="shrink-0" />
                         ) : (
-                          <XCircle color="#EF4444" size={22} className="shrink-0" />
+                          <XCircle color={theme.errorOn} size={22} className="shrink-0" />
                         )}
                         <span>{userAnswers[i] === q.correctAnswer ? gt.correct : gt.incorrect}</span>
                       </div>
@@ -557,7 +557,7 @@ export function TriviaQuizGame({ onClose, onBackToGames }: { onClose: () => void
             }}
           >
             <div className="w-24 h-24 rounded-full bg-primarySubtle flex items-center justify-center" style={{ backgroundColor: theme.primarySubtle }}>
-              <RotateCcw size={48} color={theme.primary} />
+              <RotateCcw size={48} color={theme.primaryOn} />
             </div>
 
             <div className="text-center gap-2 flex flex-col">
@@ -573,7 +573,7 @@ export function TriviaQuizGame({ onClose, onBackToGames }: { onClose: () => void
               <button
                 onClick={loadGameState}
                 className="w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-95"
-                style={{ backgroundColor: theme.primary, color: theme.textInverse, fontSize: TYPE_SCALE.md }}
+                style={{ backgroundColor: theme.primary, color: theme.brandOnPrimary, fontSize: TYPE_SCALE.md }}
               >
                 {gt.continuePlaying}
               </button>

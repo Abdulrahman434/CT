@@ -329,7 +329,7 @@ export function WordChainGame({ onClose, onBackToGames }: { onClose: () => void;
             {isArabic ? (
               <div className="space-y-8 text-right">
                 <div className="space-y-3">
-                  <h2 className="text-5xl font-black" style={{ color: theme.primary }}>{gt.wordChain}</h2>
+                  <h2 className="text-5xl font-black" style={{ color: theme.primaryOn }}>{gt.wordChain}</h2>
                   <h3 className="text-2xl font-semibold text-gray-800">{gt.wordChainHowToPlay}</h3>
                 </div>
 
@@ -362,7 +362,7 @@ export function WordChainGame({ onClose, onBackToGames }: { onClose: () => void;
             ) : (
               <div className="space-y-8 text-left">
                 <div className="space-y-3">
-                  <h2 className="text-5xl font-black" style={{ color: theme.primary }}>{gt.wordChain}</h2>
+                  <h2 className="text-5xl font-black" style={{ color: theme.primaryOn }}>{gt.wordChain}</h2>
                   <h3 className="text-2xl font-semibold text-gray-800">{gt.wordChainDesc}</h3>
                 </div>
 
@@ -383,7 +383,7 @@ export function WordChainGame({ onClose, onBackToGames }: { onClose: () => void;
                   </div>
                 </div>
 
-                <div className="px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider" style={{ backgroundColor: theme.primarySubtle, color: theme.primary }}>{gt.twoPlayersLocal}</div>
+                <div className="px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider" style={{ backgroundColor: theme.primarySubtle, color: theme.primaryOn }}>{gt.twoPlayersLocal}</div>
 
                 <div className="w-full animate-in fade-in slide-in-from-bottom-4">
                   <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">{gt.selectCategory}</h3>
@@ -409,16 +409,16 @@ export function WordChainGame({ onClose, onBackToGames }: { onClose: () => void;
           <div className="w-full max-w-4xl flex flex-col h-full gap-8 py-4 relative">
             {/* Top Section: Player Info */}
             <div className="shrink-0 flex justify-between items-center bg-white p-6 rounded-3xl shadow-md border border-gray-100">
-              <div className={`flex flex-col items-center gap-2 transition-all duration-300 ${currentPlayer === 1 ? 'scale-110' : 'opacity-40 grayscale'}`} style={{ color: currentPlayer === 1 ? theme.primary : undefined }}>
+              <div className={`flex flex-col items-center gap-2 transition-all duration-300 ${currentPlayer === 1 ? 'scale-110' : 'opacity-40 grayscale'}`} style={{ color: currentPlayer === 1 ? theme.primaryOn : undefined }}>
                 <div className="w-16 h-16 rounded-full flex items-center justify-center bg-blue-50 border-2 border-blue-100">
-                  <User size={32} color={theme.primary} />
+                  <User size={32} color={theme.primaryOn} />
                 </div>
                 <div className="flex flex-col items-center">
                   <span className="text-sm font-black uppercase tracking-wider">{gt.player1}</span>
                   <span className="text-2xl font-black">{scores[1]}</span>
                 </div>
                 {currentPlayer === 1 && (
-                  <div className="px-4 py-1 rounded-full text-xs font-black uppercase animate-pulse" style={{ backgroundColor: theme.primary, color: theme.textInverse }}>
+                  <div className="px-4 py-1 rounded-full text-xs font-black uppercase animate-pulse" style={{ backgroundColor: theme.primary, color: theme.brandOnPrimary }}>
                     {gt.player1Turn}
                   </div>
                 )}
@@ -431,7 +431,7 @@ export function WordChainGame({ onClose, onBackToGames }: { onClose: () => void;
                     backgroundColor: 'white',
                     boxShadow: SHADOW.md
                   }}>
-                  <div className={`text-4xl font-black ${timeLeft <= 3 ? 'text-red-500 animate-pulse' : ''}`} style={{ color: timeLeft > 3 ? theme.primary : undefined }}>
+                  <div className={`text-4xl font-black ${timeLeft <= 3 ? 'text-red-500 animate-pulse' : ''}`} style={{ color: timeLeft > 3 ? theme.primaryOn : undefined }}>
                     {timeLeft}s
                   </div>
                 </div>
@@ -440,16 +440,16 @@ export function WordChainGame({ onClose, onBackToGames }: { onClose: () => void;
                 </div>
               </div>
 
-              <div className={`flex flex-col items-center gap-2 transition-all duration-300 ${currentPlayer === 2 ? 'scale-110' : 'opacity-40 grayscale'}`} style={{ color: currentPlayer === 2 ? theme.primary : undefined }}>
+              <div className={`flex flex-col items-center gap-2 transition-all duration-300 ${currentPlayer === 2 ? 'scale-110' : 'opacity-40 grayscale'}`} style={{ color: currentPlayer === 2 ? theme.primaryOn : undefined }}>
                 <div className="w-16 h-16 rounded-full flex items-center justify-center bg-blue-50 border-2 border-blue-100">
-                  <User size={32} color={theme.primary} />
+                  <User size={32} color={theme.primaryOn} />
                 </div>
                 <div className="flex flex-col items-center">
                   <span className="text-sm font-black uppercase tracking-wider">{gt.player2}</span>
                   <span className="text-2xl font-black">{scores[2]}</span>
                 </div>
                 {currentPlayer === 2 && (
-                  <div className="px-4 py-1 rounded-full text-xs font-black uppercase animate-pulse" style={{ backgroundColor: theme.primary, color: theme.textInverse }}>
+                  <div className="px-4 py-1 rounded-full text-xs font-black uppercase animate-pulse" style={{ backgroundColor: theme.primary, color: theme.brandOnPrimary }}>
                     {gt.player2Turn}
                   </div>
                 )}
@@ -484,7 +484,7 @@ export function WordChainGame({ onClose, onBackToGames }: { onClose: () => void;
                     <span className="flex items-center justify-center w-10 h-10 rounded-full text-lg border-2" 
                       style={{ 
                         backgroundColor: i === chain.length - 1 ? 'rgba(255,255,255,0.2)' : theme.primarySubtle,
-                        color: i === chain.length - 1 ? 'white' : theme.primary,
+                        color: i === chain.length - 1 ? 'white' : theme.primaryOn,
                         borderColor: i === chain.length - 1 ? 'rgba(255,255,255,0.4)' : theme.primary
                       }}
                     >
@@ -494,7 +494,7 @@ export function WordChainGame({ onClose, onBackToGames }: { onClose: () => void;
                       {word.slice(0, -1)}
                       <span 
                         className={`underline underline-offset-8 decoration-4`} 
-                        style={{ color: i === chain.length - 1 ? 'white' : theme.primary }}
+                        style={{ color: i === chain.length - 1 ? 'white' : theme.primaryOn }}
                       >
                         {word.slice(-1)}
                       </span>
@@ -549,7 +549,7 @@ export function WordChainGame({ onClose, onBackToGames }: { onClose: () => void;
 
               <form onSubmit={handleSubmit} className="flex gap-4">
                 <div className="flex-1 relative group">
-                  <div className="absolute left-6 top-1/2 -translate-y-1/2 text-4xl font-black pointer-events-none select-none opacity-10 group-focus-within:opacity-20 transition-opacity" style={{ color: theme.primary }}>
+                  <div className="absolute left-6 top-1/2 -translate-y-1/2 text-4xl font-black pointer-events-none select-none opacity-10 group-focus-within:opacity-20 transition-opacity" style={{ color: theme.primaryOn }}>
                     {isArabic ? getLastArabicLetter(chain[chain.length - 1]) : chain[chain.length - 1][chain[chain.length - 1].length - 1].toUpperCase()}
                   </div>
                   <input
@@ -585,11 +585,11 @@ export function WordChainGame({ onClose, onBackToGames }: { onClose: () => void;
               <div className="flex justify-center gap-8 mt-6">
                 <div className="text-center">
                   <p className="text-sm font-bold text-gray-400 uppercase">{gt.player1}</p>
-                  <p className="text-3xl font-black" style={{ color: theme.primary }}>{scores[1]}</p>
+                  <p className="text-3xl font-black" style={{ color: theme.primaryOn }}>{scores[1]}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-bold text-gray-400 uppercase">{gt.player2}</p>
-                  <p className="text-3xl font-black" style={{ color: theme.primary }}>{scores[2]}</p>
+                  <p className="text-3xl font-black" style={{ color: theme.primaryOn }}>{scores[2]}</p>
                 </div>
               </div>
             </div>
@@ -628,7 +628,7 @@ export function WordChainGame({ onClose, onBackToGames }: { onClose: () => void;
             }}
           >
             <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ backgroundColor: theme.primarySubtle }}>
-              <RotateCcw size={48} style={{ color: theme.primary }} />
+              <RotateCcw size={48} style={{ color: theme.primaryOn }} />
             </div>
 
             <div className="text-center gap-2 flex flex-col">

@@ -19,7 +19,7 @@ export function UpdateBanner() {
         {t("update.available") || "An update is available"}
       </span>
       <button onClick={reload} style={{
-        background: theme.primary, color: theme.textInverse, border: "none",
+        background: theme.primary, color: theme.brandOnPrimary, border: "none",
         borderRadius: theme.radiusLg, padding: "8px 16px", fontWeight: 700, cursor: "pointer",
       }}>
         {t("update.reload") || "Reload now"}

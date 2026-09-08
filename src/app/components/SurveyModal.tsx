@@ -1069,7 +1069,7 @@ export function SurveyModal({ onClose, initialPath = "hub" }: SurveyModalProps) 
     <div
       className="fixed inset-0 flex flex-col overflow-hidden"
       style={{
-        background: `linear-gradient(160deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`,
+        background: theme.pageGradientFlat,
         zIndex: 1000,
         direction: isRTL ? "rtl" : "ltr",
         ["--sm-primary" as any]: theme.primary,

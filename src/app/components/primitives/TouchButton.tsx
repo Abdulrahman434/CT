@@ -53,7 +53,7 @@ export function TouchButton({
     },
     secondary: {
       backgroundColor: theme.primarySubtle,
-      color: theme.primary,
+      color: theme.primaryOn,
       boxShadow: "none",
     },
     danger: {

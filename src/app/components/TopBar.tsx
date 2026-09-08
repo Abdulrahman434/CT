@@ -208,7 +208,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
                       fontFamily: fontFamily,
                       ...TEXT_STYLE.micro,
                       letterSpacing: isRTL ? "0px" : "0.5px",
-                      color: isNext ? theme.accent : theme.textMuted,
+                      color: isNext ? theme.accentOn : theme.textMuted,
                       lineHeight: "15px",
                     }}
                   >
@@ -219,7 +219,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
                       fontFamily: fontFamily,
                       ...TEXT_STYLE.bodyEmphasis,
                       fontWeight: WEIGHT.bold,
-                      color: isNext ? theme.accent : theme.textHeading,
+                      color: isNext ? theme.accentOn : theme.textHeading,
                       lineHeight: "20px",
                       fontVariantNumeric: "tabular-nums",
                     }}
@@ -395,7 +395,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
             }}
             aria-label="Language"
           >
-            <Globe size={20} style={{ color: theme.primary }} />
+            <Globe size={20} style={{ color: theme.primaryOn }} />
           </button>
         </div>
 
@@ -414,7 +414,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
             aria-label="Notifications"
             onClick={onBellTap}
           >
-            <Bell size={20} style={{ color: theme.primary }} />
+            <Bell size={20} style={{ color: theme.primaryOn }} />
             {unreadCount > 0 && (
               <div
                 className="absolute flex items-center justify-center"
@@ -458,7 +458,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
             aria-label="Casting"
             onClick={onSettingsTap}
           >
-            <Cast size={20} style={{ color: theme.primary }} />
+            <Cast size={20} style={{ color: theme.primaryOn }} />
             {/* Active dot */}
             <div
               className="absolute"
@@ -491,7 +491,7 @@ export function TopBar({ showPrayer = true, onFajrTap, onDhuhrTap, onAsrTap, onM
               aria-label="Settings"
               onClick={onSettingsTap}
             >
-              <Settings size={20} style={{ color: theme.primary }} />
+              <Settings size={20} style={{ color: theme.primaryOn }} />
             </button>
           </div>
         )}

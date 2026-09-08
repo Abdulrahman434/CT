@@ -322,8 +322,8 @@ export function MyAccountDialog({
                 className="flex items-center justify-center gap-2 cursor-pointer active:scale-[0.97] mt-2"
                 style={{ height: "44px", border: "none", background: "none" }}
               >
-                <Trash2 size={16} style={{ color: "#EF4444" }} />
-                <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 600, color: "#EF4444" }}>
+                <Trash2 size={16} style={{ color: theme.errorOn }} />
+                <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 600, color: theme.errorOn }}>
                   {tr("settings.account.overview.remove")}
                 </span>
               </button>

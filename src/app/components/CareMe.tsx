@@ -156,9 +156,9 @@ function SectionContainer({ children, theme, isExpanded, padding, bg, className 
     <div
       className={className}
       style={{
-        backgroundColor: bg || "rgba(0,0,0,0.026)",
+        backgroundColor: bg || theme.surfaceInset,
         borderRadius: theme.radiusLg,
-        border: "1px solid rgba(0,0,0,0.04)",
+        border: theme.borderInset,
         padding: padding || (isExpanded ? "20px" : "14px"),
         width: "100%"
       }}
@@ -180,7 +180,7 @@ function ReportedPain({ theme }: { theme: any }) {
         className="w-9 h-9 flex items-center justify-center shrink-0"
         style={{ backgroundColor: theme.warningSubtle, borderRadius: theme.radiusMd }}
       >
-        <AlertTriangle size={18} style={{ color: theme.warning }} />
+        <AlertTriangle size={18} style={{ color: theme.warningOn }} />
       </div>
       <div className="flex-1 min-w-0">
         <p style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.subtitle, color: theme.textHeading }}>{t("care.pain.score")}</p>
@@ -190,7 +190,7 @@ function ReportedPain({ theme }: { theme: any }) {
         className="flex items-center gap-1 px-2.5 py-1 shrink-0"
         style={{ backgroundColor: theme.warningSubtle, borderRadius: theme.radiusSm }}
       >
-        <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.label, color: theme.warning }}>5 / 10</span>
+        <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.label, color: theme.warningOn }}>5 / 10</span>
       </div>
     </div>
   );
@@ -202,8 +202,8 @@ function SlideSectionHeading({ icon, label, theme, extra }: { icon: React.Compon
   return (
     <div className="flex items-center justify-between py-2 mb-1 border-b" style={{ borderColor: theme.borderSubtle }}>
       <div className="flex items-center gap-2">
-        <Icon size={16} strokeWidth={2.5} style={{ color: theme.primary }} />
-        <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.label, fontWeight: WEIGHT.bold, color: theme.primary, letterSpacing: "0.2px" }}>
+        <Icon size={16} strokeWidth={2.5} style={{ color: theme.primaryOn }} />
+        <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.label, fontWeight: WEIGHT.bold, color: theme.primaryOn, letterSpacing: "0.2px" }}>
           {label}
         </span>
       </div>
@@ -286,7 +286,7 @@ function HisEmptyStateSection({
         className="w-14 h-14 rounded-full flex items-center justify-center mb-3 shrink-0"
         style={{ backgroundColor: theme.primarySubtle }}
       >
-        <Sparkles size={24} style={{ color: theme.primary }} strokeWidth={2.2} />
+        <Sparkles size={24} style={{ color: theme.primaryOn }} strokeWidth={2.2} />
       </div>
       <h4
         style={{
@@ -350,13 +350,13 @@ function DemoBannerHeader({
       }}
     >
       <div className="flex items-center gap-2">
-        <Sparkles size={14} style={{ color: theme.primary }} />
+        <Sparkles size={14} style={{ color: theme.primaryOn }} />
         <span
           style={{
             fontFamily: theme.fontFamily,
             fontSize: "12px",
             fontWeight: 800,
-            color: theme.primary,
+            color: theme.primaryOn,
           }}
         >
           {t("care.his.demoBadge")}
@@ -549,7 +549,7 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
                 <ApiImage src={m.img} alt={t(m.nameKey)} className="w-full h-full object-cover" />
               </div>
               <div className="flex flex-col">
-                <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.primary, fontWeight: 700, lineHeight: 1.2 }}>{t(m.roleKey)}</p>
+                <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.primaryOn, fontWeight: 700, lineHeight: 1.2 }}>{t(m.roleKey)}</p>
                 <p style={{
                   fontFamily: theme.fontFamily,
                   ...(isExpanded ? { fontSize: "18px" } : { fontSize: "15.5px" }),
@@ -577,7 +577,7 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
                 backgroundColor: isNpo ? "#EF444415" : theme.primarySubtle
               }}
             >
-              <Utensils size={isExpanded ? 18 : 14} style={{ color: isNpo ? "#EF4444" : theme.primary }} strokeWidth={2.5} />
+              <Utensils size={isExpanded ? 18 : 14} style={{ color: isNpo ? "#EF4444" : theme.primaryOn }} strokeWidth={2.5} />
             </div>
             <div className="flex flex-col gap-2">
               <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.textMuted }}>{t("care.diet.title")}</p>
@@ -585,7 +585,7 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
                 fontSize: isExpanded ? "15px" : "13px",
                 backgroundColor: isNpo ? "#EF444415" : theme.primarySubtle,
                 borderColor: isNpo ? "#EF444435" : `${theme.primary}35`,
-                color: isNpo ? "#EF4444" : theme.primary
+                color: isNpo ? "#EF4444" : theme.primaryOn
               }}>{patientDietLabel}</span>
             </div>
           </div>
@@ -601,17 +601,17 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
                 backgroundColor: "#EF444415"
               }}
             >
-              <AlertTriangle size={isExpanded ? 18 : 14} style={{ color: "#EF4444" }} strokeWidth={2.5} />
+              <AlertTriangle size={isExpanded ? 18 : 14} style={{ color: theme.errorOn }} strokeWidth={2.5} />
             </div>
             <div className="flex flex-col gap-2">
-              <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: "#EF4444", fontWeight: WEIGHT.bold }}>{t("care.allergies")}</p>
+              <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.errorOn, fontWeight: WEIGHT.bold }}>{t("care.allergies")}</p>
               <div className="flex flex-wrap gap-2">
                 {storeAllergies.map(a => (
                   <span key={a} className="px-3 py-1 rounded-md font-bold" style={{
                     fontSize: isExpanded ? "15px" : "13px",
                     backgroundColor: "#EF444415",
                     border: "1px solid #EF444440",
-                    color: "#EF4444"
+                    color: theme.errorOn
                   }}>{a}</span>
                 ))}
               </div>
@@ -629,7 +629,7 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
                 backgroundColor: theme.primarySubtle
               }}
             >
-              <Activity size={isExpanded ? 18 : 14} style={{ color: theme.primary }} strokeWidth={2.5} />
+              <Activity size={isExpanded ? 18 : 14} style={{ color: theme.primaryOn }} strokeWidth={2.5} />
             </div>
             <div className="flex flex-col gap-2.5 flex-1">
               <div className="flex justify-between items-end">
@@ -637,7 +637,7 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
                 <span style={{
                   fontFamily: theme.fontFamily,
                   fontSize: isExpanded ? "26px" : "18px",
-                  color: theme.warning,
+                  color: theme.warningOn,
                   fontWeight: 900,
                   lineHeight: 1
                 }}>{storePainScore} / 10</span>
@@ -670,11 +670,11 @@ function CareOverviewSlide({ theme, isExpanded = false }: { theme: any, isExpand
                 backgroundColor: "#EF444420"
               }}
             >
-              <AlertTriangle size={isExpanded ? 18 : 14} style={{ color: "#EF4444" }} />
+              <AlertTriangle size={isExpanded ? 18 : 14} style={{ color: theme.errorOn }} />
             </div>
             <div className="flex flex-col">
-              <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: "#EF4444", fontWeight: WEIGHT.bold }}>{t("care.fallRisk")}: {t("care.fallRisk.high")}</p>
-              <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15px" : "12px", color: "#EF4444", lineHeight: "1.4", fontStyle: 'italic', opacity: 0.85 }}>
+              <p style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: theme.errorOn, fontWeight: WEIGHT.bold }}>{t("care.fallRisk")}: {t("care.fallRisk.high")}</p>
+              <p style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15px" : "12px", color: theme.errorOn, lineHeight: "1.4", fontStyle: 'italic', opacity: 0.85 }}>
                 "{t("care.assistance.bed")}"
               </p>
             </div>
@@ -852,7 +852,7 @@ function TimelineSlide({
                 style={{ width: "24px", height: "24px", backgroundColor: theme.surface, borderRadius: theme.radiusFull }}
               >
                 {step.done ? (
-                  <CheckCircle2 size={isExpanded ? 22 : 18} style={{ color: theme.success }} />
+                  <CheckCircle2 size={isExpanded ? 22 : 18} style={{ color: theme.successOn }} />
                 ) : step.active ? (
                   <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: theme.primary }}>
                     <div className="w-2 h-2 rounded-full bg-white" />
@@ -880,7 +880,7 @@ function TimelineSlide({
                   fontFamily: theme.fontFamily,
                   fontSize: valueSize,
                   fontWeight: step.active ? WEIGHT.semibold : WEIGHT.normal,
-                  color: step.active ? theme.primary : theme.textHeading,
+                  color: step.active ? theme.primaryOn : theme.textHeading,
                   textDecoration: "none",
                 }}>
                   {isRTL && step.labelAr ? step.labelAr : (step.label || (step.labelKey ? t(step.labelKey) : ""))}
@@ -891,7 +891,7 @@ function TimelineSlide({
                     borderRadius: "12px",
                     fontSize: labelSize,
                     fontWeight: 700,
-                    color: step.done ? theme.success : step.active ? theme.primary : theme.textMuted,
+                    color: step.done ? theme.successOn : step.active ? theme.primaryOn : theme.textMuted,
                     backgroundColor: step.done ? theme.successSubtle : step.active ? `${theme.primary}18` : "transparent",
                     padding: "6px 12px",
                   }}
@@ -927,7 +927,7 @@ function DietSlide({ theme }: { theme: any }) {
           className="w-9 h-9 flex items-center justify-center shrink-0"
           style={{ backgroundColor: isNpo ? "#EF444420" : theme.primarySubtle, borderRadius: theme.radiusMd }}
         >
-          <Utensils size={18} style={{ color: isNpo ? "#EF4444" : theme.primary }} />
+          <Utensils size={18} style={{ color: isNpo ? "#EF4444" : theme.primaryOn }} />
         </div>
         <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.subtitle, color: isNpo ? "#EF4444" : theme.textHeading, fontSize: "16px", fontWeight: WEIGHT.bold }}>{dietLabel}</span>
       </div>
@@ -947,9 +947,9 @@ function AllergySlide() {
           style={{ backgroundColor: theme.errorSubtle, border: `1px solid ${theme.errorSubtle}`, borderRadius: theme.radiusLg }}
         >
           <div className="w-9 h-9 flex items-center justify-center shrink-0" style={{ backgroundColor: theme.errorSubtle, borderRadius: theme.radiusMd }}>
-            <AlertTriangle size={18} style={{ color: theme.error }} />
+            <AlertTriangle size={18} style={{ color: theme.errorOn }} />
           </div>
-          <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.body, color: theme.error }}>{t(a.nameKey)}</span>
+          <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.body, color: theme.errorOn }}>{t(a.nameKey)}</span>
         </div>
       ))}
     </div>
@@ -1020,7 +1020,7 @@ function LabResultsSlide({ theme, isExpanded = false }: { theme: any, isExpanded
                       borderRadius: theme.radiusFull
                     }}
                   >
-                    <FlaskConical size={isExpanded ? 18 : 16} style={{ color: theme.primary }} />
+                    <FlaskConical size={isExpanded ? 18 : 16} style={{ color: theme.primaryOn }} />
                   </div>
                   <div>
                     <span style={{
@@ -1049,8 +1049,8 @@ function LabResultsSlide({ theme, isExpanded = false }: { theme: any, isExpanded
                 className="mt-2.5 flex items-center justify-center gap-2 self-start px-4 py-2 pointer-events-none border transition-transform"
                 style={{ borderRadius: theme.radiusLg, backgroundColor: theme.surface, borderColor: `${theme.primary}40` }}
               >
-                <FileText size={isExpanded ? 16 : 14} style={{ color: theme.primary }} />
-                <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15.5px" : "13px", fontWeight: WEIGHT.bold, color: theme.primary }}>{t("care.imaging.viewReport")}</span>
+                <FileText size={isExpanded ? 16 : 14} style={{ color: theme.primaryOn }} />
+                <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15.5px" : "13px", fontWeight: WEIGHT.bold, color: theme.primaryOn }}>{t("care.imaging.viewReport")}</span>
               </div>
             </div>
           </SectionContainer>
@@ -1073,7 +1073,7 @@ function PdfViewerModal({ url, title, onClose }: { url: string; title: string; o
       <div className="flex items-center justify-between px-6 py-4 shrink-0" style={{ backgroundColor: theme.surface, borderBottom: `1px solid ${theme.borderSubtle}` }}>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: theme.primarySubtle }}>
-            <FileText size={18} style={{ color: theme.primary }} />
+            <FileText size={18} style={{ color: theme.primaryOn }} />
           </div>
           <div>
             <p style={{ fontFamily: theme.fontFamily, fontSize: "15px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>{title}</p>
@@ -1155,7 +1155,7 @@ function ImagingSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
                       borderRadius: theme.radiusFull
                     }}
                   >
-                    <ImageIcon size={isExpanded ? 18 : 16} style={{ color: theme.primary }} />
+                    <ImageIcon size={isExpanded ? 18 : 16} style={{ color: theme.primaryOn }} />
                   </div>
                   <span style={{
                     fontFamily: theme.fontFamily,
@@ -1177,8 +1177,8 @@ function ImagingSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
                 className="mt-2.5 flex items-center justify-center gap-2 self-start px-4 py-2 pointer-events-none border transition-transform"
                 style={{ borderRadius: theme.radiusLg, backgroundColor: theme.surface, borderColor: `${theme.primary}40` }}
               >
-                <FileText size={isExpanded ? 16 : 14} style={{ color: theme.primary }} />
-                <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15.5px" : "13px", fontWeight: WEIGHT.bold, color: theme.primary }}>{t("care.imaging.viewReport")}</span>
+                <FileText size={isExpanded ? 16 : 14} style={{ color: theme.primaryOn }} />
+                <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15.5px" : "13px", fontWeight: WEIGHT.bold, color: theme.primaryOn }}>{t("care.imaging.viewReport")}</span>
               </div>
             </div>
           </SectionContainer>
@@ -1228,9 +1228,9 @@ function ClinicalObservationsSlide({ theme, isExpanded = false }: { theme: any, 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {idx === 0 && (
-                  <span style={{ fontSize: "10px", fontWeight: 800, backgroundColor: theme.primary, color: "#fff", padding: "2px 8px", borderRadius: 99, letterSpacing: "0.5px" }}>LATEST</span>
+                  <span style={{ fontSize: "10px", fontWeight: 800, backgroundColor: theme.primary, color: theme.brandOnPrimary, padding: "2px 8px", borderRadius: 99, letterSpacing: "0.5px" }}>LATEST</span>
                 )}
-                <span style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: idx === 0 ? theme.primary : theme.textMuted, fontWeight: idx === 0 ? 700 : 500 }}>Vitals Update</span>
+                <span style={{ fontFamily: theme.fontFamily, fontSize: labelSize, color: idx === 0 ? theme.primaryOn : theme.textMuted, fontWeight: idx === 0 ? 700 : 500 }}>Vitals Update</span>
               </div>
               <span style={{ fontSize: "11px", color: theme.textDisabled, fontWeight: 700 }}>
                 {item.timestamp instanceof Date ? item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
@@ -1240,34 +1240,34 @@ function ClinicalObservationsSlide({ theme, isExpanded = false }: { theme: any, 
             </div>
             
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+              <div className="p-3 rounded-xl" style={{ backgroundColor: theme.primarySubtle, border: `1px solid ${theme.borderSubtle}` }}>
                 <div className="flex items-center gap-1.5 mb-1 opacity-60">
-                  <Droplet size={12} color="#EF4444" />
-                  <span style={{ fontSize: "10px", fontWeight: 700 }}>BP</span>
+                  <Droplet size={12} color={theme.errorOn} />
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: theme.textMuted }}>BP</span>
                 </div>
                 <span style={{ fontSize: "18px", fontWeight: 900, color: theme.textHeading }}>{item.vitals.bp || "—"}</span>
                 <span style={{ fontSize: "10px", color: theme.textMuted, marginLeft: 2 }}>mmHg</span>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+              <div className="p-3 rounded-xl" style={{ backgroundColor: theme.primarySubtle, border: `1px solid ${theme.borderSubtle}` }}>
                 <div className="flex items-center gap-1.5 mb-1 opacity-60">
                   <Activity size={12} color="#F43F5E" />
-                  <span style={{ fontSize: "10px", fontWeight: 700 }}>HR</span>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: theme.textMuted }}>HR</span>
                 </div>
                 <span style={{ fontSize: "18px", fontWeight: 900, color: theme.textHeading }}>{item.vitals.hr || "—"}</span>
                 <span style={{ fontSize: "10px", color: theme.textMuted, marginLeft: 2 }}>BPM</span>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+              <div className="p-3 rounded-xl" style={{ backgroundColor: theme.primarySubtle, border: `1px solid ${theme.borderSubtle}` }}>
                 <div className="flex items-center gap-1.5 mb-1 opacity-60">
                   <Thermometer size={12} color="#F59E0B" />
-                  <span style={{ fontSize: "10px", fontWeight: 700 }}>TEMP</span>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: theme.textMuted }}>TEMP</span>
                 </div>
                 <span style={{ fontSize: "18px", fontWeight: 900, color: theme.textHeading }}>{item.vitals.temp || "—"}</span>
                 <span style={{ fontSize: "10px", color: theme.textMuted, marginLeft: 2 }}>°C</span>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+              <div className="p-3 rounded-xl" style={{ backgroundColor: theme.primarySubtle, border: `1px solid ${theme.borderSubtle}` }}>
                 <div className="flex items-center gap-1.5 mb-1 opacity-60">
-                  <Wind size={12} style={{ color: theme.primary }} />
-                  <span style={{ fontSize: "10px", fontWeight: 700 }}>SpO₂</span>
+                  <Wind size={12} style={{ color: theme.primaryOn }} />
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: theme.textMuted }}>SpO₂</span>
                 </div>
                 <span style={{ fontSize: "18px", fontWeight: 900, color: theme.textHeading }}>{item.vitals.spo2 || "—"}</span>
                 <span style={{ fontSize: "10px", color: theme.textMuted, marginLeft: 2 }}>%</span>
@@ -1368,7 +1368,7 @@ function BabyCameraSlide({ isExpanded = false }: { isExpanded?: boolean }) {
                 height: isExpanded ? "40px" : "36px"
               }}
             >
-              <Baby size={isExpanded ? 20 : 18} style={{ color: theme.primary }} />
+              <Baby size={isExpanded ? 20 : 18} style={{ color: theme.primaryOn }} />
             </div>
             <div>
               <p style={{
@@ -1390,7 +1390,7 @@ function BabyCameraSlide({ isExpanded = false }: { isExpanded?: boolean }) {
           {/* Connected badge */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ backgroundColor: theme.primarySubtle }}>
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: theme.success, boxShadow: `0 0 6px ${theme.success}` }} />
-            <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "14px" : "12px", fontWeight: 700, color: theme.primary }}>{t("care.baby.connected")}</span>
+            <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "14px" : "12px", fontWeight: 700, color: theme.primaryOn }}>{t("care.baby.connected")}</span>
           </div>
         </div>
       </SectionContainer>
@@ -1537,12 +1537,12 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
           <Row label={t("care.billing.subtotal")} value={`${subtotal.toLocaleString()} ${t("care.currency")}`} />
           <Row label={t("care.billing.vat")} value={`${vat.toLocaleString()} ${t("care.currency")}`} />
           <Row label={t("care.billing.totalInclVat")} value={`${total.toLocaleString()} ${t("care.currency")}`} />
-          <Row label={t("care.billing.insuranceCredit").replace("Deduction", "").trim()} value={`- ${covered.toLocaleString()} ${t("care.currency")}`} color={theme.success} isHighlight />
+          <Row label={t("care.billing.insuranceCredit").replace("Deduction", "").trim()} value={`- ${covered.toLocaleString()} ${t("care.currency")}`} color={theme.successOn} isHighlight />
           <div style={{ height: "1px", backgroundColor: "rgba(0,0,0,0.06)", margin: "8px 0" }} />
           <Row label={t("care.billing.subtotal")} value={`19,490 ${t("care.currency")}`} />
           <Row label={t("care.billing.vat")} value={`2,923.5 ${t("care.currency")}`} />
           <Row label={t("care.billing.totalInclVat")} value={`22,413.5 ${t("care.currency")}`} />
-          <Row label={t("care.billing.insuranceCredit").replace("Deduction", "").trim()} value={`- 18,515.5 ${t("care.currency")}`} color={theme.success} isHighlight />
+          <Row label={t("care.billing.insuranceCredit").replace("Deduction", "").trim()} value={`- 18,515.5 ${t("care.currency")}`} color={theme.successOn} isHighlight />
 
           <div className="mt-6 pt-2 border-t border-dashed" style={{ borderColor: theme.borderSubtle }}>
             <button
@@ -1551,8 +1551,8 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
               className="flex items-center justify-center gap-2 w-full py-3 border transition-transform hover:scale-[1.01] active:scale-98"
               style={{ borderRadius: theme.radiusLg, borderColor: `${theme.primary}40`, backgroundColor: theme.surface, cursor: 'pointer' }}
             >
-              <FileText size={18} style={{ color: theme.primary }} />
-              <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15.5px" : "13.5px", fontWeight: WEIGHT.bold, color: theme.primary }}>
+              <FileText size={18} style={{ color: theme.primaryOn }} />
+              <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "15.5px" : "13.5px", fontWeight: WEIGHT.bold, color: theme.primaryOn }}>
                 {t("care.billing.viewDetailedInvoice")}
               </span>
             </button>
@@ -1565,7 +1565,7 @@ function FinanceSlide({ theme, isExpanded = false }: { theme: any, isExpanded?: 
         <div className="flex flex-col gap-5">
           <div className="flex items-center justify-between px-1">
             <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "16px" : "13.5px", color: theme.textMuted, fontWeight: WEIGHT.bold }}>{t("care.billing.patientPayable")}</span>
-            <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "26px" : "20px", color: theme.primary, fontWeight: 900 }}>{payable.toLocaleString()} <span style={{ fontSize: "0.6em" }}>{t("care.currency")}</span></span>
+            <span style={{ fontFamily: theme.fontFamily, fontSize: isExpanded ? "26px" : "20px", color: theme.primaryOn, fontWeight: 900 }}>{payable.toLocaleString()} <span style={{ fontSize: "0.6em" }}>{t("care.currency")}</span></span>
           </div>
 
           <button
@@ -1656,11 +1656,11 @@ function HospitalInvoiceOverlay({ theme, onClose }: { theme: any, onClose: () =>
                 <span>VAT (15%)</span>
                 <span className="font-semibold">2,923.50 SAR</span>
               </div>
-              <div className="flex justify-between py-4 border-y border-slate-100" style={{ color: theme.success }}>
+              <div className="flex justify-between py-4 border-y border-slate-100" style={{ color: theme.successOn }}>
                 <span className="font-bold">Insurance Credit</span>
                 <span className="font-bold">- 18,515.50 SAR</span>
               </div>
-              <div className="flex justify-between items-baseline pt-2" style={{ color: theme.primary }}>
+              <div className="flex justify-between items-baseline pt-2" style={{ color: theme.primaryOn }}>
                 <span className="text-lg font-bold">Total Due</span>
                 <span className="text-3xl font-extrabold tracking-tight">3,898.00 SAR</span>
               </div>
@@ -1711,7 +1711,7 @@ function PaymentPortal({ theme, onClose, amount }: { theme: any, onClose: () => 
 
             <div className="bg-slate-50 p-6 flex flex-col items-center border border-slate-100" style={{ borderRadius: "12px" }}>
               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Payable Now</span>
-              <span className="text-4xl font-black tracking-tight" style={{ color: theme.primary }}>{amount} <span className="text-lg">{t("care.currency")}</span></span>
+              <span className="text-4xl font-black tracking-tight" style={{ color: theme.primaryOn }}>{amount} <span className="text-lg">{t("care.currency")}</span></span>
             </div>
 
             <div className="flex flex-col gap-4">
@@ -1778,7 +1778,7 @@ function PaymentPortal({ theme, onClose, amount }: { theme: any, onClose: () => 
 
         {step === 'processing' && (
           <div className="p-20 flex flex-col items-center justify-center gap-8 text-center h-[520px]">
-            <div className="w-20 h-20 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin" style={{ borderTopColor: theme.primary }} />
+            <div className="w-20 h-20 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin" style={{ borderTopColor: theme.primaryOn }} />
             <div>
               <h3 style={{ fontFamily: theme.fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold }}>Finalizing Payment</h3>
               <p style={{ fontFamily: theme.fontFamily, fontSize: "14px", color: theme.textMuted }}>Securing your transaction...</p>
@@ -1790,7 +1790,7 @@ function PaymentPortal({ theme, onClose, amount }: { theme: any, onClose: () => 
           <div className="p-16 flex flex-col items-center justify-center gap-10 text-center h-[520px]">
             <div
               className="w-24 h-24 rounded-full flex items-center justify-center shadow-inner"
-              style={{ backgroundColor: theme.successSubtle, color: theme.success }}
+              style={{ backgroundColor: theme.successSubtle, color: theme.successOn }}
             >
               <ShieldCheck size={48} />
             </div>
@@ -1816,7 +1816,7 @@ function PaymentPortal({ theme, onClose, amount }: { theme: any, onClose: () => 
 function SlideIcon({ slideKey }: { slideKey: string }) {
   const { theme } = useTheme();
   const iconProps = { size: 16, strokeWidth: 2 };
-  const color = theme.primary;
+  const color = theme.primaryOn;
   switch (slideKey) {
     case "profile": return <IdCard {...iconProps} style={{ color }} />;
     case "overview": return <Activity {...iconProps} style={{ color }} />;
@@ -1867,7 +1867,7 @@ function DateStrip() {
             backgroundColor: theme.primarySubtle,
           }}
         >
-          <CalendarDays size={14} style={{ color: theme.primary }} />
+          <CalendarDays size={14} style={{ color: theme.primaryOn }} />
         </div>
         <div className="min-w-0" style={{ gap: "0px" }}>
           <p style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.micro, color: theme.textMuted, lineHeight: "1" }}>
@@ -1893,7 +1893,7 @@ function DateStrip() {
             backgroundColor: theme.primarySubtle,
           }}
         >
-          <CalendarDays size={14} style={{ color: theme.primary }} />
+          <CalendarDays size={14} style={{ color: theme.primaryOn }} />
         </div>
         <div className="min-w-0" style={{ gap: "0px" }}>
           <p style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.micro, color: theme.textMuted, lineHeight: "1" }}>
@@ -2121,10 +2121,11 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchEnd}
       style={{
-        backgroundColor: theme.surface,
+        backgroundColor: theme.engagementSurface,
+        backgroundImage: theme.engagementCardGradient,
         borderRadius: theme.radiusCard,
         boxShadow: SHADOW.md,
-        border: theme.cardBorder,
+        border: theme.engagementCardBorder,
         touchAction: "pan-y",
       }}
     >
@@ -2148,8 +2149,8 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
               }}
               aria-label="Update in Nurse View"
             >
-              <Stethoscope size={13} style={{ color: theme.primary }} />
-              <span style={{ fontFamily: theme.fontFamily, fontSize: "11px", fontWeight: 700, color: theme.primary }}>
+              <Stethoscope size={13} style={{ color: theme.primaryOn }} />
+              <span style={{ fontFamily: theme.fontFamily, fontSize: "11px", fontWeight: 700, color: theme.primaryOn }}>
                 Nurse View
               </span>
             </button>
@@ -2162,7 +2163,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
             style={{ borderRadius: theme.radiusMd, outline: 'none' }}
             aria-label="Toggle privacy blur"
           >
-            {isBlurred ? <EyeOff size={15} style={{ color: theme.primary }} /> : <Eye size={15} style={{ color: theme.primary }} />}
+            {isBlurred ? <EyeOff size={15} style={{ color: theme.primaryOn }} /> : <Eye size={15} style={{ color: theme.primaryOn }} />}
           </button>
           <button
             data-nav="true"
@@ -2178,7 +2179,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
             <Pin
               size={15}
               style={{
-                color: isPinned ? theme.accent : theme.primary,
+                color: isPinned ? theme.accentOn : theme.primaryOn,
                 fill: isPinned ? theme.accent : 'none',
                 transform: isPinned ? 'rotate(45deg)' : 'none',
                 transition: 'all 0.2s ease'
@@ -2193,7 +2194,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
               style={{ borderRadius: theme.radiusMd, outline: 'none' }}
               aria-label="Expand CareMe"
             >
-              <Maximize2 size={15} style={{ color: theme.primary }} />
+              <Maximize2 size={15} style={{ color: theme.primaryOn }} />
             </button>
           )}
           <button
@@ -2215,7 +2216,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
             aria-label="Next slide"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={isRTL ? { transform: "scaleX(-1)" } : undefined}>
-              <path d="M6 12L10 8L6 4" stroke={theme.primary} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.33333" />
+              <path d="M6 12L10 8L6 4" stroke={theme.primaryOn} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.33333" />
             </svg>
           </button>
         </div>
@@ -2227,7 +2228,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
       {/* Slide Title */}
       <div dir={dir} className="flex items-center gap-2 shrink-0" style={{ padding: "0 22px" }}>
         <SlideIcon slideKey={activeSlide.key} />
-        <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.subtitle, color: theme.primary }}>{t(activeSlide.titleKey)}</span>
+        <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.subtitle, color: theme.primaryOn }}>{t(activeSlide.titleKey)}</span>
         <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted, marginLeft: "auto" }}>
           {realIndex + 1} / {slides.length}
         </span>
@@ -2306,7 +2307,7 @@ export function CareMe({ onExpand }: { onExpand?: () => void }) {
         }
         .careme-scroll {
           scrollbar-width: thin;
-          scrollbar-color: ${theme.primary}4D transparent;
+          scrollbar-color: ${theme.primaryOn}4D transparent;
         }
       `}</style>
     </div>
@@ -2367,7 +2368,7 @@ export function CareMeExpanded({ onClose }: { onClose: () => void }) {
     <div
       className="absolute inset-0 z-50 flex flex-col"
       style={{
-        background: `linear-gradient(160deg, ${primary} 0%, ${theme.primaryDark} 40%, #0a1628 100%)`,
+        background: theme.pageGradient,
         animation: "caremeExpandIn 0.25s ease-out",
       }}
     >
@@ -2421,7 +2422,7 @@ export function CareMeExpanded({ onClose }: { onClose: () => void }) {
                     height: "42px",
                     borderRadius: theme.radiusMd,
                     backgroundColor: theme.primarySubtle,
-                    color: theme.primary,
+                    color: theme.primaryOn,
                   }}
                 >
                   <ExpandedSlideIcon slideKey={slide.key} size={22} />
@@ -2480,7 +2481,7 @@ export function CareMeExpanded({ onClose }: { onClose: () => void }) {
         }
         .careme-scroll {
           scrollbar-width: thin;
-          scrollbar-color: ${theme.primary}4D transparent;
+          scrollbar-color: ${theme.primaryOn}4D transparent;
         }
       `}</style>
     </div>

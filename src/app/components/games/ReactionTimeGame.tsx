@@ -206,7 +206,7 @@ export function ReactionTimeGame({ onClose, onBackToGames }: { onClose: () => vo
             ) : (
               leaderboard[mode].map((time, i) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: theme.surfaceElevated }}>
-                  <span style={{ fontFamily, fontWeight: WEIGHT.bold, color: theme.primary }}>#{i + 1}</span>
+                  <span style={{ fontFamily, fontWeight: WEIGHT.bold, color: theme.primaryOn }}>#{i + 1}</span>
                   <span style={{ fontFamily, fontWeight: WEIGHT.semibold, color: theme.textNormal }}>{time}ms</span>
                 </div>
               ))
@@ -215,7 +215,7 @@ export function ReactionTimeGame({ onClose, onBackToGames }: { onClose: () => vo
           {averageTime !== null && (
             <div className="mt-auto p-4 rounded-xl border-2 border-dashed" style={{ borderColor: theme.primarySubtle }}>
               <p style={{ fontFamily, fontSize: TYPE_SCALE.sm, color: theme.textMuted, textAlign: 'center' }}>{gt.reactionAverage} {history.length} {gt.reactionRounds}</p>
-              <p style={{ fontFamily, fontSize: TYPE_SCALE.xl, fontWeight: WEIGHT.bold, color: theme.primary, textAlign: 'center' }}>{averageTime}ms</p>
+              <p style={{ fontFamily, fontSize: TYPE_SCALE.xl, fontWeight: WEIGHT.bold, color: theme.primaryOn, textAlign: 'center' }}>{averageTime}ms</p>
             </div>
           )}
         </div>
@@ -270,8 +270,8 @@ export function ReactionTimeGame({ onClose, onBackToGames }: { onClose: () => vo
             {gameState === "result" && (
               <>
                 <div className="flex flex-col items-center gap-1">
-                  <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: theme.primary }}>{getRating(reactionTime!)}</span>
-                  <div className="text-7xl font-black" style={{ color: theme.primary }}>
+                  <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: theme.primaryOn }}>{getRating(reactionTime!)}</span>
+                  <div className="text-7xl font-black" style={{ color: theme.primaryOn }}>
                     {reactionTime}ms
                   </div>
                 </div>
@@ -330,7 +330,7 @@ export function ReactionTimeGame({ onClose, onBackToGames }: { onClose: () => vo
             }}
           >
             <div className="w-24 h-24 rounded-full bg-primarySubtle flex items-center justify-center" style={{ backgroundColor: theme.primarySubtle }}>
-              <RotateCcw size={48} color={theme.primary} />
+              <RotateCcw size={48} color={theme.primaryOn} />
             </div>
 
             <div className="text-center gap-2 flex flex-col">
@@ -346,7 +346,7 @@ export function ReactionTimeGame({ onClose, onBackToGames }: { onClose: () => vo
               <button
                 onClick={loadGameState}
                 className="w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-95"
-                style={{ backgroundColor: theme.primary, color: theme.textInverse, fontSize: TYPE_SCALE.md }}
+                style={{ backgroundColor: theme.primary, color: theme.brandOnPrimary, fontSize: TYPE_SCALE.md }}
               >
                 {gt.continuePlaying}
               </button>

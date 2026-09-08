@@ -636,9 +636,9 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
       >
         <div className="absolute inset-0" style={{
           background: callState === "incoming"
-            ? `linear-gradient(160deg, ${primary} 0%, ${theme.primaryDark} 50%, #0a1628 100%)`
+            ? theme.pageGradient
             : callState === "outgoing"
-            ? `linear-gradient(160deg, ${primary} 0%, ${theme.primaryDark} 50%, #0a1628 100%)`
+            ? theme.pageGradient
             : `linear-gradient(160deg, ${theme.primaryDark} 0%, #0d1825 50%, #060e18 100%)`,
         }} />
 
@@ -814,7 +814,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
     <div
       className="absolute inset-0 z-50 flex flex-col"
       style={{
-        background: `linear-gradient(160deg, ${primary} 0%, ${theme.primaryDark} 40%, #0a1628 100%)`,
+        background: theme.pageGradient,
         animation: "callScreenIn 0.2s ease-out",
       }}
     >
@@ -864,9 +864,9 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
            {/* Header Row */}
            <div 
              className="flex items-center gap-3 px-5 py-3.5 shrink-0 shadow-sm"
-             style={{ backgroundColor: "#fff", borderRadius: theme.radiusLg, border: "1px solid rgba(0,0,0,0.04)" }}
+             style={{ backgroundColor: theme.engagementSurface, backgroundImage: theme.engagementCardGradientShort, borderRadius: theme.radiusLg, border: theme.engagementCardBorder }}
            >
-              <div className="w-8 h-8 flex items-center justify-center shrink-0" style={{ backgroundColor: theme.primarySubtle, color: theme.primary, borderRadius: theme.radiusMd }}>
+              <div className="w-8 h-8 flex items-center justify-center shrink-0" style={{ backgroundColor: theme.primarySubtle, color: theme.primaryOn, borderRadius: theme.radiusMd }}>
                 <PhoneCall size={16} />
               </div>
               <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>{t("call.history")}</span>
@@ -906,7 +906,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
                         minWidth: "20px", height: "20px", borderRadius: theme.radiusFull, padding: "0 5px",
                         backgroundColor: active ? "rgba(255,255,255,0.25)" : theme.primarySubtle,
                         fontFamily, fontSize: "14px", fontWeight: WEIGHT.bold,
-                        color: active ? "#fff" : theme.primary,
+                        color: active ? "#fff" : theme.primaryOn,
                       }}>
                         {count}
                       </span>
@@ -976,9 +976,9 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
           {/* Header Row */}
           <div 
             className="flex items-center gap-3 px-5 py-3.5 shrink-0 shadow-sm"
-            style={{ backgroundColor: "#fff", borderRadius: theme.radiusLg, border: "1px solid rgba(0,0,0,0.04)" }}
+            style={{ backgroundColor: theme.engagementSurface, backgroundImage: theme.engagementCardGradientShort, borderRadius: theme.radiusLg, border: theme.engagementCardBorder }}
           >
-             <div className="w-8 h-8 flex items-center justify-center shrink-0" style={{ backgroundColor: theme.primarySubtle, color: theme.primary, borderRadius: theme.radiusMd }}>
+             <div className="w-8 h-8 flex items-center justify-center shrink-0" style={{ backgroundColor: theme.primarySubtle, color: theme.primaryOn, borderRadius: theme.radiusMd }}>
                <Grid3X3 size={16} />
              </div>
              <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>{t("call.keypadHint")}</span>
@@ -993,7 +993,7 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
           <div className="shrink-0 flex items-center justify-center px-5 mb-4" style={{ minHeight: "60px" }}>
             <span style={{
               fontFamily: theme.fontFamilyMono, fontSize: "48px", fontWeight: WEIGHT.bold,
-              color: dialInput ? theme.primary : theme.textDisabled,
+              color: dialInput ? theme.primaryOn : theme.textDisabled,
               letterSpacing: "8px", textAlign: "center", minHeight: "56px",
               textShadow: "none",
               transition: "all 0.3s ease",
@@ -1058,9 +1058,9 @@ export function CallScreen({ onClose }: { onClose: () => void }) {
           {/* Header Row */}
           <div 
             className="flex items-center gap-3 px-5 py-3.5 shrink-0 shadow-sm"
-            style={{ backgroundColor: "#fff", borderRadius: theme.radiusLg, border: "1px solid rgba(0,0,0,0.04)" }}
+            style={{ backgroundColor: theme.engagementSurface, backgroundImage: theme.engagementCardGradientShort, borderRadius: theme.radiusLg, border: theme.engagementCardBorder }}
           >
-             <div className="w-8 h-8 flex items-center justify-center shrink-0" style={{ backgroundColor: theme.primarySubtle, color: theme.primary, borderRadius: theme.radiusMd }}>
+             <div className="w-8 h-8 flex items-center justify-center shrink-0" style={{ backgroundColor: theme.primarySubtle, color: theme.primaryOn, borderRadius: theme.radiusMd }}>
                <BookUser size={16} />
              </div>
              <span style={{ fontFamily, fontSize: "16px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>{t("call.hospitalDirectory")}</span>
@@ -1137,7 +1137,7 @@ function ExtensionCard({ contact, onDial }: { contact: { extension: string, disp
         backgroundColor: isFilled ? "rgba(255,255,255,0.2)" : theme.primaryLight,
         transition: "all 0.2s",
       }}>
-        <ExtIcon size={24} color={isFilled ? theme.textInverse : theme.primary} strokeWidth={2} />
+        <ExtIcon size={24} color={isFilled ? theme.textInverse : theme.primaryOn} strokeWidth={2} />
       </div>
 
       {/* Name */}

@@ -658,7 +658,7 @@ export function MyPreferencesDialog({
                     <span>Device Owner: </span>
                     <b style={{ color: ks.isDeviceOwner ? t.textHeading : "#EF4444" }}>{ks.isDeviceOwner ? "Yes" : "No"}</b>
                     {!ks.isDeviceOwner && (
-                      <span style={{ color: "#EF4444" }}> — kiosk is screen-pinning; apps can't launch until Device Owner is restored</span>
+                      <span style={{ color: theme.errorOn }}> — kiosk is screen-pinning; apps can't launch until Device Owner is restored</span>
                     )}
                     <div>Lock Task: {ks.isInLockTask ? "On" : "Off"} · Build: {ks.buildType || "?"}</div>
                   </div>
@@ -799,8 +799,8 @@ export function MyPreferencesDialog({
                 className="flex items-center justify-center gap-2 cursor-pointer active:scale-[0.97] mt-2"
                 style={{ height: "44px", border: "none", background: "none" }}
               >
-                <Trash2 size={16} style={{ color: "#EF4444" }} />
-                <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 600, color: "#EF4444" }}>
+                <Trash2 size={16} style={{ color: theme.errorOn }} />
+                <span style={{ fontFamily: t.fontFamily, fontSize: "14px", fontWeight: 600, color: theme.errorOn }}>
                   Remove PIN
                 </span>
               </button>

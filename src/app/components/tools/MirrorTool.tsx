@@ -129,7 +129,7 @@ export function MirrorTool({
             <button
                onClick={() => window.location.reload()}
                className="mt-2 px-6 py-3 rounded-full flex items-center gap-2"
-               style={{ backgroundColor: theme.primary, color: "#fff", border: "none" }}
+               style={{ backgroundColor: theme.primary, color: theme.brandOnPrimary, border: "none" }}
             >
               <RefreshCw size={18} />
               Try Again

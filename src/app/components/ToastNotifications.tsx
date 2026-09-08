@@ -284,7 +284,7 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
               className="shrink-0 rounded-full flex items-center justify-center"
               style={{ width: 48, height: 48, backgroundColor: theme.primaryLight }}
             >
-              <span style={{ fontSize: "20px", fontWeight: WEIGHT.bold, color: theme.primary }}>
+              <span style={{ fontSize: "20px", fontWeight: WEIGHT.bold, color: theme.primaryOnLight }}>
                 {toast.title.charAt(0)}
               </span>
             </div>

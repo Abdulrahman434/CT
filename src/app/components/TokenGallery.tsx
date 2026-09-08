@@ -16,7 +16,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
         style={{
           fontFamily: theme.fontFamily,
           ...TEXT_STYLE.sectionTitle,
-          color: theme.primary,
+          color: theme.primaryOn,
           marginBottom: "16px",
           paddingBottom: "8px",
           borderBottom: `2px solid ${theme.primarySubtle}`,
@@ -77,7 +77,7 @@ function TextStylePreview({ name, recipe }: { name: string; recipe: any }) {
         style={{
           fontFamily: "monospace",
           ...TEXT_STYLE.label,
-          color: theme.primary,
+          color: theme.primaryOn,
           width: "120px",
           flexShrink: 0,
         }}
@@ -127,7 +127,7 @@ function ShadowPreview({ name, value }: { name: string; value: string }) {
           style={{
             fontFamily: "monospace",
             ...TEXT_STYLE.label,
-            color: theme.primary,
+            color: theme.primaryOn,
             display: "block",
           }}
         >
@@ -156,7 +156,7 @@ function SpacePreview({ step, value }: { step: string; value: string }) {
         style={{
           fontFamily: "monospace",
           ...TEXT_STYLE.label,
-          color: theme.primary,
+          color: theme.primaryOn,
           width: "60px",
           flexShrink: 0,
         }}
@@ -205,7 +205,7 @@ function RadiusPreview({ label, value }: { label: string; value: string }) {
           style={{
             fontFamily: "monospace",
             ...TEXT_STYLE.label,
-            color: theme.primary,
+            color: theme.primaryOn,
             display: "block",
           }}
         >
@@ -304,7 +304,7 @@ export function TokenGallery({ onClose }: { onClose: () => void }) {
               backgroundColor: theme.primarySubtle,
             }}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={theme.primaryOn} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="7" height="7" />
               <rect x="14" y="3" width="7" height="7" />
               <rect x="14" y="14" width="7" height="7" />
@@ -364,7 +364,7 @@ export function TokenGallery({ onClose }: { onClose: () => void }) {
             <Section title="TYPE_SCALE — Size Progression">
               {Object.entries(TYPE_SCALE).map(([name, value]) => (
                 <div key={name} className="flex items-baseline gap-3 mb-2">
-                  <span style={{ fontFamily: "monospace", ...TEXT_STYLE.label, color: theme.primary, width: "50px" }}>{name}</span>
+                  <span style={{ fontFamily: "monospace", ...TEXT_STYLE.label, color: theme.primaryOn, width: "50px" }}>{name}</span>
                   <span style={{ fontFamily: theme.fontFamily, fontSize: value, fontWeight: WEIGHT.semibold, color: theme.textHeading }}>{value}</span>
                 </div>
               ))}
@@ -450,11 +450,11 @@ export function TokenGallery({ onClose }: { onClose: () => void }) {
             <Section title="Typography">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3">
-                  <span style={{ fontFamily: "monospace", ...TEXT_STYLE.label, color: theme.primary, width: "100px" }}>fontFamily</span>
+                  <span style={{ fontFamily: "monospace", ...TEXT_STYLE.label, color: theme.primaryOn, width: "100px" }}>fontFamily</span>
                   <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.body, color: theme.textHeading }}>{theme.fontFamily}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span style={{ fontFamily: "monospace", ...TEXT_STYLE.label, color: theme.primary, width: "100px" }}>fontFamilyAr</span>
+                  <span style={{ fontFamily: "monospace", ...TEXT_STYLE.label, color: theme.primaryOn, width: "100px" }}>fontFamilyAr</span>
                   <span style={{ fontFamily: theme.fontFamilyAr, ...TEXT_STYLE.body, color: theme.textHeading }}>{theme.fontFamilyAr}</span>
                 </div>
               </div>
@@ -463,7 +463,7 @@ export function TokenGallery({ onClose }: { onClose: () => void }) {
             <Section title="WEIGHT — Font Weight Scale">
               {Object.entries(WEIGHT).map(([name, value]) => (
                 <div key={name} className="flex items-baseline gap-3 mb-2">
-                  <span style={{ fontFamily: "monospace", ...TEXT_STYLE.label, color: theme.primary, width: "80px" }}>{name}</span>
+                  <span style={{ fontFamily: "monospace", ...TEXT_STYLE.label, color: theme.primaryOn, width: "80px" }}>{name}</span>
                   <span style={{ fontFamily: theme.fontFamily, fontSize: TYPE_SCALE.md, fontWeight: value, color: theme.textHeading }}>{value} — The quick brown fox</span>
                 </div>
               ))}
@@ -472,7 +472,7 @@ export function TokenGallery({ onClose }: { onClose: () => void }) {
             <Section title="LEADING — Line Height Scale">
               {Object.entries(LEADING).map(([name, value]) => (
                 <div key={name} className="flex items-baseline gap-3 mb-2">
-                  <span style={{ fontFamily: "monospace", ...TEXT_STYLE.label, color: theme.primary, width: "70px" }}>{name}</span>
+                  <span style={{ fontFamily: "monospace", ...TEXT_STYLE.label, color: theme.primaryOn, width: "70px" }}>{name}</span>
                   <span style={{ fontFamily: "monospace", ...TEXT_STYLE.caption, color: theme.textMuted }}>{value}</span>
                 </div>
               ))}

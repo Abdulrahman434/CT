@@ -431,18 +431,18 @@ export default function KidsHomescreen({
               >
                 {mascotMood}
               </div>
-              <p style={{ fontFamily: headFont, fontSize: 14, fontWeight: 700, color: theme.primary, textAlign: "center", lineHeight: 1.2 }}>
+              <p style={{ fontFamily: headFont, fontSize: 14, fontWeight: 700, color: theme.primaryOn, textAlign: "center", lineHeight: 1.2 }}>
                 {greetingEmoji} {t(greetingKey)},
               </p>
               <p style={{ fontFamily: headFont, fontSize: 26, fontWeight: 800, color: brandInk, textAlign: "center", lineHeight: 1.05 }}>
                 {t("kids.name", firstName)}
               </p>
               {displayMrn && (
-                <p style={{ fontSize: 11.5, fontWeight: 700, color: theme.primary, textAlign: "center", lineHeight: 1.25, opacity: 0.85 }}>
+                <p style={{ fontSize: 11.5, fontWeight: 700, color: theme.primaryOn, textAlign: "center", lineHeight: 1.25, opacity: 0.85 }}>
                   MRN: {displayMrn}
                 </p>
               )}
-              <p style={{ fontSize: 12, fontWeight: 700, color: theme.primary, textAlign: "center", lineHeight: 1.25 }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: theme.primaryOn, textAlign: "center", lineHeight: 1.25 }}>
                 {t("kids.happyHere")}
               </p>
             </div>
@@ -493,7 +493,7 @@ export default function KidsHomescreen({
                   👩‍⚕️
                 </div>
                 <div className={isRTL ? "text-right" : ""}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: theme.primary, opacity: 0.85 }}>{t("kids.yourNurse")}</p>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: theme.primaryOn, opacity: 0.85 }}>{t("kids.yourNurse")}</p>
                   <p style={{ fontFamily: headFont, fontSize: 15, fontWeight: 800, color: brandInk, lineHeight: 1.1 }}>{nurseName}</p>
                 </div>
               </button>
@@ -691,7 +691,7 @@ export default function KidsHomescreen({
               }}
             >
               <span style={{ fontSize: 26, lineHeight: 1 }}>✨</span>
-              <span style={{ fontFamily: headFont, fontSize: 10.5, fontWeight: 800, color: theme.primary, textAlign: "center", padding: "0 2px", lineHeight: 1.05 }}>{t("kids.more.title")}</span>
+              <span style={{ fontFamily: headFont, fontSize: 10.5, fontWeight: 800, color: theme.primaryOnLight, textAlign: "center", padding: "0 2px", lineHeight: 1.05 }}>{t("kids.more.title")}</span>
             </button>
           </div>
         </div>
@@ -837,7 +837,7 @@ export default function KidsHomescreen({
               <button
                 onClick={() => setMoreOpen(false)}
                 className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
-                style={{ width: 52, height: 52, borderRadius: 9999, backgroundColor: pageBg, border: `3px solid ${theme.primary}`, fontSize: 26, fontWeight: 900, color: theme.primary, outline: "none" }}
+                style={{ width: 52, height: 52, borderRadius: 9999, backgroundColor: pageBg, border: `3px solid ${theme.primaryOn}`, fontSize: 26, fontWeight: 900, color: theme.primaryOn, outline: "none" }}
                 aria-label="Close"
               >
                 ✕

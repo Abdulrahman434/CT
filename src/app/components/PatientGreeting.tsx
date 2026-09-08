@@ -97,10 +97,11 @@ export function PatientGreeting({
       className={`relative overflow-hidden w-full ${fillImage ? "flex-1 flex flex-col min-h-0" : "shrink-0"}`}
       style={{
         textAlign: isRTL ? "right" : "left",
-        backgroundColor: theme.surface,
+        backgroundColor: theme.engagementSurface,
+        backgroundImage: theme.engagementCardGradient,
         borderRadius: theme.radiusCard,
         boxShadow: SHADOW.md,
-        border: theme.cardBorder,
+        border: theme.engagementCardBorder,
       }}
     >
       {rippleElements}
@@ -123,7 +124,7 @@ export function PatientGreeting({
         }}
         aria-label="Application Tour"
       >
-        <HelpCircle size={20} style={{ color: theme.primary }} strokeWidth={2} />
+        <HelpCircle size={20} style={{ color: theme.primaryOn }} strokeWidth={2} />
       </button>
 
       {/* Text content */}
@@ -183,7 +184,7 @@ export function PatientGreeting({
                 style={{
                   fontFamily: fontFamily,
                   ...TEXT_STYLE.pill,
-                  color: theme.primary,
+                  color: theme.primaryOn,
                 }}
               >
                 {t("greeting.mrn")} {displayMrn}
@@ -198,7 +199,7 @@ export function PatientGreeting({
                 style={{
                   fontFamily: fontFamily,
                   ...TEXT_STYLE.pill,
-                  color: theme.primary,
+                  color: theme.primaryOn,
                 }}
               >
                 {t("greeting.room", displayRoom)}
@@ -215,7 +216,7 @@ export function PatientGreeting({
                 <span style={{
                   fontFamily,
                   ...TEXT_STYLE.pill,
-                  color: theme.primary,
+                  color: theme.primaryOn,
                 }}>
                   {t("greeting.bed")} {displayBed}
                 </span>
@@ -235,7 +236,7 @@ export function PatientGreeting({
                 style={{
                   fontFamily: fontFamily,
                   ...TEXT_STYLE.pill,
-                  color: "#EF4444",
+                  color: theme.errorOnLight,
                   fontWeight: WEIGHT.bold,
                 }}
               >
@@ -293,12 +294,12 @@ export function PatientGreeting({
             }}
             onPointerLeave={() => setPressed(false)}
           >
-            <AboutUsIcon color={theme.textInverse} />
+            <AboutUsIcon color={theme.brandOnPrimary} />
             <span
               style={{
                 fontFamily: fontFamily,
                 ...TEXT_STYLE.buttonSm,
-                color: theme.textInverse,
+                color: theme.brandOnPrimary,
                 letterSpacing: "0.3px",
               }}
             >

@@ -80,7 +80,7 @@ export function IptvChannels({ onClose }: { onClose: () => void }) {
             <ArrowLeft size={24} color={theme.textHeading} />
           </button>
           <div className="flex items-center gap-3">
-            <Tv size={28} color={theme.primary} strokeWidth={2.5} />
+            <Tv size={28} color={theme.primaryOn} strokeWidth={2.5} />
             <h1
               style={{
                 fontFamily: fontFamily,
@@ -149,12 +149,12 @@ export function IptvChannels({ onClose }: { onClose: () => void }) {
               border: `1px solid ${theme.primary}30`
             }}
           >
-            <AlertCircle size={28} color={theme.primary} />
+            <AlertCircle size={28} color={theme.primaryOn} />
             <span style={{ 
               fontFamily: fontFamily, 
               fontSize: TYPE_SCALE.lg, 
               fontWeight: WEIGHT.medium, 
-              color: theme.primary 
+              color: theme.primaryOn 
             }}>
               {t("tv.onlyOnKiosk") || "TV is only available on the kiosk"}
             </span>

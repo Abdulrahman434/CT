@@ -363,7 +363,7 @@ export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
       dir={isRTL ? "rtl" : "ltr"}
       className="absolute inset-0 z-50 flex flex-col overflow-hidden"
       style={{
-        background: `linear-gradient(160deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`,
+        background: theme.pageGradientFlat,
         fontFamily,
         // CSS vars used by the hover/focus rules below (keeps colours brand-driven)
         ["--ns-primary" as any]: theme.primary,
@@ -468,12 +468,12 @@ export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
                 marginBottom: SPACE[3],
               }}
             >
-              <CheckCircle2 size={72} color={theme.success} strokeWidth={2} />
+              <CheckCircle2 size={72} color={theme.successOn} strokeWidth={2} />
             </motion.div>
             <h2 style={{ ...TEXT_STYLE.display, fontFamily, fontSize: TYPE_SCALE["2xl"], color: theme.textHeading }}>
               {t("need.success.title")}
             </h2>
-            <p style={{ ...TEXT_STYLE.subtitle, fontFamily, color: theme.primary, marginTop: 8 }}>
+            <p style={{ ...TEXT_STYLE.subtitle, fontFamily, color: theme.primaryOn, marginTop: 8 }}>
               {success === "report" ? t("need.success.subtitleReport") : t("need.success.subtitle")}
             </p>
             <p style={{ ...TEXT_STYLE.body, fontFamily, color: theme.textMuted, marginTop: 6, maxWidth: 440, lineHeight: LEADING.relaxed }}>
@@ -551,7 +551,7 @@ export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
                         padding: "0 8px",
                         borderRadius: theme.radiusFull,
                         backgroundColor: active ? "rgba(255,255,255,0.22)" : theme.primarySubtle,
-                        color: active ? theme.textInverse : theme.primary,
+                        color: active ? theme.textInverse : theme.primaryOn,
                         fontFamily,
                         fontSize: TYPE_SCALE.sm,
                         fontWeight: WEIGHT.bold,
@@ -587,7 +587,7 @@ export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
                       borderRadius: theme.radiusFull,
                       backgroundColor: theme.errorSubtle,
                       border: `1px solid color-mix(in srgb, ${theme.error} 35%, transparent)`,
-                      color: theme.error,
+                      color: theme.errorOn,
                       outline: "none",
                     }}
                     onMouseEnter={(e) => {
@@ -597,8 +597,8 @@ export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
                       e.currentTarget.style.backgroundColor = theme.errorSubtle;
                     }}
                   >
-                    <Wrench size={15} color={theme.error} strokeWidth={2.4} />
-                    <span style={{ ...TEXT_STYLE.buttonSm, fontFamily, color: theme.error }}>
+                    <Wrench size={15} color={theme.errorOn} strokeWidth={2.4} />
+                    <span style={{ ...TEXT_STYLE.buttonSm, fontFamily, color: theme.errorOn }}>
                       {t("need.tab.report")}
                     </span>
                   </button>
@@ -761,7 +761,7 @@ export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
                                   backgroundColor: theme.primaryLight,
                                 }}
                               >
-                                <CardIcon size={48} color={theme.primary} strokeWidth={1.8} />
+                                <CardIcon size={48} color={theme.primaryOnLight} strokeWidth={1.8} />
                               </div>
                               <div
                                 className="shrink-0 text-center"
@@ -856,7 +856,7 @@ export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
                     lineHeight: 1,
                   }}
                 >
-                  <selected.card.Icon size={34} color={selected.kind === "report" ? theme.error : theme.primary} strokeWidth={1.8} />
+                  <selected.card.Icon size={34} color={selected.kind === "report" ? theme.errorOn : theme.primaryOn} strokeWidth={1.8} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p style={{ ...TEXT_STYLE.sectionTitle, fontFamily, color: theme.textHeading }}>
@@ -887,7 +887,7 @@ export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
                           fontFamily,
                           fontSize: TYPE_SCALE.base,
                           fontWeight: isActive ? WEIGHT.bold : WEIGHT.medium,
-                          color: isActive ? theme.error : theme.textHeading,
+                          color: isActive ? theme.errorOn : theme.textHeading,
                         }}
                       >
                         {t(chipKey)}
@@ -995,14 +995,14 @@ export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
               style={{ backgroundColor: "#fff", boxShadow: "0 12px 48px rgba(0,0,0,0.25)" }}
             >
               {/* Overlay header */}
-              <div className="shrink-0 flex items-center justify-between px-8 py-5" style={{ borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
+              <div className="shrink-0 flex items-center justify-between px-8 py-5" style={{ borderBottom: `1px solid ${theme.borderDefault}` }}>
                 <div className="flex items-center gap-3">
                   <div style={{
                     width: 40, height: 40, borderRadius: 10,
                     backgroundColor: theme.primaryLight,
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
-                    <ClipboardList size={20} color={theme.primary} />
+                    <ClipboardList size={20} color={theme.primaryOnLight} />
                   </div>
                   <span style={{ fontFamily, fontSize: "20px", fontWeight: WEIGHT.bold, color: theme.textHeading }}>
                     {t("need.tab.mine")}
@@ -1032,7 +1032,7 @@ export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
                         backgroundColor: theme.primarySubtle,
                       }}
                     >
-                      <Inbox size={44} color={theme.primary} strokeWidth={1.8} />
+                      <Inbox size={44} color={theme.primaryOn} strokeWidth={1.8} />
                     </div>
                     <p style={{ ...TEXT_STYLE.sectionTitle, fontFamily, color: theme.textHeading }}>
                       {t("need.empty.title")}
@@ -1070,7 +1070,7 @@ export function NeedSomething({ onClose, initialTab }: NeedSomethingProps) {
                             }}
                           >
                             {RowIcon ? (
-                              <RowIcon size={30} color={theme.primary} strokeWidth={1.8} />
+                              <RowIcon size={30} color={theme.primaryOnLight} strokeWidth={1.8} />
                             ) : (
                               r.emoji
                             )}

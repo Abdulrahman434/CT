@@ -326,7 +326,7 @@ export function MemoryGame({ onClose, onBackToGames }: { onClose: () => void; on
           <div className="flex items-center gap-4">
             <div className="flex flex-col items-end">
               <span style={{ fontFamily, fontSize: '12px', color: theme.textMuted }}>{gt.best}: {bestScores[difficulty] ? formatTime(bestScores[difficulty]) : '--:--'}</span>
-              <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: theme.primary }}>{formatTime(timer)}</span>
+              <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: theme.primaryOn }}>{formatTime(timer)}</span>
             </div>
             <div
               className="px-6 py-3"
@@ -340,7 +340,7 @@ export function MemoryGame({ onClose, onBackToGames }: { onClose: () => void; on
                   fontFamily: fontFamily,
                   fontSize: TYPE_SCALE.md,
                   fontWeight: WEIGHT.semibold,
-                  color: theme.primary,
+                  color: theme.primaryOn,
                 }}
               >
                 {gt.moves}: {moves}
@@ -463,7 +463,7 @@ export function MemoryGame({ onClose, onBackToGames }: { onClose: () => void; on
             }}
           >
             <div className="w-24 h-24 rounded-full bg-primarySubtle flex items-center justify-center" style={{ backgroundColor: theme.primarySubtle }}>
-              <RotateCcw size={48} color={theme.primary} />
+              <RotateCcw size={48} color={theme.primaryOn} />
             </div>
 
             <div className="text-center gap-2 flex flex-col">
@@ -479,7 +479,7 @@ export function MemoryGame({ onClose, onBackToGames }: { onClose: () => void; on
               <button
                 onClick={loadGameState}
                 className="w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-95"
-                style={{ backgroundColor: theme.primary, color: theme.textInverse, fontSize: TYPE_SCALE.md }}
+                style={{ backgroundColor: theme.primary, color: theme.brandOnPrimary, fontSize: TYPE_SCALE.md }}
               >
                 {gt.continuePlaying}
               </button>
@@ -514,7 +514,7 @@ export function MemoryGame({ onClose, onBackToGames }: { onClose: () => void; on
               border: theme.cardBorder,
             }}
           >
-            <Trophy size={80} color={theme.primary} strokeWidth={1.5} />
+            <Trophy size={80} color={theme.primaryOn} strokeWidth={1.5} />
             <h2
               style={{
                 fontFamily: fontFamily,
@@ -535,8 +535,8 @@ export function MemoryGame({ onClose, onBackToGames }: { onClose: () => void; on
               }}
             >
               {gt.memoryWin(difficulty, moves)}<br />
-              {gt.finalTime}: <span style={{ color: theme.primary, fontWeight: WEIGHT.bold }}>{formatTime(timer)}</span><br />
-              {gt.bestTime}: <span style={{ color: theme.primary, fontWeight: WEIGHT.bold }}>{formatTime(bestScores[difficulty])}</span>
+              {gt.finalTime}: <span style={{ color: theme.primaryOn, fontWeight: WEIGHT.bold }}>{formatTime(timer)}</span><br />
+              {gt.bestTime}: <span style={{ color: theme.primaryOn, fontWeight: WEIGHT.bold }}>{formatTime(bestScores[difficulty])}</span>
             </p>
             <div className="flex gap-4 mt-4">
               <button

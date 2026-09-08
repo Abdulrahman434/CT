@@ -271,15 +271,15 @@ export function BrainMathGame({ onClose, onBackToGames }: { onClose: () => void;
                 />
               ))}
             </div>
-            <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: "#EF4444" }}>
+            <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: theme.errorOn }}>
               {gt.lives}: {lives}
             </span>
           </div>
 
           {/* Score Indicator */}
           <div className="flex items-center gap-3 px-6 py-3 bg-blue-50 rounded-2xl border border-blue-100 shadow-sm">
-            <Trophy size={24} color={theme.primary} />
-            <span style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.extrabold, color: theme.primary }}>
+            <Trophy size={24} color={theme.primaryOn} />
+            <span style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.extrabold, color: theme.primaryOn }}>
               {gt.score}: {score}
             </span>
           </div>
@@ -295,7 +295,7 @@ export function BrainMathGame({ onClose, onBackToGames }: { onClose: () => void;
         {gameState === "idle" && (
           <div className="flex flex-col items-center gap-8 max-w-md text-center">
             <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center shadow-inner">
-              <Brain size={64} color={theme.primary} />
+              <Brain size={64} color={theme.primaryOn} />
             </div>
             <h2 className="text-4xl font-black" style={{ color: theme.textHeading }}>{gt.mentalMath}</h2>
             <p className="text-lg opacity-80" style={{ color: theme.textNormal }}>{gt.mathInstructions}</p>
@@ -369,7 +369,7 @@ export function BrainMathGame({ onClose, onBackToGames }: { onClose: () => void;
         {gameState === "gameover" && (
           <div className="flex flex-col items-center gap-8 max-w-md text-center">
             <div className="w-32 h-32 bg-red-50 rounded-full flex items-center justify-center shadow-inner">
-              <Zap size={64} color="#EF4444" />
+              <Zap size={64} color={theme.errorOn} />
             </div>
             <div>
               <h2 className="text-4xl font-black text-red-500">{gt.gameOver}</h2>
@@ -430,7 +430,7 @@ export function BrainMathGame({ onClose, onBackToGames }: { onClose: () => void;
             }}
           >
             <div className="w-24 h-24 rounded-full bg-primarySubtle flex items-center justify-center" style={{ backgroundColor: theme.primarySubtle }}>
-              <RotateCcw size={48} color={theme.primary} />
+              <RotateCcw size={48} color={theme.primaryOn} />
             </div>
 
             <div className="text-center gap-2 flex flex-col">
@@ -446,7 +446,7 @@ export function BrainMathGame({ onClose, onBackToGames }: { onClose: () => void;
               <button
                 onClick={loadGameState}
                 className="w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-95"
-                style={{ backgroundColor: theme.primary, color: theme.textInverse, fontSize: TYPE_SCALE.md }}
+                style={{ backgroundColor: theme.primary, color: theme.brandOnPrimary, fontSize: TYPE_SCALE.md }}
               >
                 {gt.continuePlaying}
               </button>

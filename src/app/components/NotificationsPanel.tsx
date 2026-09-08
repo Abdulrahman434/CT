@@ -102,12 +102,12 @@ const markHardcodedHidden = (id: string) => {
 function NotifIcon({ type }: { type: string }) {
   const { theme } = useTheme();
   switch (type) {
-    case "megaphone": return <Megaphone size={20} style={{ color: theme.primary }} />;
+    case "megaphone": return <Megaphone size={20} style={{ color: theme.primaryOn }} />;
     case "message": return <MessageSquare size={20} style={{ color: "#25D366" }} />;
-    case "stethoscope": return <Stethoscope size={20} style={{ color: theme.primary }} />;
+    case "stethoscope": return <Stethoscope size={20} style={{ color: theme.primaryOn }} />;
     case "food": return <UtensilsCrossed size={20} style={{ color: "#E8A530" }} />;
-    case "download": return <Download size={20} style={{ color: theme.primary }} />;
-    default: return <Bell size={20} style={{ color: theme.primary }} />;
+    case "download": return <Download size={20} style={{ color: theme.primaryOn }} />;
+    default: return <Bell size={20} style={{ color: theme.primaryOn }} />;
   }
 }
 
@@ -502,7 +502,7 @@ export function NotificationsPanel({
                 backgroundColor: theme.primarySubtle,
               }}
             >
-              <Bell size={22} style={{ color: theme.primary }} />
+              <Bell size={22} style={{ color: theme.primaryOn }} />
               {unreadCount > 0 && (
                 <div
                   className="absolute flex items-center justify-center"
@@ -585,7 +585,7 @@ export function NotificationsPanel({
                 fontFamily,
                 ...TEXT_STYLE.micro,
                 fontWeight: WEIGHT.bold,
-                color: showHistory ? theme.textInverse : theme.primary,
+                color: showHistory ? theme.textInverse : theme.primaryOn,
                 letterSpacing: "0.5px",
               }}
             >
@@ -611,7 +611,7 @@ export function NotificationsPanel({
                 ...TEXT_STYLE.label,
                 fontSize: "13.5px",
                 fontWeight: WEIGHT.bold,
-                color: unreadCount > 0 ? theme.primary : theme.textDisabled,
+                color: unreadCount > 0 ? theme.primaryOn : theme.textDisabled,
                 border: "none",
                 background: unreadCount > 0 ? theme.primarySubtle : "none",
                 padding: "10px 16px",
@@ -879,7 +879,7 @@ export function NotificationsPanel({
                           </>
                         ) : (
                           <>
-                            <Check size={12} style={{ color: theme.success }} />
+                            <Check size={12} style={{ color: theme.successOn }} />
                             <span
                               style={{
                                 fontFamily: fontFamily,

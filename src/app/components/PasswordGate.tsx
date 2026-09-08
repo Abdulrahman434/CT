@@ -341,7 +341,7 @@ export function PasswordGate() {
                 {error && (
                   <p
                     style={{
-                      color: "#EF4444",
+                      color: theme.errorOn,
                       fontSize: "13px",
                       fontWeight: 500,
                       margin: 0,

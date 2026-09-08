@@ -330,7 +330,7 @@ export function BreathingTool({ onClose, onBackToTools }: { onClose: () => void;
                   fontFamily: fontFamily,
                   fontSize: TYPE_SCALE.base,
                   fontWeight: WEIGHT.semibold,
-                  color: theme.primary,
+                  color: theme.primaryOn,
                 }}
               >
                 {cyclesCompleted} {cyclesCompleted === 1 ? "cycle" : "cycles"} completed

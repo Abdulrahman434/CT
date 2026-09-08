@@ -1269,7 +1269,7 @@ function getCategories(theme: any, locale: string = "en", t: any): Record<string
                 <div className="flex items-center justify-center mb-1.5" style={{ width: 64, height: 64, backgroundColor: item.isVideo ? "#E8453C" : theme.primary, borderRadius: theme.radiusLg }}>
                   {item.isVideo ? <PlayCircle size={32} color="#fff" /> : <BookOpenText size={32} color="#fff" />}
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 800, color: item.isVideo ? "#E8453C" : theme.primary, letterSpacing: 0.5 }}>{item.isVideo ? "VIDEO" : "LINK"}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: item.isVideo ? "#E8453C" : theme.primaryOn, letterSpacing: 0.5 }}>{item.isVideo ? "VIDEO" : "LINK"}</span>
               </div>
             ),
           }))
@@ -1907,7 +1907,7 @@ export function AppLauncher({
     <div
       className="absolute inset-0 z-50 flex flex-col"
       style={{
-        background: `linear-gradient(160deg, ${theme.primary} 0%, ${theme.primaryDark} 40%, #0a1628 100%)`,
+        background: theme.pageGradient,
         animation: "appLauncherIn 0.2s ease-out",
       }}
     >
@@ -2119,7 +2119,7 @@ export function AppLauncher({
         >
           <InternalPageHeader 
             title={locale === "ar" ? "متصفح الروابط" : "URL Browser"}
-            icon={<Globe size={26} color={theme.primary} />}
+            icon={<Globe size={26} color={theme.primaryOn} />}
             onClose={() => setShowUrlNavigator(false)}
           />
           
@@ -2151,7 +2151,7 @@ export function AppLauncher({
                 <button 
                   type="submit"
                   className="px-12 font-bold text-xl transition-all active:scale-95"
-                  style={{ backgroundColor: theme.primary, color: theme.textInverse }}
+                  style={{ backgroundColor: theme.primary, color: theme.brandOnPrimary }}
                 >
                   GO
                 </button>
@@ -2244,7 +2244,7 @@ export function AppLauncher({
               justifyContent: "center",
               animation: "breathePulse 1.6s ease-in-out infinite",
             }}>
-              <Download size={28} style={{ color: theme.primary }} />
+              <Download size={28} style={{ color: theme.primaryOn }} />
             </div>
 
             {/* App name */}
@@ -2312,7 +2312,7 @@ export function AppLauncher({
               display: "flex", alignItems: "center", justifyContent: "center",
               animation: "breathePulse 1.6s ease-in-out infinite",
             }}>
-              <PlayCircle size={28} style={{ color: theme.primary }} />
+              <PlayCircle size={28} style={{ color: theme.primaryOn }} />
             </div>
             <p style={{
               fontFamily: theme.fontFamily, fontSize: "17px", fontWeight: 700,

@@ -354,7 +354,7 @@ export function RemindersTool({
                 {newPushNotify && <Check size={16} color="#fff" strokeWidth={3} />}
               </button>
               <div className="flex items-center gap-2">
-                <BellRing size={18} color={newPushNotify ? theme.primary : theme.textMuted} />
+                <BellRing size={18} color={newPushNotify ? theme.primaryOn : theme.textMuted} />
                 <span
                   style={{
                     fontFamily: fontFamily,
@@ -498,7 +498,7 @@ export function RemindersTool({
                     }}
                   >
                     {reminder.pushNotify ? (
-                      <BellRing size={20} color={theme.primary} />
+                      <BellRing size={20} color={theme.primaryOn} />
                     ) : (
                       <Bell size={20} color={theme.textDisabled} />
                     )}

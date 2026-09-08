@@ -270,7 +270,7 @@ export function ImageJigsawGame({ onClose, onBackToGames }: { onClose: () => voi
             <>
               <div className="flex flex-col items-end">
                 <span style={{ fontFamily, fontSize: '12px', color: theme.textMuted }}>{gt.moves}: {moves}</span>
-                <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: theme.primary }}>{formatTime(timer)}</span>
+                <span style={{ fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.bold, color: theme.primaryOn }}>{formatTime(timer)}</span>
               </div>
               <button
                 onClick={() => setShowNumbers(!showNumbers)}
@@ -367,7 +367,7 @@ export function ImageJigsawGame({ onClose, onBackToGames }: { onClose: () => voi
                       {selectedImageIndex === idx && (
                         <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
                           <div className="bg-white rounded-full p-2 shadow-lg">
-                            <Trophy size={20} color={theme.primary} />
+                            <Trophy size={20} color={theme.primaryOn} />
                           </div>
                         </div>
                       )}
@@ -529,7 +529,7 @@ export function ImageJigsawGame({ onClose, onBackToGames }: { onClose: () => voi
             }}
           >
             <div className="w-24 h-24 rounded-full bg-primarySubtle flex items-center justify-center" style={{ backgroundColor: theme.primarySubtle }}>
-              <RotateCcw size={48} color={theme.primary} />
+              <RotateCcw size={48} color={theme.primaryOn} />
             </div>
 
             <div className="text-center gap-2 flex flex-col">
@@ -545,7 +545,7 @@ export function ImageJigsawGame({ onClose, onBackToGames }: { onClose: () => voi
               <button
                 onClick={loadGameState}
                 className="w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-95"
-                style={{ backgroundColor: theme.primary, color: theme.textInverse, fontSize: TYPE_SCALE.md }}
+                style={{ backgroundColor: theme.primary, color: theme.brandOnPrimary, fontSize: TYPE_SCALE.md }}
               >
                 {gt.continuePlaying}
               </button>

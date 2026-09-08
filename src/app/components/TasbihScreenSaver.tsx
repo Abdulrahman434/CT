@@ -1113,11 +1113,11 @@ export function TasbihScreenSaver({ onClose }: TasbihScreenSaverProps) {
                   height: "56px", paddingLeft: "28px", paddingRight: "28px",
                   backgroundColor: "#FFFFFF", borderRadius: theme.radiusLg,
                   border: "none", fontFamily: theme.fontFamily, fontSize: TYPE_SCALE.lg,
-                  fontWeight: WEIGHT.semibold, color: theme.primary, outline: "none",
+                  fontWeight: WEIGHT.semibold, color: theme.primaryOnLight, outline: "none",
                   boxShadow: `0 4px 16px rgba(0,0,0,0.15)`,
                 }}
               >
-                <RotateCcw size={22} strokeWidth={2} color={theme.primary} />
+                <RotateCcw size={22} strokeWidth={2} color={theme.primaryOnLight} />
                 {t("tasbih.reset")}
               </motion.button>
             )}

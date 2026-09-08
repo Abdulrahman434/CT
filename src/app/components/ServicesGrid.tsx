@@ -275,7 +275,7 @@ function ServiceCard({ item, onTap, square, contained, compact, onLongPress, isL
         height: square ? undefined : undefined,
         padding: square ? "0 28px 0 18px" : "0",
         backgroundColor: pressed ? theme.primary : theme.engagementSurface,
-        backgroundImage: pressed ? "none" : theme.engagementCardGradient,
+        backgroundImage: pressed ? "none" : theme.engagementCardGradientShort,
         borderRadius: compact ? theme.radiusXl : theme.radiusCard,
         boxShadow: pressed
           ? `0px 2px 8px 0px ${theme.primarySubtle}`
@@ -368,14 +368,15 @@ function SurveyCardFilled({ onOpen, compact, onLongPress, isLocked }: { onOpen: 
       onClick={(e) => handleClick(() => onOpen(e))}
       className={`relative overflow-hidden flex flex-col items-center justify-center ${compact ? "gap-1" : "gap-3"} w-full h-full transition-transform duration-150 cursor-pointer`}
       style={{
-        backgroundColor: pressed ? theme.accent : theme.surface,
+        backgroundColor: pressed ? theme.accent : theme.engagementSurface,
+        backgroundImage: pressed ? "none" : theme.engagementCardGradientShort,
         borderRadius: theme.radiusCard,
         boxShadow: pressed
           ? `0px 2px 8px 0px ${theme.accentSubtle}`
           : SHADOW.md,
         outline: "none",
         transform: pressed ? "scale(0.96)" : "scale(1)",
-        border: pressed ? "none" : theme.cardBorder,
+        border: pressed ? "none" : theme.engagementCardBorder,
       }}
       aria-label="Survey"
     >
@@ -446,14 +447,14 @@ function SurveyCard({ square, contained, onOpen, onLongPress, isLocked }: { squa
           transition: "background-color 0.15s",
         }}
       >
-        <MessageSquareMore size={40} color={pressed ? theme.textInverse : theme.accent} strokeWidth={1.5} />
+        <MessageSquareMore size={40} color={pressed ? theme.textInverse : theme.accentOn} strokeWidth={1.5} />
       </div>
       <span
         style={{
           fontFamily: theme.fontFamily,
           ...TEXT_STYLE.pageTitle,
           fontWeight: WEIGHT.semibold,
-          color: pressed ? theme.textInverse : theme.accent,
+          color: pressed ? theme.textInverse : theme.accentOn,
           lineHeight: "26px",
           textAlign: "center",
           transition: "color 0.15s",
@@ -756,7 +757,7 @@ function AboutUsButton({ onTap, onLongPress, isLocked }: { onTap: () => void; on
           transition: "background-color 0.15s",
         }}
       >
-        <HubIcon label="About Us" color={pressed ? theme.textInverse : theme.primary} />
+        <HubIcon label="About Us" color={pressed ? theme.textInverse : theme.primaryOn} />
       </div>
       <span
         style={{
@@ -876,7 +877,7 @@ export function ServicesGrid({
                 {isHubItemVisible(top.label) ? (
                   <HubCard
                     item={top}
-                    onTap={(e) => handleTileTap(e, top.labelKey, t(top.labelKey), <HubIcon label={top.label} color={theme.primary} />, lockedIds.has(top.labelKey), () => onOpenCategory?.(top.label))}
+                    onTap={(e) => handleTileTap(e, top.labelKey, t(top.labelKey), <HubIcon label={top.label} color={theme.primaryOn} />, lockedIds.has(top.labelKey), () => onOpenCategory?.(top.label))}
                     onLongPress={() => handleTileLongPress(top.labelKey, t(top.labelKey), lockedIds.has(top.labelKey))}
                     isLocked={lockedIds.has(top.labelKey)}
                     contained={contained}
@@ -888,7 +889,7 @@ export function ServicesGrid({
                 {isHubItemVisible(bottom.label) ? (
                   <HubCard
                     item={bottom}
-                    onTap={(e) => handleTileTap(e, bottom.labelKey, t(bottom.labelKey), <HubIcon label={bottom.label} color={theme.primary} />, lockedIds.has(bottom.labelKey), () => onOpenCategory?.(bottom.label))}
+                    onTap={(e) => handleTileTap(e, bottom.labelKey, t(bottom.labelKey), <HubIcon label={bottom.label} color={theme.primaryOn} />, lockedIds.has(bottom.labelKey), () => onOpenCategory?.(bottom.label))}
                     onLongPress={() => handleTileLongPress(bottom.labelKey, t(bottom.labelKey), lockedIds.has(bottom.labelKey))}
                     isLocked={lockedIds.has(bottom.labelKey)}
                     contained={contained}
@@ -914,10 +915,11 @@ export function ServicesGrid({
             <div
               className="col-span-4 grid grid-cols-4 gap-2 h-full items-center"
               style={{
-                backgroundColor: theme.surface,
+                backgroundColor: theme.engagementSurface,
+                backgroundImage: theme.engagementCardGradient,
                 borderRadius: theme.radiusCard,
                 boxShadow: SHADOW.md,
-                border: theme.cardBorder,
+                border: theme.engagementCardBorder,
                 padding: "12px 16px",
               }}
             >
@@ -1131,10 +1133,11 @@ export function ShortcutsColumn({ contained, onOpenSurvey, onLaunchTool, swapped
       <div
         className="flex flex-col gap-3 flex-1 min-h-0"
         style={{
-          backgroundColor: contained ? "transparent" : theme.surface,
+          backgroundColor: contained ? "transparent" : theme.engagementSurface,
+          backgroundImage: contained ? "none" : theme.engagementCardGradient,
           borderRadius: theme.radiusCard,
           boxShadow: contained ? "none" : SHADOW.md,
-          border: contained ? "none" : theme.cardBorder,
+          border: contained ? "none" : theme.engagementCardBorder,
           padding: "16px",
         }}
       >

@@ -280,6 +280,12 @@ export interface ThemeConfig {
   /** Pre-composed card border — "none" in light, subtle luminous edge in dark */
   cardBorder: string;
 
+  /** Inset panel *inside* a card (a section block, a grouped list). Neutral
+   *  rather than brand-tinted, and mode-aware so the edge stays visible in
+   *  dark mode — hardcoded rgba(0,0,0,…) borders vanish there. */
+  surfaceInset: string;
+  borderInset: string;
+
   /* ── Engagement tiles (hub + service grid) ──
    * All derived from `primary` so every brand gets the same treatment.
    * Bottom-row (filled) tiles pair `primary` with `brandOnPrimary`. */
@@ -287,6 +293,40 @@ export interface ThemeConfig {
   brandOnPrimary: string;
   /** Accessible text/icon color on an `accent` fill */
   brandOnAccent: string;
+
+  /* ── Foreground-safe brand colors ──────────────────────────────────────────
+   * Use these for TEXT, ICONS and BORDERS drawn *in* the brand color on an app
+   * surface. In light mode they are the brand hex; in dark mode they are the
+   * same hue lifted until it clears AA on the lightest surface it can land on.
+   * `primary`/`accent` stay raw and remain correct for FILLS, which pair with
+   * `brandOnPrimary`/`brandOnAccent`. */
+  primaryOn: string;
+  accentOn: string;
+  /** Brand foreground for surfaces that stay LIGHT in both modes (hardcoded
+   *  white cards, printed-style panels). Always derived against white, so it
+   *  does not get lifted when dark mode is active. */
+  primaryOnLight: string;
+  accentOnLight: string;
+
+  /** Full-bleed inner-page backdrop (Social, Games, About Us, Food, Call…).
+   *  Brand-saturated in light mode; brand-tinted but genuinely dark in dark
+   *  mode, so inner pages stop looking identical in both themes. */
+  pageGradient: string;
+  /** Two-stop variant for panels that don't need the deep third stop */
+  pageGradientFlat: string;
+
+  /** Contrast-safe semantic colors for TEXT and ICONS. `success`/`warning`/
+   *  `error`/`info` stay raw for fills and pair with `onSuccess` etc. */
+  successOn: string;
+  warningOn: string;
+  errorOn: string;
+  infoOn: string;
+  /** Semantic foregrounds for surfaces that stay LIGHT in both modes
+   *  (hardcoded pale chips such as the #FEE2E2 logout pill). */
+  successOnLight: string;
+  warningOnLight: string;
+  errorOnLight: string;
+  infoOnLight: string;
 
   /* ── Interaction states — derived per brand color, never hardcoded ── */
   primaryHover: string;      primaryHoverOn: string;
@@ -318,6 +358,11 @@ export interface ThemeConfig {
   engagementFill: string;
   /** Accessible glyph color on `engagementFill` */
   engagementOnFill: string;
+  /** Opaque color at the top of the card gradient */
+  engagementTint: string;
+  /** Card gradient for SHORT cards — the tint clears earlier so the surface
+   *  still reads on a low card instead of being swamped by brand color. */
+  engagementCardGradientShort: string;
 
   /* ── Semantic Status ── */
   success: string;           // #22C55E — completed, positive
@@ -353,6 +398,7 @@ function buildTheme(core: {
   fontFamily: string;
   fontFamilyAr: string;
   logoUrl: string;
+  logoUrlDark?: string;
   heroImageUrl: string;
   heroImageUrls?: string[];
   heroCropPosition?: string;
@@ -389,7 +435,8 @@ function buildTheme(core: {
     fontFamilyAr: c.fontFamilyAr,
     fontFamilyMono: `${c.fontFamily.split(",")[0]}, monospace`,
 
-    logoUrl: c.logoUrl || (c.id === "dsfh" ? DSFH_LOGO : c.id === "burjeel" ? burjeelLogo : c.id === "slh" ? slhLogo : c.id === "dallah" ? dallahLogo : c.id === "caremed" ? caremedLogo : c.id === "imc" ? imcLogo : c.id === "careinn" ? careinnLogo : c.id === "prime" ? primeLogo : c.id === "kauh" ? kauhLogo : c.id === "andalusia" ? andalusiaLogo : ""),
+    // Dark mode prefers a light-on-dark mark when the brand supplies one.
+    logoUrl: (dark && c.logoUrlDark) || c.logoUrl || (c.id === "dsfh" ? DSFH_LOGO : c.id === "burjeel" ? burjeelLogo : c.id === "slh" ? slhLogo : c.id === "dallah" ? dallahLogo : c.id === "caremed" ? caremedLogo : c.id === "imc" ? imcLogo : c.id === "careinn" ? careinnLogo : c.id === "prime" ? primeLogo : c.id === "kauh" ? kauhLogo : c.id === "andalusia" ? andalusiaLogo : ""),
     heroImageUrl: c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : c.id === "imc" ? imcHero : c.id === "careinn" ? careinnHero : c.id === "prime" ? primeHero : c.id === "kauh" ? kauhHero : c.id === "andalusia" ? andalusiaHero : ""),
     heroImageUrls: c.heroImageUrls && c.heroImageUrls.length > 0 ? c.heroImageUrls : [c.heroImageUrl || (c.id === "dsfh" ? DSFH_HERO : c.id === "burjeel" ? burjeelHero : c.id === "slh" ? slhHero : c.id === "dallah" ? dallahHero : c.id === "caremed" ? caremedHero : c.id === "imc" ? imcHero : c.id === "careinn" ? careinnHero : c.id === "prime" ? primeHero : c.id === "kauh" ? kauhHero : c.id === "andalusia" ? andalusiaHero : "")],
     heroCropPosition: c.heroCropPosition || "50% 15%",
@@ -422,10 +469,37 @@ function buildTheme(core: {
     /* ── LIGHT MODE ── */
     const P = fillSet(c.primary, "#FFFFFF", false);
     const A = fillSet(c.accent, "#FFFFFF", false);
+    // Brand text/icons in light mode land on white or on a pale brand tint;
+    // the tint is darker, so it is the binding backdrop for dark ink.
+    const ENG_L = engagementTokens(c.primary, c.accent, "#FFFFFF", {
+      tint: 0.09, border: 0.18, iconBg: 0.06, stroke: 0.35,
+      minBorder: 1.35, minIconBg: 1.05, minStroke: 1.7, minGlyph: 4.5,
+    });
+    const chipOnTintL = overlayHex(P.seed, P.subtleAlpha, ENG_L.engagementTint);
+    const backdropsL = ["#FFFFFF", "#F8F8F8", "#F9FAFB", P.subtleSolid, A.subtleSolid,
+      ENG_L.engagementTint, chipOnTintL];
+    const pBackdropL = worstBackdrop(
+      ["#FFFFFF", P.subtleSolid, A.subtleSolid, ENG_L.engagementTint, chipOnTintL], false);
     return {
       ...shared,
       primarySubtle: P.subtle,
       accentSubtle: A.subtle,
+      primaryOn: ensureContrastAll(c.primary, backdropsL, 4.5),
+      accentOn: ensureContrastAll(c.accent, backdropsL, 4.5),
+      surfaceInset: "rgba(0,0,0,0.026)",
+      borderInset: `1px solid ${hexToRgba("#1B2A32", 0.12)}`,
+      primaryOnLight: ensureContrast(c.primary, "#FFFFFF", 4.5),
+      accentOnLight: ensureContrast(c.accent, "#FFFFFF", 4.5),
+      pageGradient: `linear-gradient(160deg, ${c.primary} 0%, ${c.primaryDark} 40%, #0a1628 100%)`,
+      pageGradientFlat: `linear-gradient(160deg, ${c.primary} 0%, ${c.primaryDark} 100%)`,
+      successOn: ensureContrast("#22C55E", pBackdropL, 4.5),
+      warningOn: ensureContrast("#F59E0B", pBackdropL, 4.5),
+      errorOn: ensureContrast("#EF4444", pBackdropL, 4.5),
+      infoOn: ensureContrast("#3B82F6", pBackdropL, 4.5),
+      successOnLight: ensureContrast("#22C55E", "#FFFFFF", 4.5),
+      warningOnLight: ensureContrast("#F59E0B", "#FFFFFF", 4.5),
+      errorOnLight: ensureContrast("#EF4444", "#FFFFFF", 4.5),
+      infoOnLight: ensureContrast("#3B82F6", "#FFFFFF", 4.5),
       ...stateTokens(P, A, "#FFFFFF"),
 
       background: "#FFFFFF",
@@ -437,8 +511,8 @@ function buildTheme(core: {
       textHeading: "#1B2A32",
       textBody: "#1B2A32",
       textNormal: "#1B2A32",
-      textMuted: ensureContrast("#95A3AD", "#FFFFFF", 4.5),
-      textDisabled: ensureContrast("#C0CAD0", "#FFFFFF", 3),
+      textMuted: ensureContrastAll("#95A3AD", backdropsL, 4.5),
+      textDisabled: ensureContrastAll("#C0CAD0", backdropsL, 3),
       textInverse: "#FFFFFF",
       textInverseMuted: "rgba(255,255,255,0.7)",
 
@@ -462,10 +536,7 @@ function buildTheme(core: {
       borderAccent: A.border,
       cardBorder: "none",
 
-      ...engagementTokens(c.primary, c.accent, "#FFFFFF", {
-        tint: 0.09, border: 0.18, iconBg: 0.06, stroke: 0.35,
-        minBorder: 1.35, minIconBg: 1.05, minStroke: 1.7, minGlyph: 4.5,
-      }),
+      ...ENG_L,
 
       gradientCanvas: `linear-gradient(160deg, ${c.primaryLight} 0%, ${lighten(c.primaryLight, 0.3)} 25%, ${lighten(c.primaryLight, 0.5)} 50%, ${lighten(c.primaryLight, 0.6)} 75%, ${lighten(c.primaryLight, 0.65)} 100%)`,
 
@@ -492,15 +563,48 @@ function buildTheme(core: {
   const DARK_TEXT_SEC = "#8B99A4";
   // Lifted until legible on the lightest dark backdrop (DARK_ELEVATED), so the
   // same value stays readable on every darker one. Hue is preserved.
-  const DARK_MUTED = ensureContrast("#5C6B77", DARK_ELEVATED, 4.5);
-  const DARK_DISABLED = ensureContrast("#3D4A54", DARK_ELEVATED, 3);
   const PD = fillSet(c.primary, DARK_SURFACE, true);
   const AD = fillSet(c.accent, DARK_SURFACE, true);
+  // Muted/disabled text also lands on brand-tinted chips and tiles, which are
+  // lighter than the plain card — include those in the backdrop set so the
+  // floor holds for every brand, not just on the neutral surface.
+  const ENG_D = engagementTokens(c.primary, c.accent, ENGAGEMENT_DARK_SURFACE, {
+    tint: 0.17, border: 0.22, iconBg: 0.11, stroke: 0.55,
+    minBorder: 1.55, minIconBg: 1.22, minStroke: 2.0, minGlyph: 4.5,
+  });
+  // Deepest real stack: a brand-tinted chip drawn on the card's gradient top.
+  const chipOnTintD = overlayHex(PD.seed, PD.subtleAlpha, ENG_D.engagementTint);
+  const backdropsD = [DARK_SURFACE, ENGAGEMENT_DARK_SURFACE, DARK_ELEVATED,
+    PD.subtleSolid, AD.subtleSolid, ENG_D.engagementTint, chipOnTintD];
+  const neutralBackdropD = worstBackdrop(
+    [DARK_SURFACE, ENGAGEMENT_DARK_SURFACE, DARK_ELEVATED,
+     PD.subtleSolid, AD.subtleSolid, ENG_D.engagementTint, chipOnTintD], true);
+  const DARK_MUTED = ensureContrastAll("#5C6B77", backdropsD, 4.5);
+  const DARK_DISABLED = ensureContrastAll("#3D4A54", backdropsD, 3);
+  // In dark mode brand text/icons sit on the card, the elevated panel, or a
+  // brand-tinted chip. The lightest of those decides how far we must lift.
+  const pBackdropD = neutralBackdropD;
 
   return {
     ...shared,
     primarySubtle: PD.subtle,
     accentSubtle: AD.subtle,
+    primaryOn: ensureContrastAll(c.primary, backdropsD, 4.5),
+    accentOn: ensureContrastAll(c.accent, backdropsD, 4.5),
+    surfaceInset: "rgba(255,255,255,0.045)",
+    borderInset: `1px solid ${hexToRgba("#FFFFFF", 0.14)}`,
+    primaryOnLight: ensureContrast(c.primary, "#FFFFFF", 4.5),
+    accentOnLight: ensureContrast(c.accent, "#FFFFFF", 4.5),
+    pageGradient: `linear-gradient(160deg, ${mixHex(c.primary, DARK_BG, 0.34)} 0%, ${mixHex(c.primary, DARK_BG, 0.16)} 45%, ${DARK_BG} 100%)`,
+    pageGradientFlat: `linear-gradient(160deg, ${mixHex(c.primary, DARK_BG, 0.34)} 0%, ${mixHex(c.primary, DARK_BG, 0.12)} 100%)`,
+    successOn: ensureContrast("#22C55E", pBackdropD, 4.5),
+    warningOn: ensureContrast("#F59E0B", pBackdropD, 4.5),
+    errorOn: ensureContrast("#EF4444", pBackdropD, 4.5),
+    infoOn: ensureContrast("#3B82F6", pBackdropD, 4.5),
+    successOnLight: ensureContrast("#22C55E", "#FFFFFF", 4.5),
+    warningOnLight: ensureContrast("#F59E0B", "#FFFFFF", 4.5),
+    errorOnLight: ensureContrast("#EF4444", "#FFFFFF", 4.5),
+    infoOnLight: ensureContrast("#3B82F6", "#FFFFFF", 4.5),
     ...stateTokens(PD, AD, DARK_SURFACE),
 
     background: DARK_BG,
@@ -537,10 +641,7 @@ function buildTheme(core: {
     borderAccent: AD.border,
     cardBorder: "1px solid rgba(255,255,255,0.05)",
 
-    ...engagementTokens(c.primary, c.accent, ENGAGEMENT_DARK_SURFACE, {
-      tint: 0.17, border: 0.22, iconBg: 0.11, stroke: 0.55,
-      minBorder: 1.55, minIconBg: 1.22, minStroke: 2.0, minGlyph: 4.5,
-    }),
+    ...ENG_D,
 
     gradientCanvas: `linear-gradient(160deg, ${DARK_BG} 0%, #131920 30%, #161B22 60%, #1C2128 100%)`,
 
@@ -750,6 +851,9 @@ function fillSet(color: string, surface: string, dark: boolean) {
     activeOn: contrastRatio(on, active) >= 3 ? on : onColorFor(active),
     subtle: hexToRgba(seed, subtleA),
     subtleSolid: overlayHex(seed, subtleA, surface),
+    /** alpha of `subtle`, so callers can composite it over another backdrop */
+    subtleAlpha: subtleA,
+    seed,
     selected: overlayHex(seed, selectedA, surface),
     border: hexToRgba(seed, borderA),
     // A focus ring is useless if it cannot be seen, so it is held to the same
@@ -760,6 +864,25 @@ function fillSet(color: string, surface: string, dark: boolean) {
     /** true when the raw color could not meet contrast unaided and was shifted */
     adjusted: seed.toLowerCase() !== base.toLowerCase(),
   };
+}
+
+/** The backdrop that makes a foreground hardest to read.
+ *  We only ever move lightness away from the surface, so on dark backgrounds
+ *  the lightest candidate is the binding constraint and on light backgrounds
+ *  the darkest is. Clearing that one clears all the others. */
+function worstBackdrop(backdrops: string[], dark: boolean): string {
+  return backdrops.reduce((worst, cand) =>
+    (dark ? luminance(cand) > luminance(worst) : luminance(cand) < luminance(worst)) ? cand : worst,
+  backdrops[0]);
+}
+
+/** Clear `minRatio` against EVERY candidate backdrop, not just one guessed by
+ *  luminance. `worstBackdrop` assumes the foreground moves away from the surface
+ *  in a single direction, which holds for a dark navy on white but not for a
+ *  light accent (#4EBEE3) sitting on a pale tint of itself — there the binding
+ *  surface is the lightest, not the darkest. Iterating removes the guess. */
+function ensureContrastAll(color: string, backdrops: string[], minRatio: number): string {
+  return backdrops.reduce((c, bg) => ensureContrast(c, bg, minRatio), color);
 }
 
 /** Flatten two ramps into the named interaction tokens the UI consumes. */
@@ -818,6 +941,10 @@ function engagementTokens(
     engagementOnFill: onColorFor(fill),
     engagementSurface: surface,
     engagementCardGradient: `linear-gradient(180deg, ${tint} 0%, ${surface} 58%)`,
+    engagementCardGradientShort: `linear-gradient(180deg, ${tint} 0%, ${surface} 32%)`,
+    /** Opaque color at the very top of the card gradient — the lightest point
+     *  text can sit on, so neutral text tokens must clear it. */
+    engagementTint: tint,
     engagementCardBorder: `1px solid ${hexToRgba(glyph, borderAlpha)}`,
     engagementIconBg: iconBg,
     engagementIconStroke: hexToRgba(glyph, strokeAlpha),
@@ -834,6 +961,7 @@ export function primaryRgba(theme: ThemeConfig, alpha: number): string {
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import logoImage from "../../assets/fakeeh-jeddah-logo.svg";
+import logoImageDark from "../../assets/logos/Fakeeh-Hospitals-Dark-Mode.svg";
 import hospitalImg from "../../assets/fakeeh-jeddah-hero.png";
 
 import burjeelLogo from "../../assets/c8626cd3ed1ce90e9b3bab4a5f97a7315203f204.png";
@@ -878,6 +1006,7 @@ export const DSFH_CORE: HospitalCoreConfig = {
   fontFamily: "'Mulish', sans-serif",
   fontFamilyAr: "'Almarai', sans-serif",
   logoUrl: logoImage,
+  logoUrlDark: logoImageDark,
   hospitalWebsiteUrl: "https://en.dsfhriyadh.fakeeh.care/",
   heroImageUrl: hospitalImg,
   primary: "#008AAB",
@@ -1084,17 +1213,24 @@ export interface HospitalCoreConfig {
   fontFamily: string;
   fontFamilyAr: string;
   logoUrl: string;
+  /** Optional light-on-dark logo. Used automatically in dark mode; falls back
+   *  to `logoUrl` when a brand hasn't supplied one. */
+  logoUrlDark?: string;
   heroImageUrl: string;
   heroImageUrls?: string[];
   heroCropPosition?: string;
   slideshowInterval?: number;
   heroOpacity?: number;      // background photo opacity, percent 0–100 (default 40)
   primary: string;
-  primaryDark: string;
-  primaryLight: string;
+  /** Optional — auto-derived from `primary` when absent */
+  primaryDark?: string;
+  /** Optional — auto-derived from `primary` when absent */
+  primaryLight?: string;
   accent: string;
-  accentDark: string;
-  accentLight: string;
+  /** Optional — auto-derived from `accent` when absent */
+  accentDark?: string;
+  /** Optional — auto-derived from `accent` when absent */
+  accentLight?: string;
   location?: string;
   country?: string;
 }
@@ -1345,6 +1481,8 @@ function injectCSSVars(t: ThemeConfig) {
     "--brand-primary": t.primary,
     "--brand-on-primary": t.brandOnPrimary,
     "--brand-on-accent": t.brandOnAccent,
+    "--brand-primary-on": t.primaryOn,
+    "--brand-accent-on": t.accentOn,
     "--brand-primary-hover": t.primaryHover,
     "--brand-primary-active": t.primaryActive,
     "--brand-primary-selected": t.primarySelected,
@@ -1417,9 +1555,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const saved = savedConfigs.find((c) => c.id === preset.id);
       if (!saved) return preset;
       const hasBuiltinAssets = ["dsfh", "burjeel", "slh", "dallah", "caremed", "careinn", "prime"].includes(preset.id);
+      // A saved config that changes primary/accent must NOT keep the preset's
+      // tonal variants — they were derived from the old hex and would otherwise
+      // silently shadow the new brand (e.g. CareInn saved as #16274D still
+      // inheriting primaryLight #e1e3e9, derived from #1B2F5B). Drop them so
+      // buildTheme regenerates from the colors actually in force.
+      const eq = (a?: string, b?: string) => (a || "").toLowerCase() === (b || "").toLowerCase();
+      const primaryMoved = !!saved.primary && !eq(saved.primary, preset.primary);
+      const accentMoved = !!saved.accent && !eq(saved.accent, preset.accent);
       return {
         ...preset,
         ...saved,
+        primaryDark: saved.primaryDark || (primaryMoved ? undefined : preset.primaryDark),
+        primaryLight: saved.primaryLight || (primaryMoved ? undefined : preset.primaryLight),
+        accentDark: saved.accentDark || (accentMoved ? undefined : preset.accentDark),
+        accentLight: saved.accentLight || (accentMoved ? undefined : preset.accentLight),
         // For presets with bundled assets, keep them unless user provided external URLs
         logoUrl: hasBuiltinAssets
           ? (saved.logoUrl && isUserProvidedUrl(saved.logoUrl) ? saved.logoUrl : preset.logoUrl)

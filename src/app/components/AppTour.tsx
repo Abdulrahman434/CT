@@ -486,7 +486,7 @@ export function AppTour({ onClose }: { onClose: () => void }) {
                   marginBottom: "24px",
                 }}
               >
-                <Icon size={30} color={theme.primary} strokeWidth={1.8} />
+                <Icon size={30} color={theme.primaryOn} strokeWidth={1.8} />
               </div>
 
               {/* Title */}
@@ -578,7 +578,7 @@ export function AppTour({ onClose }: { onClose: () => void }) {
                       ...TEXT_STYLE.button,
                       fontSize: TYPE_SCALE.base,
                       fontWeight: WEIGHT.semibold,
-                      color: theme.primary,
+                      color: theme.primaryOn,
                     }}
                   >
                     {isRTL ? <ChevronRight size={18} strokeWidth={2.5} /> : <ChevronLeft size={18} strokeWidth={2.5} />}

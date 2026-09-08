@@ -121,26 +121,26 @@ export function CalculatorTool({ onClose, onBackToTools }: { onClose: () => void
     { label: "C", action: () => handleClear(), color: "#D10044", span: 1 },
     { label: "( )", action: () => {}, color: theme.textMuted, span: 1 },
     { label: "%", action: () => handleOperation("%"), color: theme.textMuted, span: 1 },
-    { label: "÷", action: () => handleOperation("÷"), color: theme.primary, span: 1 },
+    { label: "÷", action: () => handleOperation("÷"), color: theme.primaryOn, span: 1 },
     
     { label: "7", action: () => handleNumber("7"), color: theme.textHeading, span: 1 },
     { label: "8", action: () => handleNumber("8"), color: theme.textHeading, span: 1 },
     { label: "9", action: () => handleNumber("9"), color: theme.textHeading, span: 1 },
-    { label: "×", action: () => handleOperation("×"), color: theme.primary, span: 1 },
+    { label: "×", action: () => handleOperation("×"), color: theme.primaryOn, span: 1 },
     
     { label: "4", action: () => handleNumber("4"), color: theme.textHeading, span: 1 },
     { label: "5", action: () => handleNumber("5"), color: theme.textHeading, span: 1 },
     { label: "6", action: () => handleNumber("6"), color: theme.textHeading, span: 1 },
-    { label: "-", action: () => handleOperation("-"), color: theme.primary, span: 1 },
+    { label: "-", action: () => handleOperation("-"), color: theme.primaryOn, span: 1 },
     
     { label: "1", action: () => handleNumber("1"), color: theme.textHeading, span: 1 },
     { label: "2", action: () => handleNumber("2"), color: theme.textHeading, span: 1 },
     { label: "3", action: () => handleNumber("3"), color: theme.textHeading, span: 1 },
-    { label: "+", action: () => handleOperation("+"), color: theme.primary, span: 1 },
+    { label: "+", action: () => handleOperation("+"), color: theme.primaryOn, span: 1 },
     
     { label: "0", action: () => handleNumber("0"), color: theme.textHeading, span: 2 },
     { label: ".", action: () => handleDecimal(), color: theme.textHeading, span: 1 },
-    { label: "=", action: () => handleEquals(), color: theme.primary, span: 1 },
+    { label: "=", action: () => handleEquals(), color: theme.primaryOn, span: 1 },
   ];
 
   return (
