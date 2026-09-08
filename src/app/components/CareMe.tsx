@@ -1,4 +1,4 @@
-import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, primaryRgba, TEXT_STYLE, SPACE } from "./ThemeContext";
+import { useTheme, TYPE_SCALE, WEIGHT, SHADOW, primaryRgba, TEXT_STYLE, SPACE, LEADING } from "./ThemeContext";
 import { ApiImage } from "./ApiImage";
 import { useLocale } from "./i18n";
 import { useNurseStore, type SectionKey } from "./NurseDataStore";
@@ -1854,12 +1854,14 @@ function SlideIcon({ slideKey }: { slideKey: string }) {
  * TWO STATES, TOLD APART BY completedAt. The form writes every answer as it
  * is given, so a stored record only means the patient started; a submit is
  * what stamps completedAt. A form abandoned at question 3 therefore still
- * shows the invitation here rather than a "Submitted" badge over half a form
- * — and is still openable, which is the point of measuring the submit.
+ * shows the invitation here rather than a read-back of half a form — and is
+ * still openable, which is the point of measuring the submit.
  *
- * The answers scroll INSIDE the card, under a badge that sits outside that
- * box and stays on screen however long the list runs. The card keeps the
- * height the panel gave it instead of growing past the column beside it.
+ * The answered state carries no status line: a list of the patient's own
+ * answers is already the proof they sent them, and a "Submitted" badge over
+ * it was a second header under the one the panel draws. The answers scroll
+ * INSIDE the card, which keeps the height the panel gave it instead of
+ * growing past the column beside it.
  *
  * ONE ANSWER, ONE BLOCK, borrowing the shape of the Discharge Plan card
  * beside it: what was asked on the left, what the patient chose in a pill on
@@ -1875,8 +1877,6 @@ function PreferencesSlide({ theme, isExpanded = false, onOpenForm }: {
 }) {
   const { t, fontFamily } = useLocale();
   const { activeConfigId } = useTheme();
-  /* Demo affordance, off on every branded device — see the reset button. */
-  const { isFullAccess } = useAuth();
   const [record, setRecord] = useState(() => readPreferenceRecord());
 
   /* The form is a modal over this card, which stays mounted underneath it —
@@ -1932,44 +1932,11 @@ function PreferencesSlide({ theme, isExpanded = false, onOpenForm }: {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* The panel already titles the card — the slide's own title bar when it
-          is a slide, the header box above it when the row is expanded — so the
-          badge is all this row adds. Repeating "Your Preferences" under a line
-          that already says it is how a card starts looking bolted on. */}
-      <div
-        className="shrink-0 flex items-center justify-end gap-2 py-2 mb-1 border-b"
-        style={{ borderColor: theme.borderSubtle }}
-      >
-        <div
-          className="flex items-center gap-1 rounded-full"
-          style={{ backgroundColor: theme.successSubtle, padding: "4px 10px" }}
-        >
-          <Check size={12} strokeWidth={3} style={{ color: theme.success }} />
-          <span style={{ fontFamily, ...TEXT_STYLE.micro, color: theme.success }}>
-            {t("care.preferences.submitted")}
-          </span>
-        </div>
-        {/* Demo only, and deliberately on THIS header rather than the form's:
-            the answered state is the one a demo needs to get out of, and it is
-            the one state that never reopens the form. isFullAccess is the
-            CareInn credential, so this is absent on every branded device. */}
-        {isFullAccess && (
-          <button
-            onClick={() => clearPreferenceRecord()}
-            title={t("ppf.demo.reset")}
-            aria-label={t("ppf.demo.reset")}
-            data-careme="prefs-demo-reset"
-            className="shrink-0 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
-            style={{
-              width: "28px", height: "28px", borderRadius: theme.radiusSm,
-              backgroundColor: theme.warningSubtle, border: "none", outline: "none",
-            }}
-          >
-            <RotateCcw size={14} style={{ color: theme.warning }} />
-          </button>
-        )}
-      </div>
-
+      {/* No status row. The panel already titles the card — the slide's own
+          title bar when it is a slide, the header box above it when the row is
+          expanded — and that title now carries the demo reset too, so the
+          answers start at the top of the box instead of under a strip that
+          only restated what a filled-in list already says. */}
       <div
         className="flex-1 min-h-0 overflow-y-auto careme-scroll flex flex-col gap-2"
         style={{ paddingInlineEnd: "8px" }}
@@ -1998,9 +1965,26 @@ function PreferencesSlide({ theme, isExpanded = false, onOpenForm }: {
             {/* The patient's own words, set as a quote rather than as fine
                 print — at helper size in textMuted this read as disabled text
                 and was being skipped. Logical inline-start so the rule stays
-                on the reading edge in Arabic and Urdu. */}
+                on the reading edge in Arabic and Urdu.
+
+                FREE TEXT, SO IT IS TYPED, NOT CHOSEN — and the card is a fixed
+                width on a fixed panel. Two ways it used to break out of that:
+
+                overflowWrap "anywhere" is for the note with no space in it —
+                a run-on sentence, a URL, a long transliteration. Without it
+                the line simply kept going past the card's edge and was cut by
+                the panel. "anywhere" rather than "break-word" because it also
+                lets the paragraph report a narrow min-content width, so a
+                flex parent can no longer be widened by the text inside it.
+
+                maxHeight is for the note that IS wrapping and just goes on:
+                a few lines high it scrolls on its own instead of pushing the
+                answers below it out of the card. Four lines in the slide, six
+                in the expanded column, expressed from the type scale so it
+                stays whole lines if the body size ever moves. */}
             {row.note && (
               <p
+                className="careme-scroll"
                 style={{
                   fontFamily,
                   ...TEXT_STYLE.body,
@@ -2008,6 +1992,9 @@ function PreferencesSlide({ theme, isExpanded = false, onOpenForm }: {
                   marginTop: SPACE[2],
                   borderInlineStart: `3px solid ${theme.primary}`,
                   paddingInlineStart: SPACE[2],
+                  overflowWrap: "anywhere",
+                  maxHeight: `calc(${TYPE_SCALE.base} * ${LEADING.normal} * ${isExpanded ? 6 : 4})`,
+                  overflowY: "auto",
                 }}
               >
                 {row.note}
@@ -2017,6 +2004,49 @@ function PreferencesSlide({ theme, isExpanded = false, onOpenForm }: {
         ))}
       </div>
     </div>
+  );
+}
+
+/* The demo way out of the answered state, sat beside the card's TITLE rather
+ * than in a row of its own above the answers: it is a control over the whole
+ * card, not the first entry in the list, and the list is what the patient is
+ * there to read. Deliberately not in the form either — the answered state is
+ * the one a demo needs to get out of, and it is the one state that never
+ * reopens the form.
+ *
+ * isFullAccess is the CareInn credential, so this is absent on every branded
+ * device; and it waits for a submitted record, so an unanswered card carries
+ * nothing to reset. Same PREFS_SAVED_EVENT the card listens on, because the
+ * form is a modal over a title bar that never unmounts. */
+function PreferencesResetButton({ size = 26 }: { size?: number }) {
+  const { theme } = useTheme();
+  const { t } = useLocale();
+  const { isFullAccess } = useAuth();
+  const [record, setRecord] = useState(() => readPreferenceRecord());
+
+  useEffect(() => {
+    const refresh = () => setRecord(readPreferenceRecord());
+    window.addEventListener(PREFS_SAVED_EVENT, refresh);
+    return () => window.removeEventListener(PREFS_SAVED_EVENT, refresh);
+  }, []);
+
+  if (!isFullAccess || !record?.completedAt) return null;
+
+  return (
+    <button
+      data-nav="true"
+      onClick={() => clearPreferenceRecord()}
+      title={t("ppf.demo.reset")}
+      aria-label={t("ppf.demo.reset")}
+      data-careme="prefs-demo-reset"
+      className="shrink-0 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+      style={{
+        width: `${size}px`, height: `${size}px`, borderRadius: "999px",
+        backgroundColor: theme.warningSubtle, border: "none", outline: "none",
+      }}
+    >
+      <RotateCcw size={Math.round(size * 0.52)} style={{ color: theme.warning }} />
+    </button>
   );
 }
 
@@ -2418,6 +2448,7 @@ export function CareMe({ onExpand, onOpenPreferences }: { onExpand?: () => void;
       <div dir={dir} className="flex items-center gap-2 shrink-0" style={{ padding: "0 22px" }}>
         <SlideIcon slideKey={activeSlide.key} />
         <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.subtitle, color: theme.primary }}>{t(activeSlide.titleKey)}</span>
+        {activeSlide.key === "preferences" && <PreferencesResetButton size={24} />}
         <span style={{ fontFamily: theme.fontFamily, ...TEXT_STYLE.caption, color: theme.textMuted, marginLeft: "auto" }}>
           {realIndex + 1} / {slides.length}
         </span>
@@ -2627,6 +2658,7 @@ export function CareMeExpanded({ onClose, onOpenPreferences }: { onClose: () => 
                 }}>
                   {t(slide.titleKey)}
                 </span>
+                {slide.key === "preferences" && <PreferencesResetButton size={28} />}
               </div>
 
               {/* Content Card below */}

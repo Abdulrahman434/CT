@@ -550,7 +550,6 @@ const translations: Record<string, TranslationEntry> = {
   "care.preferences.title": { en: "Your Preferences", ar: "تفضيلاتك", ur: "آپ کی ترجیحات" },
   "care.preferences.description": { en: "A few short questions about your meals, sleep, prayer, and daily care — so your stay follows what works for you.", ar: "أسئلة قصيرة عن وجباتك ونومك وصلاتك ورعايتك اليومية — لتكون إقامتك على ما يناسبك.", ur: "آپ کے کھانے، نیند، نماز اور روزمرہ نگہداشت کے بارے میں چند مختصر سوالات — تاکہ آپ کا قیام آپ کی پسند کے مطابق ہو۔" },
   "care.preferences.fill": { en: "Fill out preferences", ar: "تعبئة التفضيلات", ur: "ترجیحات پُر کریں" },
-  "care.preferences.submitted": { en: "Submitted", ar: "تم الإرسال", ur: "جمع کرا دیا گیا" },
   "care.extension": { en: "Extension", ar: "التحويلة", ur: "ایکسٹینشن" },
   "care.age": { en: "Age", ar: "العمر", ur: "عمر" },
   "care.ageUnits": { en: "{0} Yrs", ar: "{0} سنة", ur: "{0} سال" },
@@ -1357,6 +1356,9 @@ const translations: Record<string, TranslationEntry> = {
   "ppf.comments.placeholder": { en: "Anything else you'd like to add", ar: "أي شيء آخر تود إضافته", ur: "کچھ اور جو آپ شامل کرنا چاہیں" },
   "ppf.done.title": { en: "Thank you", ar: "شكراً لك", ur: "شکریہ" },
   "ppf.done.body": { en: "Your preferences have been saved and shared with the concerned teams.", ar: "تم حفظ تفضيلاتك ومشاركتها مع الجهات المعنية.", ur: "آپ کی ترجیحات محفوظ کر لی گئی ہیں اور متعلقہ ٹیموں کے ساتھ شیئر کر دی گئی ہیں۔" },
+  /* {0} is the CareMe panel's own name, taken from care.title so this points
+     at the tile the patient can actually see rather than an English brand. */
+  "ppf.done.where": { en: "If you'd like to view your preferences, go to the {0} page.", ar: "إذا أردت الاطلاع على تفضيلاتك، انتقل إلى صفحة {0}.", ur: "اگر آپ اپنی ترجیحات دیکھنا چاہیں تو {0} کے صفحے پر جائیں۔" },
   "ppf.done.close": { en: "Close", ar: "إغلاق", ur: "بند کریں" },
   "ppf.demo.reset": { en: "Reset preferences (Demo)", ar: "إعادة تعيين التفضيلات (عرض توضيحي)", ur: "ترجیحات ری سیٹ کریں (ڈیمو)" },
 

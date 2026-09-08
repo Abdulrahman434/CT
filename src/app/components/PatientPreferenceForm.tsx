@@ -82,10 +82,12 @@ import { QuestionProgress, QuestionProgressBar } from "./QuestionProgress";
  * not go under it.
  *
  * COLOUR — no hex literals anywhere. Every content icon is the per-hospital
- * secondary on a theme.accentSubtle chip, so icons re-brand with the active
- * hospital. See iconColor below for why the exact token depends on light/dark
- * mode. (The favourite-colour question was the one exception, holding raw
- * swatches as answer options; it is gone, so the rule has no exceptions.)
+ * PRIMARY on a theme.primarySubtle chip, so icons re-brand with the active
+ * hospital and match the Next button, the progress bar and the step badge
+ * rather than sitting on the secondary beside them. See iconColor below for
+ * why the exact shade depends on light/dark mode. (The favourite-colour
+ * question was the one exception, holding raw swatches as answer options; it
+ * is gone, so the rule has no exceptions.)
  *
  * Sub-views are plain render functions, not nested components: a nested
  * component is a new type on every keystroke and the notes field would lose
@@ -603,12 +605,24 @@ function TimeWheelPicker({
     onPickTime(fromWheel(next));
   };
 
-  /* Nothing is committed on mount. The wheel used to write its resting value
-     the moment the screen opened, so a patient who never touched it still had
-     "7:00 AM" recorded as their preference and Next already enabled — the same
-     thing a pre-selected pill does, and it reached the care plan as a choice
-     they never made. A scroll or a tap on any visible row commits; until one
-     of those happens the question is unanswered and Next stays shut. */
+  /* THE RESTING VALUE IS THE ANSWER, committed as the screen opens, so the
+     question arrives answered at 7:00 AM and Next is live from the first
+     frame. The wheels already show that time; requiring a turn of them to
+     record what is plainly displayed reads as the control being broken.
+
+     Know what this trades away. The commit was removed once for a reason:
+     nobody chose 7:00 AM, and it now reaches the care plan looking exactly
+     like a time the patient set — the same objection as a pre-selected pill,
+     which the yes/no screens still refuse to do. The two time questions
+     (handover.roundTime, comfort.bathingTime) will carry 07:00 for every
+     patient who pages past them without looking. If that default turns out to
+     be worth less than an empty answer, this effect is the whole of it:
+     delete it and the wheel goes back to committing only on a real gesture. */
+  useEffect(() => {
+    if (!stored) onPickTime(fromWheel(WHEEL_REST));
+    /* Mount only: a later clear would otherwise be written straight back. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const period = (pm: boolean) => t(pm ? "ppf.time.pm" : "ppf.time.am");
   const readout = `${draft.hour}:${draft.minute} ${period(draft.pm)}`;
@@ -656,7 +670,7 @@ function TimeWheelPicker({
               height: itemH, transform: "translateY(-50%)",
               borderRadius: theme.radiusMd,
               backgroundColor: theme.surface,
-              border: `3px solid ${theme.accent}`,
+              border: `3px solid ${iconColor}`,
               boxShadow: SHADOW.md,
               pointerEvents: "none", zIndex: 0,
             }}
@@ -728,18 +742,29 @@ export function PatientPreferenceForm({
   const { theme, activeConfigId, darkMode } = useTheme();
   const { t, locale, isRTL, fontFamily } = useLocale();
 
-  /* Secondary-colour foreground (icons and their labels).
+  /* THE BRAND FOREGROUND of this form: content icons, their section labels,
+   * the selected pill and the Back button all resolve to this one value.
    *
-   * accentDark is the more legible of the two on the white card — it raises
-   * contrast for all 10 hospitals (e.g. Burjeel 2.27:1 -> 3.63:1). But the
-   * ramp inverts on the dark surface, where accentDark is worse for all 10 and
-   * would drop five hospitals below the 3:1 floor. The patient can turn on dark
-   * mode at the wizard's theme step, which runs before this form opens, so both
-   * surfaces are reachable and the choice has to follow the mode.
+   * It is the hospital's PRIMARY, in the shade that surface can carry. Plain
+   * theme.primary is not usable on either surface on its own: on the white
+   * card it leaves Andalusia at 2.24:1, Prime at 2.73 and KAUH at 2.82, and on
+   * the dark surface it collapses for every navy-branded hospital — Care
+   * Medical 1.09:1, SLH 1.14, CareInn 1.25, Burjeel 1.80. So each surface
+   * takes the end of the ramp that survives on it:
    *
-   * Borders, fills and the progress bar stay on theme.accent — they are
-   * decoration, not something the patient has to read. */
-  const iconColor = darkMode ? theme.accent : theme.accentDark;
+   *   white card    primaryDark   4.02:1 (KAUH) .. 18.15:1 (IMC)
+   *   dark surface  primaryLight  9.12:1 (Prime) .. 14.37:1 (DSFH)
+   *
+   * Every one of the 10 hospitals clears 4:1 in both modes, which the accent
+   * pair this replaced did not (Dallah's accentDark was 2.85:1 on the card).
+   * The patient can turn on dark mode at the wizard's theme step, which runs
+   * before this form opens, so both surfaces are reachable and the choice has
+   * to follow the mode.
+   *
+   * Anything the patient READS or has to perceive as state — a selection
+   * border included — takes this. theme.primary itself is left to the fills
+   * that carry white text on top (the Next button) and to the progress bar. */
+  const iconColor = darkMode ? theme.primaryLight : theme.primaryDark;
 
   /* Q4 names the hospital's app — see preferenceAppName. */
   const appName = useMemo(
@@ -859,9 +884,11 @@ export function PatientPreferenceForm({
    * Next is gated on a real answer so nothing is recorded as "skipped" that
    * the patient never saw. That only works if every screen HAS an answer the
    * patient can give: a yes/no question has its two pills, and a time
-   * question is answered by the wheels themselves, which always read as a
-   * time. On a review the gate is already satisfied by the restored answer,
-   * which is the point: the patient can page through without re-answering. */
+   * question arrives already carrying the time its wheels are showing — see
+   * the mount commit in TimeWheelPicker, which is what makes that true rather
+   * than a special case here. On a review the gate is already satisfied by the
+   * restored answer, which is the point: the patient can page through without
+   * re-answering. */
   const canAdvance = (() => {
     if (screen.kind === "comments") return true;          // closing screen, optional by design
     if (screen.kind === "carePartner") return partner.accepted;
@@ -1010,8 +1037,8 @@ export function PatientPreferenceForm({
       style={{
         padding: `${M.pillY} 40px`,
         borderRadius: theme.radiusLg,
-        border: selected ? `2px solid ${theme.accent}` : `1.5px solid ${theme.borderDefault}`,
-        backgroundColor: selected ? theme.accentSubtle : theme.surface,
+        border: selected ? `2px solid ${iconColor}` : `1.5px solid ${theme.borderDefault}`,
+        backgroundColor: selected ? theme.primarySubtle : theme.surface,
         fontFamily,
         /* One step under the question, so the answers read as answers to it
            rather than as a second heading. The pill's geometry is unchanged —
@@ -1152,7 +1179,7 @@ export function PatientPreferenceForm({
       <div className="flex items-center justify-center gap-3 shrink-0" style={{ marginBottom: M.chipGap }}>
         <div
           className="flex items-center justify-center shrink-0"
-          style={{ width: M.chip, height: M.chip, borderRadius: theme.radiusFull, backgroundColor: theme.accentSubtle }}
+          style={{ width: M.chip, height: M.chip, borderRadius: theme.radiusFull, backgroundColor: theme.primarySubtle }}
         >
           <Icon size={M.chipIcon} style={{ color: iconColor }} />
         </div>
@@ -1234,8 +1261,8 @@ export function PatientPreferenceForm({
           width: "100%", maxWidth: "1000px",
           padding: "14px 20px",
           borderRadius: theme.radiusLg,
-          backgroundColor: partner.accepted ? theme.accentSubtle : theme.surface,
-          border: partner.accepted ? `2px solid ${theme.accent}` : `2px solid ${theme.borderDefault}`,
+          backgroundColor: partner.accepted ? theme.primarySubtle : theme.surface,
+          border: partner.accepted ? `2px solid ${iconColor}` : `2px solid ${theme.borderDefault}`,
           textAlign: isRTL ? "right" : "left",
           outline: "none",
         }}
@@ -1262,7 +1289,7 @@ export function PatientPreferenceForm({
       <div className="flex items-center justify-center gap-4 shrink-0" style={{ marginBottom: M.chipGap }}>
         <div
           className="flex items-center justify-center shrink-0"
-          style={{ width: M.chip, height: M.chip, borderRadius: theme.radiusFull, backgroundColor: theme.accentSubtle }}
+          style={{ width: M.chip, height: M.chip, borderRadius: theme.radiusFull, backgroundColor: theme.primarySubtle }}
         >
           <ClipboardList size={M.chipIcon} style={{ color: iconColor }} />
         </div>
@@ -1295,6 +1322,12 @@ export function PatientPreferenceForm({
    * canAdvance — so waiting can never become being stuck. Back is present on
    * every screen but the first, so an answer can always be revised. */
 
+  /* Back was surface-on-surface: textMuted on white inside a border at 6%
+     black. Nothing about that says "button" — it read as the disabled state
+     of one, on a screen where the disabled state is a real thing Next uses
+     while an answer is missing. Outlining it in the brand foreground tells
+     the two apart at a glance: Next is the filled action, Back is the
+     outlined one, and only a genuinely disabled button is grey. */
   const navButton = (
     label: string,
     onClick: () => void,
@@ -1313,8 +1346,8 @@ export function PatientPreferenceForm({
         height: "56px", padding: "0 32px", borderRadius: "14px",
         fontFamily, fontSize: TYPE_SCALE.md, fontWeight: WEIGHT.semibold,
         backgroundColor: disabled ? theme.tileInactiveBg : variant === "primary" ? theme.primary : theme.surface,
-        color: disabled ? theme.textDisabled : variant === "primary" ? theme.textInverse : theme.textMuted,
-        border: variant === "primary" || disabled ? "none" : `1.5px solid ${theme.borderDefault}`,
+        color: disabled ? theme.textDisabled : variant === "primary" ? theme.textInverse : iconColor,
+        border: variant === "primary" || disabled ? "none" : `1.5px solid ${iconColor}`,
         boxShadow: variant === "primary" && !disabled ? SHADOW.md : "none",
         outline: "none",
       }}
@@ -1383,7 +1416,7 @@ export function PatientPreferenceForm({
         }
         .ppf-scroll::-webkit-scrollbar { width: 6px; }
         .ppf-scroll::-webkit-scrollbar-thumb { background: ${theme.borderDefault}; border-radius: 3px; }
-        .ppf-field:focus { border-color: ${theme.accent} !important; }
+        .ppf-field:focus { border-color: ${iconColor} !important; }
         /* Beats the inline resize:none the field carries by default. */
         .ppf-field[data-grow] { resize: vertical !important; }
         .ppf-field::placeholder { color: ${theme.textDisabled}; }
@@ -1442,7 +1475,7 @@ export function PatientPreferenceForm({
           >
             <div
               className="flex items-center justify-center shrink-0"
-              style={{ width: "36px", height: "36px", borderRadius: theme.radiusSm, backgroundColor: theme.accentSubtle }}
+              style={{ width: "36px", height: "36px", borderRadius: theme.radiusSm, backgroundColor: theme.primarySubtle }}
             >
               <ClipboardList size={18} style={{ color: iconColor }} />
             </div>
@@ -1500,15 +1533,21 @@ export function PatientPreferenceForm({
           style={{
             width: 56, height: 56,
             marginBottom: "16px",
-            borderRadius: theme.radiusFull, backgroundColor: theme.accentSubtle,
+            borderRadius: theme.radiusFull, backgroundColor: theme.primarySubtle,
           }}>
           <CheckCircle2 size={28} style={{ color: iconColor }} />
         </div>
         <h2 style={{ fontFamily, fontSize: TYPE_SCALE.lg, fontWeight: WEIGHT.bold, color: theme.textHeading, marginBottom: "10px" }}>
           {t("ppf.done.title")}
         </h2>
-        <p style={{ fontFamily, fontSize: TYPE_SCALE.base, color: theme.textMuted, maxWidth: "620px", lineHeight: LEADING.relaxed, marginBottom: "20px" }}>
+        <p style={{ fontFamily, fontSize: TYPE_SCALE.base, color: theme.textMuted, maxWidth: "620px", lineHeight: LEADING.relaxed, marginBottom: "6px" }}>
           {t("ppf.done.body")}
+        </p>
+        {/* Where the answers went, named as the panel names itself. The card
+            is a read-back with no way back into the form, so the patient is
+            told where to find it rather than left with a dead end. */}
+        <p style={{ fontFamily, fontSize: TYPE_SCALE.base, color: theme.textMuted, maxWidth: "620px", lineHeight: LEADING.relaxed, marginBottom: "20px" }}>
+          {t("ppf.done.where", t("care.title"))}
         </p>
         <button
           onClick={onClose}
