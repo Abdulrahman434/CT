@@ -323,10 +323,14 @@ const translations: Record<string, TranslationEntry> = {
 
   /* The line under the divider on a meal card. A placed order has nothing on
      it left to change, so it reports the time it was sent rather than offering
-     an action. */
+     an action.
+
+     Both lines name the order rather than leaving the verb bare: "Submit
+     before 8:00 PM" and "أرسل قبل" read as instructions to nobody in
+     particular, and the patient has to work out what is being submitted. */
   "food.card.viewMenu": { en: "View menu", ar: "عرض القائمة", ur: "مینو دیکھیں" },
-  "food.card.submitBefore": { en: "Submit before {0}", ar: "أرسل قبل {0}", ur: "{0} سے پہلے جمع کریں" },
-  "food.card.submittedAt": { en: "Submitted at {0}", ar: "أُرسل الساعة {0}", ur: "{0} پر جمع کرایا گیا" },
+  "food.card.submitBefore": { en: "Submit before {0}", ar: "أرسل طلبك قبل {0}", ur: "اپنا آرڈر {0} سے پہلے جمع کریں" },
+  "food.card.submittedAt": { en: "Your order was submitted at {0}", ar: "طلبك أُرسل الساعة {0}", ur: "آپ کا آرڈر {0} پر جمع کرایا گیا" },
 
   /* ─── Idle Screen ─── */
   "idle.welcome": { en: "Welcome to {0}", ar: "مرحباً بك في {0}", ur: "{0} میں خوش آمدید" },
