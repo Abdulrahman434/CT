@@ -8,6 +8,7 @@ import {
   Baby, User, FlaskConical, ChevronDown, ChevronRight, ChevronLeft, Home,
   AlertTriangle, X, Plus, ShieldAlert, Sparkles, CheckCircle2, Circle, SlidersHorizontal, Trash2,
   CalendarClock,
+  type LucideIcon,
 } from "lucide-react";
 import { InternalPageHeader } from "./InternalPageHeader";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -42,7 +43,11 @@ type KidsBreakfastType = "hot" | "cold" | null;
 interface MealPeriod {
   id: MealId;
   label: { en: string; ar: string };
-  icon: React.ComponentType<{ size?: number; color?: string }>;
+  /* Lucide's own type. A hand-written `ComponentType<{size?: number}>` looks
+     equivalent but is not assignable from a lucide icon: theirs takes
+     `string | number`, and the narrower prop makes the component contravariant
+     in a way TypeScript rejects. */
+  icon: LucideIcon;
   timeRange: string;
   hours: [number, number];
   orderCutoff: number;
@@ -71,7 +76,7 @@ const pendingKey = (dayOffset: number, mealId: MealId) => `${dayOffset}:${mealId
 
 const P = FOOD_PHOTOS;
 
-const MEAL_ICONS: Record<MealId, React.ComponentType<{ size?: number; color?: string }>> = {
+const MEAL_ICONS: Record<MealId, LucideIcon> = {
   breakfast: Sun,
   lunch:     Coffee,
   dinner:    Moon,
@@ -1290,7 +1295,7 @@ interface DietOptionItem {
   desc: { en: string; ar: string };
   color: string;
   bg: string;
-  icon: React.ComponentType<{ size?: number; color?: string }>;
+  icon: LucideIcon;
 }
 
 const ALL_DIET_OPTIONS: DietOptionItem[] = [
