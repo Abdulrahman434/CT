@@ -39,6 +39,9 @@ type Step = "landing" | "select-type" | "select-meal" | "kids-breakfast-type" | 
 type OrderFor = "patient" | "guest";
 type GroupMode = GroupModeData;
 type KidsBreakfastType = "hot" | "cold" | null;
+/** How much of a day the patient has actually sent: none of it, part of it,
+ *  or every meal on it. The notice says a different thing for each. */
+type DayOrderStatus = "none" | "some" | "all";
 
 interface MealPeriod {
   id: MealId;
@@ -416,7 +419,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
      autoStandard orders are the kitchen's fallback for anything left unordered
      at the cut-off — they sit in `orders` like any other, so they are skipped
      or the notice would report a meal nobody chose as the patient's own. */
-  const dayOrderedByPatient = useMemo(() => {
+  const dayOrderStatus = useMemo<DayOrderStatus>(() => {
     const dayStr = dayForOffset(selectedDayOffset).toDateString();
     const chosen = new Set(
       (orders as any[])
@@ -424,7 +427,9 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
           new Date(o.deliveryDate).toDateString() === dayStr)
         .map((o) => o.mealId || o.mealType?.toLowerCase()),
     );
-    return (Object.keys(MEAL_WINDOWS) as MealId[]).every((id) => chosen.has(id));
+    const ids = Object.keys(MEAL_WINDOWS) as MealId[];
+    if (ids.every((id) => chosen.has(id))) return "all";
+    return ids.some((id) => chosen.has(id)) ? "some" : "none";
   }, [orders, selectedDayOffset]);
 
   /* Already with the kitchen, keyed day + meal against the moment it was
@@ -862,7 +867,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
                         .filter((m) => placedAtByKey.has(pendingKey(selectedDayOffset, m.id)))
                         .map((m) => [m.id, placedAtByKey.get(pendingKey(selectedDayOffset, m.id)) ?? null] as const),
                     )}
-                    dayOrderedByPatient={dayOrderedByPatient}
+                    dayOrderStatus={dayOrderStatus}
                     windowState={windowState}
                   />
                 )}
@@ -1981,7 +1986,7 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
  * STEP 2: CHOOSE MEALS (rolling three-day window)
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamily, isRTL, selectedDayOffset, onSelectDay, pendingMealIds, placedMealTimes, dayOrderedByPatient, windowState }: {
+function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamily, isRTL, selectedDayOffset, onSelectDay, pendingMealIds, placedMealTimes, dayOrderStatus, windowState }: {
   meals: MealPeriod[]; selectedMealId: MealId | null; onSelect: (id: MealId) => void;
   /** Open a meal's menu to read on a day that cannot be ordered yet. */
   onDeselect?: () => void; fontFamily: string; isRTL: boolean;
@@ -1994,11 +1999,11 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
    *  each was submitted. A member with a null time is still placed — its send
    *  time simply could not be read. */
   placedMealTimes: Map<MealId, Date | null>;
-  /** Did the PATIENT order this day — the day on screen, not tomorrow? The
-   *  kitchen posts a standard meal for anything unordered once the window
-   *  shuts, and that is not a choice: it lands in `orders` like any other, so
-   *  the notice would call it "your order" if it read `placedMealTimes`. */
-  dayOrderedByPatient: boolean;
+  /** How much of this day — the day on screen, not tomorrow — the PATIENT has
+   *  sent. The kitchen posts a standard meal for anything unordered once the
+   *  window shuts, and that is not a choice: it lands in `orders` like any
+   *  other, so this would call it "your order" if it read `placedMealTimes`. */
+  dayOrderStatus: DayOrderStatus;
   /** Where tomorrow's meal stands in today's cycle. */
   windowState: OrderWindowState;
 }) {
@@ -2033,15 +2038,21 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
       ? { text: t("food.notice.previewDay", dayName,
             formatDayWeekday(selectedDayOffset - 1, isRTL, locale), windowStartStr),
           Icon: CalendarClock, accent: theme.info, surface: theme.infoSubtle }
-      : dayOrderedByPatient
+      : dayOrderStatus === "all"
         ? { text: t("food.notice.ordered", dayName),
             Icon: CheckCircle2, accent: theme.success, surface: theme.successSubtle }
         : windowState === "before"
           ? { text: t("food.notice.opensToday", dayName, windowStartStr),
               Icon: Clock, accent: theme.info, surface: theme.infoSubtle }
           : windowState === "open"
-            ? { text: t("food.notice.openUntil", dayName, windowEndStr),
-                Icon: ChefHat, accent: TEAL, surface: TEAL_15 }
+            /* Part of the day already sent is neither "open" nor "all set":
+               saying the menu is open, flat, reads as though nothing had been
+               ordered while a card right below says otherwise. */
+            ? dayOrderStatus === "some"
+              ? { text: t("food.notice.partlyOrdered", dayName, windowEndStr),
+                  Icon: ClipboardList, accent: TEAL, surface: TEAL_15 }
+              : { text: t("food.notice.openUntil", dayName, windowEndStr),
+                  Icon: ChefHat, accent: TEAL, surface: TEAL_15 }
             /* Closed is not a failure: something is still coming, so it takes
                the settled green rather than an alarm colour. */
             : { text: t("food.notice.closed", dayName),
@@ -2189,19 +2200,26 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
              weight the deadline line already uses for a plain statement. */
           const actionIsLink = !placedAt && (placed || !canOrder);
 
-          /* Outside the window — and on anything already sent — the card still
-             opens, to read rather than to pick. */
-          const handleClick = () => (canOrder && !placed) ? onSelect(meal.id) : setMenuMeal(meal);
+          /* Outside the window the card still opens, to read rather than to
+             pick. A sent order opens nothing: its menu is a list of choices
+             that can no longer be made, and offering it invites the patient to
+             look for a way to change an order the kitchen has already got. */
+          const handleClick = () => {
+            if (placed) return;
+            if (canOrder) onSelect(meal.id); else setMenuMeal(meal);
+          };
 
           return (
             <motion.div key={meal.id}
-              role="button"
-              tabIndex={0}
-              onClick={handleClick}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleClick(); } }}
+              role={placed ? undefined : "button"}
+              tabIndex={placed ? undefined : 0}
+              aria-disabled={placed || undefined}
+              onClick={placed ? undefined : handleClick}
+              onKeyDown={placed ? undefined : (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleClick(); } }}
               data-fo-meal={meal.id}
-              whileTap={{ scale: 0.97 }}
-              whileHover={{ y: -2 }}
+              data-fo-placed={placed ? "true" : undefined}
+              whileTap={placed ? undefined : { scale: 0.97 }}
+              whileHover={placed ? undefined : { y: -2 }}
               dir={isRTL ? "rtl" : "ltr"}
               style={{
                 width: "390px",
@@ -2210,10 +2228,14 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                 /* A chosen card is framed as well as ticked. The width is the
                    same 2px in every state and only the colour moves, so the
                    card cannot change size under the patient's finger — the
-                   three cards stay on the same baseline whichever is picked. */
-                border: `2px solid ${(chosen || placed) ? (placed ? GREEN : TEAL) : "rgba(0,0,0,0.08)"}`,
+                   three cards stay on the same baseline whichever is picked.
+
+                   A sent order takes the plain border of the other two: its
+                   chip already says it is sent, and a frame around one of
+                   three otherwise identical cards read as a selection. */
+                border: `2px solid ${chosen && !placed ? TEAL : "rgba(0,0,0,0.08)"}`,
                 boxShadow: "none",
-                cursor: "pointer", outline: "none",
+                cursor: placed ? "default" : "pointer", outline: "none",
                 transition: "border-color 0.2s, box-shadow 0.2s, transform 0.2s",
                 display: "flex", flexDirection: "column", alignItems: "center",
                 /* No padding: the photograph runs to the card's own edges and

@@ -310,6 +310,11 @@ const translations: Record<string, TranslationEntry> = {
     ar: "قائمة يوم {0} مفتوحة الآن — خذ وقتك، وأرسل طلبك قبل الساعة {1}.",
     ur: "{0} کا مینو کھلا ہے — اطمینان سے چنیے، اور {1} بجے تک اپنا آرڈر بھیج دیجیے۔",
   },
+  "food.notice.partlyOrdered": {
+    en: "Part of your {0} order is already in — the rest stays open until {1}.",
+    ar: "جزء من طلبك ليوم {0} وصل إلى المطبخ — والباقي مفتوح حتى الساعة {1}.",
+    ur: "{0} کے آپ کے آرڈر کا کچھ حصہ پہنچ چکا ہے — باقی {1} بجے تک کھلا ہے۔",
+  },
   "food.notice.ordered": {
     en: "You're all set for {0} — the kitchen has your order and it's locked in.",
     ar: "كل شيء جاهز ليوم {0} — طلبك وصل إلى المطبخ وأصبح نهائيًا.",
