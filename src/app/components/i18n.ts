@@ -315,11 +315,12 @@ const translations: Record<string, TranslationEntry> = {
     ur: "{0} کے لیے آرڈر بند ہو چکا ہے — ایک معیاری کھانا پیش کیا جائے گا۔",
   },
 
-  /* The line under the divider on a meal card. A placed order shares the
-     "View menu" wording: the card still opens its menu to read, and there is
-     nothing on it left to change. */
+  /* The line under the divider on a meal card. A placed order has nothing on
+     it left to change, so it reports the time it was sent rather than offering
+     an action. */
   "food.card.viewMenu": { en: "View menu", ar: "عرض القائمة", ur: "مینو دیکھیں" },
   "food.card.submitBefore": { en: "Submit before {0}", ar: "أرسل قبل {0}", ur: "{0} سے پہلے جمع کریں" },
+  "food.card.submittedAt": { en: "Submitted at {0}", ar: "أُرسل الساعة {0}", ur: "{0} پر جمع کرایا گیا" },
 
   /* ─── Idle Screen ─── */
   "idle.welcome": { en: "Welcome to {0}", ar: "مرحباً بك في {0}", ur: "{0} میں خوش آمدید" },

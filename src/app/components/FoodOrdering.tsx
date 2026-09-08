@@ -249,6 +249,11 @@ function formatHour(h: number, isRTL: boolean, locale?: Locale): string {
   return d.toLocaleTimeString(localeTag(isRTL, locale), { hour: "numeric", minute: "2-digit", hour12: true });
 }
 
+/** Format a moment as "5:09 PM", to match `formatHour` above. */
+function formatClock(d: Date, isRTL: boolean, locale?: Locale): string {
+  return d.toLocaleTimeString(localeTag(isRTL, locale), { hour: "numeric", minute: "2-digit", hour12: true });
+}
+
 /** "4:00 PM – 8:00 PM" in the active language. */
 function orderWindowLabel(isRTL: boolean): string {
   return `${formatHour(ORDER_WINDOW_START, isRTL)} – ${formatHour(ORDER_WINDOW_END, isRTL)}`;
@@ -408,18 +413,23 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
       new Date(o.deliveryDate).toDateString() === dayStr);
   }, [orders, selectedDayOffset]);
 
-  /* Already with the kitchen, keyed day + meal. Read back off the placed
-     orders rather than kept alongside them, so it survives leaving this
-     screen and coming back. */
-  const placedKeys = useMemo(() => {
-    const keys = new Set<string>();
+  /* Already with the kitchen, keyed day + meal against the moment it was
+     sent. Read back off the placed orders rather than kept alongside them, so
+     it survives leaving this screen and coming back. */
+  const placedAtByKey = useMemo(() => {
+    const keys = new Map<string, Date | null>();
     for (const o of orders as any[]) {
       const mealId = o.mealId || o.mealType?.toLowerCase();
       if (!mealId || !o.deliveryDate) continue;
       const d = new Date(o.deliveryDate);
       if (Number.isNaN(d.getTime())) continue;
+      /* An order with no readable send time is still an order: it is keyed
+         with a null so the card knows it is placed and simply has no time to
+         show. */
+      const sentAt = o.placedAt instanceof Date ? o.placedAt : new Date(o.placedAt);
+      const sent = Number.isNaN(sentAt.getTime()) ? null : sentAt;
       for (const off of ORDER_DAY_OFFSETS) {
-        if (d.toDateString() === dayForOffset(off).toDateString()) keys.add(pendingKey(off, mealId));
+        if (d.toDateString() === dayForOffset(off).toDateString()) keys.set(pendingKey(off, mealId), sent);
       }
     }
     return keys;
@@ -547,7 +557,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
   useEffect(() => {
     if (windowState !== "closed") return;
     const due = pendingMeals.filter(
-      (e) => isOrderableDay(e.dayOffset) && !placedKeys.has(pendingKey(e.dayOffset, e.mealId)),
+      (e) => isOrderableDay(e.dayOffset) && !placedAtByKey.has(pendingKey(e.dayOffset, e.mealId)),
     );
     if (due.length === 0) {
       if (pendingMeals.some((e) => isOrderableDay(e.dayOffset))) {
@@ -557,7 +567,7 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
     }
     due.forEach((entry) => placeOrder(entry.orderData));
     setPendingMeals((prev) => prev.filter((e) => !isOrderableDay(e.dayOffset)));
-  }, [windowState, pendingMeals, placedKeys, placeOrder]);
+  }, [windowState, pendingMeals, placedAtByKey, placeOrder]);
 
   /** The explicit submit. Everything in the basket goes to the kitchen now —
    *  nothing was sent while the patient was still choosing. */
@@ -833,8 +843,10 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
                         .filter((e) => e.dayOffset === selectedDayOffset)
                         .map((e) => e.mealId),
                     )}
-                    placedMealIds={new Set(
-                      meals.filter((m) => placedKeys.has(pendingKey(selectedDayOffset, m.id))).map((m) => m.id),
+                    placedMealTimes={new Map(
+                      meals
+                        .filter((m) => placedAtByKey.has(pendingKey(selectedDayOffset, m.id)))
+                        .map((m) => [m.id, placedAtByKey.get(pendingKey(selectedDayOffset, m.id)) ?? null] as const),
                     )}
                     dayOrderedByPatient={dayOrderedByPatient}
                     windowState={windowState}
@@ -1955,7 +1967,7 @@ function OrderTypeStep({ orderFor, onSelect, fontFamily, isRTL, isNpo }: {
  * STEP 2: CHOOSE MEALS (rolling three-day window)
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamily, isRTL, selectedDayOffset, onSelectDay, pendingMealIds, placedMealIds, dayOrderedByPatient, windowState }: {
+function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamily, isRTL, selectedDayOffset, onSelectDay, pendingMealIds, placedMealTimes, dayOrderedByPatient, windowState }: {
   meals: MealPeriod[]; selectedMealId: MealId | null; onSelect: (id: MealId) => void;
   /** Open a meal's menu to read on a day that cannot be ordered yet. */
   onDeselect?: () => void; fontFamily: string; isRTL: boolean;
@@ -1964,12 +1976,14 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
   onSelectDay: (offset: number) => void;
   /** Meals already in the basket for the selected day. */
   pendingMealIds: Set<MealId>;
-  /** Meals already sent to the kitchen for the selected day. */
-  placedMealIds: Set<MealId>;
+  /** Meals already sent to the kitchen for the selected day, against the time
+   *  each was submitted. A member with a null time is still placed — its send
+   *  time simply could not be read. */
+  placedMealTimes: Map<MealId, Date | null>;
   /** Did the PATIENT order this day — the day on screen, not tomorrow? The
    *  kitchen posts a standard meal for anything unordered once the window
    *  shuts, and that is not a choice: it lands in `orders` like any other, so
-   *  the notice would call it "your order" if it read `placedMealIds`. */
+   *  the notice would call it "your order" if it read `placedMealTimes`. */
   dayOrderedByPatient: boolean;
   /** Where tomorrow's meal stands in today's cycle. */
   windowState: OrderWindowState;
@@ -2095,7 +2109,8 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
         {meals.map((meal) => {
           /* In the basket for the day on screen — not sent to the kitchen. */
           const inOrder = pendingMealIds.has(meal.id);
-          const placed = dayOrderable && placedMealIds.has(meal.id);
+          const placed = dayOrderable && placedMealTimes.has(meal.id);
+          const placedAt = placed ? placedMealTimes.get(meal.id) : null;
           const selected = dayOrderable && selectedMealId === meal.id;
           const chosen = dayOrderable && (selected || inOrder);
 
@@ -2133,12 +2148,19 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
              its own: the whole card has always been the tap target. It stays
              put when a meal is chosen — see the note above.
 
-             A placed order reads "View menu" like any other unbuyable card.
-             It used to offer "Change selection", which the kitchen cannot
-             honour: once an order is sent there is nothing left to change. */
-          const actionLabel = (placed || !canOrder)
-            ? t("food.card.viewMenu")
-            : t("food.card.submitBefore", windowEndStr);
+             A placed order has no action left — the kitchen cannot honour a
+             change, and it used to offer "Change selection" and then "View
+             menu" for want of anything better. It reports when it was sent
+             instead, which is the one thing about it still worth reading. */
+          const actionLabel = placedAt
+            ? t("food.card.submittedAt", formatClock(placedAt, isRTL, locale))
+            : (placed || !canOrder)
+              ? t("food.card.viewMenu")
+              : t("food.card.submitBefore", windowEndStr);
+          /* Teal and bold is what "View menu" wears, because it opens
+             something. A timestamp opens nothing, so it takes the muted
+             weight the deadline line already uses for a plain statement. */
+          const actionIsLink = !placedAt && (placed || !canOrder);
 
           /* Outside the window — and on anything already sent — the card still
              opens, to read rather than to pick. */
@@ -2173,8 +2195,11 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                 position: "relative",
                 overflow: "hidden",
               }}>
-              {/* Chosen, or already with the kitchen */}
-              {(chosen || placed) && (
+              {/* Chosen. Not shown on a placed order: the tick reads as "this
+                  is the one you are picking", and on a card that can no longer
+                  be picked it was being mistaken for a live selection. The
+                  "Order placed" chip is that card's whole status. */}
+              {chosen && !placed && (
                 <div className="absolute pop-in" style={{ top: "16px", [isRTL ? "left" : "right"]: "16px", zIndex: 2, width: "36px", height: "36px", borderRadius: "50%", backgroundColor: TICK_GREEN, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 12px ${TICK_GREEN_SHADOW}` }}>
                   <Check size={20} color="#fff" strokeWidth={3} />
                 </div>
@@ -2223,8 +2248,8 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
                     {canOrder && !placed && <Clock size={15} color="#6B7280" className="shrink-0" />}
                     <span style={{
                       fontFamily, fontSize: "16px",
-                      fontWeight: (placed || !canOrder) ? WEIGHT.bold : WEIGHT.medium,
-                      color: (placed || !canOrder) ? TEAL : "#6B7280",
+                      fontWeight: actionIsLink ? WEIGHT.bold : WEIGHT.medium,
+                      color: actionIsLink ? TEAL : "#6B7280",
                       textAlign: "center",
                     }}>
                       {actionLabel}
