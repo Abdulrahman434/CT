@@ -402,15 +402,24 @@ export function FoodOrdering({ onClose, initialView }: { onClose: () => void; in
   /** Meals sent in the last submission — the confirmation screen lists them. */
   const [submittedSummary, setSubmittedSummary] = useState<PendingMeal[]>([]);
 
-  /* Did the patient themselves order the day on screen? autoStandard orders
-     are the kitchen's fallback for anything left unordered at the cut-off —
-     they sit in `orders` like any other, so the notice has to skip them or it
-     would report a meal nobody chose as a confirmed order. */
+  /* Is the day on screen finished — every meal on it chosen and sent?
+     `some` was wrong here: one placed breakfast made the notice call the whole
+     day settled and unchangeable while lunch and dinner were still open, and
+     the patient in the middle of picking a lunch was told they could no longer
+     change anything. It takes all three.
+
+     autoStandard orders are the kitchen's fallback for anything left unordered
+     at the cut-off — they sit in `orders` like any other, so they are skipped
+     or the notice would report a meal nobody chose as the patient's own. */
   const dayOrderedByPatient = useMemo(() => {
     const dayStr = dayForOffset(selectedDayOffset).toDateString();
-    return (orders as any[]).some((o) =>
-      !o.autoStandard && o.deliveryDate &&
-      new Date(o.deliveryDate).toDateString() === dayStr);
+    const chosen = new Set(
+      (orders as any[])
+        .filter((o) => !o.autoStandard && o.deliveryDate &&
+          new Date(o.deliveryDate).toDateString() === dayStr)
+        .map((o) => o.mealId || o.mealType?.toLowerCase()),
+    );
+    return (Object.keys(MEAL_WINDOWS) as MealId[]).every((id) => chosen.has(id));
   }, [orders, selectedDayOffset]);
 
   /* Already with the kitchen, keyed day + meal against the moment it was
