@@ -288,31 +288,37 @@ const translations: Record<string, TranslationEntry> = {
 
   /* The one notice under the day tabs. One whole sentence per state, with the
      day and time interpolated — the Arabic and Urdu word order does not
-     survive being assembled from fragments. {0} is always the selected day. */
+     survive being assembled from fragments. {0} is always the selected day.
+
+     Spoken to the patient, not reported at them: a day that cannot be ordered
+     yet is an invitation to look rather than a door being held shut, and a day
+     already sent is a reassurance rather than a restriction. The two "coming
+     up" states share an opening clause so they read as one situation seen at
+     two distances. */
   "food.notice.previewDay": {
-    en: "Ordering for {0} is not open yet — it opens on {1} at {2}.",
-    ar: "لم يُفتح باب الطلب ليوم {0} بعد — يفتح يوم {1} الساعة {2}.",
-    ur: "{0} کے لیے آرڈر ابھی نہیں کھلا — یہ {1} کو {2} بجے کھلے گا۔",
+    en: "Take a look at what's on for {0} — you'll be able to order from {2} on {1}.",
+    ar: "تصفّح قائمة يوم {0} — يمكنك الطلب اعتبارًا من الساعة {2} يوم {1}.",
+    ur: "{0} کا مینو دیکھ لیجیے — آپ {1} کو {2} بجے سے آرڈر کر سکیں گے۔",
   },
   "food.notice.opensToday": {
-    en: "Ordering for {0} opens today at {1}.",
-    ar: "يفتح باب الطلب ليوم {0} اليوم الساعة {1}.",
-    ur: "{0} کے لیے آرڈر آج {1} بجے کھلے گا۔",
+    en: "Take a look at what's on for {0} — you'll be able to order from {1} today.",
+    ar: "تصفّح قائمة يوم {0} — يمكنك الطلب اليوم اعتبارًا من الساعة {1}.",
+    ur: "{0} کا مینو دیکھ لیجیے — آپ آج {1} بجے سے آرڈر کر سکیں گے۔",
   },
   "food.notice.openUntil": {
-    en: "Ordering for {0} is open until {1}.",
-    ar: "باب الطلب ليوم {0} مفتوح حتى الساعة {1}.",
-    ur: "{0} کے لیے آرڈر {1} بجے تک کھلا ہے۔",
+    en: "{0}'s menu is open — take your time, and send your order by {1}.",
+    ar: "قائمة يوم {0} مفتوحة الآن — خذ وقتك، وأرسل طلبك قبل الساعة {1}.",
+    ur: "{0} کا مینو کھلا ہے — اطمینان سے چنیے، اور {1} بجے تک اپنا آرڈر بھیج دیجیے۔",
   },
   "food.notice.ordered": {
-    en: "Your order for {0} is confirmed and cannot be changed.",
-    ar: "تم تأكيد طلبك ليوم {0} ولا يمكن تغييره.",
-    ur: "{0} کے لیے آپ کا آرڈر تصدیق شدہ ہے اور اسے تبدیل نہیں کیا جا سکتا۔",
+    en: "You're all set for {0} — the kitchen has your order and it's locked in.",
+    ar: "كل شيء جاهز ليوم {0} — طلبك وصل إلى المطبخ وأصبح نهائيًا.",
+    ur: "{0} کے لیے سب طے ہے — آپ کا آرڈر کچن تک پہنچ چکا ہے اور اب حتمی ہے۔",
   },
   "food.notice.closed": {
-    en: "Ordering for {0} has closed — a standard meal will be served.",
-    ar: "أُغلق باب الطلب ليوم {0} — ستُقدَّم وجبة قياسية.",
-    ur: "{0} کے لیے آرڈر بند ہو چکا ہے — ایک معیاری کھانا پیش کیا جائے گا۔",
+    en: "Ordering for {0} has closed — a standard meal is already set aside for you.",
+    ar: "أُغلق باب الطلب ليوم {0} — وقد جُهّزت لك وجبة قياسية.",
+    ur: "{0} کے لیے آرڈر بند ہو چکا ہے — آپ کے لیے ایک معیاری کھانا پہلے سے مختص ہے۔",
   },
 
   /* The line under the divider on a meal card. A placed order has nothing on

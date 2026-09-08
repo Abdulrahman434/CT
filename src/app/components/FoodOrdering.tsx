@@ -7,7 +7,7 @@ import {
   Star, Heart, Droplets, Flame, Snowflake, Globe,
   Baby, User, FlaskConical, ChevronDown, ChevronRight, ChevronLeft, Home,
   AlertTriangle, X, Plus, ShieldAlert, Sparkles, CheckCircle2, Circle, SlidersHorizontal, Trash2,
-  Info,
+  CalendarClock,
 } from "lucide-react";
 import { InternalPageHeader } from "./InternalPageHeader";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -2009,17 +2009,30 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
    * A day the run cannot buy yet opens on the evening before it — that is the
    * whole rule, so the day it opens is simply the day before this one. */
   const dayName = formatDayWeekday(selectedDayOffset, isRTL, locale);
-  const noticeText =
+  /* Icon and colour carry the state as much as the sentence does. One "i" on
+     all five made them read as a single template with the words swapped, and
+     the patient stopped reading it. The accent groups them: green for a day
+     that is settled either way, brand teal for the one state that invites an
+     action now, blue for a day still ahead. */
+  const notice =
     !dayOrderable
-      ? t("food.notice.previewDay", dayName,
-          formatDayWeekday(selectedDayOffset - 1, isRTL, locale), windowStartStr)
+      ? { text: t("food.notice.previewDay", dayName,
+            formatDayWeekday(selectedDayOffset - 1, isRTL, locale), windowStartStr),
+          Icon: CalendarClock, accent: theme.info, surface: theme.infoSubtle }
       : dayOrderedByPatient
-        ? t("food.notice.ordered", dayName)
+        ? { text: t("food.notice.ordered", dayName),
+            Icon: CheckCircle2, accent: theme.success, surface: theme.successSubtle }
         : windowState === "before"
-          ? t("food.notice.opensToday", dayName, windowStartStr)
+          ? { text: t("food.notice.opensToday", dayName, windowStartStr),
+              Icon: Clock, accent: theme.info, surface: theme.infoSubtle }
           : windowState === "open"
-            ? t("food.notice.openUntil", dayName, windowEndStr)
-            : t("food.notice.closed", dayName);
+            ? { text: t("food.notice.openUntil", dayName, windowEndStr),
+                Icon: ChefHat, accent: TEAL, surface: TEAL_15 }
+            /* Closed is not a failure: something is still coming, so it takes
+               the settled green rather than an alarm colour. */
+            : { text: t("food.notice.closed", dayName),
+                Icon: Utensils, accent: theme.success, surface: theme.successSubtle };
+  const NoticeIcon = notice.Icon;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
@@ -2079,27 +2092,27 @@ function ChooseMealStep({ meals, selectedMealId, onSelect, onDeselect, fontFamil
             because a notice that says "tomorrow" while Wednesday is selected
             is answering a question nobody asked.
 
-            Informational, not amber: none of these five states is a warning,
-            and the clock icon this used to carry made a routine cut-off read
-            as something going wrong. */}
+            Never amber, in any state: none of these five is a warning, and an
+            alarm colour on a routine cut-off makes it read as something going
+            wrong. The icon and accent come from `notice` above. */}
         <div data-fo-notice data-fo-window-state={windowState}
           className="flex items-center gap-3"
           style={{
             maxWidth: "900px",
             padding: "14px 26px",
             borderRadius: "18px",
-            backgroundColor: theme.infoSubtle,
-            border: `1.5px solid ${theme.info}`,
+            backgroundColor: notice.surface,
+            border: `1.5px solid ${notice.accent}`,
           }}>
-          <Info size={20} color={theme.info} className="shrink-0" />
+          <NoticeIcon size={20} color={notice.accent} className="shrink-0" />
           {/* One whole sentence per state, translated as a unit — see the
               food.notice.* keys. Nothing here explains the rules; it says
-              where this day stands, and the order can never be changed. */}
+              where this day stands, in the words one would use out loud. */}
           <p style={{
             fontFamily, fontSize: "16px", fontWeight: WEIGHT.medium, color: theme.textBody,
             margin: 0, lineHeight: 1.5, textAlign: isRTL ? "right" : "left",
           }}>
-            {noticeText}
+            {notice.text}
           </p>
         </div>
       </div>
