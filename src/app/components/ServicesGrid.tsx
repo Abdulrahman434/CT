@@ -202,7 +202,8 @@ function HubCard({
       onClick={(e) => handleClick(() => onTap(e))}
       className={`relative overflow-hidden flex flex-col items-center justify-center ${compact ? "gap-1.5" : "gap-3"} transition-transform duration-100 ease-out cursor-pointer h-full w-full`}
       style={{
-        backgroundColor: pressed ? theme.primary : contained ? theme.surfaceElevated : theme.surface,
+        backgroundColor: pressed ? theme.primary : theme.engagementSurface,
+        backgroundImage: pressed ? "none" : theme.engagementCardGradient,
         borderRadius: theme.radiusCard,
         boxShadow: pressed
           ? `0px 2px 8px 0px ${theme.primarySubtle}`
@@ -211,7 +212,7 @@ function HubCard({
           : SHADOW.md,
         outline: "none",
         transform: pressed ? "scale(0.96)" : "scale(1)",
-        border: contained && !pressed ? `1px solid ${theme.primarySubtle}` : pressed ? "none" : theme.cardBorder,
+        border: pressed ? "none" : theme.engagementCardBorder,
       }}
       aria-label={`${t(item.labelKey)}: ${t(item.desc)}`}
     >
@@ -223,11 +224,12 @@ function HubCard({
           width: iconBoxSize,
           height: iconBoxSize,
           borderRadius: iconRadius,
-          backgroundColor: pressed ? "rgba(255,255,255,0.2)" : theme.primaryLight,
+          backgroundColor: pressed ? "rgba(255,255,255,0.2)" : theme.engagementIconBg,
+          border: `1px solid ${pressed ? "transparent" : theme.engagementIconStroke}`,
           transition: "background-color 0.1s ease-out",
         }}
       >
-        <HubIcon label={item.label} color={pressed ? theme.textInverse : theme.primary} />
+        <HubIcon label={item.label} color={pressed ? theme.textInverse : theme.engagementIconColor} />
       </div>
       {/* Label */}
       <span
@@ -272,7 +274,8 @@ function ServiceCard({ item, onTap, square, contained, compact, onLongPress, isL
       style={{
         height: square ? undefined : undefined,
         padding: square ? "0 28px 0 18px" : "0",
-        backgroundColor: pressed ? theme.primary : contained ? theme.surfaceElevated : theme.surface,
+        backgroundColor: pressed ? theme.primary : theme.engagementSurface,
+        backgroundImage: pressed ? "none" : theme.engagementCardGradient,
         borderRadius: compact ? theme.radiusXl : theme.radiusCard,
         boxShadow: pressed
           ? `0px 2px 8px 0px ${theme.primarySubtle}`
@@ -281,7 +284,7 @@ function ServiceCard({ item, onTap, square, contained, compact, onLongPress, isL
           : SHADOW.md,
         outline: "none",
         transform: pressed ? "scale(0.97)" : "scale(1)",
-        border: contained && !pressed ? `1px solid ${theme.primarySubtle}` : pressed ? "none" : theme.cardBorder,
+        border: pressed ? "none" : theme.engagementCardBorder,
       }}
       aria-label={item.label}
     >
@@ -294,24 +297,24 @@ function ServiceCard({ item, onTap, square, contained, compact, onLongPress, isL
           width: iconBoxSize,
           height: iconBoxSize,
           borderRadius: iconRadius,
-          backgroundColor: pressed ? "rgba(255,255,255,0.2)" : theme.primary,
+          backgroundColor: pressed ? "rgba(255,255,255,0.2)" : theme.engagementFill,
           transition: "background-color 0.1s ease-out",
         }}
       >
         {item.lucideIcon ? (
-          <item.lucideIcon size={iconSize} color={theme.textInverse} />
+          <item.lucideIcon size={iconSize} color={theme.engagementOnFill} />
         ) : (
           <svg width={iconSize} height={iconSize} viewBox={item.viewBox || "0 0 20 20"} fill="none">
             {item.clipId ? (
               <g clipPath={`url(#${item.clipId})`}>
                 {item.svgPaths.map((d, i) => (
-                  <path key={i} d={d} stroke={theme.textInverse} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.66667" />
+                  <path key={i} d={d} stroke={theme.engagementOnFill} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.66667" />
                 ))}
               </g>
             ) : (
               <g>
                 {item.svgPaths.map((d, i) => (
-                  <path key={i} d={d} stroke={theme.textInverse} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.66667" />
+                  <path key={i} d={d} stroke={theme.engagementOnFill} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.66667" />
                 ))}
               </g>
             )}
@@ -387,7 +390,7 @@ function SurveyCardFilled({ onOpen, compact, onLongPress, isLocked }: { onOpen: 
           transition: "background-color 0.15s",
         }}
       >
-        <MessageSquareMore size={iconSize} color={theme.textInverse} strokeWidth={1.5} />
+        <MessageSquareMore size={iconSize} color={pressed ? theme.textInverse : theme.brandOnAccent} strokeWidth={1.5} />
       </div>
       <span
         style={{

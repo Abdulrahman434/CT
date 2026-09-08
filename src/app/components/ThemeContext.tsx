@@ -280,6 +280,45 @@ export interface ThemeConfig {
   /** Pre-composed card border — "none" in light, subtle luminous edge in dark */
   cardBorder: string;
 
+  /* ── Engagement tiles (hub + service grid) ──
+   * All derived from `primary` so every brand gets the same treatment.
+   * Bottom-row (filled) tiles pair `primary` with `brandOnPrimary`. */
+  /** Accessible text/icon color on a `primary` fill */
+  brandOnPrimary: string;
+  /** Accessible text/icon color on an `accent` fill */
+  brandOnAccent: string;
+
+  /* ── Interaction states — derived per brand color, never hardcoded ── */
+  primaryHover: string;      primaryHoverOn: string;
+  primaryActive: string;     primaryActiveOn: string;
+  primarySelected: string;   primaryBorder: string;
+  accentHover: string;       accentHoverOn: string;
+  accentActive: string;      accentActiveOn: string;
+  accentSelected: string;
+  focusRing: string;         // visible outline on this mode's surface
+  disabledBg: string;        disabledOn: string;
+  /** Accessible foregrounds for the semantic fills */
+  onSuccess: string; onWarning: string; onError: string; onInfo: string;
+  /** true when a supplied brand color had to be shifted to stay accessible */
+  brandAdjusted: boolean;
+  /** Base surface behind an engagement tile */
+  engagementSurface: string;
+  /** Top gradient: primary tint fading into the surface at 58% */
+  engagementCardGradient: string;
+  /** Pre-composed 1px tile border */
+  engagementCardBorder: string;
+  /** Icon-container fill for the 8 hub tiles */
+  engagementIconBg: string;
+  /** 1px stroke around the rounded icon container (not the glyph) */
+  engagementIconStroke: string;
+  /** Glyph color for the 8 hub tiles */
+  engagementIconColor: string;
+  /** Solid fill for the filled (bottom-row) icon containers — guaranteed to
+   *  separate from the card even when the brand color matches the surface */
+  engagementFill: string;
+  /** Accessible glyph color on `engagementFill` */
+  engagementOnFill: string;
+
   /* ── Semantic Status ── */
   success: string;           // #22C55E — completed, positive
   successSubtle: string;     // success @ 8% — tinted backgrounds
@@ -320,13 +359,24 @@ function buildTheme(core: {
   slideshowInterval?: number;
   heroOpacity?: number;
   primary: string;
-  primaryDark: string;
-  primaryLight: string;
+  primaryDark?: string;
+  primaryLight?: string;
   accent: string;
-  accentDark: string;
-  accentLight: string;
+  accentDark?: string;
+  accentLight?: string;
 }, dark = false): ThemeConfig {
-  const c = core;
+  // Normalize first: every downstream token assumes a parseable #rrggbb, and a
+  // brand may supply anything. Light/dark variants are optional — auto-derived
+  // when absent so a config needs only Primary + Accent.
+  const c = {
+    ...core,
+    primary: normalizeHex(core.primary),
+    accent: normalizeHex(core.accent, "#7A6A58"),
+    primaryDark: normalizeHex(core.primaryDark, autoDarken(normalizeHex(core.primary))),
+    primaryLight: normalizeHex(core.primaryLight, autoLighten(normalizeHex(core.primary))),
+    accentDark: normalizeHex(core.accentDark, autoDarken(normalizeHex(core.accent, "#7A6A58"))),
+    accentLight: normalizeHex(core.accentLight, autoLighten(normalizeHex(core.accent, "#7A6A58"))),
+  };
 
   /* ── shared tokens (mode-independent) ── */
   const shared = {
@@ -370,10 +420,13 @@ function buildTheme(core: {
 
   if (!dark) {
     /* ── LIGHT MODE ── */
+    const P = fillSet(c.primary, "#FFFFFF", false);
+    const A = fillSet(c.accent, "#FFFFFF", false);
     return {
       ...shared,
-      primarySubtle: hexToRgba(c.primary, 0.08),
-      accentSubtle: hexToRgba(c.accent, 0.06),
+      primarySubtle: P.subtle,
+      accentSubtle: A.subtle,
+      ...stateTokens(P, A, "#FFFFFF"),
 
       background: "#FFFFFF",
       surface: "#FFFFFF",
@@ -384,30 +437,35 @@ function buildTheme(core: {
       textHeading: "#1B2A32",
       textBody: "#1B2A32",
       textNormal: "#1B2A32",
-      textMuted: "#95A3AD",
-      textDisabled: "#C0CAD0",
+      textMuted: ensureContrast("#95A3AD", "#FFFFFF", 4.5),
+      textDisabled: ensureContrast("#C0CAD0", "#FFFFFF", 3),
       textInverse: "#FFFFFF",
       textInverseMuted: "rgba(255,255,255,0.7)",
 
-      iconDefault: "#95A3AD",
-      iconBrand: c.primary,
+      iconDefault: ensureContrast("#95A3AD", "#FFFFFF", 3),
+      iconBrand: ensureContrast(c.primary, "#FFFFFF", 3),
       iconInverse: "#FFFFFF",
 
       tileActiveBg: c.primary,
       tileInactiveBg: "rgba(0,0,0,0.04)",
-      tileActiveText: "#FFFFFF",
-      tileInactiveText: "#95A3AD",
+      tileActiveText: P.on,
+      tileInactiveText: ensureContrast("#95A3AD", "#FFFFFF", 4.5),
       sliderTrack: c.primary,
       sliderThumb: c.primary,
       sliderBg: "rgba(0,0,0,0.08)",
       checkboxActive: c.primary,
-      checkboxCheck: "#FFFFFF",
+      checkboxCheck: P.on,
 
       borderDefault: "rgba(0,0,0,0.06)",
       borderSubtle: "rgba(0,0,0,0.04)",
       borderActive: c.primary,
-      borderAccent: hexToRgba(c.accent, 0.15),
+      borderAccent: A.border,
       cardBorder: "none",
+
+      ...engagementTokens(c.primary, c.accent, "#FFFFFF", {
+        tint: 0.09, border: 0.18, iconBg: 0.06, stroke: 0.35,
+        minBorder: 1.35, minIconBg: 1.05, minStroke: 1.7, minGlyph: 4.5,
+      }),
 
       gradientCanvas: `linear-gradient(160deg, ${c.primaryLight} 0%, ${lighten(c.primaryLight, 0.3)} 25%, ${lighten(c.primaryLight, 0.5)} 50%, ${lighten(c.primaryLight, 0.6)} 75%, ${lighten(c.primaryLight, 0.65)} 100%)`,
 
@@ -428,16 +486,22 @@ function buildTheme(core: {
   /* ── DARK MODE ── */
   const DARK_BG = "#0F1419";
   const DARK_SURFACE = "#1A2027";
+  const ENGAGEMENT_DARK_SURFACE = "#1B2227";
   const DARK_ELEVATED = "#222B34";
   const DARK_TEXT = "#E7EBED";
   const DARK_TEXT_SEC = "#8B99A4";
-  const DARK_MUTED = "#5C6B77";
-  const DARK_DISABLED = "#3D4A54";
+  // Lifted until legible on the lightest dark backdrop (DARK_ELEVATED), so the
+  // same value stays readable on every darker one. Hue is preserved.
+  const DARK_MUTED = ensureContrast("#5C6B77", DARK_ELEVATED, 4.5);
+  const DARK_DISABLED = ensureContrast("#3D4A54", DARK_ELEVATED, 3);
+  const PD = fillSet(c.primary, DARK_SURFACE, true);
+  const AD = fillSet(c.accent, DARK_SURFACE, true);
 
   return {
     ...shared,
-    primarySubtle: hexToRgba(c.primary, 0.14),
-    accentSubtle: hexToRgba(c.accent, 0.12),
+    primarySubtle: PD.subtle,
+    accentSubtle: AD.subtle,
+    ...stateTokens(PD, AD, DARK_SURFACE),
 
     background: DARK_BG,
     surface: DARK_SURFACE,
@@ -454,24 +518,29 @@ function buildTheme(core: {
     textInverseMuted: "rgba(255,255,255,0.6)",
 
     iconDefault: DARK_MUTED,
-    iconBrand: c.primary,
+    iconBrand: ensureContrast(c.primary, DARK_SURFACE, 3),
     iconInverse: "#FFFFFF",
 
     tileActiveBg: c.primary,
     tileInactiveBg: "rgba(255,255,255,0.06)",
-    tileActiveText: "#FFFFFF",
+    tileActiveText: PD.on,
     tileInactiveText: DARK_MUTED,
     sliderTrack: c.primary,
     sliderThumb: c.primary,
     sliderBg: "rgba(255,255,255,0.10)",
     checkboxActive: c.primary,
-    checkboxCheck: "#FFFFFF",
+    checkboxCheck: PD.on,
 
     borderDefault: "rgba(255,255,255,0.08)",
     borderSubtle: "rgba(255,255,255,0.05)",
     borderActive: c.primary,
-    borderAccent: hexToRgba(c.accent, 0.20),
+    borderAccent: AD.border,
     cardBorder: "1px solid rgba(255,255,255,0.05)",
+
+    ...engagementTokens(c.primary, c.accent, ENGAGEMENT_DARK_SURFACE, {
+      tint: 0.17, border: 0.22, iconBg: 0.11, stroke: 0.55,
+      minBorder: 1.55, minIconBg: 1.22, minStroke: 2.0, minGlyph: 4.5,
+    }),
 
     gradientCanvas: `linear-gradient(160deg, ${DARK_BG} 0%, #131920 30%, #161B22 60%, #1C2128 100%)`,
 
@@ -524,7 +593,238 @@ export function autoLighten(hex: string): string {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
+/** Mix `hex` into `base` at `amount` (0–1 share of `hex`) — the JS equivalent
+ *  of color-mix(), used so derived tints work in older kiosk WebViews. */
+function mixHex(hex: string, base: string, amount: number): string {
+  const a = hex.replace("#", "");
+  const b = base.replace("#", "");
+  const ch = (i: number) =>
+    Math.round(parseInt(a.substring(i, i + 2), 16) * amount + parseInt(b.substring(i, i + 2), 16) * (1 - amount));
+  return `#${[0, 2, 4].map((i) => ch(i).toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** WCAG relative luminance of a hex color (0 = black, 1 = white) */
+function luminance(hex: string): number {
+  const h = hex.replace("#", "");
+  const chan = (i: number) => {
+    const v = parseInt(h.substring(i, i + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * chan(0) + 0.7152 * chan(2) + 0.0722 * chan(4);
+}
+
+/** Accept any user-supplied color string and return a safe #rrggbb.
+ *  Handles #abc, #aabbcc, bare hex, whitespace and case. Anything unparseable
+ *  (empty, "red", a broken paste, undefined) returns `fallback` rather than
+ *  propagating NaN through every derived token — this is the system's floor:
+ *  a bad brand color degrades to a neutral theme, it never renders garbage. */
+export function normalizeHex(input: string | undefined | null, fallback = "#5A6B78"): string {
+  if (typeof input !== "string") return fallback;
+  let h = input.trim().replace(/^#/, "");
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  if (!/^[0-9a-fA-F]{6}$/.test(h)) return fallback;
+  return `#${h.toLowerCase()}`;
+}
+
+/** Move a color along lightness only — hue and chroma survive. */
+function shiftL(hex: string, delta: number): string {
+  const [h, s, l] = hexToHsl(hex);
+  return hslToHex(h, s, Math.max(0, Math.min(1, l + delta)));
+}
+
+/** Foreground for a filled brand surface (icons, and text on that fill).
+ *  Prefers white — the conventional pairing — and only drops to ink when white
+ *  cannot clear the 3:1 bar WCAG 1.4.11 sets for graphical objects. Picking
+ *  purely by "whichever ratio is larger" made this a coin flip for mid-tone
+ *  brands (#008AAB scores white 4.02 vs ink 4.06), so the same UI could show
+ *  white icons for one brand and black for the next. */
+function onColorFor(hex: string): string {
+  return contrastRatio("#FFFFFF", hex) >= 3 ? "#FFFFFF" : "#10222B";
+}
+
 /** Generate rgba from theme primary for CSS usage (scrollbars, dynamic opacity) */
+
+/* ── Contrast-aware derivation ───────────────────────────────────────────────
+ * Brand primaries span a huge range: #008AAB (mid teal) through #212556 and
+ * #1D234D (navies darker than the dark-mode surface) to #C9A96E (a pale gold
+ * lighter than most light-mode ink). A fixed mix percentage or opacity that
+ * reads well for one is invisible for another — a 17% mix of #212556 into
+ * #1B2227 returns the surface, and a 22% border of it scores 1.02:1.
+ *
+ * So each derived value states the contrast it needs and solves for it,
+ * treating the design spec's percentage as a floor rather than an answer.
+ * Lightness is adjusted in HSL so the brand hue and chroma survive. */
+
+function hexToHsl(hex: string): [number, number, number] {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16) / 255;
+  const g = parseInt(h.substring(2, 4), 16) / 255;
+  const b = parseInt(h.substring(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const hue = max === r ? ((g - b) / d + (g < b ? 6 : 0)) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [hue / 6, sat, l];
+}
+
+function hslToHex(hu: number, sa: number, li: number): string {
+  const f = (n: number) => {
+    const k = (n + hu * 12) % 12;
+    const a = sa * Math.min(li, 1 - li);
+    const v = li - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)));
+    return Math.round(255 * v).toString(16).padStart(2, "0");
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+/** WCAG contrast ratio between two opaque colors (1 → identical, 21 → max) */
+export function contrastRatio(a: string, b: string): number {
+  const la = luminance(a), lb = luminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+/** Composite `fg` at `alpha` over opaque `bg` → the opaque result */
+function overlayHex(fg: string, alpha: number, bg: string): string {
+  return mixHex(fg, bg, alpha);
+}
+
+/** Shift `color`'s lightness (hue/chroma preserved) until it clears `minRatio`
+ *  against `bg`. Moves away from the backdrop — lighter on dark, darker on light. */
+function ensureContrast(color: string, bg: string, minRatio: number): string {
+  if (contrastRatio(color, bg) >= minRatio) return color;
+  const [hu, sa, l0] = hexToHsl(color);
+  const up = luminance(bg) < 0.18;         // dark backdrop → lighten
+  let lo = l0, hi = up ? 1 : 0, best = up ? "#FFFFFF" : "#000000";
+  for (let i = 0; i < 24; i++) {           // bisect on lightness
+    const mid = (lo + hi) / 2;
+    const cand = hslToHex(hu, sa, mid);
+    if (contrastRatio(cand, bg) >= minRatio) { best = cand; hi = mid; } else { lo = mid; }
+  }
+  return best;
+}
+
+/** Smallest alpha ≥ `floor` whose composite of `fg` over `bg` clears `minRatio`. */
+function solveAlpha(fg: string, bg: string, minRatio: number, floor: number): number {
+  if (contrastRatio(overlayHex(fg, floor, bg), bg) >= minRatio) return floor;
+  for (let a = floor; a <= 1.0001; a += 0.02) {
+    if (contrastRatio(overlayHex(fg, Math.min(a, 1), bg), bg) >= minRatio) return Math.min(a, 1);
+  }
+  return 1;
+}
+
+/** Every value one brand color needs on one surface — fills, their accessible
+ *  foregrounds, interaction states, tints, borders and the disabled pair.
+ *
+ *  This is the reusable unit: `fillSet(primary, …)` and `fillSet(accent, …)`
+ *  are the same call, and semantic colors (error/success/warning/info) go
+ *  through it too. Nothing here knows which brand it is looking at. */
+function fillSet(color: string, surface: string, dark: boolean) {
+  const base = color;
+  const on = onColorFor(base);
+  // Hover/press move away from the surface so the control gains weight when
+  // touched: lighter on dark, darker on light. Clamped inside hslToHex.
+  const dir = dark ? 1 : -1;
+  const hover = shiftL(base, dir * 0.06);
+  const active = shiftL(base, dir * 0.12);
+
+  // Tints must be *seen* against this surface, so they are solved, not fixed.
+  const tintFloor = dark ? 0.14 : 0.08;
+  const seed = ensureContrast(base, surface, dark ? 3 : 3);
+  const subtleA = solveAlpha(seed, surface, dark ? 1.18 : 1.05, tintFloor);
+  const selectedA = solveAlpha(seed, surface, dark ? 1.45 : 1.16, subtleA + 0.06);
+  const borderA = solveAlpha(seed, surface, dark ? 1.55 : 1.35, 0.18);
+
+  // Disabled: keep the hue but drain it, then guarantee its label is still
+  // perceivable (3:1) — "de-emphasised" must not mean "invisible".
+  const disabledBg = overlayHex(shiftL(base, dir * 0.05), dark ? 0.10 : 0.07, surface);
+  const disabledOn = ensureContrast(shiftL(base, dir * 0.2), disabledBg, 3);
+
+  return {
+    base,
+    on,
+    hover,
+    hoverOn: contrastRatio(on, hover) >= 3 ? on : onColorFor(hover),
+    active,
+    activeOn: contrastRatio(on, active) >= 3 ? on : onColorFor(active),
+    subtle: hexToRgba(seed, subtleA),
+    subtleSolid: overlayHex(seed, subtleA, surface),
+    selected: overlayHex(seed, selectedA, surface),
+    border: hexToRgba(seed, borderA),
+    // A focus ring is useless if it cannot be seen, so it is held to the same
+    // 3:1 non-text bar against the surface it is drawn on.
+    ring: ensureContrast(base, surface, 3),
+    disabledBg,
+    disabledOn,
+    /** true when the raw color could not meet contrast unaided and was shifted */
+    adjusted: seed.toLowerCase() !== base.toLowerCase(),
+  };
+}
+
+/** Flatten two ramps into the named interaction tokens the UI consumes. */
+function stateTokens(P: ReturnType<typeof fillSet>, A: ReturnType<typeof fillSet>, surface: string) {
+  return {
+    primaryHover: P.hover,   primaryHoverOn: P.hoverOn,
+    primaryActive: P.active, primaryActiveOn: P.activeOn,
+    primarySelected: P.selected, primaryBorder: P.border,
+    accentHover: A.hover,    accentHoverOn: A.hoverOn,
+    accentActive: A.active,  accentActiveOn: A.activeOn,
+    accentSelected: A.selected,
+    focusRing: P.ring,
+    disabledBg: P.disabledBg, disabledOn: P.disabledOn,
+    onSuccess: onColorFor("#22C55E"),
+    onWarning: onColorFor("#F59E0B"),
+    onError: onColorFor("#EF4444"),
+    onInfo: onColorFor("#3B82F6"),
+    brandAdjusted: P.adjusted || A.adjusted,
+  };
+}
+
+/** Build every Engagement token for one surface.
+ *  `spec` carries the design percentages (used as floors) and the contrast
+ *  each result must actually reach on this surface. */
+function engagementTokens(
+  primary: string,
+  accent: string,
+  surface: string,
+  spec: { tint: number; border: number; iconBg: number; stroke: number;
+          minBorder: number; minIconBg: number; minStroke: number; minGlyph: number },
+) {
+  // The glyph carries meaning, so it leads: pull the brand color to a readable
+  // lightness on this surface, then tint everything else from that same color
+  // so a navy brand stays navy instead of collapsing into the gray surface.
+  const seed = ensureContrast(primary, surface, spec.minGlyph);
+
+  const iconBgAlpha = solveAlpha(seed, surface, spec.minIconBg, spec.iconBg);
+  const iconBg = overlayHex(seed, iconBgAlpha, surface);
+  // The glyph sits on the container, not the card, so re-check it against that.
+  const glyph = ensureContrast(seed, iconBg, spec.minGlyph);
+
+  const borderAlpha = solveAlpha(glyph, surface, spec.minBorder, spec.border);
+  const strokeAlpha = solveAlpha(glyph, iconBg, spec.minStroke, spec.stroke);
+  const tint = overlayHex(glyph, Math.max(spec.tint, iconBgAlpha), surface);
+
+  // The filled container must read as a filled container. A brand whose color
+  // sits on top of the surface luminance (a near-black primary in dark mode)
+  // would otherwise vanish, so the fill is held to a minimum separation and
+  // its glyph is then chosen against the fill that actually ships.
+  const fill = ensureContrast(primary, surface, 1.6);
+
+  return {
+    brandOnPrimary: onColorFor(primary),
+    brandOnAccent: onColorFor(accent),
+    engagementFill: fill,
+    engagementOnFill: onColorFor(fill),
+    engagementSurface: surface,
+    engagementCardGradient: `linear-gradient(180deg, ${tint} 0%, ${surface} 58%)`,
+    engagementCardBorder: `1px solid ${hexToRgba(glyph, borderAlpha)}`,
+    engagementIconBg: iconBg,
+    engagementIconStroke: hexToRgba(glyph, strokeAlpha),
+    engagementIconColor: glyph,
+  };
+}
+
 export function primaryRgba(theme: ThemeConfig, alpha: number): string {
   return hexToRgba(theme.primary, alpha);
 }
@@ -1040,6 +1340,27 @@ function injectCSSVars(t: ThemeConfig) {
     "--hbs-warning-subtle": t.warningSubtle,
     "--hbs-error": t.error,
     "--hbs-error-subtle": t.errorSubtle,
+
+    // Shared brand tokens — every Engagement color derives from these
+    "--brand-primary": t.primary,
+    "--brand-on-primary": t.brandOnPrimary,
+    "--brand-on-accent": t.brandOnAccent,
+    "--brand-primary-hover": t.primaryHover,
+    "--brand-primary-active": t.primaryActive,
+    "--brand-primary-selected": t.primarySelected,
+    "--brand-primary-border": t.primaryBorder,
+    "--brand-accent-hover": t.accentHover,
+    "--brand-accent-active": t.accentActive,
+    "--brand-accent-selected": t.accentSelected,
+    "--brand-focus-ring": t.focusRing,
+    "--brand-disabled-bg": t.disabledBg,
+    "--brand-disabled-on": t.disabledOn,
+    "--engagement-surface": t.engagementSurface,
+    "--engagement-card-gradient": t.engagementCardGradient,
+    "--engagement-card-border": t.engagementCardBorder,
+    "--engagement-icon-bg": t.engagementIconBg,
+    "--engagement-icon-stroke": t.engagementIconStroke,
+    "--engagement-icon-color": t.engagementIconColor,
 
     // Standard CSS Custom Properties for layout styling
     "--primary-color": t.primary,
